@@ -156,6 +156,22 @@ public sealed class ScanStoreHistoryTests
     }
 
     [Fact]
+    public void Rechnername_vergleicht_Gross_Klein_auch_bei_Umlauten()
+    {
+        using var db = new TestDb();
+        using var store = db.Open();
+        var older = Run(T0, "PRÜF-PC", @"C:\Daten");
+        var foreign = Run(T0.AddHours(1), "PRÜF-PC-2", @"C:\Daten");  // neuer, aber anderer Rechner
+        store.Save(older);
+        store.Save(foreign);
+
+        // SQLite-NOCASE faltet nur ASCII – „Ü“ und „ü“ müssen trotzdem derselbe Rechner sein
+        Assert.Equal(older.Id, store.FindPrevious(Run(T0.AddDays(1), "prüf-pc", @"C:\Daten"))?.Id);
+        Assert.Equal(foreign.Id, store.FindPrevious(Run(T0.AddDays(1), "Prüf-PC-2", @"C:\Daten"))?.Id);
+        Assert.Null(store.FindPrevious(Run(T0.AddDays(1), "PRUEF-PC", @"C:\Daten")));
+    }
+
+    [Fact]
     public void Delete_entfernt_den_Lauf_mit_allen_Kindzeilen_und_laesst_andere_unberuehrt()
     {
         using var db = new TestDb();

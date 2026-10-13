@@ -35,7 +35,16 @@ internal static class DatabaseLocation
             if (File.Exists(file))
             {
                 // Ordner beschreibbar heißt nicht Datei beschreibbar: in %ProgramData% gehört sie dem, der sie anlegte
-                using var _ = new FileStream(file, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete);
+                try
+                {
+                    using var _ = new FileStream(file, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete);
+                }
+                catch (IOException ex) when (IsSharingViolation(ex))
+                {
+                    // Gerade von einem anderen Programm gesperrt (Sicherung, Virenscanner, Kopie): trotzdem diese
+                    // Datei. Ein stiller Wechsel ins Profil würde die Historie spalten – der Lauf landete in einer
+                    // zweiten Datenbank, der Vergleich fände keinen Vorgänger. ScanStore meldet die Sperre.
+                }
                 return true;
             }
             var probe = Path.Combine(dir, $".schreibprobe-{Guid.NewGuid():N}.tmp");
@@ -47,6 +56,9 @@ internal static class DatabaseLocation
             return false;
         }
     }
+
+    // HRESULT zu ERROR_SHARING_VIOLATION (32) bzw. ERROR_LOCK_VIOLATION (33)
+    private static bool IsSharingViolation(IOException ex) => ex.HResult is unchecked((int)0x80070020) or unchecked((int)0x80070021);
 
     /// <summary>UNC-Pfad oder verbundenes Netzlaufwerk.</summary>
     public static bool IsNetworkPath(string fullPath)

@@ -18,7 +18,10 @@ public sealed class ScanStore : IDisposable
     private bool _disposed;
 
     /// <param name="databasePath">Datenbankdatei (der Ordner wird bei Bedarf angelegt) oder „:memory:“ für einen flüchtigen Speicher.</param>
-    /// <exception cref="ScanStoreException">Datei nicht anlegbar, keine Zutritt-Datenbank oder von einer neueren Version.</exception>
+    /// <exception cref="ScanStoreException">
+    /// Datei nicht anlegbar, keine Zutritt-Datenbank, von einer neueren Version oder – beim Öffnen über eine Freigabe –
+    /// gerade anderswo im WAL-Modus geöffnet.
+    /// </exception>
     public ScanStore(string databasePath)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(databasePath);
@@ -48,7 +51,9 @@ public sealed class ScanStore : IDisposable
         try
         {
             _db.Open();
-            Schema.Prepare(_db, DatabasePath, useWal: !inMemory && !DatabaseLocation.IsNetworkPath(DatabasePath));
+            var medium = inMemory ? StorageMedium.Memory
+                : DatabaseLocation.IsNetworkPath(DatabasePath) ? StorageMedium.Network : StorageMedium.Local;
+            Schema.Prepare(_db, DatabasePath, medium);
         }
         catch (Exception ex)
         {
@@ -146,7 +151,15 @@ public sealed class ScanStore : IDisposable
         {
             if (_disposed) return;
             _disposed = true;
-            try { Schema.Execute(_db, "PRAGMA optimize;"); }
+            try
+            {
+                // Nur Pflege: hält ein anderer Prozess gerade die Schreibsperre (z. B. die Befehlszeile speichert
+                // einen großen Lauf), nicht bis zum Standard-Timeout von 30 s warten – das Fenster hinge beim Schließen.
+                using var cmd = _db.CreateCommand();
+                cmd.CommandTimeout = 1;
+                cmd.CommandText = "PRAGMA optimize;";
+                cmd.ExecuteNonQuery();
+            }
             catch (SqliteException) { }
             // Beim Schließen der letzten Verbindung überträgt SQLite die -wal-Datei und löscht sie
             SqliteConnection.ClearPool(_db);

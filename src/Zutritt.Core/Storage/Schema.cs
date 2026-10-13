@@ -3,6 +3,16 @@ using Microsoft.Data.Sqlite;
 
 namespace Zutritt.Core.Storage;
 
+/// <summary>Wo die Datenbank liegt – davon hängt das Journal ab.</summary>
+internal enum StorageMedium
+{
+    Memory,
+    /// <summary>Lokales Laufwerk: neue Dateien bekommen WAL.</summary>
+    Local,
+    /// <summary>UNC-Pfad oder Netzlaufwerk: nie WAL, siehe <see cref="Schema.Prepare"/>.</summary>
+    Network,
+}
+
 /// <summary>
 /// Aufbau und Migration der Datenbank. Die Version steht in <c>PRAGMA user_version</c>; jede Stufe in
 /// <see cref="Migrations"/> hebt die Datenbank genau um eine Version an. Neue Felder kommen als neue Stufe
@@ -135,33 +145,52 @@ internal static class Schema
     private static readonly string[] Migrations = [V1];
 
     /// <summary>Verbindung einstellen, Datei prüfen und auf den aktuellen Stand bringen.</summary>
-    /// <param name="useWal">WAL nur auf lokalen Laufwerken: über SMB ist der gemeinsame Speicher (-shm) nicht zuverlässig.</param>
-    public static void Prepare(SqliteConnection db, string displayPath, bool useWal)
+    /// <param name="path">Voller Pfad der Datei (für Meldungen und den Blick in den Dateikopf).</param>
+    public static void Prepare(SqliteConnection db, string path, StorageMedium medium)
     {
         // Fremdschlüssel gelten je Verbindung und sind in SQLite standardmäßig aus
         Execute(db, "PRAGMA foreign_keys = ON;");
 
-        var appId = Scalar(db, "PRAGMA application_id;");
+        // Über das Netz darf SQLite den gemeinsamen Speicher (-shm) einer WAL-Datenbank nie benutzen: über SMB ist er
+        // nicht zuverlässig, die Datei kann beschädigt werden (über \\localhost hing der Zugriff sogar dauerhaft). Im
+        // Sperrmodus EXCLUSIVE öffnet SQLite eine WAL-Datenbank ohne ihn – und nur, wenn niemand sonst sie offen hat.
+        // Muss vor dem ersten Lesen stehen.
+        var network = medium == StorageMedium.Network;
+        var walOverNetwork = network && HeaderSaysWal(path);
+        if (network) Execute(db, "PRAGMA locking_mode = EXCLUSIVE;");
+
+        long appId;
+        try
+        {
+            // Wer eine WAL-Datenbank offen hat, hält sie, bis er sie schließt: dann nicht 30 s warten
+            appId = Scalar(db, "PRAGMA application_id;", timeoutSeconds: walOverNetwork ? 5 : null);
+        }
+        catch (SqliteException ex) when (walOverNetwork && (ex.SqliteErrorCode & 0xFF) is 5 or 6)
+        {
+            throw new ScanStoreException($"Die Datenbank „{path}“ ist gerade im WAL-Modus geöffnet – meist von Zutritt auf dem Rechner, auf dem sie liegt. Über eine Freigabe lässt sie sich erst öffnen, wenn sie dort geschlossen ist; Zutritt stellt sie dann dauerhaft auf das für Freigaben geeignete Journal um.", ex);
+        }
         var version = Scalar(db, "PRAGMA user_version;");
         bool isNew = appId == 0 && version == 0 && Scalar(db, "SELECT count(*) FROM sqlite_schema;") == 0;
 
         if (!isNew && appId != ApplicationId)
-            throw new ScanStoreException($"Die Datei „{displayPath}“ ist eine SQLite-Datenbank, aber keine Zutritt-Datenbank. Sie wird nicht verändert.");
+            throw new ScanStoreException($"Die Datei „{path}“ ist eine SQLite-Datenbank, aber keine Zutritt-Datenbank. Sie wird nicht verändert.");
         if (version > CurrentVersion)
-            throw new ScanStoreException($"Die Datenbank „{displayPath}“ stammt von einer neueren Zutritt-Version (Schema {version}, diese Version kennt bis {CurrentVersion}). Bitte Zutritt aktualisieren.");
+            throw new ScanStoreException($"Die Datenbank „{path}“ stammt von einer neueren Zutritt-Version (Schema {version}, diese Version kennt bis {CurrentVersion}). Bitte Zutritt aktualisieren.");
 
         // Muss vor der ersten Tabelle stehen; danach gibt Delete freie Seiten per incremental_vacuum zurück
         if (isNew) Execute(db, "PRAGMA auto_vacuum = INCREMENTAL;");
-        if (useWal)
+        if (isNew && medium == StorageMedium.Local)
         {
+            // WAL nur für neue Dateien auf einem lokalen Laufwerk. Eine vorhandene Datei im klassischen Journal bleibt
+            // so: sie wurde schon über eine Freigabe geöffnet, und wer sie dort noch offen hat, nähme nach einem Wechsel
+            // zu WAL den gemeinsamen Speicher übers Netz.
             Execute(db, "PRAGMA journal_mode = WAL;");
         }
-        else if (Text(db, "PRAGMA journal_mode;") == "wal")
+        else if (network && Text(db, "PRAGMA journal_mode;") == "wal")
         {
-            // Lokal angelegt, dann auf eine Freigabe verschoben: zurück auf das klassische Journal. Hält ein
-            // anderer Rechner die Datei gerade offen, geht das nicht – dann eben beim nächsten Öffnen.
-            try { Execute(db, "PRAGMA journal_mode = DELETE;"); }
-            catch (SqliteException) { }
+            // Lokal angelegt, jetzt über eine Freigabe: dauerhaft zurück auf das klassische Journal. Die Sperre gehört
+            // uns; scheitert es trotzdem, lieber nicht öffnen als mit WAL übers Netz weiterarbeiten.
+            Execute(db, "PRAGMA journal_mode = DELETE;");
         }
         // Eine große Speicherung darf die -wal-Datei nicht dauerhaft aufblähen
         Execute(db, "PRAGMA journal_size_limit = 33554432;");
@@ -169,6 +198,30 @@ internal static class Schema
         Execute(db, "PRAGMA cache_size = -32768;");
 
         if (version < CurrentVersion) Migrate(db);
+
+        if (network)
+        {
+            // Sperre wieder freigeben, damit andere Rechner die Datei benutzen können – SQLite tut das erst beim nächsten Zugriff
+            Execute(db, "PRAGMA locking_mode = NORMAL;");
+            Scalar(db, "SELECT count(*) FROM sqlite_schema;");
+        }
+    }
+
+    /// <summary>
+    /// Steht im Dateikopf der WAL-Modus (Bytes 18 und 19 = 2)? Ohne SQLite gelesen, also ohne Sperren und ohne -shm.
+    /// </summary>
+    internal static bool HeaderSaysWal(string path)
+    {
+        try
+        {
+            using var file = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            Span<byte> header = stackalloc byte[20];
+            return file.ReadAtLeast(header, header.Length, throwOnEndOfStream: false) == header.Length && header[18] == 2 && header[19] == 2;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
     }
 
     private static void Migrate(SqliteConnection db)
@@ -191,11 +244,12 @@ internal static class Schema
         cmd.ExecuteNonQuery();
     }
 
-    internal static long Scalar(SqliteConnection db, string sql, SqliteTransaction? tx = null)
+    internal static long Scalar(SqliteConnection db, string sql, SqliteTransaction? tx = null, int? timeoutSeconds = null)
     {
         using var cmd = db.CreateCommand();
         cmd.Transaction = tx;
         cmd.CommandText = sql;
+        if (timeoutSeconds is { } t) cmd.CommandTimeout = t;
         return Convert.ToInt64(cmd.ExecuteScalar() ?? 0L, CultureInfo.InvariantCulture);
     }
 

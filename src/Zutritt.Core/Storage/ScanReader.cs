@@ -10,6 +10,7 @@ namespace Zutritt.Core.Storage;
 internal static class ScanReader
 {
     private const string SummaryColumns = "id, started_at, targets, folder_count, finding_count, high_finding_count, scanned_by";
+    private const int SummaryColumnCount = 7;
 
     public static ScanResult? Load(SqliteConnection db, long id)
     {
@@ -36,23 +37,28 @@ internal static class ScanReader
         return list;
     }
 
-    /// <param name="machine">Nur Läufe dieses Rechners, null = egal.</param>
+    /// <param name="machine">Nur Läufe dieses Rechners (Groß/Klein egal), null = egal.</param>
     public static ScanSummary? FindPrevious(SqliteConnection db, string targetsKey, long startedUtc, long excludeId, string? machine)
     {
+        // Der Rechnername wird hier verglichen, nicht per COLLATE NOCASE: SQLite faltet nur ASCII,
+        // „PRÜF-PC“ und „prüf-pc“ wären dort verschiedene Rechner. Der Index liefert die Läufe schon
+        // absteigend; gelesen wird nur bis zum ersten passenden.
         using var cmd = db.CreateCommand();
         cmd.CommandText = $"""
-            SELECT {SummaryColumns} FROM scan
+            SELECT {SummaryColumns}, machine FROM scan
             WHERE targets_key = $key AND started_utc < $started AND id <> $id
-              AND ($machine IS NULL OR machine = $machine COLLATE NOCASE)
-            ORDER BY started_utc DESC, id DESC
-            LIMIT 1;
+            ORDER BY started_utc DESC, id DESC;
             """;
         cmd.Parameters.AddWithValue("$key", targetsKey);
         cmd.Parameters.AddWithValue("$started", startedUtc);
         cmd.Parameters.AddWithValue("$id", excludeId);
-        cmd.Parameters.AddWithValue("$machine", (object?)machine ?? DBNull.Value);
         using var r = cmd.ExecuteReader();
-        return r.Read() ? ReadSummary(r) : null;
+        while (r.Read())
+        {
+            if (machine is null || string.Equals(r.GetString(SummaryColumnCount), machine, StringComparison.OrdinalIgnoreCase))
+                return ReadSummary(r);
+        }
+        return null;
     }
 
     private static ScanSummary ReadSummary(SqliteDataReader r) => new(

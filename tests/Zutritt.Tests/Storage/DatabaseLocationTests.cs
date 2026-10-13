@@ -81,6 +81,24 @@ public sealed class DatabaseLocationTests
         Assert.Equal(file, DatabaseLocation.Choose(programData, local));
     }
 
+    [Theory]
+    [InlineData(FileShare.Read)]   // z. B. Sicherung oder Kopie, die nur Lesen zulässt
+    [InlineData(FileShare.None)]   // exklusiv geöffnet
+    public void Gesperrte_Datei_bleibt_im_gemeinsamen_Ordner(FileShare share)
+    {
+        // Eine Sperre ist kein fehlendes Recht: ein Wechsel ins Profil spaltete still die Historie
+        using var tmp = new TempFolder();
+        var programData = tmp.Sub("ProgramData");
+        var local = tmp.Sub("Local");
+        var file = Path.Combine(tmp.Sub("ProgramData", "Zutritt"), "zutritt.db");
+        using (var store = new ScanStore(file)) store.Save(SampleScan.Create());
+
+        using (new FileStream(file, FileMode.Open, FileAccess.Read, share))
+            Assert.Equal(file, DatabaseLocation.Choose(programData, local));
+
+        Assert.False(Directory.Exists(Path.Combine(local, "Zutritt")));
+    }
+
     [Fact]
     public void Vorhandene_beschreibbare_Datei_bleibt_im_gemeinsamen_Ordner()
     {

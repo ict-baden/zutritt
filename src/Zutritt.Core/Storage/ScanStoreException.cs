@@ -21,7 +21,8 @@ public sealed class ScanStoreException : Exception
         10 => "Ein-/Ausgabefehler beim Zugriff auf die Datenbankdatei.",
         11 => "Die Datenbankdatei ist beschädigt.",
         13 => "Der Datenträger ist voll.",
-        14 => "Die Datenbankdatei kann nicht geöffnet werden (Pfad und Zugriffsrechte prüfen; evtl. hält ein anderes Programm sie gesperrt).",
+        // Folgt beim Öffnen auf „… kann nicht geöffnet werden.“ – deshalb hier der Grund, nicht derselbe Satz noch einmal
+        14 => "Die Datei oder ihr Journal ist nicht zugänglich: Pfad und Zugriffsrechte prüfen; möglicherweise hält ein anderes Programm sie gesperrt.",
         19 => $"Die Daten verletzen eine Regel der Datenbank ({ex.Message}).",
         23 => "Zugriff auf die Datenbank verweigert.",
         26 => "Die Datei ist keine SQLite-Datenbank.",
