@@ -243,6 +243,35 @@ public sealed class FindingRulesTests
     }
 
     [Fact]
+    public void Verweigerte_Teilrechte_werden_benannt_statt_als_Stufe()
+    {
+        // ToLevel hieße hier „Kein Zugriff verweigert“ bzw. „Vollzugriff verweigert“ – beides falsch
+        var u = Sid(2001); var weg = Sid(2999);
+        var b = new ScanBuilder().User(u, @"T\u").Orphan(weg);
+        b.Folder("", 0, Deny(S.Everyone, FileSystemRights.Delete | FileSystemRights.DeleteSubdirectoriesAndFiles), Allow(S.Administrators, Full));
+        b.Folder(@"\A", 1, Deny(u, FileSystemRights.ChangePermissions | FileSystemRights.TakeOwnership), Allow(weg, FileSystemRights.Delete));
+        b.Folder(@"\B", 1, Deny(u, Full), Deny(S.AuthenticatedUsers, FileSystemRights.Write));
+        var findings = FindingRules.Evaluate(b.Scan);
+        string Msg(string rule, string path, string sid) => findings.Single(f => f.RuleId == rule && f.Path == Share + path && f.Sid == sid).Message;
+
+        Assert.Equal("Verweigern-Eintrag für „Jeder“ („Löschen“ und „Unterordner und Dateien löschen“ verweigert).", Msg("ZT07", "", S.Everyone));
+        Assert.Equal("Verweigern-Eintrag für „T\\u“ („Berechtigungen ändern“ und „Besitz übernehmen“ verweigert).", Msg("ZT07", @"\A", u));
+        Assert.Equal("Verweigern-Eintrag für „T\\u“ („Vollzugriff“ verweigert).", Msg("ZT07", @"\B", u));
+        Assert.Contains("(„Schreiben“ verweigert)", Msg("ZT07", @"\B", S.AuthenticatedUsers));
+        Assert.Contains("hat einen Eintrag „Löschen“", Msg("ZT04", @"\A", weg));
+    }
+
+    [Theory]
+    [InlineData(FileSystemRights.Modify | FileSystemRights.Synchronize, "„Ändern“")]
+    [InlineData(FileSystemRights.ReadAndExecute | FileSystemRights.Synchronize, "„Lesen“")]
+    [InlineData(FileSystemRights.Write | FileSystemRights.Delete, "„Schreiben“ und „Löschen“")]
+    [InlineData(FileSystemRights.ReadData | FileSystemRights.WriteData | FileSystemRights.ChangePermissions, "„Lesen“, „Schreiben“ und „Berechtigungen ändern“")]
+    [InlineData(FileSystemRights.Traverse, "„Ordner durchsuchen bzw. Datei ausführen“")]
+    [InlineData(FileSystemRights.Synchronize, "„Synchronisieren“")]
+    [InlineData((FileSystemRights)0x10000000, "„Vollzugriff“")]
+    public void Rechte_als_Text(FileSystemRights rights, string text) => Assert.Equal(text, FindingRules.Describe(rights));
+
+    [Fact]
     public void Leere_Gruppe_nur_wenn_Mitglieder_wirklich_bekannt()
     {
         var leer = Sid(1001); var unbekannt = Sid(1002);

@@ -80,6 +80,7 @@ public sealed class SidCatalogTests
     [InlineData("S-1-5-11", true)]
     [InlineData("S-1-3-4", true)]
     [InlineData("S-1-5-80-123-456", true)]
+    [InlineData("S-1-5-5-0-123456", true)]
     [InlineData("S-1-15-2-1", true)]
     [InlineData("S-1-5-32-545", false)]
     [InlineData("S-1-5-21-1-2-3-1001", false)]

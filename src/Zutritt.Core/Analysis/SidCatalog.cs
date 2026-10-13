@@ -108,8 +108,9 @@ public static class SidCatalog
                 return true;
             case "5":
                 if (parts.Length == 4) return true; // S-1-5-18, S-1-5-11 …
-                // Dienste, Authentifizierungspakete, „Lokales Konto“, IIS, VMs, Fenster-Manager, Treiber
-                return parts[3] is "64" or "80" or "82" or "83" or "84" or "90" or "96" or "113" or "114";
+                // Anmeldesitzung (S-1-5-5-x-y), Dienste, Authentifizierungspakete, „Lokales Konto“, IIS, VMs,
+                // Fenster-Manager, Treiber
+                return parts[3] is "5" or "64" or "80" or "82" or "83" or "84" or "90" or "96" or "113" or "114";
             default:
                 return false;
         }

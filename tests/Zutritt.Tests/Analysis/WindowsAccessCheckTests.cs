@@ -24,7 +24,7 @@ public sealed class WindowsAccessCheckTests
     {
         var suffix = Guid.NewGuid().ToString("N")[..6];
         using var machine = new PrincipalContext(ContextType.Machine);
-        using var temp = new TempFolder();
+        var temp = new TempFolder();
         UserPrincipal? user = null;
         GroupPrincipal? group = null;
         try
@@ -75,10 +75,59 @@ public sealed class WindowsAccessCheckTests
         }
         finally
         {
+            Unlock(temp.Path);
+            temp.Dispose();
             try { group?.Delete(); } catch { /* Aufräumen nach bestem Bemühen */ }
             try { user?.Delete(); } catch { }
             group?.Dispose();
             user?.Dispose();
+        }
+
+        // Nichts darf liegen bleiben – auch nicht der Ordner „v“, der nur dem (jetzt gelöschten) Testkonto Rechte gab
+        Assert.False(Directory.Exists(temp.Path), $"Testordner nicht aufgeräumt: {temp.Path}");
+        Assert.Null(FindLocal(machine, "zt-test-u" + suffix));
+        Assert.Null(FindLocal(machine, "zt-test-g" + suffix));
+    }
+
+    private static string? FindLocal(PrincipalContext machine, string name)
+    {
+        using var found = System.DirectoryServices.AccountManagement.Principal.FindByIdentity(machine, IdentityType.SamAccountName, name);
+        return found?.Name;
+    }
+
+    /// <summary>
+    /// Gibt dem Aufrufer im ganzen Testbaum wieder Vollzugriff (Verweigerungen fallen weg). Nötig, weil z. B. „v“ nur
+    /// dem Testkonto Rechte gibt: Die Aufzählung in <see cref="TempFolder.Dispose"/> öffnet jeden Unterordner sofort,
+    /// bricht dort ab, und der ganze Baum bliebe im Temp-Ordner liegen. Besitzer ist der Test selbst (bzw. die
+    /// Administratoren), er darf die DACL also immer neu schreiben.
+    /// </summary>
+    private static void Unlock(string root)
+    {
+        var me = WindowsIdentity.GetCurrent().User!;
+        var pending = new Stack<string>();
+        pending.Push(root);
+        while (pending.Count > 0)
+        {
+            var dir = pending.Pop();
+            try
+            {
+                var ds = new DirectorySecurity();
+                ds.SetAccessRuleProtection(true, false);
+                ds.AddAccessRule(new FileSystemAccessRule(me, FileSystemRights.FullControl, CIOI, PropagationFlags.None, AccessControlType.Allow));
+                new DirectoryInfo(dir).SetAccessControl(ds);
+                foreach (var file in Directory.GetFiles(dir))
+                {
+                    var fs = new FileSecurity();
+                    fs.SetAccessRuleProtection(true, false);
+                    fs.AddAccessRule(new FileSystemAccessRule(me, FileSystemRights.FullControl, AccessControlType.Allow));
+                    new FileInfo(file).SetAccessControl(fs);
+                }
+                foreach (var sub in Directory.GetDirectories(dir)) pending.Push(sub);
+            }
+            catch (Exception e) when (e is UnauthorizedAccessException or IOException)
+            {
+                // Weiter mit dem Rest – was übrig bleibt, meldet die Prüfung am Ende des Tests
+            }
         }
     }
 

@@ -72,19 +72,29 @@ internal sealed class AccessContext
     private readonly Dictionary<string, ShareInfo> _shares = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<(string Sid, LogonKind Logon), Membership> _tokens = new(TokenKeyComparer.Instance);
     private readonly Dictionary<string, Membership> _groups = new(StringComparer.OrdinalIgnoreCase);
+    // Je Knoten einmal sortiert und abgebildet – der Vergleich prüft jeden Knoten für jede Person
+    private readonly Dictionary<FolderNode, PreparedAce[]> _prepared = new(ReferenceEqualityComparer.Instance);
     private Dictionary<string, FolderNode>? _stored;
 
-    public AccessContext(ScanResult scan)
+    /// <param name="scan">Der Lauf.</param>
+    /// <param name="useMembership">
+    /// false: Gruppenmitgliedschaften aus <see cref="Principal.Members"/> ignorieren. Für den Vergleich mit einem Lauf
+    /// ohne Gruppenauflösung – dort fehlen alle Mitgliedschaften, beide Seiten müssen gleich wenig wissen.
+    /// </param>
+    public AccessContext(ScanResult scan, bool useMembership = true)
     {
         Scan = scan;
-        foreach (var group in scan.Principals.Values)
+        if (useMembership)
         {
-            foreach (var member in group.Members)
+            foreach (var group in scan.Principals.Values)
             {
-                if (string.IsNullOrEmpty(member)) continue;
-                // Doppelte Einträge sind unschädlich – die Breitensuche besucht jede Gruppe nur einmal
-                if (!_directGroups.TryGetValue(member, out var list)) _directGroups[member] = list = [];
-                list.Add(group.Sid);
+                foreach (var member in group.Members)
+                {
+                    if (string.IsNullOrEmpty(member)) continue;
+                    // Doppelte Einträge sind unschädlich – die Breitensuche besucht jede Gruppe nur einmal
+                    if (!_directGroups.TryGetValue(member, out var list)) _directGroups[member] = list = [];
+                    list.Add(group.Sid);
+                }
             }
         }
         foreach (var share in scan.Shares) _shares.TryAdd(PathOrder.Normalize(share.UncPath), share);
@@ -180,24 +190,18 @@ internal sealed class AccessContext
 
     public static LogonKind LogonFor(FolderNode node) => node.ShareUnc is null ? LogonKind.Local : LogonKind.Network;
 
-    /// <summary>Recht eines Kontos (oder jedes Mitglieds einer Gruppe) auf den Knoten selbst.</summary>
-    public AccessResult Evaluate(FolderNode node, Membership token)
-    {
-        bool owner = OwnerInToken(node, token);
-        return Walk(node, sid => Applies(sid, token, owner), sid => Applies(sid, token, owner),
-            sid => ChainLength(sid, token, node));
-    }
+    /// <summary>Recht eines Kontos (oder jedes Mitglieds einer Gruppe) auf den Knoten selbst, samt Eintrag für „über welche Gruppen“.</summary>
+    public AccessResult Evaluate(FolderNode node, Membership token) => Walk(node, token, onlyAllowSid: null, explain: true);
+
+    /// <summary>Nur die Stufe – ohne Suche nach dem erklärenden Eintrag, für Massenvergleiche.</summary>
+    public AccessLevel Level(FolderNode node, Membership token) => Walk(node, token, onlyAllowSid: null, explain: false).Level;
 
     /// <summary>
     /// Recht, das ein einzelner ACL-Eintrag (Konto oder Gruppe) seinen Mitgliedern auf diesem Knoten gibt:
     /// nur die Erlauben-Einträge genau dieser SID, aber alle Verweigerungen, die die Mitglieder treffen.
     /// </summary>
-    public AccessResult EvaluateEntry(FolderNode node, string trustee, Membership trusteeToken)
-    {
-        bool owner = OwnerInToken(node, trusteeToken);
-        return Walk(node, sid => sid.Equals(trustee, StringComparison.OrdinalIgnoreCase),
-            sid => Applies(sid, trusteeToken, owner), _ => 0);
-    }
+    public AccessResult EvaluateEntry(FolderNode node, string trustee, Membership trusteeToken) =>
+        Walk(node, trusteeToken, onlyAllowSid: trustee, explain: false);
 
     private static bool OwnerInToken(FolderNode node, Membership token) =>
         !string.IsNullOrEmpty(node.OwnerSid) && token.Contains(node.OwnerSid);
@@ -217,32 +221,36 @@ internal sealed class AccessContext
     /// Bildet die Zugriffsprüfung von Windows (MAXIMUM_ALLOWED) nach: Einträge in kanonischer Reihenfolge,
     /// ein Bit gilt, sobald es erlaubt wurde, bevor ein passender Verweigern-Eintrag es sperrt.
     /// </summary>
-    private static AccessResult Walk(FolderNode node, Func<string, bool> allowApplies, Func<string, bool> denyApplies,
-        Func<string, int> chainLength)
+    /// <param name="onlyAllowSid">Nur Erlauben-Einträge dieser SID zählen (Verweigerungen weiter für das ganze Token).</param>
+    /// <param name="explain">Eintrag mit dem höchsten Recht und kürzestem Weg merken (für „über welche Gruppen“).</param>
+    private AccessResult Walk(FolderNode node, Membership token, string? onlyAllowSid, bool explain)
     {
+        bool owner = OwnerInToken(node, token);
         FileSystemRights granted = 0, denied = 0, allowed = 0;
         string? best = null;
         var bestLevel = AccessLevel.Keine;
         int bestChain = int.MaxValue;
 
-        foreach (var ace in Canonical(node.Aces))
+        foreach (var ace in Prepared(node))
         {
-            if (ace.InheritOnly || SidCatalog.IsCreatorPlaceholder(ace.Sid)) continue;
-            var mask = Rights.MapGeneric(ace.Rights);
             if (ace.IsDeny)
             {
-                if (denyApplies(ace.Sid)) denied |= mask & ~granted;
+                if (Applies(ace.Sid, token, owner)) denied |= ace.Mask & ~granted;
                 continue;
             }
-            if (!allowApplies(ace.Sid)) continue;
+            bool applies = onlyAllowSid is null
+                ? Applies(ace.Sid, token, owner)
+                : ace.Sid.Equals(onlyAllowSid, StringComparison.OrdinalIgnoreCase);
+            if (!applies) continue;
 
-            allowed |= mask;
-            var survives = mask & ~denied;
+            allowed |= ace.Mask;
+            var survives = ace.Mask & ~denied;
             granted |= survives;
+            if (!explain) continue;
 
             var level = Rights.ToLevel(survives);
             if (level == AccessLevel.Keine || level < bestLevel) continue;
-            int chain = chainLength(ace.Sid);
+            int chain = ChainLength(ace.Sid, token, node);
             if (level > bestLevel || chain < bestChain)
             {
                 best = ace.Sid;
@@ -251,6 +259,20 @@ internal sealed class AccessContext
             }
         }
         return new AccessResult(granted, allowed, best);
+    }
+
+    /// <summary>Eintrag in Auswertungsreihenfolge; generische Rechte schon abgebildet.</summary>
+    private readonly record struct PreparedAce(string Sid, FileSystemRights Mask, bool IsDeny);
+
+    /// <summary>Wirksame Einträge des Knotens selbst (ohne INHERIT_ONLY und ERSTELLER-BESITZER) in kanonischer Reihenfolge.</summary>
+    private PreparedAce[] Prepared(FolderNode node)
+    {
+        if (_prepared.TryGetValue(node, out var prepared)) return prepared;
+        var list = new List<PreparedAce>(node.Aces.Count);
+        foreach (var ace in Canonical(node.Aces))
+            if (!ace.InheritOnly && !SidCatalog.IsCreatorPlaceholder(ace.Sid))
+                list.Add(new PreparedAce(ace.Sid, Rights.MapGeneric(ace.Rights), ace.IsDeny));
+        return _prepared[node] = [.. list];
     }
 
     /// <summary>

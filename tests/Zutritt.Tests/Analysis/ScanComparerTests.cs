@@ -193,6 +193,82 @@ public sealed class ScanComparerTests
     }
 
     [Fact]
+    public void Lauf_ohne_Gruppenaufloesung_erzeugt_keine_Schein_Aenderungen()
+    {
+        // Älterer Lauf ohne Gruppen: dort fehlen alle Mitgliedschaften. Ohne Ausgleich sähe es so aus, als hätten
+        // Erika und Max ihr Gruppenrecht gerade erst bekommen.
+        var older = Evaluated(s =>
+        {
+            s.Request = s.Request with { ResolveGroups = false };
+            foreach (var p in s.Principals.Values) p.Members.Clear();
+            s.Principals.Remove(S.Erika);
+        });
+        var unchanged = ScanComparer.Compare(older, Newer(_ => { }));
+        Assert.Empty(unchanged.AccessChanges);
+        Assert.Empty(unchanged.MembershipChanges);
+
+        // Echte Änderungen an direkten Einträgen bleiben sichtbar
+        var changed = ScanComparer.Compare(older, Newer(s => SetAces(s, @"\QC",
+            Allow(S.System, S.Full), Allow(S.Administrators, S.Full), Allow(S.QcTeam, S.Modify), Allow(S.Max, S.Read))));
+        Assert.Equal([new AccessChange(Root + @"\QC", S.Max, AccessLevel.Vollzugriff, AccessLevel.Lesen)], changed.AccessChanges);
+    }
+
+    [Fact]
+    public void Besitzerrechte_folgen_der_Mitgliedschaft_in_der_Besitzergruppe()
+    {
+        // Einträge unverändert, nur Erika ist jetzt in der Gruppe, die Besitzer ist – BESITZERRECHTE gelten nun auch für sie
+        const string owners = S.Domain + "-1200";
+        static void Setup(ScanResult s)
+        {
+            s.Principals[owners] = new Principal { Sid = owners, Name = @"LAB\Projekt-Besitzer", Kind = PrincipalKind.Gruppe };
+            var f = AddFolder(s, @"\Projekt", 1, true, Allow(S.Administrators, S.Full), Allow(SidCatalog.OwnerRights, S.Modify));
+            f.OwnerSid = owners;
+        }
+        var older = Evaluated(Setup);
+        var newer = Newer(s =>
+        {
+            Setup(s);
+            s.Principals[owners].Members.Add(S.Erika);
+        });
+        var result = ScanComparer.Compare(older, newer);
+        Assert.Equal([new AccessChange(Root + @"\Projekt", S.Erika, AccessLevel.Keine, AccessLevel.Aendern)], result.AccessChanges);
+        Assert.Empty(result.AceChanges);
+    }
+
+    [Fact]
+    public void Grosser_Lauf_mit_wenigen_Aenderungen_schnell()
+    {
+        // 20.000 gespeicherte Ordner, 2.000 Personen in 200 Gruppen; an jedem 50. Ordner wechselt die Gruppe.
+        // Vorher rechnete der Vergleich jede Person auf jedem Ordner (gut 100 s), jetzt nur, was sich ändern kann.
+        static ScanResult Big(bool changed)
+        {
+            var b = new ScanBuilder().WithShare(new ShareAce(S.Everyone, ShareAccess.Vollzugriff, false));
+            var users = Enumerable.Range(0, 2000).Select(i => Sid(100_000 + i)).ToList();
+            foreach (var u in users) b.User(u, $@"T\u{u[^6..]}");
+            for (int g = 0; g < 200; g++) b.Group(Sid(1000 + g), $@"T\G{g}", users.Where((_, i) => i % 200 == g).ToArray());
+            b.Folder("", 0, Allow(S.Administrators, S.Full));
+            for (int i = 0; i < 20_000; i++)
+            {
+                var g = Sid(1000 + (i * 7 + (changed && i % 50 == 0 ? 1 : 0)) % 200);
+                b.Folder($@"\P{i / 100}\O{i}", 2, Allow(S.System, S.Full), Allow(S.Administrators, S.Full), Allow(g, S.Modify),
+                    Allow(Sid(1000 + i * 3 % 200), S.Read), Allow(S.Administrators, S.Full, inherited: true));
+            }
+            return b.Scan;
+        }
+
+        var older = Big(changed: false);
+        var newer = Big(changed: true);
+        var watch = Stopwatch.StartNew();
+        var result = ScanComparer.Compare(older, newer);
+        watch.Stop();
+
+        // 400 Ordner × (10 Personen verlieren „Ändern“ + 10 gewinnen es); die Gruppen sind disjunkt
+        Assert.Equal(400 * 2, result.AceChanges.Count);
+        Assert.Equal(400 * 20, result.AccessChanges.Count);
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(10), $"Vergleich dauerte {watch.Elapsed}");
+    }
+
+    [Fact]
     public void Unbekannte_Mitglieder_werden_nicht_verglichen()
     {
         var newer = Newer(s =>

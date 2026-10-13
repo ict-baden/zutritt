@@ -156,9 +156,9 @@ public static class FindingRules
             if (kind == PrincipalKind.Verwaist)
             {
                 bool alsoOwner = string.Equals(folder.OwnerSid, sid, StringComparison.OrdinalIgnoreCase);
-                var entry = scopes.HasAllow
-                    ? $"einen Eintrag „{Rights.Label(scopes.Raw)}“"
-                    : "einen Verweigern-Eintrag";
+                var entry = !scopes.HasAllow ? "einen Verweigern-Eintrag"
+                    : scopes.Raw > AccessLevel.Keine ? $"einen Eintrag „{Rights.Label(scopes.Raw)}“"
+                    : $"einen Eintrag {Describe(scopes.AllowMask)}";
                 sink.Add(Orphaned, folder.Path, sid, alsoOwner
                     ? $"Die verwaiste SID {sid} ist Besitzer und hat {entry} – das Konto gibt es nicht mehr."
                     : $"Die verwaiste SID {sid} hat {entry} – das Konto gibt es nicht mehr.");
@@ -170,7 +170,7 @@ public static class FindingRules
 
             if (scopes.HasDeny)
                 sink.Add(DenyEntry, folder.Path, sid,
-                    $"Verweigern-Eintrag für „{who}“ („{Rights.Label(scopes.Denied)}“ verweigert).");
+                    $"Verweigern-Eintrag für „{who}“ ({Describe(scopes.DeniedMask)} verweigert).");
 
             if (kind == PrincipalKind.Gruppe && principal is { Members.Count: 0, MembersUnknown: false }
                 && scan.Request.ResolveGroups && scopes.Raw > AccessLevel.Keine)
@@ -251,7 +251,10 @@ public static class FindingRules
     /// Unterordner, Dateien). So zählt auch ein Eintrag, der nur an Inhalte vererbt wird, ohne dass Rechte aus
     /// verschiedenen Bereichen zu einem Recht verschmelzen, das es nirgends gibt.
     /// </summary>
-    private readonly record struct ScopeLevels(AccessLevel Raw, AccessLevel Net, AccessLevel Denied, bool HasAllow, bool HasDeny, bool OnlyForChildren)
+    /// <param name="AllowMask">Alle eigenen expliziten Erlauben-Rechte der SID (für Texte).</param>
+    /// <param name="DeniedMask">Alle eigenen expliziten Verweigern-Rechte der SID (für Texte).</param>
+    private readonly record struct ScopeLevels(AccessLevel Raw, AccessLevel Net, FileSystemRights AllowMask, FileSystemRights DeniedMask,
+        bool HasAllow, bool HasDeny, bool OnlyForChildren)
     {
         public static ScopeLevels For(AccessContext ctx, FolderNode folder, string sid)
         {
@@ -260,7 +263,7 @@ public static class FindingRules
             var token = ctx.TokenOf(sid, AccessContext.LogonFor(folder));
             Span<FileSystemRights> allow = stackalloc FileSystemRights[3];
             Span<FileSystemRights> deny = stackalloc FileSystemRights[3];
-            FileSystemRights ownDeny = 0;
+            FileSystemRights ownAllow = 0, ownDeny = 0;
             bool hasAllow = false, hasDeny = false;
 
             foreach (var ace in folder.Aces)
@@ -276,7 +279,7 @@ public static class FindingRules
                 if (!folder.IsFile && (ace.Inheritance & InheritanceFlags.ObjectInherit) != 0) target[2] |= mask;
 
                 if (own && ace.IsDeny) { hasDeny = true; ownDeny |= mask; }
-                if (own && !ace.IsDeny) hasAllow = true;
+                if (own && !ace.IsDeny) { hasAllow = true; ownAllow |= mask; }
             }
 
             AccessLevel raw = AccessLevel.Keine, net = AccessLevel.Keine;
@@ -286,10 +289,52 @@ public static class FindingRules
                 net = Max(net, Rights.ToLevel(allow[i] & ~deny[i]));
             }
             var self = Rights.ToLevel(allow[0] & ~deny[0]);
-            return new ScopeLevels(raw, net, Rights.ToLevel(ownDeny), hasAllow, hasDeny, net > self);
+            return new ScopeLevels(raw, net, ownAllow, ownDeny, hasAllow, hasDeny, net > self);
         }
 
         private static AccessLevel Max(AccessLevel a, AccessLevel b) => a > b ? a : b;
+    }
+
+    /// <summary>
+    /// Rechte als Text, z. B. „„Löschen“ und „Berechtigungen ändern““. Für Verweigerungen taugt
+    /// <see cref="Rights.ToLevel"/> nicht: Es beschreibt, was jemand höchstens kann – „Löschen verweigert“ hieße dann
+    /// „Kein Zugriff verweigert“, „Berechtigungen ändern verweigert“ hieße „Vollzugriff verweigert“. Ganze Stufen
+    /// heißen deshalb wie in der Windows-Oberfläche, sonst werden die enthaltenen Teile genannt.
+    /// </summary>
+    internal static string Describe(FileSystemRights rights)
+    {
+        const FileSystemRights Full = FileSystemRights.FullControl & ~FileSystemRights.Synchronize;
+        const FileSystemRights Modify = FileSystemRights.Modify & ~FileSystemRights.Synchronize;
+        var mask = Rights.MapGeneric(rights) & ~FileSystemRights.Synchronize;
+
+        bool Has(FileSystemRights r) => (mask & r) != 0;
+        var parts = new List<string>();
+        if ((mask & Full) == Full) parts.Add("Vollzugriff");
+        else
+        {
+            if ((mask & Modify) == Modify) parts.Add("Ändern");
+            else
+            {
+                if (Has(FileSystemRights.ReadData)) parts.Add("Lesen");
+                if (Has(FileSystemRights.WriteData | FileSystemRights.AppendData)) parts.Add("Schreiben");
+                if (Has(FileSystemRights.Delete)) parts.Add("Löschen");
+            }
+            if (Has(FileSystemRights.DeleteSubdirectoriesAndFiles)) parts.Add("Unterordner und Dateien löschen");
+            if (Has(FileSystemRights.ChangePermissions)) parts.Add("Berechtigungen ändern");
+            if (Has(FileSystemRights.TakeOwnership)) parts.Add("Besitz übernehmen");
+            if (parts.Count == 0)
+            {
+                // Nur Kleinigkeiten – dann genau diese nennen
+                if (Has(FileSystemRights.ExecuteFile)) parts.Add("Ordner durchsuchen bzw. Datei ausführen");
+                if (Has(FileSystemRights.ReadAttributes | FileSystemRights.ReadExtendedAttributes)) parts.Add("Attribute lesen");
+                if (Has(FileSystemRights.WriteAttributes | FileSystemRights.WriteExtendedAttributes)) parts.Add("Attribute schreiben");
+                if (Has(FileSystemRights.ReadPermissions)) parts.Add("Berechtigungen lesen");
+            }
+            if (parts.Count == 0) parts.Add("Synchronisieren");
+        }
+
+        var quoted = parts.Select(p => $"„{p}“").ToList();
+        return quoted.Count == 1 ? quoted[0] : string.Join(", ", quoted.Take(quoted.Count - 1)) + " und " + quoted[^1];
     }
 
     /// <summary>Sammelt Befunde eindeutig je (Regel, Pfad, SID); der erste gewinnt.</summary>

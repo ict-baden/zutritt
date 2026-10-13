@@ -147,7 +147,7 @@ public static class EffectiveAccess
     internal static AccessLevel EffectiveLevel(AccessContext ctx, FolderNode folder, string sid)
     {
         var token = ctx.TokenOf(sid, AccessContext.LogonFor(folder));
-        var ntfs = ctx.Evaluate(folder, token).Level;
+        var ntfs = ctx.Level(folder, token);
         return ctx.ShareAccessFor(folder, token) is { } share ? Rights.CapByShare(ntfs, share) : ntfs;
     }
 
