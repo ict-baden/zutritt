@@ -6,15 +6,225 @@ namespace Zutritt.Core.Identity;
 /// Löst SIDs zu Konten auf, erkennt bekannte Prinzipale und verwaiste SIDs und füllt Gruppen bis zur
 /// Person auf. Fragt die Verzeichnisse der Reihe nach und merkt sich Ergebnisse.
 /// </summary>
-public sealed class IdentityResolver
+/// <remarks>
+/// Reihenfolge je SID: bekannte SIDs (feste deutsche Namen) → Verzeichnisse der Reihe nach → LSA von Windows.
+/// „Verwaist“ heißt: die zuständige Stelle war erreichbar und kennt das Konto nicht (ERROR_NONE_MAPPED).
+/// Ist eine Domäne oder ein Server nicht erreichbar, bleibt das Konto „Unbekannt“ – ein falsches „verwaist“
+/// würde im Audit dazu verleiten, gültige Berechtigungen zu löschen.
+/// </remarks>
+public sealed class IdentityResolver : IDisposable
 {
-    public IdentityResolver(IEnumerable<IDirectory> directories) => throw new NotImplementedException();
+    /// <summary>Standard für die maximale Verschachtelungstiefe von Gruppen.</summary>
+    public const int DefaultMaxGroupDepth = 20;
+
+    // Einzelabfragen über Resolve() dürfen kurz zwischengespeichert werden; Läufe bekommen immer frische Daten.
+    private static readonly TimeSpan AdHocCacheLifetime = TimeSpan.FromMinutes(5);
+
+    private readonly List<IDirectory> _directories;
+    private readonly Func<string?, IAccountLookup> _lookupFactory;
+    private readonly Func<string?, IDirectory>? _machineDirectoryFactory;
+    private readonly bool _askScannedServers;
+    private readonly List<IDisposable> _owned;
+    private readonly int _maxGroupDepth = DefaultMaxGroupDepth;
+    private readonly object _gate = new();
+    private ResolveSession? _adHoc;
+    private DateTime _adHocCreatedUtc;
+
+    /// <summary>
+    /// Resolver mit genau diesen Verzeichnissen; Rückfall ist die LSA dieses Rechners. Für Läufe über entfernte
+    /// Server <see cref="CreateDefault"/> verwenden – das fragt zusätzlich die Kontendatenbank und LSA jedes gescannten Servers.
+    /// </summary>
+    public IdentityResolver(IEnumerable<IDirectory> directories)
+        : this(directories, lookupFactory: null, machineDirectoryFactory: null, askScannedServers: false, owned: []) { }
+
+    /// <param name="lookupFactory">LSA eines Servers (null = dieser Rechner); Standard: Windows.</param>
+    /// <param name="machineDirectoryFactory">Kontendatenbank für gescannte Rechner, die kein Verzeichnis in der Liste haben.</param>
+    /// <param name="askScannedServers">Auch die LSA der gescannten Server fragen (nicht nur dieses Rechners).</param>
+    /// <param name="owned">Vom Resolver selbst angelegte Verzeichnisse, die er beim Dispose schließt.</param>
+    internal IdentityResolver(IEnumerable<IDirectory> directories, Func<string?, IAccountLookup>? lookupFactory,
+        Func<string?, IDirectory>? machineDirectoryFactory, bool askScannedServers, IEnumerable<IDisposable> owned)
+    {
+        ArgumentNullException.ThrowIfNull(directories);
+        _directories = [.. directories];
+        if (_directories.Any(d => d is null)) throw new ArgumentException("Die Liste der Verzeichnisse enthält einen leeren Eintrag.", nameof(directories));
+        _lookupFactory = lookupFactory ?? (server => new WindowsAccountLookup(server));
+        _machineDirectoryFactory = machineDirectoryFactory;
+        _askScannedServers = askScannedServers;
+        _owned = [.. owned];
+    }
+
+    /// <summary>
+    /// Maximale Verschachtelungstiefe beim Auflösen von Gruppen (Gruppen in der ACL = Tiefe 0). Tiefer liegende
+    /// Gruppen werden mit <see cref="Principal.MembersUnknown"/> markiert und als Hinweis im Lauf vermerkt.
+    /// </summary>
+    public int MaxGroupDepth
+    {
+        get => _maxGroupDepth;
+        init => _maxGroupDepth = value >= 0 ? value : throw new ArgumentOutOfRangeException(nameof(value), "Die Tiefe darf nicht negativ sein.");
+    }
 
     /// <summary>Standard: lokales Verzeichnis dieses Rechners plus AD, falls der Rechner in einer Domäne ist.</summary>
-    public static IdentityResolver CreateDefault() => throw new NotImplementedException();
+    /// <remarks>
+    /// Bei Läufen über entfernte Server werden zusätzlich deren Kontendatenbank (VORDEFINIERT-Gruppen, lokale
+    /// Konten) und LSA gefragt – die SIDs einer ACL gelten so, wie der Server sie sieht.
+    /// </remarks>
+    public static IdentityResolver CreateDefault()
+    {
+        var directories = new List<IDirectory> { new LocalDirectory() };
+        var owned = new List<IDisposable>();
+        var domain = ComputerDomain.Query();
+        if (domain is not null)
+        {
+            var ad = new ActiveDirectoryDirectory(domain);
+            directories.Add(ad);
+            owned.Add(ad);
+        }
+        return new IdentityResolver(directories, lookupFactory: null, machineDirectoryFactory: server => new LocalDirectory(server),
+            askScannedServers: true, owned);
+    }
 
-    public Principal Resolve(string sid) => throw new NotImplementedException();
+    /// <summary>
+    /// Konto zu einer SID, ohne Gruppenmitglieder. Ungültige oder nicht auflösbare SIDs ergeben keinen
+    /// Fehler, sondern <see cref="PrincipalKind.Unbekannt"/> bzw. <see cref="PrincipalKind.Verwaist"/>.
+    /// </summary>
+    public Principal Resolve(string sid)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(sid);
+        lock (_gate)
+        {
+            if (_adHoc is null || DateTime.UtcNow - _adHocCreatedUtc > AdHocCacheLifetime)
+            {
+                var machine = _directories.Where(d => d is IMachineDirectory).ToList();
+                var others = _directories.Where(d => d is not IMachineDirectory).ToList();
+                _adHoc = new ResolveSession(machine, others, [_lookupFactory(null)]);
+                _adHocCreatedUtc = DateTime.UtcNow;
+            }
+            return _adHoc.Resolve(sid);
+        }
+    }
 
     /// <summary>Alle SIDs in <paramref name="result"/> auflösen und Gruppen rekursiv expandieren (in result.Principals).</summary>
-    public void ResolveAll(ScanResult result, bool expandGroups, CancellationToken ct = default) => throw new NotImplementedException();
+    /// <remarks>
+    /// Baut <see cref="ScanResult.Principals"/> neu auf (erst am Ende, ein Abbruch lässt das Ergebnis unverändert).
+    /// Ohne <paramref name="expandGroups"/> sind alle Gruppen als <see cref="Principal.MembersUnknown"/> markiert –
+    /// sie sind ja nicht leer, nur nicht gelesen. Probleme mit Servern oder Domänen landen in <see cref="ScanResult.Errors"/>.
+    /// </remarks>
+    public void ResolveAll(ScanResult result, bool expandGroups, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        ct.ThrowIfCancellationRequested();
+
+        var session = CreateSession(MachineNames.Of(result));
+        var principals = new Dictionary<string, Principal>(StringComparer.OrdinalIgnoreCase);
+        // Breitensuche: jede Gruppe wird auf ihrer kürzesten Tiefe genau einmal aufgeklappt – das erkennt Zyklen
+        // und begrenzt die Tiefe ohne Rekursion.
+        var pending = new Queue<(Principal Group, int Depth)>();
+
+        void Add(string sid, int depth)
+        {
+            var key = ResolveSession.Normalize(sid);
+            if (key.Length == 0 || principals.ContainsKey(key)) return;
+            var p = session.Resolve(key);
+            principals[key] = p;
+            if (p.Kind == PrincipalKind.Gruppe) pending.Enqueue((p, depth));
+        }
+
+        foreach (var sid in CollectSids(result))
+        {
+            ct.ThrowIfCancellationRequested();
+            Add(sid, 0);
+        }
+
+        while (pending.TryDequeue(out var item))
+        {
+            ct.ThrowIfCancellationRequested();
+            var (group, depth) = item;
+            if (!expandGroups)
+            {
+                group.MembersUnknown = true;
+                continue;
+            }
+            if (depth >= MaxGroupDepth)
+            {
+                group.MembersUnknown = true;
+                session.Note(group.Label, $"Gruppen sind tiefer als {MaxGroupDepth} Ebenen verschachtelt – die Mitglieder dieser Gruppe wurden nicht mehr aufgelöst.");
+                continue;
+            }
+
+            var answer = session.GetMembers(group.Sid);
+            if (answer.Members is null)
+            {
+                group.MembersUnknown = true;
+                continue;
+            }
+            group.Members.AddRange(answer.Members);
+            group.MembersUnknown = answer.Incomplete;
+            foreach (var member in answer.Members)
+            {
+                ct.ThrowIfCancellationRequested();
+                Add(member, depth + 1);
+            }
+        }
+
+        result.Principals.Clear();
+        foreach (var (sid, p) in principals) result.Principals[sid] = p;
+        result.Errors.AddRange(session.Problems);
+    }
+
+    /// <summary>Schließt Verzeichnisse, die der Resolver selbst angelegt hat (z. B. die AD-Verbindung).</summary>
+    public void Dispose()
+    {
+        foreach (var d in _owned) d.Dispose();
+    }
+
+    private ResolveSession CreateSession(IReadOnlyList<string?> machines)
+    {
+        var wanted = new HashSet<string>(machines.Select(m => m ?? ""), StringComparer.OrdinalIgnoreCase);
+        var covered = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var machineDirectories = new List<IDirectory>();
+        var others = new List<IDirectory>();
+
+        foreach (var directory in _directories)
+        {
+            if (directory is IMachineDirectory md)
+            {
+                // Kontendatenbanken anderer Rechner bleiben draußen: ihre VORDEFINIERT-Gruppen haben dieselben
+                // SIDs, aber andere Mitglieder, und würden sonst falsche Berechtigungen vortäuschen.
+                var key = MachineNames.Normalize(md.Server) ?? "";
+                if (wanted.Contains(key) && covered.Add(key)) machineDirectories.Add(directory);
+            }
+            else
+            {
+                others.Add(directory);
+            }
+        }
+
+        if (_machineDirectoryFactory is not null)
+        {
+            foreach (var machine in machines)
+                if (covered.Add(machine ?? "")) machineDirectories.Add(_machineDirectoryFactory(machine));
+        }
+
+        var lookups = new List<IAccountLookup>();
+        if (_askScannedServers)
+            foreach (var machine in machines)
+                if (machine is not null) lookups.Add(_lookupFactory(machine));
+        // Die LSA dieses Rechners zuletzt: Sie kennt die eigene Domäne auch dann, wenn ein Server nicht antwortet.
+        lookups.Add(_lookupFactory(null));
+
+        return new ResolveSession(machineDirectories, others, lookups);
+    }
+
+    private static IEnumerable<string> CollectSids(ScanResult result)
+    {
+        foreach (var folder in result.Folders)
+        {
+            if (!string.IsNullOrWhiteSpace(folder.OwnerSid)) yield return folder.OwnerSid;
+            foreach (var ace in folder.Aces)
+                if (!string.IsNullOrWhiteSpace(ace.Sid)) yield return ace.Sid;
+        }
+        foreach (var share in result.Shares)
+            foreach (var ace in share.Permissions)
+                if (!string.IsNullOrWhiteSpace(ace.Sid)) yield return ace.Sid;
+    }
 }
