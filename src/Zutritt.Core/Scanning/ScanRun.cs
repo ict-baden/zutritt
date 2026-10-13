@@ -1,0 +1,349 @@
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using Zutritt.Core.Model;
+
+namespace Zutritt.Core.Scanning;
+
+/// <summary>
+/// Zustand eines einzelnen Laufs: Ziele auflösen, Freigaben sammeln, Bäume ablaufen. Ohne Konten und Befunde –
+/// die hängt <see cref="Scanner"/> danach an.
+/// </summary>
+internal sealed class ScanRun
+{
+    public const string PhaseTargets = "Ziele";
+    public const string PhaseFolders = "Ordner";
+    public const string PhaseAccounts = "Konten";
+    public const string PhaseFindings = "Befunde";
+    public const string PhaseDone = "Fertig";
+
+    private sealed record Root(string Path, bool IsLocal, ScanTarget? Unc, ShareLookup? Lookup);
+
+    /// <summary>
+    /// Noch zu prüfender Ordner. <see cref="ParentSignature"/> null = Rechte des Elternordners unbekannt;
+    /// <see cref="ParentDescriptor"/> = rohe Beschreibung des Elternordners (für Zugriffslisten im NT4-Stil).
+    /// </summary>
+    private readonly record struct Pending(string Path, int Depth, string? ParentSignature, byte[]? ParentDescriptor, string? ShareUnc, bool IsLink);
+
+    private readonly ScanResult _result;
+    private readonly ScanRequest _request;
+    private readonly IProgress<ScanProgress>? _progress;
+    private readonly CancellationToken _ct;
+    private readonly Stopwatch _clock = Stopwatch.StartNew();
+    private readonly long _progressIntervalMs;
+    private long _lastReport;
+    private string _phase = PhaseTargets;
+
+    private readonly List<Root> _roots = [];
+    private readonly HashSet<string> _rootPaths = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _shareUncs = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, ShareLookup> _lookups = new(StringComparer.OrdinalIgnoreCase);
+    private readonly List<DirEntry> _entries = [];
+    private ShareListing? _localListing;
+    private LocalShareMap? _localMap;
+    private bool _walkingLocal;
+    private bool _localMapChecked;
+
+    /// <param name="progressIntervalMs">Mindestabstand zwischen zwei Fortschrittsmeldungen innerhalb einer Phase.</param>
+    public ScanRun(ScanResult result, IProgress<ScanProgress>? progress, long progressIntervalMs, CancellationToken ct)
+    {
+        _result = result;
+        _request = result.Request;
+        _progress = progress;
+        _progressIntervalMs = progressIntervalMs;
+        _lastReport = -progressIntervalMs;
+        _ct = ct;
+    }
+
+    /// <summary>Ziele auflösen und alle Bäume ablaufen.</summary>
+    public void Execute()
+    {
+        SetPhase(PhaseTargets, "");
+        foreach (var raw in _request.Targets)
+        {
+            _ct.ThrowIfCancellationRequested();
+            ResolveTarget(raw);
+        }
+
+        SetPhase(PhaseFolders, "");
+        foreach (var root in _roots)
+        {
+            _ct.ThrowIfCancellationRequested();
+            WalkRoot(root);
+        }
+    }
+
+    public void SetPhase(string phase, string path)
+    {
+        _phase = phase;
+        _lastReport = _clock.ElapsedMilliseconds;
+        _progress?.Report(Snapshot(path));
+    }
+
+    private ScanProgress Snapshot(string path)
+        => new(_phase, path, _result.FoldersVisited, _result.Folders.Count, _result.Errors.Count);
+
+    private void Report(string path)
+    {
+        if (_progress is null) return;
+        long now = _clock.ElapsedMilliseconds;
+        if (now - _lastReport < _progressIntervalMs) return;
+        _lastReport = now;
+        _progress.Report(Snapshot(path));
+    }
+
+    // ---------- Ziele ----------
+
+    private void ResolveTarget(string raw)
+    {
+        var target = TargetParser.Parse(raw, out var error);
+        if (target is null)
+        {
+            AddError(raw ?? "", "Ungültiges Ziel: " + error);
+            return;
+        }
+
+        switch (target.Kind)
+        {
+            case TargetKind.LocalPath:
+                AddRoot(new Root(target.Path, IsLocal: true, null, null));
+                break;
+
+            case TargetKind.UncPath:
+                var lookup = LookupShare(target.Server!, target.Share!);
+                if (lookup.Read is not null) AddShare(lookup.Read);
+                AddRoot(new Root(target.Path, IsLocal: false, target, lookup));
+                break;
+
+            case TargetKind.Server:
+                var listing = ShareEnumerator.Enumerate(target.Server!);
+                if (listing.Error is not null) { AddError(target.Path, listing.Error); break; }
+                var shares = listing.Shares.Where(s => !(_request.SkipAdminShares && s.Share.IsAdminShare)).ToList();
+                if (shares.Count == 0) { AddError(target.Path, "Keine Datenträger-Freigaben gefunden"); break; }
+                foreach (var read in shares)
+                {
+                    AddShare(read);
+                    var unc = new ScanTarget(TargetKind.UncPath, read.Share.UncPath, read.Share.Server, read.Share.Name);
+                    AddRoot(new Root(read.Share.UncPath, IsLocal: false, unc, new ShareLookup(read, null, false)));
+                }
+                break;
+
+            case TargetKind.LocalShares:
+                ResolveLocalShares();
+                break;
+        }
+    }
+
+    private void ResolveLocalShares()
+    {
+        var listing = LocalListing();
+        if (listing.Error is not null) { AddError(".", listing.Error); return; }
+        var shares = listing.Shares.Where(s => !(_request.SkipAdminShares && s.Share.IsAdminShare)).ToList();
+        if (shares.Count == 0)
+        {
+            AddError(".", "Keine Datenträger-Freigaben auf diesem Rechner gefunden");
+            return;
+        }
+        foreach (var read in shares)
+        {
+            if (read.Share.LocalPath.Length == 0)
+            {
+                // Ohne lokalen Pfad (Rechte fehlen) lässt sich die Freigabe hier nicht prüfen – wenigstens nennen.
+                AddShare(read);
+                AddError(read.Share.UncPath, "Lokaler Pfad der Freigabe nicht lesbar – Freigabe nicht geprüft");
+                continue;
+            }
+            try
+            {
+                AddRoot(new Root(LongPath.TrimEndSeparator(Path.GetFullPath(read.Share.LocalPath)), IsLocal: true, null, null));
+            }
+            catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException)
+            {
+                AddShare(read);
+                AddError(read.Share.UncPath, $"Ungültiger lokaler Pfad der Freigabe: „{read.Share.LocalPath}“");
+            }
+        }
+    }
+
+    /// <summary>Freigaben dieses Rechners, einmal je Lauf gelesen (für „.“ und für die Zuordnung lokaler Pfade).</summary>
+    private ShareListing LocalListing()
+    {
+        if (_localListing is not null) return _localListing;
+        _localListing = ShareEnumerator.Enumerate(".");
+        _localMap = new LocalShareMap(_localListing.Shares, includeAdminShares: !_request.SkipAdminShares);
+        return _localListing;
+    }
+
+    private ShareLookup LookupShare(string server, string share)
+    {
+        var key = $@"\\{server}\{share}";
+        if (!_lookups.TryGetValue(key, out var lookup)) _lookups[key] = lookup = ShareEnumerator.Lookup(server, share);
+        return lookup;
+    }
+
+    private void AddRoot(Root root)
+    {
+        // Doppelte Ziele nur einmal prüfen; liegt ein Ziel in einem anderen, prüft es nur sein eigener Durchlauf.
+        if (_rootPaths.Add(root.Path)) _roots.Add(root);
+    }
+
+    private void AddShare(ShareRead read)
+    {
+        if (!_shareUncs.Add(read.Share.UncPath)) return;
+        _result.Shares.Add(read.Share);
+        if (read.Note is not null) AddError(read.Share.UncPath, read.Note);
+    }
+
+    private void AddError(string path, string message) => _result.Errors.Add(new ScanError(path, message));
+
+    // ---------- Bäume ----------
+
+    private void WalkRoot(Root root)
+    {
+        _walkingLocal = root.IsLocal;
+        if (root.IsLocal && !_localMapChecked)
+        {
+            _localMapChecked = true;
+            var listing = LocalListing();
+            // Ohne Serverdienst gibt es keine Freigaben – das ist kein Fehler, sondern das Ergebnis.
+            if (listing.Error is not null && listing.ErrorCode != Native.NERR_ServerNotStarted)
+                AddError(Environment.MachineName, listing.Error + " – lokale Ordner ohne Zuordnung zu Freigaben");
+        }
+
+        uint attributes = Native.GetFileAttributes(LongPath.ToExtended(root.Path));
+        // Ohne Recht auf Attribute (Elternordner nicht auflistbar) als Ordner weiterversuchen: Rechte lesen und
+        // Auflisten melden ihre Fehler dann genauer.
+        if (attributes == Native.INVALID_FILE_ATTRIBUTES && Marshal.GetLastPInvokeError() == Native.ERROR_ACCESS_DENIED)
+            attributes = (uint)FileAttributes.Directory;
+        if (attributes == Native.INVALID_FILE_ATTRIBUTES)
+        {
+            int error = Marshal.GetLastPInvokeError();
+            var failed = new FolderNode { Path = root.Path, Depth = 0, Error = "Ziel nicht erreichbar: " + Win32Error.Describe(error) };
+            failed.ShareUnc = root.IsLocal ? RootShareUnc(root) : root.Lookup?.Read?.Share.UncPath;
+            _result.FoldersVisited++;
+            _result.Folders.Add(failed);
+            AddError(failed.Path, failed.Error);
+            Report(failed.Path);
+            return;
+        }
+
+        // Freigabe existiert (Pfad erreichbar), aber ihre Daten waren nicht lesbar: als „Rechte nicht lesbar“ aufnehmen,
+        // damit Ordner und Bericht trotzdem wissen, über welche Freigabe der Zugriff läuft.
+        if (root is { IsLocal: false, Unc: not null, Lookup: { Read: null } lookup })
+        {
+            var placeholder = new ShareInfo { Server = root.Unc.Server!, Name = root.Unc.Share!, PermissionsReadable = false };
+            AddShare(new ShareRead(placeholder, lookup.Error ?? "Freigabe-Berechtigungen nicht lesbar"));
+        }
+
+        var shareUnc = RootShareUnc(root);
+        if ((attributes & (uint)FileAttributes.Directory) == 0)
+        {
+            // Eine Datei als Ziel: nur sie selbst prüfen.
+            var file = AclReader.Read(root.Path, 0, isFile: true, followLinks: true, parentDescriptor: null, readParent: true,
+                wantDescriptor: false, out _);
+            file.ShareUnc = shareUnc;
+            _result.FilesVisited++;
+            _result.Folders.Add(file);
+            if (file.Error is not null) AddError(file.Path, file.Error);
+            Report(file.Path);
+            return;
+        }
+
+        // Tiefensuche mit eigenem Stapel statt Rekursion: Bäume mit Hunderten Ebenen sprengen so keinen Aufrufstapel.
+        var stack = new Stack<Pending>();
+        stack.Push(new Pending(root.Path, 0, null, null, shareUnc, IsLink: false));
+        while (stack.Count > 0)
+        {
+            _ct.ThrowIfCancellationRequested();
+            VisitDirectory(stack.Pop(), stack);
+        }
+    }
+
+    private string? RootShareUnc(Root root)
+    {
+        if (!root.IsLocal) return root.Unc?.ShareUnc;
+        var read = _localMap?.Longest(root.Path);
+        if (read is null) return null;
+        AddShare(read);
+        return read.Share.UncPath;
+    }
+
+    private void VisitDirectory(Pending item, Stack<Pending> stack)
+    {
+        // Verknüpfungen (Junctions, symbolische Links) nicht verfolgen: Schleifen und doppelt gezählte Bäume vermeiden.
+        // Die Wurzel aber schon, falls sie selbst eine ist – sie wurde ausdrücklich als Ziel genannt.
+        bool isRoot = item.Depth == 0;
+        bool descend = (isRoot || !item.IsLink) && (_request.MaxDepth is not int max || item.Depth < max);
+
+        // Die Wurzel liest ihren Elternordner bei Bedarf selbst, alle anderen bekommen ihn mit.
+        var node = AclReader.Read(item.Path, item.Depth, isFile: false, followLinks: isRoot, item.ParentDescriptor,
+            readParent: isRoot, wantDescriptor: descend, out var descriptor);
+        _result.FoldersVisited++;
+        node.ShareUnc = item.ShareUnc;
+        var signature = NodeSignature.Of(node);
+
+        // Gespeichert wird, was die Auswertung nicht vom nächsthöheren gespeicherten Ordner ableiten kann.
+        bool store = item.Depth == 0 || node.Error is not null || node.InheritanceBroken || node.HasExplicitAces
+                     || item.ParentSignature is null || signature != item.ParentSignature;
+        if (store) _result.Folders.Add(node);
+
+        if (descend)
+        {
+            _entries.Clear();
+            int error = DirectoryLister.List(item.Path, _entries);
+            if (error != Native.ERROR_SUCCESS)
+            {
+                node.Error = Join(node.Error, "Inhalt nicht auflistbar: " + Win32Error.Describe(error));
+                if (!store) { _result.Folders.Add(node); store = true; }
+            }
+
+            // Einheitliche Reihenfolge, damit zwei Läufe über denselben Baum gleich aussehen.
+            _entries.Sort(static (a, b) => StringComparer.OrdinalIgnoreCase.Compare(a.Name, b.Name));
+            if (_request.IncludeFiles)
+            {
+                foreach (var entry in _entries)
+                    if (!entry.IsDirectory) VisitFile(LongPath.Combine(item.Path, entry.Name), item.Depth + 1, descriptor, node.ShareUnc);
+            }
+            for (int i = _entries.Count - 1; i >= 0; i--)
+            {
+                var entry = _entries[i];
+                if (!entry.IsDirectory) continue;
+                var child = LongPath.Combine(item.Path, entry.Name);
+                if (_rootPaths.Contains(child)) continue; // eigenes Ziel, wird mit eigener Wurzel geprüft
+                stack.Push(new Pending(child, item.Depth + 1, signature, descriptor, ChildShareUnc(child, item.ShareUnc), entry.IsLink));
+            }
+        }
+
+        if (node.Error is not null) AddError(node.Path, node.Error);
+        Report(node.Path);
+    }
+
+    private void VisitFile(string path, int depth, byte[]? parentDescriptor, string? shareUnc)
+    {
+        _ct.ThrowIfCancellationRequested();
+        var node = AclReader.Read(path, depth, isFile: true, followLinks: false, parentDescriptor, readParent: false,
+            wantDescriptor: false, out _);
+        _result.FilesVisited++;
+        node.ShareUnc = shareUnc;
+        if (node.Error is not null || node.InheritanceBroken || node.HasExplicitAces)
+        {
+            _result.Folders.Add(node);
+            if (node.Error is not null) AddError(node.Path, node.Error);
+        }
+        Report(path);
+    }
+
+    /// <summary>
+    /// Freigabe eines Unterordners: Liegt genau hier eine (lokale) Freigabe, gilt sie – sonst die des Elternordners.
+    /// Das ergibt das längste passende Präfix, ohne für jeden Ordner alle Freigaben zu vergleichen.
+    /// </summary>
+    private string? ChildShareUnc(string child, string? parentShareUnc)
+    {
+        if (!_walkingLocal || _localMap is null || _localMap.IsEmpty) return parentShareUnc;
+        var read = _localMap.At(child);
+        if (read is null) return parentShareUnc;
+        AddShare(read);
+        return read.Share.UncPath;
+    }
+
+    private static string Join(string? first, string second) => first is null ? second : first + "; " + second;
+}
