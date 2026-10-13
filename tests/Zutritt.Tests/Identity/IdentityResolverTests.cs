@@ -218,6 +218,112 @@ public class IdentityResolverTests
     }
 
     [Fact]
+    public void Fehlende_VORDEFINIERT_Gruppe_ist_nie_verwaist()
+    {
+        // Die Kontendatenbank sagt verbindlich „gibt es nicht“ – trotzdem kein gelöschtes Konto, sondern eine
+        // von Windows vergebene SID, die es nur auf anderen Windows-Ausgaben gibt.
+        var local = new FakeMachineDirectory(null, Machine);
+        var p = Scans.Resolver(new FakeLookup(), local).Resolve("S-1-5-32-999");
+
+        Assert.Equal(PrincipalKind.Unbekannt, p.Kind);
+        Assert.Equal("S-1-5-32-999", p.Name);
+        Assert.True(p.IsLocal);
+    }
+
+    [Fact]
+    public void RDS_Gruppen_aus_dem_Windows_Abbild_sind_VORDEFINIERT_Gruppen_auch_ohne_Konto()
+    {
+        // Auf Arbeitsplatzrechnern gibt es diese Gruppen nicht, sie stehen aber in Systemordner-ACLs.
+        var local = new FakeMachineDirectory(null, Machine);
+        var scan = Scans.On(@"C:\Windows\System32\Ordner", "S-1-5-32-575", "S-1-5-32-576", "S-1-5-32-577");
+
+        Scans.Resolver(new FakeLookup(), local).ResolveAll(scan, expandGroups: true);
+
+        var rds = scan.Principals["S-1-5-32-575"];
+        Assert.Equal(@"VORDEFINIERT\RDS-Remotezugriffsserver", rds.Name);
+        Assert.Equal(PrincipalKind.Gruppe, rds.Kind);
+        // Gruppe nicht vorhanden: Mitglieder unbekannt, nicht „leer“ (sonst schlüge „Leere Gruppe berechtigt“ an).
+        Assert.True(rds.MembersUnknown);
+        Assert.All(scan.Principals.Values, p => Assert.NotEqual(PrincipalKind.Verwaist, p.Kind));
+    }
+
+    [Fact]
+    public void Entfernter_Server_ohne_eigene_LSA_meldet_unbekannt_statt_verwaist()
+    {
+        // Öffentlicher Konstruktor: nur die LSA dieses Rechners. Ein lokales Konto von FS01 kennt sie nicht –
+        // das beweist nicht, dass es gelöscht ist.
+        const string fs01Account = "S-1-5-21-3000000001-3000000002-3000000003-1001";
+        var scan = Scans.OwnedBy(@"\\FS01\Daten", fs01Account, fs01Account, WellKnownSids.Everyone);
+
+        Scans.Resolver(new FakeLookup()).ResolveAll(scan, expandGroups: true);
+
+        var p = scan.Principals[fs01Account];
+        Assert.Equal(PrincipalKind.Unbekannt, p.Kind);
+        Assert.Equal(fs01Account, p.Name);
+        var note = Assert.Single(scan.Errors);
+        Assert.Equal(@"\\FS01", note.Path);
+        Assert.Contains("„Unbekannt“ statt „Verwaist“", note.Message);
+
+        // Gegenprobe: Auf diesem Rechner ist dieselbe Antwort der LSA verbindlich.
+        var local = Scans.On(@"C:\Daten", fs01Account);
+        Scans.Resolver(new FakeLookup()).ResolveAll(local, expandGroups: true);
+        Assert.Equal(PrincipalKind.Verwaist, local.Principals[fs01Account].Kind);
+        Assert.Empty(local.Errors);
+    }
+
+    [Fact]
+    public void Entfernter_Server_mit_eigener_LSA_erkennt_verwaiste_Konten()
+    {
+        const string fs01Account = "S-1-5-21-3000000001-3000000002-3000000003-1001";
+        var lookups = new Dictionary<string, FakeLookup>(StringComparer.OrdinalIgnoreCase) { ["FS01"] = new("FS01"), [""] = new() };
+        var resolver = new IdentityResolver([], s => lookups[s ?? ""], machineDirectoryFactory: null, askScannedServers: true, owned: []);
+        var scan = Scans.On(@"\\FS01\Daten", fs01Account);
+
+        resolver.ResolveAll(scan, expandGroups: true);
+
+        Assert.Equal(PrincipalKind.Verwaist, scan.Principals[fs01Account].Kind);
+        Assert.Empty(scan.Errors);
+        Assert.Equal(1, lookups["FS01"].Calls);
+    }
+
+    [Fact]
+    public void Zweiter_Lauf_ueber_dasselbe_Ergebnis_haengt_Hinweise_nicht_doppelt_an()
+    {
+        var scan = Scans.On(@"C:\Daten", Max);
+        scan.Errors.Add(new ScanError(@"C:\Daten\Geheim", "Zugriff verweigert"));
+        var resolver = Scans.Resolver(new FakeLookup().Fail(Max, Native.RPC_S_SERVER_UNAVAILABLE));
+
+        resolver.ResolveAll(scan, expandGroups: true);
+        resolver.ResolveAll(scan, expandGroups: true);
+
+        Assert.Equal(2, scan.Errors.Count);
+        Assert.Equal(@"C:\Daten\Geheim", scan.Errors[0].Path);
+        Assert.Equal(@"\\" + Environment.MachineName, scan.Errors[1].Path);
+    }
+
+    [Fact]
+    public void Grosser_Lauf_fragt_jede_SID_nur_einmal_und_bleibt_schnell()
+    {
+        // 50.000 Ordner mit je 5 Einträgen aus 40 verschiedenen Konten.
+        var fake = new FakeDirectory();
+        var sids = Enumerable.Range(0, 40).Select(i => $"{Dom}-{7000 + i}").ToList();
+        foreach (var sid in sids) fake.Add(sid, $@"LAB\konto{sid[^4..]}", PrincipalKind.Benutzer);
+        var dir = new CountingDirectory(fake);
+        var scan = new ScanResult { Request = new ScanRequest { Targets = [@"D:\Daten"] } };
+        for (var i = 0; i < 50_000; i++)
+            scan.Folders.Add(Scans.Folder($@"D:\Daten\{i}", sids[i % 40], sids[i % 40], sids[(i + 1) % 40], sids[(i + 2) % 40],
+                WellKnownSids.LocalSystem, WellKnownSids.BuiltinAdministrators));
+
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        Scans.Resolver(new FakeLookup(), dir).ResolveAll(scan, expandGroups: true);
+        sw.Stop();
+
+        Assert.Equal(42, scan.Principals.Count);
+        Assert.Equal(40, dir.Lookups.Count);
+        Assert.True(sw.ElapsedMilliseconds < 3000, $"Auflösen dauerte {sw.ElapsedMilliseconds} ms");
+    }
+
+    [Fact]
     public void Nicht_uebersetzbares_EntraID_Konto_ist_unbekannt()
     {
         var p = Scans.Resolver(new FakeLookup()).Resolve("S-1-12-1-1234567890-1234567890-1234567890-1234567890");
@@ -608,8 +714,9 @@ public class IdentityResolverTests
             .AddMember(WellKnownSids.BuiltinAdministrators, Fs02 + "-500"));
         var scan = Scans.On(@"\\FS01\A", WellKnownSids.BuiltinAdministrators);
         scan.Folders.Add(Scans.Folder(@"\\FS02\B", "", WellKnownSids.BuiltinAdministrators));
+        var lookup = new FakeLookup().Map(Dom + "-512", "LAB", "Domänen-Admins", Use.Group);
 
-        MachineAware(new FakeLookup(), null, fs01, fs02).ResolveAll(scan, expandGroups: true);
+        MachineAware(lookup, null, fs01, fs02).ResolveAll(scan, expandGroups: true);
 
         var admins = scan.Principals[WellKnownSids.BuiltinAdministrators];
         Assert.Equal(new[] { Dom + "-512", Fs02 + "-500" }.Order(StringComparer.OrdinalIgnoreCase), admins.Members);

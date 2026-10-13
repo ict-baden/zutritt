@@ -22,16 +22,17 @@ internal sealed class LocalAccounts : IDisposable
         var args = new List<string> { "user", name, password, "/add", "/y" };
         if (fullName is not null) args.Add($"/fullname:{fullName}");
         if (disabled) args.Add("/active:no");
-        Net(args);
+        // Vorher vormerken: Auch wenn „net“ einen Fehler meldet, kann das Konto schon angelegt sein – dann muss es weg.
         _users.Add(name);
+        Net(args);
         return name;
     }
 
     public string CreateGroup()
     {
         var name = NewName();
-        Net(["localgroup", name, "/add"]);
         _groups.Add(name);
+        Net(["localgroup", name, "/add"]);
         return name;
     }
 

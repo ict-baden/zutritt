@@ -30,6 +30,8 @@ public sealed class FakeDirectory : IDirectory
             _principals[principal.Sid] = Copy(principal);
             if (principal.Kind == PrincipalKind.Gruppe || principal.Members.Count > 0)
                 _members[principal.Sid] = [.. principal.Members];
+            else
+                _members.Remove(principal.Sid); // ersetzt: alte Mitglieder dürfen nicht hängen bleiben
             if (principal.MembersUnknown) _unreadable.Add(principal.Sid);
             else _unreadable.Remove(principal.Sid);
         }

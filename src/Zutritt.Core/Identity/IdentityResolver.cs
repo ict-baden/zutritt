@@ -33,6 +33,8 @@ public sealed class IdentityResolver : IDisposable
     /// <summary>
     /// Resolver mit genau diesen Verzeichnissen; Rückfall ist die LSA dieses Rechners. Für Läufe über entfernte
     /// Server <see cref="CreateDefault"/> verwenden – das fragt zusätzlich die Kontendatenbank und LSA jedes gescannten Servers.
+    /// Ohne das bleiben SIDs, die kein Verzeichnis und nicht die LSA dieses Rechners kennt, bei entfernten Servern
+    /// „Unbekannt“ statt „Verwaist“: Lokale Konten eines Servers kennt nur der Server selbst.
     /// </summary>
     public IdentityResolver(IEnumerable<IDirectory> directories)
         : this(directories, lookupFactory: null, machineDirectoryFactory: null, askScannedServers: false, owned: []) { }
@@ -122,6 +124,9 @@ public sealed class IdentityResolver : IDisposable
 
         void Add(string sid, int depth)
         {
+            // Schneller Vorabtest: Bei 100.000 Ordnern kommt dieselbe SID hunderttausendfach vor, Normalize kostet je
+            // einen Win32-Aufruf. Die Schlüssel vergleichen ohne Groß/Klein, das deckt die übliche Schreibweise ab.
+            if (principals.ContainsKey(sid)) return;
             var key = ResolveSession.Normalize(sid);
             if (key.Length == 0 || principals.ContainsKey(key)) return;
             var p = session.Resolve(key);
@@ -168,7 +173,10 @@ public sealed class IdentityResolver : IDisposable
 
         result.Principals.Clear();
         foreach (var (sid, p) in principals) result.Principals[sid] = p;
-        result.Errors.AddRange(session.Problems);
+        // Ein zweiter Lauf über dasselbe Ergebnis darf dieselben Hinweise nicht noch einmal anhängen.
+        var known = new HashSet<ScanError>(result.Errors);
+        foreach (var problem in session.Problems)
+            if (known.Add(problem)) result.Errors.Add(problem);
     }
 
     /// <summary>Schließt Verzeichnisse, die der Resolver selbst angelegt hat (z. B. die AD-Verbindung).</summary>
@@ -206,13 +214,17 @@ public sealed class IdentityResolver : IDisposable
         }
 
         var lookups = new List<IAccountLookup>();
-        if (_askScannedServers)
-            foreach (var machine in machines)
-                if (machine is not null) lookups.Add(_lookupFactory(machine));
+        var unasked = new List<string>();
+        foreach (var machine in machines)
+        {
+            if (machine is null) continue;
+            if (_askScannedServers) lookups.Add(_lookupFactory(machine));
+            else unasked.Add(machine);
+        }
         // Die LSA dieses Rechners zuletzt: Sie kennt die eigene Domäne auch dann, wenn ein Server nicht antwortet.
         lookups.Add(_lookupFactory(null));
 
-        return new ResolveSession(machineDirectories, others, lookups);
+        return new ResolveSession(machineDirectories, others, lookups, unasked);
     }
 
     private static IEnumerable<string> CollectSids(ScanResult result)

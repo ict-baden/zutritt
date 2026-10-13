@@ -37,6 +37,15 @@ public class MachineNamesTests
         Assert.Equal("FS01", MachineNames.Normalize(@"\\fs01"));
     }
 
+    [Theory]
+    [InlineData(@"\\FS01\", "FS01")]
+    [InlineData(@"  //fs01/ ", "fs01")]
+    [InlineData("localhost", "localhost")]
+    [InlineData(@"\\", null)]
+    [InlineData(" ", null)]
+    [InlineData(null, null)]
+    public void Servername_ohne_Schraegstriche(string? input, string? expected) => Assert.Equal(expected, MachineNames.Strip(input));
+
     [Fact]
     public void Rechner_eines_Laufs_in_Reihenfolge_ohne_Doppelte()
     {

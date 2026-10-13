@@ -14,10 +14,17 @@ internal static class MachineNames
     /// <summary>Servername in Großbuchstaben, null für diesen Rechner („.“, localhost, eigener Name).</summary>
     public static string? Normalize(string? server)
     {
+        var s = Strip(server);
+        if (s is null || LocalNames.Value.Contains(s)) return null;
+        return s.ToUpperInvariant();
+    }
+
+    /// <summary>Servername ohne führende/abschließende Schrägstriche („\\FS01\“ → „FS01“), null wenn leer.</summary>
+    public static string? Strip(string? server)
+    {
         if (string.IsNullOrWhiteSpace(server)) return null;
         var s = server.Trim().TrimStart('\\', '/').TrimEnd('\\', '/');
-        if (s.Length == 0 || LocalNames.Value.Contains(s)) return null;
-        return s.ToUpperInvariant();
+        return s.Length == 0 ? null : s;
     }
 
     /// <summary>Server eines Pfads (\\server\freigabe\… oder \\?\UNC\server\…), null für lokale Pfade.</summary>

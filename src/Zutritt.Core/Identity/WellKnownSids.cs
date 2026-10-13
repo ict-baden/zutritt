@@ -74,6 +74,8 @@ public static class WellKnownSids
     };
 
     // VORDEFINIERT-Gruppen sind echte Gruppen der lokalen Kontendatenbank mit Mitgliedern (Kind = Gruppe).
+    // Einige gibt es nur auf Servern oder DCs (z. B. die RDS-Gruppen); Windows trägt sie trotzdem in die ACLs
+    // von Systemordnern auch auf Arbeitsplatzrechnern ein – deshalb stehen sie hier, statt als „verwaist“ aufzufallen.
     private static readonly Dictionary<string, string> BuiltinGroups = new(StringComparer.OrdinalIgnoreCase)
     {
         [BuiltinAdministrators] = Builtin + "Administratoren",
@@ -85,15 +87,24 @@ public static class WellKnownSids
         ["S-1-5-32-550"] = Builtin + "Druck-Operatoren",
         [BuiltinBackupOperators] = Builtin + "Sicherungs-Operatoren",
         ["S-1-5-32-552"] = Builtin + "Replikations-Operator",
+        ["S-1-5-32-554"] = Builtin + "Prä-Windows 2000 kompatibler Zugriff",
         ["S-1-5-32-555"] = Builtin + "Remotedesktopbenutzer",
         ["S-1-5-32-556"] = Builtin + "Netzwerkkonfigurations-Operatoren",
+        ["S-1-5-32-557"] = Builtin + "Erstellungen eingehender Gesamtstrukturvertrauensstellung",
         ["S-1-5-32-558"] = Builtin + "Leistungsüberwachungsbenutzer",
         ["S-1-5-32-559"] = Builtin + "Leistungsprotokollbenutzer",
+        ["S-1-5-32-560"] = Builtin + "Windows-Autorisierungszugriffsgruppe",
+        ["S-1-5-32-561"] = Builtin + "Terminalserver-Lizenzserver",
         ["S-1-5-32-562"] = Builtin + "Distributed COM-Benutzer",
         ["S-1-5-32-568"] = Builtin + "IIS_IUSRS",
         ["S-1-5-32-569"] = Builtin + "Kryptografie-Operatoren",
         ["S-1-5-32-573"] = Builtin + "Ereignisprotokollleser",
+        ["S-1-5-32-574"] = Builtin + "Zertifikatdienst-DCOM-Zugriff",
+        ["S-1-5-32-575"] = Builtin + "RDS-Remotezugriffsserver",
+        ["S-1-5-32-576"] = Builtin + "RDS-Endpunktserver",
+        ["S-1-5-32-577"] = Builtin + "RDS-Verwaltungsserver",
         ["S-1-5-32-578"] = Builtin + "Hyper-V-Administratoren",
+        ["S-1-5-32-579"] = Builtin + "Zugriffssteuerungs-Unterstützungsoperatoren",
         ["S-1-5-32-580"] = Builtin + "Remoteverwaltungsbenutzer",
     };
 
@@ -117,7 +128,10 @@ public static class WellKnownSids
         return false;
     }
 
-    /// <summary>VORDEFINIERT-Gruppe: gleiche SID auf jedem Rechner, aber Mitglieder je Rechner verschieden.</summary>
+    /// <summary>
+    /// VORDEFINIERT-Gruppe: gleiche SID auf jedem Rechner, aber Mitglieder je Rechner verschieden. Diese SIDs legt
+    /// Windows selbst fest – fehlt eine auf einem Rechner, wurde kein Konto gelöscht; sie ist deshalb nie „verwaist“.
+    /// </summary>
     public static bool IsBuiltin(string sid) => sid.StartsWith(BuiltinPrefix, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Konto einer Domäne oder einer lokalen Kontendatenbank (S-1-5-21-…).</summary>

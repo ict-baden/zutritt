@@ -30,6 +30,9 @@ public class WellKnownSidsTests
     [InlineData("S-1-5-32-546", @"VORDEFINIERT\Gäste")]
     [InlineData("S-1-5-32-547", @"VORDEFINIERT\Hauptbenutzer")]
     [InlineData("S-1-5-32-551", @"VORDEFINIERT\Sicherungs-Operatoren")]
+    [InlineData("S-1-5-32-575", @"VORDEFINIERT\RDS-Remotezugriffsserver")]
+    [InlineData("S-1-5-32-576", @"VORDEFINIERT\RDS-Endpunktserver")]
+    [InlineData("S-1-5-32-577", @"VORDEFINIERT\RDS-Verwaltungsserver")]
     public void Vordefinierte_Gruppen_sind_echte_Gruppen_mit_deutschem_Namen(string sid, string name)
     {
         Assert.True(WellKnownSids.TryGet(sid, out var n, out var kind));

@@ -71,6 +71,22 @@ public class IdentityResolverIntegrationTests
     }
 
     [Fact]
+    public void VORDEFINIERT_SIDs_ohne_Gruppe_auf_diesem_Rechner_sind_nie_verwaist()
+    {
+        // S-1-5-32-575…577 (RDS-Gruppen) gibt es nur auf Servern; Windows trägt sie trotzdem in Systemordner ein.
+        var scan = Scans.On(@"C:\Daten", "S-1-5-32-575", "S-1-5-32-576", "S-1-5-32-577", "S-1-5-32-999");
+
+        using var resolver = IdentityResolver.CreateDefault();
+        resolver.ResolveAll(scan, expandGroups: true);
+
+        Assert.Equal(@"VORDEFINIERT\RDS-Remotezugriffsserver", scan.Principals["S-1-5-32-575"].Name);
+        Assert.Equal(PrincipalKind.Gruppe, scan.Principals["S-1-5-32-575"].Kind);
+        Assert.Equal(PrincipalKind.Unbekannt, scan.Principals["S-1-5-32-999"].Kind);
+        Assert.All(scan.Principals.Values, p => Assert.NotEqual(PrincipalKind.Verwaist, p.Kind));
+        Assert.Equal(PrincipalKind.Unbekannt, resolver.Resolve("S-1-5-32-999").Kind);
+    }
+
+    [Fact]
     public void Echte_ACL_eines_Ordners_wird_vollstaendig_aufgeloest()
     {
         using var temp = new TempFolder();

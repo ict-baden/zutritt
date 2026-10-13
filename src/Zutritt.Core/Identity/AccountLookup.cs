@@ -49,7 +49,7 @@ internal interface IAccountLookup
 /// </summary>
 internal sealed class WindowsAccountLookup(string? server) : IAccountLookup
 {
-    public string? Server { get; } = string.IsNullOrWhiteSpace(server) ? null : server.Trim().TrimStart('\\');
+    public string? Server { get; } = MachineNames.Strip(server);
 
     public unsafe AccountLookupResult Lookup(string sid)
     {

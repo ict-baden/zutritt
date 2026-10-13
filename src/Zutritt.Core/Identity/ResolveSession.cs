@@ -24,6 +24,7 @@ internal sealed class ResolveSession
     private readonly IReadOnlyList<IDirectory> _chain;
     private readonly IReadOnlyList<IDirectory> _machineDirectories;
     private readonly IReadOnlyList<IAccountLookup> _lookups;
+    private readonly IReadOnlyList<string> _unaskedServers;
     private readonly HashSet<IAccountLookup> _deadLookups = [];
     private readonly Dictionary<string, Principal> _principals = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, MembersAnswer> _members = new(StringComparer.OrdinalIgnoreCase);
@@ -33,11 +34,17 @@ internal sealed class ResolveSession
     /// <param name="machineDirectories">Verzeichnisse der gescannten Rechner (lokale Kontendatenbanken), vorne in der Kette.</param>
     /// <param name="otherDirectories">Alle übrigen Verzeichnisse (AD, Attrappen) in der gewünschten Reihenfolge.</param>
     /// <param name="lookups">LSA der gescannten Rechner (und dieses Rechners) als Rückfall.</param>
-    public ResolveSession(IReadOnlyList<IDirectory> machineDirectories, IReadOnlyList<IDirectory> otherDirectories, IReadOnlyList<IAccountLookup> lookups)
+    /// <param name="unaskedServers">
+    /// Gescannte Server, deren LSA nicht unter <paramref name="lookups"/> ist. Für ihre lokalen Konten und Dienste
+    /// beweist ein „nicht zugeordnet“ dieses Rechners nichts – solche SIDs bleiben dann „Unbekannt“.
+    /// </param>
+    public ResolveSession(IReadOnlyList<IDirectory> machineDirectories, IReadOnlyList<IDirectory> otherDirectories,
+        IReadOnlyList<IAccountLookup> lookups, IReadOnlyList<string>? unaskedServers = null)
     {
         _machineDirectories = machineDirectories;
         _chain = [.. machineDirectories, .. otherDirectories];
         _lookups = lookups;
+        _unaskedServers = unaskedServers ?? [];
     }
 
     /// <summary>Probleme mit Quellen (Server, Domäne) und Hinweise, als Fehler für den Lauf.</summary>
@@ -109,12 +116,24 @@ internal sealed class ResolveSession
 
         var nonAccount = WellKnownSids.NonAccountName(sid);
         if (nonAccount is not null) return Make(sid, nonAccount, PrincipalKind.Bekannt);
+        // VORDEFINIERT-Gruppe, die es auf diesem Rechner nicht gibt (z. B. nur auf Servern): von Windows vergeben,
+        // kein gelöschtes Konto – ein Löschhinweis wäre falsch.
+        if (WellKnownSids.IsBuiltin(sid)) return Make(sid, sid, PrincipalKind.Unbekannt, isLocal: true);
 
         // Die zuständige Kontendatenbank war erreichbar und kennt das Konto nicht: sicher verwaist.
         if (missing) return Make(sid, sid, PrincipalKind.Verwaist);
         // Sonst nur dann verwaist, wenn nichts dagegen spricht – lieber „unbekannt“ als ein falscher Löschhinweis.
-        if (unreachable || WellKnownSids.IsUnverifiable(sid)) return Make(sid, sid, PrincipalKind.Unbekannt);
-        return Make(sid, sid, lsa.Status == LookupStatus.NichtZugeordnet ? PrincipalKind.Verwaist : PrincipalKind.Unbekannt);
+        if (unreachable || WellKnownSids.IsUnverifiable(sid) || lsa.Status != LookupStatus.NichtZugeordnet)
+            return Make(sid, sid, PrincipalKind.Unbekannt);
+        if (_unaskedServers.Count > 0)
+        {
+            // Lokale Konten und Dienste eines Servers kennt nur dessen eigene LSA, nicht die dieses Rechners.
+            foreach (var unasked in _unaskedServers)
+                Note(@"\\" + unasked, "Konten wurden nicht beim Server selbst nachgeschlagen. Nicht auflösbare Konten bleiben "
+                    + "deshalb „Unbekannt“ statt „Verwaist“ – lokale Konten des Servers kennt nur der Server.");
+            return Make(sid, sid, PrincipalKind.Unbekannt);
+        }
+        return Make(sid, sid, PrincipalKind.Verwaist);
     }
 
     private LookupOutcome Ask(IDirectory directory, string sid)

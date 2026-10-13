@@ -26,7 +26,7 @@ public sealed class LocalDirectory : IAuthoritativeDirectory, IMachineDirectory
     /// <summary>Lokale Kontendatenbank eines (entfernten) Servers, null oder leer = dieser Rechner.</summary>
     public LocalDirectory(string? server)
     {
-        Server = string.IsNullOrWhiteSpace(server) ? null : server.Trim().TrimStart('\\');
+        Server = MachineNames.Strip(server);
         _lsa = new WindowsAccountLookup(Server);
     }
 

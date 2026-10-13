@@ -140,9 +140,10 @@ public class LocalDirectoryTests
     public void Ueber_localhost_wie_ein_entfernter_Server_gleiche_Antworten()
     {
         var local = new LocalDirectory();
-        var remote = new LocalDirectory(@"\\localhost");
+        var remote = new LocalDirectory(@"\\localhost\");
 
         Assert.Equal("localhost", remote.Server);
+        Assert.Equal(@"\\localhost", remote.SourceName);
         Assert.Equal(local.AccountDomainSid, remote.AccountDomainSid);
         Assert.Equal(local.GetMembers(WellKnownSids.BuiltinUsers)!.Order(), remote.GetMembers(WellKnownSids.BuiltinUsers)!.Order());
         Assert.Equal(local.Lookup(local.AccountDomainSid + "-500")!.Name, remote.Lookup(local.AccountDomainSid + "-500")!.Name, ignoreCase: true);

@@ -67,4 +67,13 @@ public class FakeDirectoryTests
         Assert.Equal(@"LAB\neu", p.Name);
         Assert.True(p.IsDisabled);
     }
+
+    [Fact]
+    public void Ersetzte_Gruppe_behaelt_keine_alten_Mitglieder()
+    {
+        var fake = new FakeDirectory().Add("S-1-5-21-1-2-3-1101", @"LAB\Team", PrincipalKind.Gruppe, "S-1-5-21-1-2-3-1001");
+        fake.Add("S-1-5-21-1-2-3-1101", @"LAB\jetzt-ein-Benutzer", PrincipalKind.Benutzer);
+
+        Assert.Null(fake.GetMembers("S-1-5-21-1-2-3-1101"));
+    }
 }
