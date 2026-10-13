@@ -1,0 +1,424 @@
+using System.Security.AccessControl;
+using Zutritt.Core.Model;
+
+namespace Zutritt.Demo;
+
+/// <summary>
+/// Eingebauter Demo-Lauf: erfundener Fileserver \\FS01 eines Pharma-Mittelständlers mit den Freigaben Labor, QM
+/// und Produktion, deutschen Namen und allen Befund-Arten (ZT01–ZT13), dazu ein Lauf eine Woche früher für den
+/// Vergleich. Keine echten Kundendaten. Die Befunde sind hier von Hand gesetzt (passend zu den Regeln), damit die
+/// Demo ohne Auswertung auskommt und immer gleich aussieht.
+/// </summary>
+public static class DemoData
+{
+    // ---------- Bekannte Prinzipale ----------
+    private const string Everyone = "S-1-1-0";
+    private const string AuthUsers = "S-1-5-11";
+    private const string Interactive = "S-1-5-4";
+    private const string System = "S-1-5-18";
+    private const string CreatorOwner = "S-1-3-0";
+    private const string Administrators = "S-1-5-32-544";
+    private const string BuiltinUsers = "S-1-5-32-545";
+
+    // ---------- Erfundene Domäne MUSTER ----------
+    private const string Domain = "S-1-5-21-2847561930-1639847205-3958126407";
+    private const string DomainAdmins = Domain + "-512";
+    private const string DomainUsers = Domain + "-513";
+
+    private const string AnnaBecker = Domain + "-1101";
+    private const string JonasWeber = Domain + "-1102";
+    private const string LauraSchmidt = Domain + "-1103";
+    private const string FelixWagner = Domain + "-1104";
+    private const string SophieHoffmann = Domain + "-1105";
+    private const string LukasSchaefer = Domain + "-1106";
+    private const string MarieKoch = Domain + "-1107";
+    private const string PaulRichter = Domain + "-1108";
+    private const string LeaKlein = Domain + "-1109";
+    private const string TimWolf = Domain + "-1110";        // ausgeschieden, deaktiviert
+    private const string HannahNeumann = Domain + "-1111";
+    private const string BenSchwarz = Domain + "-1112";
+    private const string EmmaZimmermann = Domain + "-1113";
+    private const string LeonBraun = Domain + "-1114";
+    private const string MiaKrueger = Domain + "-1115";
+    private const string FinnHofmann = Domain + "-1116";
+    private const string ExtAuditor = Domain + "-1117";     // externes Audit, nach dem Audit deaktiviert
+    private const string SvcHplc = Domain + "-1118";
+    private const string SvcBackup = Domain + "-1119";
+    private const string AdmIt = Domain + "-1120";
+    private const string Orphan = Domain + "-1188";         // gelöschtes Konto
+
+    private const string QcTeam = Domain + "-1201";
+    private const string QaTeam = Domain + "-1202";
+    private const string LaborAlle = Domain + "-1203";
+    private const string MikroTeam = Domain + "-1204";
+    private const string QmTeam = Domain + "-1205";
+    private const string QmLeitung = Domain + "-1206";
+    private const string QmLeser = Domain + "-1207";
+    private const string ProduktionAlle = Domain + "-1208";
+    private const string SchichtA = Domain + "-1209";
+    private const string SchichtB = Domain + "-1210";
+    private const string ProduktionLeitung = Domain + "-1211";
+    private const string Instandhaltung = Domain + "-1212";
+    private const string Geschaeftsleitung = Domain + "-1213";
+    private const string Einkauf = Domain + "-1214";
+    private const string FileserverAdmins = Domain + "-1215";
+    private const string AltProjekt = Domain + "-1216";     // leere Gruppe
+
+    private const FileSystemRights Read = FileSystemRights.ReadAndExecute | FileSystemRights.Synchronize;
+    private const FileSystemRights Write = FileSystemRights.ReadAndExecute | FileSystemRights.Write | FileSystemRights.Synchronize;
+    private const FileSystemRights Modify = FileSystemRights.Modify | FileSystemRights.Synchronize;
+    private const FileSystemRights Full = FileSystemRights.FullControl;
+    private const FileSystemRights DeleteOnly = FileSystemRights.Delete | FileSystemRights.DeleteSubdirectoriesAndFiles;
+
+    private const InheritanceFlags CIOI = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
+
+    /// <summary>Älterer Lauf (eine Woche vorher) und aktueller Lauf, beide noch ohne Id.</summary>
+    public static (ScanResult Older, ScanResult Newer) Create()
+    {
+        var newer = new DateTimeOffset(2026, 10, 12, 6, 0, 0, TimeSpan.FromHours(2));
+        return (Build(newer.AddDays(-7), older: true), Build(newer, older: false));
+    }
+
+    private static ScanResult Build(DateTimeOffset started, bool older)
+    {
+        var b = new Builder(started, older);
+        b.Principals();
+        b.Shares();
+        b.Labor();
+        b.Qm();
+        b.Produktion();
+        return b.Scan;
+    }
+
+    private sealed class Builder(DateTimeOffset started, bool older)
+    {
+        public readonly ScanResult Scan = new()
+        {
+            StartedAt = started,
+            FinishedAt = started.AddMinutes(4).AddSeconds(older ? 21 : 37),
+            Machine = "ADMIN-PC07",
+            ScannedBy = @"MUSTER\adm.it",
+            ToolVersion = AppInfo.Version,
+            Request = new ScanRequest { Targets = [@"\\FS01"] },
+            FoldersVisited = older ? 18_690 : 18_734,
+            FilesVisited = 0,
+        };
+
+        // ================= Konten und Gruppen =================
+
+        public void Principals()
+        {
+            Known(Everyone, "Jeder");
+            Known(AuthUsers, @"NT-AUTORITÄT\Authentifizierte Benutzer");
+            Known(Interactive, @"NT-AUTORITÄT\INTERAKTIV");
+            Known(System, @"NT-AUTORITÄT\SYSTEM");
+            Known(CreatorOwner, "ERSTELLER-BESITZER");
+
+            Group(Administrators, @"VORDEFINIERT\Administratoren", local: true, DomainAdmins, FileserverAdmins);
+            Group(BuiltinUsers, @"VORDEFINIERT\Benutzer", local: true, Interactive, AuthUsers, DomainUsers);
+
+            User(AnnaBecker, "anna.becker", "Anna Becker");
+            User(JonasWeber, "jonas.weber", "Jonas Weber");
+            User(LauraSchmidt, "laura.schmidt", "Laura Schmidt");
+            User(FelixWagner, "felix.wagner", "Felix Wagner");
+            User(SophieHoffmann, "sophie.hoffmann", "Sophie Hoffmann");
+            User(LukasSchaefer, "lukas.schaefer", "Lukas Schäfer");
+            User(MarieKoch, "marie.koch", "Marie Koch");
+            User(PaulRichter, "paul.richter", "Paul Richter");
+            User(LeaKlein, "lea.klein", "Lea Klein");
+            User(TimWolf, "tim.wolf", "Tim Wolf", disabled: true);
+            User(HannahNeumann, "hannah.neumann", "Hannah Neumann");
+            User(BenSchwarz, "ben.schwarz", "Ben Schwarz");
+            User(EmmaZimmermann, "emma.zimmermann", "Emma Zimmermann");
+            User(LeonBraun, "leon.braun", "Leon Braun");
+            User(MiaKrueger, "mia.krueger", "Mia Krüger");
+            User(FinnHofmann, "finn.hofmann", "Finn Hofmann");
+            User(ExtAuditor, "ext.auditor", "Externer Auditor (Audit 2026)", disabled: !older);
+            User(SvcHplc, "svc-hplc", "Dienstkonto HPLC-Datensystem");
+            User(SvcBackup, "svc-backup", "Dienstkonto Datensicherung");
+            User(AdmIt, "adm.it", "IT-Administration");
+            Scan.Principals[Orphan] = new Principal { Sid = Orphan, Name = Orphan, Kind = PrincipalKind.Verwaist };
+
+            string[] allUsers = [AnnaBecker, JonasWeber, LauraSchmidt, FelixWagner, SophieHoffmann, LukasSchaefer, MarieKoch, PaulRichter,
+                LeaKlein, TimWolf, HannahNeumann, BenSchwarz, EmmaZimmermann, LeonBraun, MiaKrueger, FinnHofmann, ExtAuditor, SvcHplc, SvcBackup, AdmIt];
+            Group(DomainAdmins, @"MUSTER\Domänen-Admins", local: false, AdmIt);
+            Group(DomainUsers, @"MUSTER\Domänen-Benutzer", local: false, allUsers);
+            // Neu seit dem letzten Lauf: Anna Becker (QC-Leitung) ist jetzt auch im QC-Team
+            Group(QcTeam, @"MUSTER\QC-Team", local: false, older ? [LauraSchmidt] : [LauraSchmidt, AnnaBecker]);
+            Group(QaTeam, @"MUSTER\QA-Team", local: false, MarieKoch);
+            Group(MikroTeam, @"MUSTER\Mikrobiologie", local: false, EmmaZimmermann);
+            Group(LaborAlle, @"MUSTER\Labor-Alle", local: false, QcTeam, MikroTeam, JonasWeber, FelixWagner, TimWolf);
+            Group(QmTeam, @"MUSTER\QM-Team", local: false, SophieHoffmann, LukasSchaefer);
+            Group(QmLeitung, @"MUSTER\QM-Leitung", local: false, SophieHoffmann);
+            Group(SchichtA, @"MUSTER\Produktion-Schicht-A", local: false, LeaKlein, LeonBraun);
+            Group(SchichtB, @"MUSTER\Produktion-Schicht-B", local: false, BenSchwarz);
+            Group(ProduktionLeitung, @"MUSTER\Produktion-Leitung", local: false, HannahNeumann);
+            Group(Instandhaltung, @"MUSTER\Instandhaltung", local: false, PaulRichter);
+            Group(ProduktionAlle, @"MUSTER\Produktion-Alle", local: false, SchichtA, SchichtB, ProduktionLeitung, Instandhaltung);
+            Group(QmLeser, @"MUSTER\QM-Dokumente-Lesen", local: false, LaborAlle, ProduktionAlle, QaTeam);
+            Group(Geschaeftsleitung, @"MUSTER\Geschäftsleitung", local: false, FinnHofmann);
+            Group(Einkauf, @"MUSTER\Einkauf", local: false, MiaKrueger);
+            Group(FileserverAdmins, @"MUSTER\Fileserver-Admins", local: false, AdmIt);
+            Group(AltProjekt, @"MUSTER\Alt-Projekt-2019", local: false);
+        }
+
+        private void Known(string sid, string name) =>
+            Scan.Principals[sid] = new Principal { Sid = sid, Name = name, DisplayName = name.Split('\\').Last(), Kind = PrincipalKind.Bekannt };
+
+        private void User(string sid, string account, string display, bool disabled = false) =>
+            Scan.Principals[sid] = new Principal
+            {
+                Sid = sid, Name = @"MUSTER\" + account, DisplayName = display, Kind = PrincipalKind.Benutzer, IsDisabled = disabled,
+            };
+
+        private void Group(string sid, string name, bool local, params string[] members)
+        {
+            var g = new Principal { Sid = sid, Name = name, DisplayName = name.Split('\\').Last(), Kind = PrincipalKind.Gruppe, IsLocal = local };
+            g.Members.AddRange(members);
+            Scan.Principals[sid] = g;
+        }
+
+        // ================= Freigaben =================
+
+        public void Shares()
+        {
+            Scan.Shares.Add(new ShareInfo
+            {
+                Server = "FS01", Name = "Labor", LocalPath = @"D:\Freigaben\Labor", Remark = "Labordaten QC und Mikrobiologie",
+                Permissions = [new ShareAce(Everyone, ShareAccess.Vollzugriff, false)],
+            });
+            Scan.Shares.Add(new ShareInfo
+            {
+                Server = "FS01", Name = "QM", LocalPath = @"D:\Freigaben\QM", Remark = "Qualitätsmanagement",
+                Permissions = [new ShareAce(AuthUsers, ShareAccess.Aendern, false), new ShareAce(Administrators, ShareAccess.Vollzugriff, false)],
+            });
+            Scan.Shares.Add(new ShareInfo
+            {
+                Server = "FS01", Name = "Produktion", LocalPath = @"E:\Produktion", Remark = "Chargen, Rezepturen, Wartung",
+                PermissionsReadable = false,
+            });
+        }
+
+        // ================= Labor =================
+
+        public void Labor()
+        {
+            const string S = @"\\FS01\Labor";
+            Folder(S, "", 0, broken: true, Administrators,
+                A(System, Full), A(Administrators, Full), A(CreatorOwner, Full, inheritOnly: true), A(LaborAlle, Modify));
+            Finding("ZT08", Severity.Info, S, Everyone, "Freigabe-Berechtigung: „Jeder“ hat Vollzugriff – der Schutz liegt allein bei den NTFS-Rechten.");
+
+            Folder(S, @"\QC", 1, broken: true, Administrators,
+                A(System, Full), A(Administrators, Full), A(QcTeam, Modify), A(AnnaBecker, Full));
+            Finding("ZT03", Severity.Mittel, S + @"\QC", AnnaBecker, "„MUSTER\\anna.becker“ ist direkt berechtigt (Vollzugriff) statt über eine Gruppe.");
+            Finding("ZT05", Severity.Hoch, S + @"\QC", AnnaBecker, "„MUSTER\\anna.becker“ hat Vollzugriff und darf damit auch Berechtigungen ändern.");
+
+            if (older)
+            {
+                Folder(S, @"\QC\Methoden", 2, broken: false, Administrators,
+                    A(Everyone, Read), I(System, Full), I(Administrators, Full), I(QcTeam, Modify), I(AnnaBecker, Full));
+                Finding("ZT02", Severity.Mittel, S + @"\QC\Methoden", Everyone, "„Jeder“ darf hier lesen.");
+            }
+            else
+            {
+                Folder(S, @"\QC\Methoden", 2, broken: false, Administrators,
+                    A(QaTeam, Read), I(System, Full), I(Administrators, Full), I(QcTeam, Modify), I(AnnaBecker, Full));
+            }
+
+            Folder(S, @"\QC\Rohdaten", 2, broken: true, Administrators,
+                A(System, Full), A(Administrators, Full), A(QcTeam, Write), A(SvcHplc, Modify));
+            Finding("ZT03", Severity.Mittel, S + @"\QC\Rohdaten", SvcHplc, "„MUSTER\\svc-hplc“ ist direkt berechtigt (Ändern) statt über eine Gruppe.");
+
+            Folder(S, @"\QC\Rohdaten\HPLC-03", 3, broken: false, Administrators,
+                A(QcTeam, DeleteOnly, deny: true), I(System, Full), I(Administrators, Full), I(QcTeam, Write), I(SvcHplc, Modify));
+            Finding("ZT07", Severity.Info, S + @"\QC\Rohdaten\HPLC-03", QcTeam, "Verweigern-Eintrag für „MUSTER\\QC-Team“ (Löschen).");
+
+            Folder(S, @"\QC\Prüfpläne", 2, broken: false, Administrators,
+                A(ProduktionLeitung, Read), I(System, Full), I(Administrators, Full), I(QcTeam, Modify), I(AnnaBecker, Full));
+
+            if (!older)
+            {
+                // Neu seit dem letzten Lauf: Austausch-Ordner, in dem „Jeder“ ändern darf
+                Folder(S, @"\Austausch", 1, broken: false, JonasWeber,
+                    A(Everyone, Modify), I(System, Full), I(Administrators, Full), I(LaborAlle, Modify));
+                Finding("ZT01", Severity.Hoch, S + @"\Austausch", Everyone, "„Jeder“ darf hier ändern.");
+                Finding("ZT10", Severity.Niedrig, S + @"\Austausch", JonasWeber, "Besitzer ist das Benutzerkonto „MUSTER\\jonas.weber“.");
+            }
+
+            Folder(S, @"\Archiv", 1, broken: false, Administrators,
+                A(AuthUsers, Read), A(FelixWagner, Modify, deny: true), I(System, Full), I(Administrators, Full), I(LaborAlle, Modify));
+            Finding("ZT02", Severity.Mittel, S + @"\Archiv", AuthUsers, "„NT-AUTORITÄT\\Authentifizierte Benutzer“ darf hier lesen.");
+            Finding("ZT07", Severity.Info, S + @"\Archiv", FelixWagner, "Verweigern-Eintrag für „MUSTER\\felix.wagner“ (Ändern).");
+
+            Folder(S, @"\Projekte", 1, broken: false, Administrators,
+                A(Geschaeftsleitung, Read), I(System, Full), I(Administrators, Full), I(LaborAlle, Modify));
+
+            Folder(S, @"\Projekte\2019\Alt\Rohdaten", 4, broken: true, Administrators,
+                A(Administrators, Full), A(Orphan, Modify), A(TimWolf, Read), A(AltProjekt, Read));
+            const string Alt = S + @"\Projekte\2019\Alt\Rohdaten";
+            Finding("ZT06", Severity.Niedrig, Alt, null, "Vererbung ist in Ebene 4 unterbrochen – eine leicht übersehene Ausnahme.");
+            Finding("ZT04", Severity.Mittel, Alt, Orphan, $"Die verwaiste SID {Orphan} ist berechtigt (Ändern).");
+            Finding("ZT03", Severity.Mittel, Alt, TimWolf, "„MUSTER\\tim.wolf“ ist direkt berechtigt (Lesen) statt über eine Gruppe.");
+            Finding("ZT12", Severity.Mittel, Alt, TimWolf, "Das deaktivierte Konto „MUSTER\\tim.wolf“ ist noch berechtigt (Lesen).");
+            Finding("ZT11", Severity.Niedrig, Alt, AltProjekt, "Die Gruppe „MUSTER\\Alt-Projekt-2019“ hat keine Mitglieder, ist aber berechtigt (Lesen).");
+
+            Folder(S, @"\Projekte\2026-Stabilität", 2, broken: false, Administrators,
+                A(QaTeam, Modify), I(System, Full), I(Administrators, Full), I(LaborAlle, Modify), I(Geschaeftsleitung, Read));
+
+            Folder(S, @"\Mikrobiologie", 1, broken: true, Administrators,
+                A(System, Full), A(Administrators, Full), A(MikroTeam, Modify), A(QcTeam, Read));
+            Folder(S, @"\Mikrobiologie\Umgebungsmonitoring", 2, broken: false, Administrators,
+                A(ProduktionLeitung, Read), I(System, Full), I(Administrators, Full), I(MikroTeam, Modify), I(QcTeam, Read));
+            Folder(S, @"\Mikrobiologie\Nährmedien", 2, broken: false, Administrators,
+                A(Einkauf, Read), I(System, Full), I(Administrators, Full), I(MikroTeam, Modify), I(QcTeam, Read));
+
+            Folder(S, @"\Geräte", 1, broken: false, Administrators,
+                A(DomainUsers, Read), I(System, Full), I(Administrators, Full), I(LaborAlle, Modify));
+            Finding("ZT02", Severity.Mittel, S + @"\Geräte", DomainUsers, "„MUSTER\\Domänen-Benutzer“ darf hier lesen.");
+            Folder(S, @"\Geräte\Logbücher", 2, broken: false, Administrators,
+                A(Instandhaltung, Modify), I(System, Full), I(Administrators, Full), I(LaborAlle, Modify), I(DomainUsers, Read));
+
+            Unreadable(S, @"\Personal", 1, "Zugriff verweigert");
+            Finding("ZT09", Severity.Info, S + @"\Personal", null, "Ordner nicht lesbar: Zugriff verweigert. Der Inhalt ist nicht geprüft.");
+
+            Folder(S, @"\Vorlagen", 1, broken: true, Administrators,
+                A(System, Full), A(Administrators, Full), A(LaborAlle, Read), A(QmTeam, Modify));
+        }
+
+        // ================= QM =================
+
+        public void Qm()
+        {
+            const string S = @"\\FS01\QM";
+            Folder(S, "", 0, broken: true, Administrators,
+                A(System, Full), A(Administrators, Full), A(CreatorOwner, Full, inheritOnly: true), A(QmTeam, Modify), A(QmLeser, Read));
+            Finding("ZT08", Severity.Info, S, AuthUsers, "Freigabe-Berechtigung: „Authentifizierte Benutzer“ dürfen ändern – der Schutz liegt allein bei den NTFS-Rechten.");
+
+            Folder(S, @"\SOPs", 1, broken: true, Administrators,
+                A(System, Full), A(Administrators, Full), A(QmTeam, Modify), A(QmLeser, Read));
+            Folder(S, @"\SOPs\Entwürfe", 2, broken: true, Administrators,
+                A(System, Full), A(Administrators, Full), A(QmTeam, Modify), A(SophieHoffmann, Modify));
+            Finding("ZT03", Severity.Mittel, S + @"\SOPs\Entwürfe", SophieHoffmann, "„MUSTER\\sophie.hoffmann“ ist direkt berechtigt (Ändern) statt über eine Gruppe.");
+            Folder(S, @"\SOPs\Freigegeben", 2, broken: false, Administrators,
+                A(AuthUsers, Read), I(System, Full), I(Administrators, Full), I(QmTeam, Modify), I(QmLeser, Read));
+            Finding("ZT02", Severity.Mittel, S + @"\SOPs\Freigegeben", AuthUsers, "„NT-AUTORITÄT\\Authentifizierte Benutzer“ darf hier lesen.");
+            Folder(S, @"\SOPs\Archiv", 2, broken: false, Administrators,
+                A(ProduktionAlle, Read, deny: true), I(System, Full), I(Administrators, Full), I(QmTeam, Modify), I(QmLeser, Read));
+            Finding("ZT07", Severity.Info, S + @"\SOPs\Archiv", ProduktionAlle, "Verweigern-Eintrag für „MUSTER\\Produktion-Alle“ (Lesen).");
+
+            Folder(S, @"\Audits", 1, broken: true, Administrators,
+                A(System, Full), A(Administrators, Full), A(QmLeitung, Modify), A(Geschaeftsleitung, Read));
+            Folder(S, @"\Audits\2026", 2, broken: false, Administrators,
+                A(ExtAuditor, Read), I(System, Full), I(Administrators, Full), I(QmLeitung, Modify), I(Geschaeftsleitung, Read));
+            Finding("ZT03", Severity.Mittel, S + @"\Audits\2026", ExtAuditor, "„MUSTER\\ext.auditor“ ist direkt berechtigt (Lesen) statt über eine Gruppe.");
+            if (!older)
+                Finding("ZT12", Severity.Mittel, S + @"\Audits\2026", ExtAuditor, "Das deaktivierte Konto „MUSTER\\ext.auditor“ ist noch berechtigt (Lesen).");
+
+            Folder(S, @"\Abweichungen", 1, broken: true, Administrators,
+                A(System, Full), A(Administrators, Full), A(QmTeam, Modify), A(QcTeam, Modify), A(ProduktionLeitung, Modify));
+            Folder(S, @"\CAPA", 1, broken: false, Administrators,
+                A(QaTeam, Full), I(System, Full), I(Administrators, Full), I(QmTeam, Modify), I(QmLeser, Read));
+            Finding("ZT05", Severity.Hoch, S + @"\CAPA", QaTeam, "„MUSTER\\QA-Team“ hat Vollzugriff und darf damit auch Berechtigungen ändern.");
+            Folder(S, @"\Schulungen", 1, broken: false, Administrators,
+                A(DomainUsers, Modify), I(System, Full), I(Administrators, Full), I(QmTeam, Modify), I(QmLeser, Read));
+            Finding("ZT01", Severity.Hoch, S + @"\Schulungen", DomainUsers, "„MUSTER\\Domänen-Benutzer“ darf hier ändern.");
+            Folder(S, @"\Lieferanten", 1, broken: false, Administrators,
+                A(Einkauf, Modify), I(System, Full), I(Administrators, Full), I(QmTeam, Modify), I(QmLeser, Read));
+
+            if (older)
+            {
+                // Im letzten Lauf noch vorhanden, inzwischen aufgeräumt
+                Folder(S, @"\Temp", 1, broken: false, SophieHoffmann,
+                    A(Everyone, Modify), I(System, Full), I(Administrators, Full), I(QmTeam, Modify), I(QmLeser, Read));
+                Finding("ZT01", Severity.Hoch, S + @"\Temp", Everyone, "„Jeder“ darf hier ändern.");
+                Finding("ZT10", Severity.Niedrig, S + @"\Temp", SophieHoffmann, "Besitzer ist das Benutzerkonto „MUSTER\\sophie.hoffmann“.");
+            }
+
+            Folder(S, @"\Validierung", 1, broken: true, Administrators,
+                A(System, Full), A(Administrators, Full), A(QmTeam, Modify), A(QaTeam, Modify));
+            const string Alt = S + @"\Validierung\Computersysteme\2020\Altsystem";
+            Folder(S, @"\Validierung\Computersysteme\2020\Altsystem", 4, broken: true, LukasSchaefer,
+                A(Administrators, Full), A(QaTeam, Read));
+            Finding("ZT06", Severity.Niedrig, Alt, null, "Vererbung ist in Ebene 4 unterbrochen – eine leicht übersehene Ausnahme.");
+            Finding("ZT10", Severity.Niedrig, Alt, LukasSchaefer, "Besitzer ist das Benutzerkonto „MUSTER\\lukas.schaefer“.");
+
+            Folder(S, @"\Management-Review", 1, broken: true, Orphan,
+                A(System, Full), A(Administrators, Full), A(Geschaeftsleitung, Modify), A(QmLeitung, Modify));
+            Finding("ZT04", Severity.Mittel, S + @"\Management-Review", Orphan, $"Besitzer ist die verwaiste SID {Orphan}.");
+        }
+
+        // ================= Produktion =================
+
+        public void Produktion()
+        {
+            const string S = @"\\FS01\Produktion";
+            Folder(S, "", 0, broken: true, Administrators,
+                A(System, Full), A(Administrators, Full), A(CreatorOwner, Full, inheritOnly: true), A(ProduktionAlle, Modify));
+            Finding("ZT13", Severity.Info, S, null, "Die Freigabe-Berechtigungen von \\\\FS01\\Produktion ließen sich nicht lesen – der Zugriff über das Netz ist nur nach NTFS bewertet.");
+
+            Folder(S, @"\Chargenprotokolle", 1, broken: true, Administrators,
+                A(System, Full), A(Administrators, Full), A(ProduktionLeitung, Modify), A(SchichtA, Write), A(SchichtB, Write), A(QaTeam, Read));
+            Folder(S, @"\Chargenprotokolle\2026", 2, broken: false, Administrators,
+                A(SchichtB, DeleteOnly, deny: true), I(System, Full), I(Administrators, Full), I(ProduktionLeitung, Modify),
+                I(SchichtA, Write), I(SchichtB, Write), I(QaTeam, Read));
+            Finding("ZT07", Severity.Info, S + @"\Chargenprotokolle\2026", SchichtB, "Verweigern-Eintrag für „MUSTER\\Produktion-Schicht-B“ (Löschen).");
+
+            Folder(S, @"\Rezepturen", 1, broken: true, Administrators,
+                A(System, Full), A(Administrators, Full), A(ProduktionLeitung, Modify), A(ProduktionAlle, Read));
+            Folder(S, @"\Schichtbuch", 1, broken: false, Administrators,
+                A(SchichtA, Modify), A(SchichtB, Modify), I(System, Full), I(Administrators, Full), I(ProduktionAlle, Modify));
+
+            Folder(S, @"\Wartung", 1, broken: true, Administrators,
+                A(System, Full), A(Administrators, Full), A(Instandhaltung, Modify), A(SvcBackup, Read));
+            Finding("ZT03", Severity.Mittel, S + @"\Wartung", SvcBackup, "„MUSTER\\svc-backup“ ist direkt berechtigt (Lesen) statt über eine Gruppe.");
+            // Seit dem letzten Lauf von Lesen auf Ändern erweitert
+            Folder(S, @"\Wartung\Anlage-3", 2, broken: false, Administrators,
+                A(PaulRichter, older ? Read : Modify), I(System, Full), I(Administrators, Full), I(Instandhaltung, Modify), I(SvcBackup, Read));
+            Finding("ZT03", Severity.Mittel, S + @"\Wartung\Anlage-3", PaulRichter,
+                $"„MUSTER\\paul.richter“ ist direkt berechtigt ({(older ? "Lesen" : "Ändern")}) statt über eine Gruppe.");
+
+            Folder(S, @"\Linie-1\SPS\Backup", 3, broken: true, Administrators,
+                A(Administrators, Full), A(Instandhaltung, Full));
+            Finding("ZT06", Severity.Niedrig, S + @"\Linie-1\SPS\Backup", null, "Vererbung ist in Ebene 3 unterbrochen – eine leicht übersehene Ausnahme.");
+            Finding("ZT05", Severity.Hoch, S + @"\Linie-1\SPS\Backup", Instandhaltung, "„MUSTER\\Instandhaltung“ hat Vollzugriff und darf damit auch Berechtigungen ändern.");
+
+            Unreadable(S, @"\Linie-2\Messdaten\Export", 3, "Der Pfad ist zu lang.");
+            Finding("ZT09", Severity.Info, S + @"\Linie-2\Messdaten\Export", null, "Ordner nicht lesbar: Der Pfad ist zu lang. Der Inhalt ist nicht geprüft.");
+
+            Folder(S, @"\Kantine", 1, broken: false, Administrators,
+                A(Everyone, Read), I(System, Full), I(Administrators, Full), I(ProduktionAlle, Modify));
+            Finding("ZT02", Severity.Mittel, S + @"\Kantine", Everyone, "„Jeder“ darf hier lesen.");
+        }
+
+        // ================= Bausteine =================
+
+        private void Folder(string share, string relative, int depth, bool broken, string owner, params AceEntry[] aces)
+        {
+            var f = new FolderNode { Path = share + relative, Depth = depth, InheritanceBroken = broken, ShareUnc = share, OwnerSid = owner };
+            f.Aces.AddRange(aces);
+            Scan.Folders.Add(f);
+        }
+
+        private void Unreadable(string share, string relative, int depth, string error)
+        {
+            Scan.Errors.Add(new ScanError(share + relative, error));
+            Scan.Folders.Add(new FolderNode { Path = share + relative, Depth = depth, ShareUnc = share, Error = error });
+        }
+
+        private void Finding(string rule, Severity severity, string path, string? sid, string message) =>
+            Scan.Findings.Add(new Finding { RuleId = rule, Severity = severity, Path = path, Sid = sid, Message = message });
+
+        /// <summary>Expliziter Eintrag (gilt für diesen Ordner, Unterordner und Dateien).</summary>
+        private static AceEntry A(string sid, FileSystemRights rights, bool deny = false, bool inheritOnly = false) => new()
+        {
+            Sid = sid, Rights = rights, IsDeny = deny, Inheritance = CIOI,
+            Propagation = inheritOnly ? PropagationFlags.InheritOnly : PropagationFlags.None,
+        };
+
+        /// <summary>Geerbter Eintrag.</summary>
+        private static AceEntry I(string sid, FileSystemRights rights) => new()
+        {
+            Sid = sid, Rights = rights, IsInherited = true, Inheritance = CIOI, Propagation = PropagationFlags.None,
+        };
+    }
+}

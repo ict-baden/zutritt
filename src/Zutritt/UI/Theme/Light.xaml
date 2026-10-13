@@ -1,0 +1,27 @@
+<!-- Ergänzt Fluent.Light.xaml um die wenigen Zutritt-eigenen Farben -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Eigener Kippschalter (Stil „ToggleSwitch“ in Controls.xaml), wie Vitrine -->
+    <SolidColorBrush x:Key="ControlOff" Color="#06000000"/>
+    <SolidColorBrush x:Key="ControlOffStroke" Color="#72000000"/>
+    <SolidColorBrush x:Key="Knob" Color="#9E000000"/>
+
+    <!-- Schwere der Befunde: Hoch rot, Mittel orange, Niedrig gelb, Info grau (wie in den Berichten).
+         Auf hellem Grund dunkler gewählt, damit Text in der Farbe lesbar bleibt. -->
+    <SolidColorBrush x:Key="SevHigh" Color="#C42B1C"/>
+    <SolidColorBrush x:Key="SevHighBg" Color="#1FC42B1C"/>
+    <SolidColorBrush x:Key="SevMedium" Color="#C35A0A"/>
+    <SolidColorBrush x:Key="SevMediumBg" Color="#1FE06A10"/>
+    <SolidColorBrush x:Key="SevLow" Color="#8A6A00"/>
+    <SolidColorBrush x:Key="SevLowBg" Color="#29D9A400"/>
+    <SolidColorBrush x:Key="SevInfo" Color="#5E5E5E"/>
+    <SolidColorBrush x:Key="SevInfoBg" Color="#14000000"/>
+    <SolidColorBrush x:Key="Good" Color="#0F7B0F"/>
+    <SolidColorBrush x:Key="GoodBg" Color="#1A0F7B0F"/>
+
+    <!-- Kopfkarte (Verlauf im Produkt-Akzent Blau-Violett, dezent) -->
+    <LinearGradientBrush x:Key="HeroBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#265B8CFF" Offset="0"/>
+        <GradientStop Color="#147A3FD1" Offset="1"/>
+    </LinearGradientBrush>
+</ResourceDictionary>
