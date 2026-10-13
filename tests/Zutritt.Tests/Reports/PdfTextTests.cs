@@ -73,4 +73,32 @@ public sealed class PdfTextTests : IDisposable
         Assert.Contains("gekürzt – vollständig im Excel-Bericht", content);
         Assert.True(content.Length < 2_000);
     }
+
+    [Fact]
+    public void VieleKurzeZeilen_WerdenGekuerzt_DamitDieZelleAufEineSeitePasst()
+    {
+        // 150 kurze Zeilen sind wenige Zeichen, aber höher als eine Seite – MigraDoc schnitte sie still ab
+        var lines = string.Join("\n", Enumerable.Range(0, 150).Select(i => $@"\\FS{i:D3}\Daten"));
+        var paragraph = new Paragraph();
+        _text.Append(paragraph, lines, 360, 9.5);
+
+        var content = PdfDom.Text(paragraph);
+        Assert.InRange(content.Count(c => c == '\n'), 25, 31);
+        Assert.Contains(@"\\FS000\Daten", content);
+        Assert.DoesNotContain(@"\\FS149\Daten", content);
+        Assert.Contains("gekürzt – vollständig im Excel-Bericht", content);
+    }
+
+    [Fact]
+    public void Begrenzung_LaesstPassendeTexteUnveraendert()
+    {
+        var thirty = string.Join("\n", Enumerable.Range(0, 30).Select(i => $"Zeile {i}"));
+        Assert.Same(thirty, PdfText.Limit(thirty, 300, 8.5));
+        Assert.Equal("", PdfText.Limit("", 300, 8.5));
+        Assert.EndsWith("(gekürzt – vollständig im Excel-Bericht)", PdfText.Limit(thirty + "\nZeile 30", 300, 8.5));
+        // Kein halbes Zeichen am Schnitt („a“ vorne, damit der Schnitt mitten in ein Paar fiele)
+        var emoji = "a" + string.Concat(Enumerable.Repeat("😀", 2_000));
+        var cut = PdfText.Limit(emoji, 100, 8.5);
+        Assert.False(char.IsHighSurrogate(cut[cut.IndexOf(' ') - 1]));
+    }
 }

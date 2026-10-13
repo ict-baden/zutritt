@@ -42,7 +42,7 @@ internal static class ReportDataBuilder
         foreach (var rule in rules) ruleMap.TryAdd(rule.Id, rule);
 
         var folders = BuildFolders(scan, names);
-        var people = BuildPeople(scan, forPerson, maxPersonGrants);
+        var people = BuildPeople(scan, forPerson, maxPersonGrants, folders);
         var groups = BuildGroups(scan, names);
         var shares = BuildShares(scan, names);
         var errors = scan.Errors.OrderBy(e => e.Path, PathOrder.Instance).ToList();
@@ -135,12 +135,19 @@ internal static class ReportDataBuilder
             })
             .ToList();
 
-    private static List<PersonRow> BuildPeople(ScanResult scan, Func<string, IReadOnlyList<AccessGrant>> forPerson, int maxGrants)
+    private static List<PersonRow> BuildPeople(ScanResult scan, Func<string, IReadOnlyList<AccessGrant>> forPerson, int maxGrants,
+        List<FolderRow> folders)
     {
         var users = scan.Principals.Values
             .Where(p => p.Kind == PrincipalKind.Benutzer)
             .OrderBy(p => p.Label, ReportText.NameOrder)
             .ThenBy(p => p.Sid, StringComparer.OrdinalIgnoreCase);
+
+        // Baum-Reihenfolge der Ordner einmal bestimmen und je Person nur noch Ränge vergleichen. Der Pfadvergleich
+        // (Abschnitte, deutsche Sortierung) ist teuer – je Person neu sortiert kostete er bei 1.000 Personen ×
+        // 5.000 Ordnern rund 20 s. Pfade außerhalb der gespeicherten Ordner landen am Ende, untereinander sortiert.
+        var rank = new Dictionary<string, int>(folders.Count, StringComparer.OrdinalIgnoreCase);
+        foreach (var folder in folders) rank.TryAdd(folder.Path, rank.Count);
 
         var rows = new List<PersonRow>();
         int budget = Math.Max(0, maxGrants);
@@ -149,13 +156,16 @@ internal static class ReportDataBuilder
             // Defensiv: nur echte Zugriffe zählen, auch falls die Auswertung „Kein Zugriff“ mitliefert
             var grants = (forPerson(user.Sid) ?? [])
                 .Where(g => g.Effective > AccessLevel.Keine)
-                .OrderBy(g => g.Path, PathOrder.Instance)
+                .OrderBy(g => rank.TryGetValue(g.Path, out var r) ? r : int.MaxValue)
+                .ThenBy(g => g.Path, PathOrder.Instance)
                 .ToList();
 
-            var via = new SortedSet<string>(ReportText.NameOrder);
+            // Erst sammeln, dann einmal sortieren – der deutsche Namensvergleich ist je Zugriff zu teuer
+            var viaNames = new HashSet<string>(StringComparer.Ordinal);
             foreach (var g in grants)
                 foreach (var name in g.Via)
-                    if (!string.IsNullOrWhiteSpace(name)) via.Add(name);
+                    if (!string.IsNullOrWhiteSpace(name)) viaNames.Add(name);
+            var via = new SortedSet<string>(viaNames, ReportText.NameOrder);
 
             // Einzelzugriffe nur für ganze Personen übernehmen – halbe Listen wären irreführend
             bool keep = grants.Count <= budget;

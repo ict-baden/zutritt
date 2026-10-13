@@ -180,6 +180,35 @@ public sealed class ReportDataBuilderTests
     }
 
     [Fact]
+    public void Personen_EinzelzugriffeInBaumReihenfolge_AuchPfadeAusserhalbDerOrdner()
+    {
+        const string fremdB = @"\\FS02\Daten\B", fremdA = @"\\FS02\Daten\A";
+        var data = ReportDataBuilder.Build(Scan(), null, Rules(), sid => sid == Max
+            ? [G(fremdB, Max, AccessLevel.Lesen), G(Qc, Max, AccessLevel.Lesen), G(fremdA, Max, AccessLevel.Lesen),
+               G(Rohdaten, Max, AccessLevel.Lesen), G(Root, Max, AccessLevel.Lesen), G(Archiv, Max, AccessLevel.Lesen)]
+            : [], CreatedAt);
+
+        // Gespeicherte Ordner in Baum-Reihenfolge (wie im Blatt „Ordner & Rechte“), unbekannte Pfade danach sortiert
+        Assert.Equal([Root, Archiv, Rohdaten, Qc, fremdA, fremdB], data.People.Single(p => p.Sid == Max).Grants.Select(g => g.Path));
+    }
+
+    [Fact]
+    public void Personen_VieleZugriffe_ImZeitbudget()
+    {
+        // Je Person neu nach Pfad (deutsch, abschnittsweise) sortiert dauerte das rund 20 s – jetzt um 1 s
+        var scan = Large(folders: 5_000, acesPerFolder: 2, users: 1_000);
+        var grants = scan.Folders.AsEnumerable().Reverse().Select(f => G(f.Path, "x", AccessLevel.Lesen, @"LAB\Gruppe-01")).ToList();
+
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var data = ReportDataBuilder.Build(scan, null, Rules(), _ => grants, CreatedAt);
+        sw.Stop();
+
+        Assert.True(sw.Elapsed < TimeSpan.FromSeconds(10), $"Aufbereiten brauchte {sw.Elapsed}");
+        var first = data.People.First(p => p.FolderCount == 5_000);
+        Assert.Equal(data.Folders.Select(f => f.Path), first.Grants.Select(g => g.Path));
+    }
+
+    [Fact]
     public void Personen_KeinZugriffZaehltNicht()
     {
         var data = ReportDataBuilder.Build(Scan(), null, Rules(),

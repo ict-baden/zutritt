@@ -169,6 +169,76 @@ public sealed class PdfReportTests : IDisposable
     }
 
     [Fact]
+    public void FreigabeMitVielenEintraegen_WirdMitHinweisGekuerzt_StattStillAbgeschnitten()
+    {
+        // Eine Tabellenzeile kann nicht über Seiten laufen: vorher erschienen nur 33 von 150 Einträgen, ohne Hinweis
+        var scan = Scan();
+        var perms = Enumerable.Range(0, 150).Select(i => new ShareAce($"{Domain}-{8000 + i}", ShareAccess.Lesen, i == 0)).ToList();
+        scan.Shares.Add(new ShareInfo { Server = "FS01", Name = "Viele", Permissions = perms });
+        var data = Data(scan);
+
+        var doc = PdfReport.CreateDocument(data);
+        var section = doc.Sections.Cast<Section>().Single();
+        var shares = section.Elements.OfType<MigraDoc.DocumentObjectModel.Tables.Table>()
+            .Single(t => PdfDom.Text(t).StartsWith("Freigabe\n\tPfad\n\t"));
+        var row = shares.Rows.Cast<MigraDoc.DocumentObjectModel.Tables.Row>().Single(r => PdfDom.Text(r.Cells[0]).Contains("Viele"));
+        Assert.Equal(21, row.Cells[3].Elements.Count);
+        var cell = PdfDom.Text(row.Cells[3]).Replace("\n", ""); // lange SIDs werden umbrochen
+        Assert.Contains($"{Domain}-8000: Verweigern Lesen", cell);
+        Assert.Contains("… und 130 weitere Einträge (vollständig im Excel-Bericht)", cell);
+        Assert.Contains("Freigabe-Berechtigungen (höchstens 20 Einträge je Freigabe, betrifft 1 Freigabe)", PdfDom.Text(doc));
+
+        // Freigaben bis zur Grenze bleiben vollständig
+        var exact = PdfReport.CreateDocument(data, PdfLimits.Default with { ShareEntries = 150 });
+        Assert.DoesNotContain("weitere Einträge", PdfDom.Text(exact));
+        Assert.True(PageCount(Write(data)) > 1);
+    }
+
+    [Fact]
+    public void Deckblatt_VieleZiele_WerdenGekuerzt()
+    {
+        var scan = Scan();
+        scan.Request = scan.Request with { Targets = Enumerable.Range(0, 150).Select(i => $@"\\FS{i:D3}\Daten").ToList() };
+        var doc = PdfReport.CreateDocument(Data(scan));
+
+        var section = doc.Sections.Cast<Section>().Single();
+        var cover = section.Elements.OfType<MigraDoc.DocumentObjectModel.Tables.Table>().First(t => PdfDom.Text(t).StartsWith("Ziele\n\t"));
+        var targets = PdfDom.Text(cover.Rows[0].Cells[1]);
+        Assert.Contains(@"\\FS000\Daten", targets);
+        Assert.DoesNotContain(@"\\FS149\Daten", targets);
+        Assert.Contains("gekürzt – vollständig im Excel-Bericht", targets);
+        Assert.Contains(@"\\FS000\Daten (+149 weitere)", PdfDom.Text(section.Headers.Primary));
+    }
+
+    [Fact]
+    public void NichtLesbarerOrdner_GelesenEintraegeWerdenTrotzdemGezeigt()
+    {
+        // Der Scanner setzt Error auch, wenn die Rechte gelesen wurden, aber der Inhalt nicht auflistbar war
+        var scan = Scan();
+        var qc = scan.Folders.Single(f => f.Path == Qc);
+        qc.Error = "Inhalt nicht auflistbar: Zugriff verweigert";
+
+        var text = PdfDom.Text(PdfReport.CreateDocument(Data(scan)));
+        var section = text.IndexOf("Ordner mit eigenen Rechten\nAufgeführt", StringComparison.Ordinal);
+        var start = text.IndexOf(Qc + "\n", section, StringComparison.Ordinal); // QC ist der letzte Ordner im Baum
+        var block = text[start..text.IndexOf("Personen-Übersicht", start, StringComparison.Ordinal)];
+        Assert.Contains("Nicht lesbar: Inhalt nicht auflistbar: Zugriff verweigert", block);
+        Assert.Contains(@"LAB\QC-Team", block);
+        Assert.Contains(@"LAB\max.muster", block);
+        Assert.DoesNotContain("Keine Einträge", block);
+    }
+
+    [Fact]
+    public void Kopfzeile_KuerztLangeZieleOhneHalbesZeichen()
+    {
+        var scan = Scan();
+        scan.Request = scan.Request with { Targets = [new string('a', 68) + "😀😀"] };
+        var doc = PdfReport.CreateDocument(Data(scan));
+        var header = PdfDom.Text(doc.Sections.Cast<Section>().Single().Headers.Primary).TrimEnd('\n');
+        Assert.EndsWith(new string('a', 68) + "…", header);
+    }
+
+    [Fact]
     public void LeererLauf_RendertTrotzdem()
     {
         var data = Data(new ScanResult { Request = new ScanRequest { Targets = [@"C:\Leer"] } });

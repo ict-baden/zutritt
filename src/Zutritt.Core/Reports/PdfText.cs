@@ -51,15 +51,32 @@ internal sealed class PdfText : IDisposable
         }
     }
 
-    /// <summary>Kürzt Texte, die selbst umbrochen höher als <see cref="MaxLines"/> Zeilen würden.</summary>
-    private static string Limit(string text, double width, double size)
+    /// <summary>
+    /// Kürzt Texte, die umbrochen höher als <see cref="MaxLines"/> Zeilen würden. Zählt auch die
+    /// Zeilenumbrüche im Text: viele kurze Zeilen (z. B. 150 Ziele) wären sonst kurz genug an Zeichen,
+    /// aber höher als eine Seite – MigraDoc schnitte den Rest der Tabellenzeile stillschweigend ab.
+    /// </summary>
+    internal static string Limit(string text, double width, double size)
     {
-        // Durchschnittliche Zeichenbreite grob ½ Geviert – reicht als Obergrenze
-        int max = Math.Max(40, (int)(MaxLines * width / (0.5 * size)));
-        if (text.Length <= max) return text;
-        int cut = max;
-        if (char.IsHighSurrogate(text[cut - 1])) cut--;
-        return text[..cut] + Shortened;
+        // Durchschnittliche Zeichenbreite grob ½ Geviert – reicht als Schätzung
+        int perLine = Math.Max(10, (int)(width / (0.5 * size)));
+        int lines = 0;
+        int start = 0;
+        while (true)
+        {
+            int end = text.IndexOf('\n', start);
+            int stop = end < 0 ? text.Length : end;
+            int needed = Math.Max(1, (stop - start + perLine - 1) / perLine);
+            if (lines + needed > MaxLines)
+            {
+                int cut = Math.Min(stop, start + (MaxLines - lines) * perLine);
+                if (cut > 0 && char.IsHighSurrogate(text[cut - 1])) cut--;
+                return text[..cut].TrimEnd('\r', '\n', ' ') + Shortened;
+            }
+            lines += needed;
+            if (end < 0) return text;
+            start = end + 1;
+        }
     }
 
     /// <summary>

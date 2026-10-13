@@ -30,6 +30,9 @@ internal static class ReportFile
         }
         if (Directory.Exists(full))
             throw new ReportWriteException(full, $"{ReportText.Quote(full)} ist ein Ordner – bitte einen Dateinamen angeben.");
+        // „D:\Berichte\neu\“: sonst würde der Ordner angelegt und das Ersetzen schlüge danach unverständlich fehl
+        if (Path.GetFileName(full).Length == 0)
+            throw new ReportWriteException(full, $"{ReportText.Quote(full)} enthält keinen Dateinamen – bitte einen Dateinamen angeben.");
         return full;
     }
 

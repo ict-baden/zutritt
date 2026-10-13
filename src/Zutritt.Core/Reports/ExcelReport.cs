@@ -265,8 +265,9 @@ public static class ExcelReport
         ]);
     }
 
-    private static void AddPeople(XLWorkbook wb, ReportData data, int maxRows, List<string> truncated) =>
-        AddTable(wb, "Personen", "Personen", data.People, data.People.Count, maxRows, "Keine Benutzerkonten im Lauf.", truncated,
+    private static void AddPeople(XLWorkbook wb, ReportData data, int maxRows, List<string> truncated)
+    {
+        List<Col<PersonRow>> cols =
         [
             new("Person", p => Text(p.Name), MaxWidth: 40),
             new("Anzeigename", p => Text(p.DisplayName), MaxWidth: 40),
@@ -276,7 +277,13 @@ public static class ExcelReport
             new("Über Gruppen", p => Text(string.Join("; ", p.ViaGroups)), MaxWidth: 80),
             new("Direkt berechtigt", p => ReportText.YesNo(p.HasDirect)),
             new("SID", p => p.Sid, MaxWidth: 50),
-        ]);
+        ];
+        // Nur bei gekürzten Einzelzugriffen: sonst hielte man eine Person ohne Zeilen in „Zugriffe je Person“ für unberechtigt
+        if (data.PersonGrantsTruncated)
+            cols.Insert(4, new("Einzelzugriffe aufgeführt", p => p.GrantsComplete ? "Ja" : "Nein – nur die Summe",
+                MaxWidth: 26, Style: (cell, p) => { if (!p.GrantsComplete) cell.Style.Font.FontColor = Warning; }));
+        AddTable(wb, "Personen", "Personen", data.People, data.People.Count, maxRows, "Keine Benutzerkonten im Lauf.", truncated, cols);
+    }
 
     private static void AddPersonGrants(XLWorkbook wb, ReportData data, int maxRows, List<string> truncated)
     {

@@ -217,6 +217,23 @@ public sealed class ExcelReportTests(ITestOutputHelper output) : IDisposable
     }
 
     [Fact]
+    public void GekuerzteEinzelzugriffe_PersonenZeigtWerFehlt()
+    {
+        // Budget 4: nur Erika passt – ohne Kennzeichnung hielte man Klaus und Max für unberechtigt
+        using (var wb = ExcelReport.Create(Data(maxPersonGrants: 4)))
+        {
+            var people = Rows(wb.Worksheet("Personen"));
+            Assert.Equal("Ja", people.Single(p => p["SID"] == Erika)["Einzelzugriffe aufgeführt"]);
+            Assert.Equal("Nein – nur die Summe", people.Single(p => p["SID"] == Max)["Einzelzugriffe aufgeführt"]);
+            Assert.Equal("3", people.Single(p => p["SID"] == Max)["Ordner mit Zugriff"]);
+            Assert.All(Rows(wb.Worksheet("Zugriffe je Person")), r => Assert.Equal(@"LAB\erika.beispiel", r["Person"]));
+        }
+        // Ohne Kürzung keine zusätzliche Spalte
+        using var full = ExcelReport.Create(Data());
+        Assert.DoesNotContain("Einzelzugriffe aufgeführt", Rows(full.Worksheet("Personen"))[0].Keys);
+    }
+
+    [Fact]
     public void LeererLauf_TabellenMitHinweiszeile()
     {
         var scan = new ScanResult { Request = new ScanRequest { Targets = [@"C:\Leer"] } };
@@ -301,6 +318,16 @@ public sealed class ExcelReportTests(ITestOutputHelper output) : IDisposable
         Assert.Throws<ArgumentException>(() => ExcelReport.Write(Data(), " "));
         Assert.Throws<ArgumentNullException>(() => ExcelReport.Write(null!, null, Path.Combine(_temp.Path, "x.xlsx")));
         Assert.Empty(Directory.GetFiles(_temp.Path));
+    }
+
+    [Fact]
+    public void PfadOhneDateiname_ReportWriteException_LegtKeinenOrdnerAn()
+    {
+        var dir = Path.Combine(_temp.Path, "neu") + Path.DirectorySeparatorChar;
+        var e = Assert.Throws<ReportWriteException>(() => ExcelReport.Write(Data(), dir));
+        Assert.Contains("keinen Dateinamen", e.Message);
+        Assert.Throws<ReportWriteException>(() => PdfReport.Write(Scan(), null, dir));
+        Assert.Empty(Directory.GetFileSystemEntries(_temp.Path));
     }
 
     [Fact]

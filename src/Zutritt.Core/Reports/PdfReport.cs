@@ -298,6 +298,10 @@ public static class PdfReport
                 if (total > limit) cut.Add($"{what} ({ReportText.Number(limit)} von {ReportText.Number(total)})");
             }
             Check("Befunde", data.Findings.Count, limits.Findings);
+            int longShares = data.Shares.Count(s => s.Readable && s.Permissions.Count > limits.ShareEntries);
+            if (longShares > 0)
+                cut.Add($"Freigabe-Berechtigungen (höchstens {ReportText.Number(limits.ShareEntries)} Einträge je Freigabe, "
+                    + $"betrifft {(longShares == 1 ? "1 Freigabe" : $"{ReportText.Number(longShares)} Freigaben")})");
             Check("Ordner mit eigenen Rechten", data.Folders.Count, limits.Folders);
             Check("Personen", data.PeopleWithAccess, limits.People);
             if (data.Comparison is { } c) Check("Änderungen", c.Rows.Count, limits.Changes);
@@ -404,9 +408,13 @@ public static class PdfReport
                     CellText(table, row, 3, s.PermissionsText, color: s.Readable ? null : WarningColor);
                     continue;
                 }
-                foreach (var ace in s.Permissions)
+                // Eine Tabellenzeile kann nicht über Seiten laufen – zu viele Einträge würden abgeschnitten
+                foreach (var ace in s.Permissions.Take(limits.ShareEntries))
                     CellText(table, row, 3, $"{ace.Account}: {(ace.IsDeny ? "Verweigern " : "")}{Rights.Label(ace.Access)}",
                         color: ace.IsDeny ? WarningColor : null);
+                if (s.Permissions.Count > limits.ShareEntries)
+                    CellText(table, row, 3, $"… und {ReportText.Number(s.Permissions.Count - limits.ShareEntries)} weitere Einträge "
+                        + "(vollständig im Excel-Bericht)", bold: true, color: WarningColor);
             }
         }
 
@@ -440,7 +448,8 @@ public static class PdfReport
                     var error = _section.AddParagraph();
                     error.Format.Font.Color = WarningColor;
                     text.Append(error, "Nicht lesbar: " + f.Error, width, NormalSize);
-                    continue;
+                    // Gelesene Einträge trotzdem zeigen (z. B. Rechte gelesen, aber Inhalt nicht auflistbar) – wie im Excel-Bericht
+                    if (f.Aces.Count == 0) continue;
                 }
 
                 var explicitAces = f.Aces.Where(a => !a.IsInherited).ToList();
@@ -721,7 +730,9 @@ public static class PdfReport
                 _ => $"{targets[0]} (+{targets.Count - 1} weitere)",
             };
             label = ReportText.Clean(label);
-            return label.Length <= 70 ? label : label[..69] + "…";
+            if (label.Length <= 70) return label;
+            int cut = char.IsHighSurrogate(label[68]) ? 68 : 69; // kein halbes Zeichen stehen lassen
+            return label[..cut] + "…";
         }
 
         private static Color Rgb(string hex)
@@ -732,8 +743,12 @@ public static class PdfReport
     }
 }
 
-/// <summary>Wie viele Einträge das PDF je Abschnitt höchstens zeigt (MigraDoc setzt grob 200 Tabellenzeilen je Sekunde).</summary>
-internal sealed record PdfLimits(int Findings, int Folders, int People, int Changes, int Errors)
+/// <summary>
+/// Wie viele Einträge das PDF je Abschnitt höchstens zeigt (MigraDoc setzt grob 200 Tabellenzeilen je Sekunde).
+/// <paramref name="ShareEntries"/> begrenzt die Freigabe-Berechtigungen in einer Tabellenzelle: MigraDoc kann eine
+/// Zeile nicht über Seiten teilen und schnitte den Rest ohne Hinweis ab.
+/// </summary>
+internal sealed record PdfLimits(int Findings, int Folders, int People, int Changes, int Errors, int ShareEntries = 20)
 {
     public static PdfLimits Default { get; } = new(Findings: 1_000, Folders: 250, People: 1_000, Changes: 1_000, Errors: 250);
 }
