@@ -16,7 +16,14 @@
     <Product>Zutritt</Product>
     <Description>Zeigt, wer auf Dateifreigaben worauf zugreifen darf – mit Befunden, Vergleich und Bericht</Description>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Eigener Einstiegspunkt (Program.Main): Befehlszeile ganz ohne WPF, sonst Oberfläche.
+         App.xaml wird deshalb als normale Seite übersetzt, nicht als ApplicationDefinition mit eigenem Main. -->
+    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="System.IO" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Zutritt.Core\Zutritt.Core.csproj" />

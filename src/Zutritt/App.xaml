@@ -1,0 +1,12 @@
+<Application x:Class="Zutritt.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Fluent und Light.xaml/Dark.xaml fügt ThemeManager beim Start an Position 0 und 1 ein -->
+                <ResourceDictionary Source="UI/Theme/Controls.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
