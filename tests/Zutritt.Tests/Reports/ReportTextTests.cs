@@ -116,4 +116,14 @@ public sealed class ReportTextTests
         Assert.True(PathOrder.Instance.Compare(null, "a") < 0);
         Assert.NotEqual(0, PathOrder.Instance.Compare(@"C:\A", @"C:\a")); // stabil, nicht gleich
     }
+
+    [Theory]
+    [InlineData("1.0.0+f733926704a0b920f824e12bacf806e5c132891d", "1.0.0+f733926")]
+    [InlineData("1.0.0+f733926", "1.0.0+f733926")]
+    [InlineData("1.2.3", "1.2.3")]
+    [InlineData("1.2.3-ci.12+lokal-geaendert", "1.2.3-ci.12+lokal-geaendert")] // kein Hash: unverändert
+    [InlineData("", "")]
+    [InlineData(null, "")]
+    public void Version_KuerztCommitHash(string? version, string expected) =>
+        Assert.Equal(expected, ReportText.Version(version));
 }

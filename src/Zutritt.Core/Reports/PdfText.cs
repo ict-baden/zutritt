@@ -175,6 +175,33 @@ internal sealed class PdfText : IDisposable
         return font;
     }
 
+    /// <summary>
+    /// Zeilen, die MigraDoc für <paramref name="text"/> in <paramref name="width"/> Punkt braucht – zum Abschätzen
+    /// von Tabellenhöhen. Bricht wie MigraDoc an Leerzeichen um; überlange Wörter hat <see cref="Append"/> schon
+    /// mit Zeilenumbrüchen versehen.
+    /// </summary>
+    internal int Lines(string text, double width, double size, bool bold = false)
+    {
+        var font = Font(size, bold);
+        double available = Math.Max(1, width * Safety);
+        int lines = 0;
+        foreach (var line in text.Replace("\r\n", "\n").Split('\n'))
+        {
+            lines++;
+            double x = 0;
+            foreach (var word in Words(line))
+            {
+                if (x > 0 && x + Measure(word.TrimEnd(' '), font) > available)
+                {
+                    lines++;
+                    x = 0;
+                }
+                x += Measure(word, font);
+            }
+        }
+        return lines;
+    }
+
     /// <summary>Breite in Punkt, so wie MigraDoc sie setzt.</summary>
     internal double Width(string text, double size, bool bold = false) => Measure(text, Font(size, bold));
 

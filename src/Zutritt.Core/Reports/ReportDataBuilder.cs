@@ -77,7 +77,7 @@ internal static class ReportDataBuilder
             CreatedAt = createdAt,
             Machine = scan.Machine,
             ScannedBy = scan.ScannedBy,
-            ToolVersion = scan.ToolVersion,
+            ToolVersion = ReportText.Version(scan.ToolVersion),
             ReportVersion = ReportText.ProductVersion,
             Request = scan.Request,
             FoldersVisited = scan.FoldersVisited,
@@ -348,33 +348,35 @@ internal static class ReportDataBuilder
         }
 
         foreach (var f in c.NewFindings.OrderByDescending(f => f.Severity).ThenBy(f => f.RuleId).ThenBy(f => f.Path, PathOrder.Instance))
-            rows.Add(new ChangeRow("Befund", "neu", f.Path, Account(f.Sid), "", Describe(f)));
+            rows.Add(new ChangeRow(ChangeArea.Finding, "neu", f.Path, Account(f.Sid), "", Describe(f)));
         foreach (var f in c.ResolvedFindings.OrderByDescending(f => f.Severity).ThenBy(f => f.RuleId).ThenBy(f => f.Path, PathOrder.Instance))
-            rows.Add(new ChangeRow("Befund", "behoben", f.Path, Account(f.Sid), Describe(f), ""));
-
-        foreach (var a in c.AccessChanges.OrderBy(a => a.Path, PathOrder.Instance).ThenBy(a => names.Name(a.Sid), ReportText.NameOrder))
-            rows.Add(new ChangeRow("Zugriff", a.After > a.Before ? "mehr Zugriff" : "weniger Zugriff", a.Path, names.Name(a.Sid),
-                Rights.Label(a.Before), Rights.Label(a.After)));
+            rows.Add(new ChangeRow(ChangeArea.Finding, "behoben", f.Path, Account(f.Sid), Describe(f), ""));
 
         foreach (var a in c.AceChanges.OrderBy(a => a.Path, PathOrder.Instance).ThenBy(a => names.Name(a.Sid), ReportText.NameOrder))
         {
             bool file = isFile.GetValueOrDefault(a.Path);
             // Gleiche Stufe, andere Maske (z. B. Sonderrechte): Maske zeigen, sonst sähe es nach „keine Änderung“ aus
             bool mask = a.Before is not null && a.After is not null && a.Before.Level == a.After.Level;
-            rows.Add(new ChangeRow("Berechtigung", ReportText.Change(a.Kind), a.Path, names.Name(a.Sid),
+            rows.Add(new ChangeRow(ChangeArea.Ace, ReportText.Change(a.Kind), a.Path, names.Name(a.Sid),
                 a.Before is null ? "" : ReportText.Ace(a.Before, file, mask),
                 a.After is null ? "" : ReportText.Ace(a.After, file, mask)));
         }
 
-        foreach (var p in c.FoldersAdded.OrderBy(p => p, PathOrder.Instance))
-            rows.Add(new ChangeRow("Ordner", "neu mit eigenen Rechten", p, "", "", "eigene Rechte"));
-        foreach (var p in c.FoldersRemoved.OrderBy(p => p, PathOrder.Instance))
-            rows.Add(new ChangeRow("Ordner", "keine eigenen Rechte mehr", p, "", "eigene Rechte", ""));
-
         foreach (var m in c.MembershipChanges.OrderBy(m => names.Name(m.GroupSid), ReportText.NameOrder).ThenBy(m => names.Name(m.MemberSid), ReportText.NameOrder))
-            rows.Add(new ChangeRow("Mitgliedschaft", m.Kind == ChangeKind.Entfernt ? "entfernt" : m.Kind == ChangeKind.Hinzugefuegt ? "aufgenommen" : "geändert",
+            rows.Add(new ChangeRow(ChangeArea.Membership, m.Kind == ChangeKind.Entfernt ? "entfernt" : m.Kind == ChangeKind.Hinzugefuegt ? "aufgenommen" : "geändert",
                 names.Name(m.GroupSid), names.Name(m.MemberSid),
                 m.Kind == ChangeKind.Hinzugefuegt ? "" : "Mitglied", m.Kind == ChangeKind.Entfernt ? "" : "Mitglied"));
+
+        foreach (var p in c.FoldersAdded.OrderBy(p => p, PathOrder.Instance))
+            rows.Add(new ChangeRow(ChangeArea.Folder, "neu mit eigenen Rechten", p, "", "", "eigene Rechte"));
+        foreach (var p in c.FoldersRemoved.OrderBy(p => p, PathOrder.Instance))
+            rows.Add(new ChangeRow(ChangeArea.Folder, "keine eigenen Rechte mehr", p, "", "eigene Rechte", ""));
+
+        // Folgen für Personen zuletzt, „mehr Zugriff“ (das Risiko) vor „weniger Zugriff“
+        foreach (var a in c.AccessChanges.OrderBy(a => a.After > a.Before ? 0 : 1).ThenBy(a => a.Path, PathOrder.Instance)
+                     .ThenBy(a => names.Name(a.Sid), ReportText.NameOrder))
+            rows.Add(new ChangeRow(ChangeArea.Access, a.After > a.Before ? "mehr Zugriff" : "weniger Zugriff", a.Path, names.Name(a.Sid),
+                Rights.Label(a.Before), Rights.Label(a.After)));
 
         return new ComparisonData
         {

@@ -152,5 +152,21 @@ internal sealed record ComparisonData
     public bool HasChanges => Rows.Count > 0;
 }
 
-/// <summary>Eine Änderung: Bereich (Befund, Zugriff, Berechtigung, Ordner, Mitgliedschaft), was, wo, wer, vorher/nachher.</summary>
+/// <summary>Eine Änderung: Bereich (siehe <see cref="ChangeArea"/>), was, wo, wer, vorher/nachher.</summary>
 internal sealed record ChangeRow(string Area, string Change, string Subject, string Account, string Before, string After);
+
+/// <summary>
+/// Bereiche der Änderungen in der Reihenfolge, in der die Berichte sie zeigen: erst die Befunde, dann die
+/// Ursachen (Einträge, Mitgliedschaften, Ordner), zuletzt die Folgen für einzelne Personen – die sind oft
+/// hundertfach und würden sonst das Wesentliche verdrängen.
+/// </summary>
+internal static class ChangeArea
+{
+    public const string Finding = "Befund";
+    public const string Ace = "Berechtigung";
+    public const string Membership = "Mitgliedschaft";
+    public const string Folder = "Ordner";
+    public const string Access = "Zugriff";
+
+    public static IReadOnlyList<string> Order { get; } = [Finding, Ace, Membership, Folder, Access];
+}

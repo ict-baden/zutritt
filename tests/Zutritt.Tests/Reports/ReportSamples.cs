@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.AccessControl;
 using Zutritt.Core.Model;
 using Zutritt.Core.Reports;
@@ -137,6 +138,127 @@ internal static class ReportSamples
         Sid = sid, Rights = rights, IsInherited = inherited, IsDeny = deny,
         Inheritance = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit,
     };
+
+    private static readonly string[] FirstNames = ["anna", "ben", "carla", "david", "elena", "felix", "greta", "hannes", "ida", "jonas",
+        "katrin", "lukas", "marie", "nils", "olga", "paul", "quirin", "rosa", "stefan", "tanja"];
+    private static readonly string[] LastNames = ["müller", "schmidt", "schneider", "fischer", "weber", "meyer", "wagner", "becker",
+        "schulz", "hoffmann", "schäfer", "koch", "bauer", "richter", "klein", "wolf", "schröder", "neumann", "schwarz", "zimmermann"];
+
+    /// <summary>
+    /// Wirklichkeitsnaher mittelgroßer Lauf für Layout-Tests: 300 Ordner verschiedener Tiefe (einige mit sehr langen
+    /// Namen ohne Leerzeichen), 80 Personen in 16 Gruppen, breite Gruppen, direkte Rechte, verwaiste SIDs,
+    /// Verweigerungen, nicht lesbare Ordner, eine Freigabe ohne lesbare Rechte. Befunde trägt der Aufrufer ein.
+    /// <paramref name="changed"/> ändert einige Einträge und Mitgliedschaften – für einen Vergleich zweier Läufe.
+    /// </summary>
+    public static ScanResult Realistic(DateTimeOffset started, bool changed)
+    {
+        const string Archive = @"\\FS01\Qualitaetssicherung_und_Dokumentenlenkung_Archiv_Langzeit";
+        var rnd = new Random(42); // fest: beide Läufe haben dieselbe Struktur
+        var scan = SampleScan.Create(started);
+        scan.Folders.Clear();
+        scan.Errors.Clear();
+        scan.FoldersVisited = 48_213;
+        scan.FinishedAt = started.AddMinutes(17);
+        scan.Request = scan.Request with { Targets = [Root, Archive] };
+        scan.Shares.Add(new ShareInfo
+        {
+            Server = "FS01", Name = Archive[7..], LocalPath = @"E:\Shares\QS\Dokumentenlenkung\Archiv",
+            Remark = "Gelenkte Dokumente (SOPs, Arbeitsanweisungen) – nur QS schreibt",
+            Permissions = [new ShareAce(AuthenticatedUsers, ShareAccess.Aendern, false), new ShareAce(Administrators, ShareAccess.Vollzugriff, false)],
+        });
+        scan.Shares.Add(new ShareInfo { Server = "FS01", Name = "Scans$", LocalPath = @"E:\Scans", PermissionsReadable = false });
+
+        string[] groupNames = ["GG-Labor-QC-Lesen", "GG-Labor-QC-Ändern", "GG-Labor-Mikrobiologie", "GG-Produktion-Schicht-A", "GG-Produktion-Schicht-B",
+            "GG-QS-Dokumentenlenkung", "GG-QS-Lesen", "GG-Einkauf", "GG-Geschäftsleitung", "GG-IT-Admins", "GG-Projekt-Stabilität-2024",
+            "GG-Projekt-Validierung-HPLC", "GG-Personalabteilung", "GG-Externe-Berater", "GG-Lager", "GG-Alle-Mitarbeitenden-Standort-Baden"];
+        var groups = new List<string>();
+        foreach (var name in groupNames)
+        {
+            var sid = $"{Domain}-{3000 + groups.Count}";
+            scan.Principals[sid] = new Principal { Sid = sid, Name = $@"LAB\{name}", Kind = PrincipalKind.Gruppe };
+            groups.Add(sid);
+        }
+        var users = new List<string>();
+        for (int u = 0; u < 80; u++)
+        {
+            var sid = $"{Domain}-{4000 + u}";
+            var first = FirstNames[u % FirstNames.Length];
+            var last = LastNames[(u * 7 + u / 20) % LastNames.Length];
+            scan.Principals[sid] = new Principal
+            {
+                Sid = sid, Name = $@"LAB\{first}.{last}{(u >= 40 ? (u % 10).ToString(CultureInfo.InvariantCulture) : "")}",
+                DisplayName = $"{char.ToUpperInvariant(first[0])}{first[1..]} {char.ToUpperInvariant(last[0])}{last[1..]}"
+                    + (u == 5 ? " (extern, Beratung Validierung Computergestützter Systeme)" : ""),
+                Kind = PrincipalKind.Benutzer, IsDisabled = u % 17 == 3,
+            };
+            users.Add(sid);
+            for (int m = 1 + rnd.Next(4); m > 0; m--) scan.Principals[groups[rnd.Next(groups.Count)]].Members.Add(sid);
+            scan.Principals[groups[^1]].Members.Add(sid);
+        }
+        scan.Principals[groups[3]].Members.Add(groups[4]); // verschachtelt
+        scan.Principals[groups[13]].MembersUnknown = changed;
+        if (changed) scan.Principals[groups[1]].Members.Add(users[3]);
+        const string Orphan = Domain + "-9999";
+        scan.Principals[Orphan] = new Principal { Sid = Orphan, Name = Orphan, Kind = PrincipalKind.Verwaist };
+
+        const InheritanceFlags CIOI = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
+        AceEntry A(string sid, FileSystemRights rights, bool inherited = false, bool deny = false, InheritanceFlags inheritance = CIOI,
+            PropagationFlags propagation = PropagationFlags.None) =>
+            new() { Sid = sid, Rights = rights, IsInherited = inherited, IsDeny = deny, Inheritance = inheritance, Propagation = propagation };
+
+        foreach (var root in new[] { Root, Archive })
+        {
+            var node = new FolderNode { Path = root, ShareUnc = root, OwnerSid = Administrators, InheritanceBroken = true };
+            node.Aces.AddRange([A(SampleScan.System, Full), A(Administrators, Full), A(groups[^1], Read),
+                A(CreatorOwner, Full, propagation: PropagationFlags.InheritOnly)]);
+            scan.Folders.Add(node);
+        }
+
+        string[] areas = ["QC", "Mikrobiologie", "Produktion", "Projekte", "Validierung", "Austausch", "Archiv", "Personal"];
+        string[] sub = ["Rohdaten", "Auswertungen", "Berichte", "SOPs", "Geräte", "Chargen", "Freigaben", "Prüfpläne", "Messdaten_HPLC_Agilent_1260", "Altbestand"];
+        for (int i = 0; i < 300; i++)
+        {
+            string area = areas[i % areas.Length];
+            var parts = new List<string> { area };
+            for (int d = 1, depth = 1 + rnd.Next(6); d < depth; d++)
+                parts.Add(d == 1 && area == "Projekte" ? $"2024-{i:D3} Stabilitätsstudie Charge {100 + i}" : sub[rnd.Next(sub.Length)] + (d > 3 ? $"_{i}" : ""));
+            if (i % 37 == 0)
+                parts.Add("Sehr_langer_Ordnername_ohne_Leerzeichen_der_in_keine_Spalte_passt_" + new string('x', 40) + $"_{i}");
+            string root = i % 9 == 0 ? Archive : Root;
+            var node = new FolderNode
+            {
+                Path = $@"{root}\{string.Join('\\', parts)}_{i:D3}", Depth = parts.Count, ShareUnc = root,
+                OwnerSid = i % 23 == 0 ? users[i % users.Count] : Administrators, InheritanceBroken = i % 5 == 0,
+            };
+            scan.Folders.Add(node);
+            if (i % 41 == 7)
+            {
+                node.Error = "Zugriff verweigert";
+                scan.Errors.Add(new ScanError(node.Path, node.Error));
+                continue;
+            }
+            for (int a = 1 + rnd.Next(4); a > 0; a--)
+            {
+                string sid = rnd.Next(20) switch
+                {
+                    0 => Everyone,
+                    1 => AuthenticatedUsers,
+                    2 => DomainUsers,
+                    3 or 4 => users[rnd.Next(users.Count)],
+                    5 => Orphan,
+                    _ => groups[rnd.Next(groups.Count - 1)],
+                };
+                var rights = rnd.Next(4) switch { 0 => Read, 1 => Modify, 2 => Full, _ => Read | FileSystemRights.Write };
+                if (changed && i % 11 == 0) rights = Modify;
+                node.Aces.Add(A(sid, rights, deny: rnd.Next(25) == 0, inheritance: rnd.Next(6) == 0 ? InheritanceFlags.None : CIOI));
+            }
+            if (changed && i % 13 == 0) node.Aces.Add(A(groups[2], Modify));
+            if (!node.InheritanceBroken)
+                node.Aces.AddRange([A(SampleScan.System, Full, inherited: true), A(Administrators, Full, inherited: true), A(groups[^1], Read, inherited: true)]);
+        }
+        scan.Errors.Add(new ScanError(@"\\FS02\Altdaten", "Der Netzwerkpfad wurde nicht gefunden."));
+        return scan;
+    }
 
     /// <summary>Großer synthetischer Lauf für Zeit- und Speicherbudgets.</summary>
     public static ScanResult Large(int folders, int acesPerFolder, int users)

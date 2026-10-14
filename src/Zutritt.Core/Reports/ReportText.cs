@@ -117,6 +117,19 @@ internal static class ReportText
         return string.Join(" · ", parts);
     }
 
+    /// <summary>
+    /// Version für die Anzeige: ein angehängter Commit-Hash („1.0.0+f733926704a0…“) wird auf sieben Zeichen
+    /// gekürzt – nachvollziehbar genug, ohne dass 40 Hex-Zeichen das Deckblatt füllen.
+    /// </summary>
+    public static string Version(string? version)
+    {
+        if (string.IsNullOrWhiteSpace(version)) return "";
+        var plus = version.IndexOf('+');
+        if (plus < 0) return version;
+        var build = version[(plus + 1)..];
+        return build.Length > 7 && build.All(Uri.IsHexDigit) ? version[..(plus + 8)] : version;
+    }
+
     /// <summary>Version dieses Zutritt (ohne angehängten Commit-Hash).</summary>
     public static string ProductVersion { get; } = ReadProductVersion();
 

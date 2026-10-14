@@ -382,9 +382,10 @@ public sealed class ReportDataBuilderTests
         Assert.Equal(11, c.Rows.Count);
         Assert.True(c.HasChanges);
 
-        // Reihenfolge der Bereiche: Befunde zuerst
-        Assert.Equal(["Befund", "Befund", "Zugriff", "Zugriff", "Berechtigung", "Berechtigung", "Berechtigung", "Ordner", "Ordner",
-            "Mitgliedschaft", "Mitgliedschaft"], c.Rows.Select(r => r.Area));
+        // Reihenfolge der Bereiche: Befunde, dann Ursachen, zuletzt die (oft zahlreichen) Folgen für Personen
+        Assert.Equal(["Befund", "Befund", "Berechtigung", "Berechtigung", "Berechtigung", "Mitgliedschaft", "Mitgliedschaft",
+            "Ordner", "Ordner", "Zugriff", "Zugriff"], c.Rows.Select(r => r.Area));
+        Assert.Equal(["mehr Zugriff", "weniger Zugriff"], c.Rows.Where(r => r.Area == "Zugriff").Select(r => r.Change));
 
         var neu = c.Rows[0];
         Assert.Equal("neu", neu.Change);
