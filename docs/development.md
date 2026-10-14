@@ -31,7 +31,7 @@ dotnet publish @common --self-contained true -p:IncludeNativeLibrariesForSelfExt
                -p:EnableCompressionInSingleFile=true -o out/standalone  # the single Zutritt.exe
 ```
 
-The version comes from `<Version>` in `src/Zutritt/Zutritt.csproj` (currently `1.0.0`); the CI overrides it with `-p:Version=…`.
+The version comes from `<Version>` in `src/Zutritt/Zutritt.csproj` (currently `0.1.0`); the CI overrides it with `-p:Version=…`.
 
 ## Tests
 
@@ -99,7 +99,7 @@ The SQLite schema is versioned in `PRAGMA user_version` (currently 2) and identi
 
 ```powershell
 dotnet publish src/Zutritt/Zutritt.csproj -c Release -r win-x64 -p:PublishSingleFile=true --self-contained true -o publish
-dotnet build installer/Zutritt.Installer.wixproj -c Release -p:ProductVersion=1.0.0
+dotnet build installer/Zutritt.Installer.wixproj -c Release -p:ProductVersion=0.1.0
 ```
 
 `installer/Package.wxs` installs everything from the publish folder (without `.pdb`) per machine into `C:\Program Files\Zutritt`, adds a Start menu shortcut, closes a running Zutritt, and sets `MajorUpgrade` with `AllowSameVersionUpgrades` so that CI builds – which differ only in the fourth version part – replace each other. The UI culture of the package is `de-DE`. ICE38, 43, 57, 60 and 61 are suppressed with reasons in the project file; validation is skipped on CI.
@@ -108,7 +108,7 @@ dotnet build installer/Zutritt.Installer.wixproj -c Release -p:ProductVersion=1.
 
 `.github/workflows/build.yml` runs on `windows-latest` for pushes to `main`, tags `v*`, pull requests and manual starts:
 
-1. **Version:** a tag `v1.2.3` gives `1.2.3`; otherwise the csproj version plus the run number, e.g. `1.0.0-ci.12`. The MSI gets `1.0.0.12` (numbers only).
+1. **Version:** a tag `v1.2.3` gives `1.2.3`; otherwise the csproj version plus the run number, e.g. `0.1.0-ci.12`. The MSI gets `0.1.0.12` (numbers only).
 2. **Restore, build, test** (Release) – test results are uploaded as `.trx`.
 3. **Publish** the three variants, **package** the ZIP (with the README) and the single exe, **build the MSI** from the self-contained output.
 4. **Upload** everything as a workflow artifact.

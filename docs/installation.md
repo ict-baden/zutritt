@@ -29,7 +29,7 @@ All files are attached to the pre-release [**latest**](https://github.com/ict-ba
 | `Zutritt.exe` | included | Running without installation, e.g. from an admin share or a USB stick. |
 | `Zutritt-<version>-win-x64-framework.zip` | .NET 10 Desktop Runtime | A small download where the runtime is already installed. |
 
-Builds from `main` carry versions like `1.0.0-ci.12` (12 = the number of the build run); releases from a tag carry the tag's version.
+Builds from `main` carry versions like `0.1.0-ci.12` (12 = the number of the build run); releases from a tag carry the tag's version.
 
 ## MSI installer
 
@@ -41,9 +41,9 @@ The MSI installs per machine:
 
 ```powershell
 # As administrator. The file name contains the version of the build.
-msiexec /i Zutritt-1.0.0-ci.12-x64.msi            # interactive
-msiexec /i Zutritt-1.0.0-ci.12-x64.msi /qn        # silent, e.g. for software distribution
-msiexec /x Zutritt-1.0.0-ci.12-x64.msi /qn        # uninstall
+msiexec /i Zutritt-0.1.0-ci.12-x64.msi            # interactive
+msiexec /i Zutritt-0.1.0-ci.12-x64.msi /qn        # silent, e.g. for software distribution
+msiexec /x Zutritt-0.1.0-ci.12-x64.msi /qn        # uninstall
 ```
 
 The installer closes a running Zutritt before it replaces the files.

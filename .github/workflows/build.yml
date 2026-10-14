@@ -39,9 +39,9 @@ jobs:
             $base = ([xml](Get-Content src/Zutritt/Zutritt.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
             $v = "$base-ci.$env:GITHUB_RUN_NUMBER"
           }
-          # MSI kennt nur Zahlen. CI-Builds: Version aus der csproj + Lauf-Nummer als 4. Stelle (z. B. 1.0.0.12).
+          # MSI kennt nur Zahlen. CI-Builds: Version aus der csproj + Lauf-Nummer als 4. Stelle (z. B. 0.1.0.12).
           # Windows Installer vergleicht nur drei Stellen, deshalb ersetzen sich CI-Builds gegenseitig
-          # (AllowSameVersionUpgrades), und ein Release v1.0.1 ist immer neuer als jeder 1.0.0-CI-Build.
+          # (AllowSameVersionUpgrades), und ein Release v0.1.1 ist immer neuer als jeder 0.1.0-CI-Build.
           $core = $v -replace '[-+].*$', ''
           $msi = if ($env:GITHUB_REF_TYPE -eq 'tag') { $core } else { "$core.$env:GITHUB_RUN_NUMBER" }
           "version=$v" >> $env:GITHUB_OUTPUT
