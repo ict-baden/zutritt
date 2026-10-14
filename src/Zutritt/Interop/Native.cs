@@ -54,8 +54,17 @@ internal static partial class Native
     public static partial nint GetStdHandle(int stdHandle);
 
     [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SetStdHandle(int stdHandle, nint handle);
+
+    [LibraryImport("kernel32.dll", SetLastError = true)]
     public static partial uint GetFileType(nint handle);
 
+    /// <summary>Codepage der angehängten Konsole (0 ohne Konsole) – mit ihr dekodiert PowerShell, was ein Programm in die Pipe schreibt.</summary>
     [LibraryImport("kernel32.dll")]
-    public static partial uint GetOEMCP();
+    public static partial uint GetConsoleOutputCP();
+
+    [LibraryImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetFileSizeEx(nint handle, out long size);
 }

@@ -100,6 +100,16 @@ public sealed class AppState : IDisposable
         }
     }
 
+    /// <summary>
+    /// Leere temporäre Datenbank, Fehler werden durchgereicht – für die versteckte Messung mit großen Demo-Läufen.
+    /// Die Datei wird beim Beenden gelöscht.
+    /// </summary>
+    internal static AppState OpenTemporary()
+    {
+        var temp = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"Zutritt-Messung-{Environment.ProcessId}-{Guid.NewGuid():N}.db");
+        return new AppState(new ScanStore(temp), temp, isDemo: true, strict: true, temp);
+    }
+
     private static AppState CreateDemo(string temp, ScanResult older, ScanResult newer, bool strict)
     {
         var store = new ScanStore(temp);
@@ -213,6 +223,19 @@ public sealed class AppState : IDisposable
     {
         if (string.IsNullOrEmpty(sid)) return "";
         return scan is not null && scan.Principals.TryGetValue(sid, out var p) ? p.Label : sid;
+    }
+
+    /// <summary>
+    /// Kurzer Name für enge Spalten: Anzeigename („Anna Becker“, „QC-Team“), sonst der Kontoname ohne Domäne.
+    /// Verwaiste und unbekannte SIDs bleiben SIDs – dort gibt es nichts Kürzeres, das stimmt.
+    /// </summary>
+    public string ShortNameOf(string? sid) => ShortNameIn(Scan, sid);
+
+    public static string ShortNameIn(ScanResult? scan, string? sid)
+    {
+        if (string.IsNullOrEmpty(sid)) return "";
+        if (scan is null || !scan.Principals.TryGetValue(sid, out var p) || p.Kind == PrincipalKind.Verwaist) return sid;
+        return p.DisplayName.Length > 0 ? p.DisplayName : Labels.WithoutDomain(p.Label);
     }
 
     /// <summary>Name in einem Vergleich: zuerst im neueren, dann im älteren Lauf (gelöschte Konten).</summary>

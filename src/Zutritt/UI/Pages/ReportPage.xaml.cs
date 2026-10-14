@@ -122,7 +122,7 @@ public partial class ReportPage : UserControl, IPage
         ResultIcon.Text = "\uE916";
         ResultIcon.SetResourceReference(TextBlock.ForegroundProperty, "TextFillColorSecondaryBrush");
         ResultTitle.Text = "Bericht wird erstellt …";
-        ResultPath.Text = path;
+        ResultPath.Text = path ?? "";
         ResultButtons.Visibility = Visibility.Collapsed;
     }
 
@@ -133,7 +133,6 @@ public partial class ReportPage : UserControl, IPage
         ResultIcon.SetResourceReference(TextBlock.ForegroundProperty, "SystemFillColorSuccessBrush");
         ResultTitle.Text = pdf ? "PDF-Bericht gespeichert" : "Excel-Bericht gespeichert";
         ResultPath.Text = path;
-        ResultPath.ToolTip = path;
         ResultButtons.Visibility = Visibility.Visible;
     }
 

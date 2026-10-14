@@ -255,7 +255,6 @@ public partial class OverviewPage : UserControl, IPage
         if (!IsScanning) return;
         if (p.Phase.Length > 0) ProgressPhase.Text = p.Phase;
         ProgressPath.Text = p.CurrentPath;
-        ProgressPath.ToolTip = p.CurrentPath.Length > 0 ? p.CurrentPath : null;
         ProgressVisited.Text = Labels.Number(p.FoldersVisited);
         ProgressStored.Text = Labels.Number(p.FoldersStored);
         ProgressErrors.Text = Labels.Number(p.Errors);

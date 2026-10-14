@@ -14,7 +14,9 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
     {
         public override string ToString() => $"{Account}, {Right}, {Origin}, {AppliesTo}";
     }
-    public sealed record PersonRow(string Person, string Account, string ViaShare, AccessLevel EffectiveLevel, string Ntfs, AccessLevel NtfsLevel, string Via, string Note)
+    /// <param name="Via">Gruppenkette kurz (ohne Domäne), <paramref name="ViaFull"/> vollständig für den Tooltip.</param>
+    public sealed record PersonRow(string Person, string Account, string ViaShare, AccessLevel EffectiveLevel, string Ntfs, AccessLevel NtfsLevel,
+        string Via, string ViaFull, string Note)
     {
         public override string ToString() => $"{Person}, Freigabe {ViaShare}, NTFS {Ntfs}, {Via}";
     }
@@ -40,6 +42,9 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
     private int _peopleVersion;
     private FolderTreeNode? _current;
 
+    /// <summary>Berechnung von „Wer darf hier rein“ für den gewählten Ordner (für die Messung).</summary>
+    internal Task PeopleTask => _peopleTask;
+
     public FoldersPage(AppState state)
     {
         InitializeComponent();
@@ -57,6 +62,8 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
         style.Setters.Add(new Setter(TreeViewItem.IsExpandedProperty, new Binding(nameof(FolderTreeNode.IsExpanded)) { Mode = BindingMode.TwoWay }));
         style.Setters.Add(new Setter(TreeViewItem.IsSelectedProperty, new Binding(nameof(FolderTreeNode.IsSelected)) { Mode = BindingMode.TwoWay }));
         style.Setters.Add(new Setter(ItemsControl.ItemsPanelProperty, new ItemsPanelTemplate(new FrameworkElementFactory(typeof(VirtualizingStackPanel)))));
+        if (Application.Current.TryFindResource("TreeItemTemplate") is ControlTemplate template)
+            style.Setters.Add(new Setter(Control.TemplateProperty, template));
         return style;
     }
 
@@ -70,7 +77,10 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
         OnShown();
         await _treeTask;
         SearchBox.Text = "";
-        await SelectPathAsync(ScreenshotFolder);
+        // Fremde Läufe (z. B. die große Messung) haben den Demo-Ordner nicht – dann der erste gespeicherte Unterordner
+        var path = _tree is null || _tree.FindNearest(ScreenshotFolder) is not null ? ScreenshotFolder
+            : _tree.Roots.FirstOrDefault()?.Children.FirstOrDefault()?.Path ?? ScreenshotFolder;
+        await SelectPathAsync(path);
         Tabs.SelectedItem = TabPeople;
         await _peopleTask;
         await Ui.IdleAsync();
@@ -135,7 +145,7 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
     /// <summary>Ordner anzeigen (z. B. aus den Befunden): Baum bis dorthin aufklappen und auswählen.</summary>
     public void SelectPath(string path) => Ui.Run(_state, () => SelectPathAsync(path), "Der Ordner ließ sich nicht anzeigen");
 
-    private async Task SelectPathAsync(string path)
+    internal async Task SelectPathAsync(string path)
     {
         OnShown();
         await _treeTask;
@@ -352,7 +362,7 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
     private void LoadPeople(ScanResult scan, FolderNode folder)
     {
         int version = ++_peopleVersion;
-        PeopleGrid.ItemsSource = null;
+        PeopleTable.ItemsSource = null;
         BroadNotice.Visibility = Visibility.Collapsed;
         TabPeople.Header = "Wer darf hier rein";
         PeopleStatus.Visibility = Visibility.Visible;
@@ -383,7 +393,7 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
                 var share = g.ViaShare is { } v ? Labels.Of(v) : folder.ShareUnc is null ? "keine Freigabe" : "nicht lesbar";
                 var note = g.ReducedByDeny ? "Durch einen Verweigern-Eintrag eingeschränkt" : p?.IsDisabled == true ? "Das Konto ist deaktiviert" : "";
                 return new PersonRow(person, p?.Label ?? g.Sid, share, g.Effective, Labels.Of(g.Ntfs), g.Ntfs,
-                    g.Via.Count == 0 ? "direkt berechtigt" : string.Join(" › ", g.Via), note);
+                    Labels.ViaChain(g.Via), g.Via.Count == 0 ? "direkt berechtigt" : string.Join(" › ", g.Via), note);
             }).ToList();
 
         if (broad.Count > 0)
@@ -392,7 +402,7 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
             BroadText.Text = $"Außerdem berechtigt: {list}. Damit darf hier praktisch jede angemeldete Person hinein – auch wer unten nicht einzeln steht.";
             BroadNotice.Visibility = Visibility.Visible;
         }
-        PeopleGrid.ItemsSource = people;
+        PeopleTable.ItemsSource = people;
         TabPeople.Header = $"Wer darf hier rein ({people.Count})";
         PeopleStatus.Visibility = people.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         PeopleStatus.Text = scan.Request.ResolveGroups

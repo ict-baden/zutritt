@@ -4,10 +4,30 @@ using Zutritt.Interop;
 namespace Zutritt.Cli;
 
 /// <summary>
-/// Verbindet das Fensterprogramm mit der Konsole des Aufrufers. In eine echte Konsole wird Unicode geschrieben
-/// (Umlaute und „Anführungszeichen“ erscheinen richtig, ohne die Codepage des Aufrufers umzustellen); bei
-/// Umleitung in Datei oder Pipe die OEM-Codepage, wie sie cmd und PowerShell dort erwarten.
+/// Verbindet das Fensterprogramm mit der Konsole des Aufrufers und wählt je Ausgabe die Kodierung, mit der das
+/// Gegenüber Umlaute und „Anführungszeichen“ richtig liest.
 /// </summary>
+/// <remarks>
+/// <para>Entscheidung je Ziel der Ausgabe (stdout und stderr getrennt):</para>
+/// <list type="bullet">
+/// <item><b>Konsole</b>: Unicode über WriteConsoleW – richtig in jeder Konsole, ohne deren Codepage umzustellen.</item>
+/// <item><b>Datei</b> (<c>Zutritt.exe scan … &gt; log.txt 2&gt;&amp;1</c> in cmd, geplante Aufgaben): UTF-8 mit BOM, damit Editoren
+/// und <c>Get-Content</c> die Kodierung sicher erkennen. Das BOM nur in eine leere Datei – beim Anhängen (<c>&gt;&gt;</c>) oder wenn
+/// stdout und stderr in dieselbe Datei gehen, stünde es sonst mitten im Text.</item>
+/// <item><b>Pipe</b> (<c>&amp; Zutritt.exe … | Out-String</c>, <c>$x = &amp; Zutritt.exe …</c>, cmd <c>| more</c>): in der Codepage der
+/// Konsole des Aufrufers. Genau mit ihr (<c>[Console]::OutputEncoding</c>) dekodiert PowerShell, was ein Programm in die Pipe
+/// schreibt; PowerShell 7 beachtet dabei kein BOM (ausprobiert: UTF-8 mit BOM kommt bei Codepage 437/850 als „Ã¼“ an,
+/// bei 65001 mit einem unsichtbaren U+FEFF am Anfang). Windows PowerShell 5.1 erkennt das BOM zwar, liest aber die
+/// Konsolen-Codepage ebenso richtig. Steht die Konsole auf UTF-8 (65001), wird also UTF-8 geschrieben, sonst OEM
+/// (437/850: Umlaute und ß vorhanden, typografische Zeichen werden durch ähnliche ersetzt). Ohne Konsole beim
+/// Aufrufer (selten, z. B. ein Dienst liest die Pipe): UTF-8 ohne BOM.</item>
+/// </list>
+/// <para>
+/// Grenze: PowerShell 7.4+ reicht bei <c>&amp; Zutritt.exe … &gt; log.txt</c> die Bytes unverändert in die Datei – mit OEM-Konsole
+/// steht dann OEM darin. Für Logdateien deshalb die Umleitung von cmd nehmen (siehe Hilfe) oder vorher
+/// <c>[Console]::OutputEncoding = [Text.Encoding]::UTF8</c> setzen.
+/// </para>
+/// </remarks>
 internal static class ConsoleSession
 {
     private static bool _attached;
@@ -15,17 +35,31 @@ internal static class ConsoleSession
     /// <summary>Ausgabe läuft in eine echte Konsole (nicht umgeleitet) – dann lohnt sich eine Fortschrittszeile.</summary>
     public static bool IsInteractive { get; private set; }
 
+    private enum Target { None, Console, File, Pipe }
+
     public static void Attach()
     {
         if (_attached) return;
         _attached = true;
 
-        bool outRedirected = IsRedirected(Native.STD_OUTPUT_HANDLE);
-        bool errRedirected = IsRedirected(Native.STD_ERROR_HANDLE);
-        bool attached = false;
-        if (!outRedirected || !errRedirected) attached = Native.AttachConsole(Native.ATTACH_PARENT_PROCESS);
+        // Ziele vor AttachConsole bestimmen – danach zeigen die Standard-Handles auf die Konsole
+        var outHandle = Native.GetStdHandle(Native.STD_OUTPUT_HANDLE);
+        var errHandle = Native.GetStdHandle(Native.STD_ERROR_HANDLE);
+        var outTarget = TargetOf(outHandle);
+        var errTarget = TargetOf(errHandle);
 
-        if (attached && !outRedirected)
+        // Auch bei zwei umgeleiteten Ausgaben anhängen: Nur die Konsole des Aufrufers verrät, wie er eine Pipe
+        // dekodiert, und Strg+C erreicht so den laufenden Scan (sauberer Abbruch mit Exitcode 3)
+        bool attached = Native.AttachConsole(Native.ATTACH_PARENT_PROCESS);
+        if (attached)
+        {
+            // AttachConsole setzt die Standard-Handles auf die Konsole – auch umgeleitete. Ohne das Zurücksetzen
+            // ginge „> log.txt“ ins Leere (die Datei bliebe leer, die Ausgabe landete in der Konsole).
+            if (outTarget is Target.File or Target.Pipe) Native.SetStdHandle(Native.STD_OUTPUT_HANDLE, outHandle);
+            if (errTarget is Target.File or Target.Pipe) Native.SetStdHandle(Native.STD_ERROR_HANDLE, errHandle);
+        }
+
+        if (attached && outTarget is Target.None or Target.Console)
         {
             // Unicode → .NET schreibt mit WriteConsoleW und lässt die Codepage der Konsole in Ruhe
             Console.OutputEncoding = Encoding.Unicode;
@@ -34,33 +68,52 @@ internal static class ConsoleSession
             Console.WriteLine();
         }
 
-        var oem = OemEncoding();
-        if (outRedirected) Console.SetOut(new StreamWriter(Console.OpenStandardOutput(), oem) { AutoFlush = true });
-        if (errRedirected) Console.SetError(new StreamWriter(Console.OpenStandardError(), oem) { AutoFlush = true });
+        if (outTarget is Target.File or Target.Pipe)
+            Console.SetOut(CreateWriter(Console.OpenStandardOutput(), outHandle, outTarget, attached));
+        if (errTarget is Target.File or Target.Pipe)
+            Console.SetError(CreateWriter(Console.OpenStandardError(), errHandle, errTarget, attached));
     }
 
-    private static bool IsRedirected(int std)
+    private static Target TargetOf(nint handle)
     {
-        var handle = Native.GetStdHandle(std);
-        if (handle is 0 or -1) return false;
-        var type = Native.GetFileType(handle);
-        return type is Native.FILE_TYPE_DISK or Native.FILE_TYPE_PIPE;
+        if (handle is 0 or -1) return Target.None;
+        return Native.GetFileType(handle) switch
+        {
+            Native.FILE_TYPE_DISK => Target.File,
+            Native.FILE_TYPE_PIPE => Target.Pipe,
+            // Zeichengerät: Konsole oder NUL – beides braucht keine eigene Kodierung
+            _ => Target.Console,
+        };
     }
 
-    private static Encoding OemEncoding()
+    private static StreamWriter CreateWriter(Stream stream, nint handle, Target target, bool attached)
     {
+        if (target == Target.File)
+        {
+            if (Native.GetFileSizeEx(handle, out var size) && size == 0)
+                stream.Write(Encoding.UTF8.Preamble);
+            return new StreamWriter(stream, new UTF8Encoding(false)) { AutoFlush = true };
+        }
+        return new StreamWriter(stream, PipeEncoding(attached)) { AutoFlush = true };
+    }
+
+    /// <summary>Kodierung, mit der der Aufrufer die Pipe liest: die Codepage seiner Konsole.</summary>
+    private static Encoding PipeEncoding(bool attached)
+    {
+        uint codePage = attached ? Native.GetConsoleOutputCP() : 0;
+        if (codePage is 0 or 65001) return new UTF8Encoding(false);
         try
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            return Encoding.GetEncoding((int)Native.GetOEMCP(), new AsciiFallback(), DecoderFallback.ReplacementFallback);
+            return Encoding.GetEncoding((int)codePage, new AsciiFallback(), DecoderFallback.ReplacementFallback);
         }
-        catch
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException)
         {
             return new UTF8Encoding(false);
         }
     }
 
-    /// <summary>Zeichen, die es in der OEM-Codepage nicht gibt (z. B. „ “ – …), lesbar ersetzen statt „?“.</summary>
+    /// <summary>Zeichen, die es in der Codepage nicht gibt (z. B. „ “ – …), lesbar ersetzen statt „?“.</summary>
     private sealed class AsciiFallback : EncoderFallback
     {
         public override int MaxCharCount => 3;
@@ -84,7 +137,7 @@ internal static class ConsoleSession
                     '→' => "->",
                     '←' => "<-",
                     '•' or '·' => "*",
-                    '\u00A0' or '\u202F' => " ",
+                    ' ' or ' ' => " ",
                     _ => "?",
                 };
                 _pos = 0;

@@ -27,6 +27,7 @@
                 <Grid>
                     <TreeView x:Name="Tree" BorderThickness="0" Background="Transparent" ScrollViewer.CanContentScroll="True"
                               VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
+                              VirtualizingPanel.CacheLength="0.5" VirtualizingPanel.CacheLengthUnit="Page"
                               SelectedItemChanged="Tree_SelectedItemChanged" AutomationProperties.Name="Ordnerbaum">
                         <TreeView.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -87,13 +88,17 @@
                     </TreeView>
 
                     <ListBox x:Name="SearchResults" Visibility="Collapsed" BorderThickness="0" Background="Transparent"
+                             HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
                              SelectionChanged="SearchResults_SelectionChanged" AutomationProperties.Name="Suchergebnisse">
+                        <ListBox.Resources>
+                            <Thickness x:Key="ListBoxItemPadding">10,5,10,5</Thickness>
+                        </ListBox.Resources>
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Margin="0,2" ToolTip="{Binding Path}">
+                                <StackPanel Margin="0,2">
                                     <TextBlock Text="{Binding Name}" Style="{StaticResource BodyStrong}" FontSize="13" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
-                                    <TextBlock Text="{Binding Path}" Style="{StaticResource Caption}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                                    <ui:PathText Text="{Binding Path}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Stretch"/>
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -130,7 +135,7 @@
                     </Grid.RowDefinitions>
                     <StackPanel>
                         <TextBlock x:Name="DetailName" Style="{StaticResource SubtitleText}"/>
-                        <TextBox x:Name="DetailPath" IsReadOnly="True" BorderThickness="0" Background="Transparent" Padding="0" Margin="0,2,0,0"
+                        <TextBox x:Name="DetailPath" IsReadOnly="True" BorderThickness="0" Background="Transparent" Padding="0" Margin="0,2,0,0" MinHeight="0"
                                  FontFamily="{StaticResource MonoFont}" FontSize="12.5" TextWrapping="Wrap"
                                  Foreground="{DynamicResource TextFillColorSecondaryBrush}" AutomationProperties.Name="Pfad"/>
                     </StackPanel>
@@ -138,12 +143,12 @@
 
                     <TabControl x:Name="Tabs" Grid.Row="2" Margin="0,10,0,0">
                         <TabItem x:Name="TabAces" Header="Einträge">
-                            <DataGrid x:Name="AcesGrid" Style="{DynamicResource Table}" Margin="0,8,0,0" ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                            <DataGrid x:Name="AcesGrid" Style="{DynamicResource Table}" Margin="0,8,0,0"
                                       AutomationProperties.Name="Einträge der Zugriffssteuerungsliste">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Konto" Binding="{Binding Account}" Width="*" MinWidth="170" ElementStyle="{StaticResource CellText}"/>
-                                    <DataGridTextColumn Header="Art" Binding="{Binding Kind}" Width="SizeToCells" MinWidth="110" ElementStyle="{StaticResource CellText}"/>
-                                    <DataGridTemplateColumn Header="Recht" SortMemberPath="Level" Width="SizeToCells" MinWidth="120">
+                                    <DataGridTextColumn Header="Konto" Binding="{Binding Account}" Width="2.2*" MinWidth="130" ElementStyle="{StaticResource CellText}"/>
+                                    <DataGridTextColumn Header="Art" Binding="{Binding Kind}" Width="84" MinWidth="84" ElementStyle="{StaticResource CellText}"/>
+                                    <DataGridTemplateColumn Header="Recht" SortMemberPath="Level" Width="*" MinWidth="84">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock x:Name="T" Text="{Binding Right}" Style="{StaticResource CellText}"/>
@@ -157,7 +162,7 @@
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
                                     <DataGridTextColumn Header="Herkunft" Binding="{Binding Origin}" Width="86" MinWidth="86" ElementStyle="{StaticResource CellText}"/>
-                                    <DataGridTextColumn Header="Gilt für" Binding="{Binding AppliesTo}" Width="SizeToCells" MinWidth="260" ElementStyle="{StaticResource CellText}"/>
+                                    <DataGridTextColumn Header="Gilt für" Binding="{Binding AppliesTo}" Width="1.3*" MinWidth="100" ElementStyle="{StaticResource CellText}"/>
                                 </DataGrid.Columns>
                             </DataGrid>
                         </TabItem>
@@ -179,29 +184,52 @@
                                         <TextBlock x:Name="BroadText" Grid.Column="1" Style="{StaticResource Body}" FontSize="13"/>
                                     </Grid>
                                 </Border>
-                                <DataGrid x:Name="PeopleGrid" Grid.Row="1" Style="{DynamicResource Table}" AutomationProperties.Name="Personen mit Zugriff">
-                                    <DataGrid.Columns>
-                                        <DataGridTemplateColumn Header="Person" SortMemberPath="Person" Width="2*" MinWidth="140">
-                                            <DataGridTemplateColumn.CellTemplate>
+                                <ListView x:Name="PeopleTable" Grid.Row="1" Style="{DynamicResource ListTable}" ui:ListTable.Columns="2*:140, 96, 96, 2*:110, 32"
+                                          AutomationProperties.Name="Personen mit Zugriff">
+                                    <ListView.View>
+                                        <GridView AllowsColumnReorder="False">
+                                        <GridViewColumn Header="Person" ui:ListTable.SortBy="Person">
+                                            <GridViewColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <TextBlock Text="{Binding Person}" ToolTip="{Binding Account}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding Person}" ToolTip="{Binding Account}" ToolTipService.InitialShowDelay="700"
+                                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                                 </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                        <DataGridTextColumn Header="Freigabe" Binding="{Binding ViaShare}" SortMemberPath="EffectiveLevel" Width="85" ElementStyle="{StaticResource CellText}"/>
-                                        <DataGridTextColumn Header="NTFS" Binding="{Binding Ntfs}" SortMemberPath="NtfsLevel" Width="85" ElementStyle="{StaticResource CellText}"/>
-                                        <DataGridTextColumn Header="Über Gruppen" Binding="{Binding Via}" Width="2*" MinWidth="110" ElementStyle="{StaticResource CellText}"/>
-                                        <DataGridTemplateColumn Width="34" CanUserSort="False">
-                                            <DataGridTemplateColumn.CellTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Header="Freigabe" ui:ListTable.SortBy="EffectiveLevel">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding ViaShare}" Style="{StaticResource CellText}"/>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Header="NTFS" ui:ListTable.SortBy="NtfsLevel">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding Ntfs}" Style="{StaticResource CellText}"/>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Header="Über Gruppen" ui:ListTable.SortBy="Via">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding Via}" ToolTip="{Binding ViaFull}" ToolTipService.InitialShowDelay="700"
+                                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn>
+                                            <GridViewColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <TextBlock Text="&#xE7BA;" Style="{StaticResource Icon}" FontSize="13" Foreground="{DynamicResource SevMedium}"
-                                                               HorizontalAlignment="Center" ToolTip="{Binding Note}" AutomationProperties.Name="{Binding Note}"
+                                                               HorizontalAlignment="Left" ToolTip="{Binding Note}" AutomationProperties.Name="{Binding Note}"
                                                                Visibility="{Binding Note, Converter={StaticResource EmptyToVisible}, ConverterParameter=invert}"/>
                                                 </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                    </DataGrid.Columns>
-                                </DataGrid>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        </GridView>
+                                    </ListView.View>
+                                </ListView>
                                 <TextBlock x:Name="PeopleStatus" Grid.Row="1" Style="{StaticResource Caption}" FontSize="13" Margin="4,10" Visibility="Collapsed"/>
                             </Grid>
                         </TabItem>

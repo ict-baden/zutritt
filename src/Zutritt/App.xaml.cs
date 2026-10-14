@@ -18,11 +18,11 @@ public partial class App : Application
         base.OnStartup(e);
         DispatcherUnhandledException += OnUnhandled;
 
-        if (_options.Mode == AppMode.Screenshots)
+        if (_options.Mode is AppMode.Screenshots or AppMode.Benchmark)
         {
             ShutdownMode = ShutdownMode.OnExplicitShutdown;
             ConsoleSession.Attach();
-            Dispatcher.InvokeAsync(RunScreenshotsAsync);
+            Dispatcher.InvokeAsync(RunOffscreenAsync);
             return;
         }
 
@@ -34,17 +34,19 @@ public partial class App : Application
         window.Show();
     }
 
-    private async Task RunScreenshotsAsync()
+    private async Task RunOffscreenAsync()
     {
         int code;
         try
         {
-            code = await Screenshots.RunAsync(_options.ScreenshotFolder, _options.Theme);
+            code = _options.Mode == AppMode.Benchmark
+                ? await Benchmark.RunAsync(_options.ScreenshotFolder, _options.BenchmarkFolders, _options.BenchmarkPeople)
+                : await Screenshots.RunAsync(_options.ScreenshotFolder, _options.Theme);
         }
         catch (Exception ex)
         {
             // Bewusst nicht verschluckt: Fehler (auch fehlende Core-Bausteine) sichtbar melden und mit 3 enden
-            Console.Error.WriteLine($"Screenshots fehlgeschlagen: {ex}");
+            Console.Error.WriteLine($"{(_options.Mode == AppMode.Benchmark ? "Messung" : "Screenshots")} fehlgeschlagen: {ex}");
             code = CommandLine.ExitError;
         }
         Shutdown(code);
@@ -54,9 +56,9 @@ public partial class App : Application
     {
         // Niemals wegen eines Fehlers abstürzen – stattdessen freundlich melden.
         e.Handled = true;
-        if (_options.Mode == AppMode.Screenshots)
+        if (_options.Mode is AppMode.Screenshots or AppMode.Benchmark)
         {
-            Console.Error.WriteLine($"Screenshots fehlgeschlagen: {e.Exception}");
+            Console.Error.WriteLine($"{(_options.Mode == AppMode.Benchmark ? "Messung" : "Screenshots")} fehlgeschlagen: {e.Exception}");
             Shutdown(CommandLine.ExitError);
             return;
         }

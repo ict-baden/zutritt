@@ -198,7 +198,10 @@ public partial class MainWindow : Window, IThemedWindow
         InfoBar.Visibility = Visibility.Collapsed;
     }
 
-    // ================= Screenshots =================
+    // ================= Screenshots und Messung =================
+
+    /// <summary>Seite zu einem Kürzel (für die versteckte Messung, die Seiten direkt bedient).</summary>
+    internal UserControl PageFor(string slug) => (_pages.FirstOrDefault(p => p.Slug == slug) ?? _pages[0]).Page;
 
     internal async Task PrepareScreenshotAsync(string slug)
     {

@@ -311,6 +311,9 @@ internal static class CommandLine
             Zutritt.exe ist ein Fensterprogramm; damit die Eingabeaufforderung auf das Ende wartet:
               start /wait Zutritt.exe scan …            (cmd)
               Zutritt.exe scan … | Out-Default          (PowerShell)
+            Protokoll für geplante Aufgaben: in einer .cmd-Datei umleiten – dort wartet cmd auf das
+            Ende, und die Datei wird UTF-8 (mit BOM):
+              "C:\Program Files\Zutritt\Zutritt.exe" scan \\FS01 --vergleich > D:\Berichte\zutritt.log 2>&1
             Es wird nur gelesen – an Rechten und Dateien ändert Zutritt nichts.
             """);
     }

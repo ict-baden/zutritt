@@ -74,7 +74,7 @@
             <!-- ========== Liste zur gewählten Kachel ========== -->
             <Border Grid.Row="3" Style="{StaticResource Card}" Padding="0" Margin="0">
                 <Grid>
-                    <DataGrid x:Name="FindingsGrid" Style="{DynamicResource Table}" AutomationProperties.Name="Befunde">
+                    <DataGrid x:Name="FindingsGrid" Style="{DynamicResource Table}" Sorting="Grid_Sorting" AutomationProperties.Name="Befunde">
                         <DataGrid.Columns>
                             <DataGridTemplateColumn Header="Schwere" SortMemberPath="Severity" Width="100">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -84,12 +84,18 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Regel" Binding="{Binding RuleId}" Width="64" ElementStyle="{StaticResource CellText}"/>
-                            <DataGridTextColumn Header="Pfad" Binding="{Binding Path}" Width="3*" ElementStyle="{StaticResource CellText}"/>
+                            <DataGridTemplateColumn Header="Pfad" SortMemberPath="Path" Width="3*" MinWidth="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ui:PathText Text="{Binding Path}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Konto" Binding="{Binding Account}" Width="1.5*" ElementStyle="{StaticResource CellText}"/>
                             <DataGridTextColumn Header="Befund" Binding="{Binding Message}" Width="3*" ElementStyle="{StaticResource CellText}"/>
                         </DataGrid.Columns>
                     </DataGrid>
-                    <DataGrid x:Name="AccessGrid" Style="{DynamicResource Table}" AutomationProperties.Name="Zugriffsänderungen" Visibility="Collapsed">
+                    <DataGrid x:Name="AccessGrid" Style="{DynamicResource Table}" Sorting="Grid_Sorting" AutomationProperties.Name="Zugriffsänderungen" Visibility="Collapsed">
                         <DataGrid.Columns>
                             <DataGridTemplateColumn Header="Person" SortMemberPath="Person" Width="1.5*">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -98,7 +104,13 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Pfad" Binding="{Binding Path}" Width="3*" ElementStyle="{StaticResource CellText}"/>
+                            <DataGridTemplateColumn Header="Pfad" SortMemberPath="Path" Width="3*" MinWidth="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ui:PathText Text="{Binding Path}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Vorher" Binding="{Binding Before}" SortMemberPath="BeforeLevel" Width="110" ElementStyle="{StaticResource CellText}"/>
                             <DataGridTextColumn Header="Nachher" Binding="{Binding After}" SortMemberPath="AfterLevel" Width="110" ElementStyle="{StaticResource CellText}"/>
                             <DataGridTemplateColumn Header="Richtung" SortMemberPath="Direction" Width="130">
@@ -121,16 +133,22 @@
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>
-                    <DataGrid x:Name="AcesGrid" Style="{DynamicResource Table}" AutomationProperties.Name="ACL-Änderungen" Visibility="Collapsed">
+                    <DataGrid x:Name="AcesGrid" Style="{DynamicResource Table}" Sorting="Grid_Sorting" AutomationProperties.Name="ACL-Änderungen" Visibility="Collapsed">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Änderung" Binding="{Binding Change}" Width="150" ElementStyle="{StaticResource CellText}"/>
-                            <DataGridTextColumn Header="Pfad" Binding="{Binding Path}" Width="3*" ElementStyle="{StaticResource CellText}"/>
+                            <DataGridTemplateColumn Header="Pfad" SortMemberPath="Path" Width="3*" MinWidth="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ui:PathText Text="{Binding Path}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Konto" Binding="{Binding Account}" Width="1.6*" ElementStyle="{StaticResource CellText}"/>
                             <DataGridTextColumn Header="Vorher" Binding="{Binding Before}" Width="1.2*" ElementStyle="{StaticResource CellText}"/>
                             <DataGridTextColumn Header="Nachher" Binding="{Binding After}" Width="1.2*" ElementStyle="{StaticResource CellText}"/>
                         </DataGrid.Columns>
                     </DataGrid>
-                    <DataGrid x:Name="MembersGrid" Style="{DynamicResource Table}" AutomationProperties.Name="Geänderte Mitgliedschaften" Visibility="Collapsed">
+                    <DataGrid x:Name="MembersGrid" Style="{DynamicResource Table}" Sorting="Grid_Sorting" AutomationProperties.Name="Geänderte Mitgliedschaften" Visibility="Collapsed">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Änderung" Binding="{Binding Change}" Width="140" ElementStyle="{StaticResource CellText}"/>
                             <DataGridTextColumn Header="Gruppe" Binding="{Binding Group}" Width="2*" ElementStyle="{StaticResource CellText}"/>

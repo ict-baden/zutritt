@@ -1,5 +1,7 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Zutritt.Core.Model;
 
 namespace Zutritt.UI.Pages;
@@ -36,6 +38,14 @@ public partial class ComparisonPage : UserControl, IPage
     private List<OlderChoice> _choices = [];
     private List<FindingRow> _newFindings = [];
     private List<FindingRow> _resolvedFindings = [];
+    // Aufbereitete Zeilen je Vergleich: bei großen Läufen Hunderttausende Zugriffsänderungen – einmal im
+    // Hintergrund sortiert und benannt, nicht bei jedem Seitenwechsel im UI-Thread
+    private ComparisonResult? _rowsFor;
+    private ComparisonRows? _rows;
+    private ComparisonResult? _buildingFor;
+    private Task<ComparisonRows>? _building;
+
+    private sealed record ComparisonRows(List<FindingRow> New, List<FindingRow> Resolved, List<AccessRow> Access, List<AceRow> Aces, List<MemberRow> Members);
     private Task _choicesTask = Task.CompletedTask;
 
     public ComparisonPage(AppState state)
@@ -65,8 +75,7 @@ public partial class ComparisonPage : UserControl, IPage
         if (_shownScan is not { } scan)
         {
             _choices = [];
-            _choicesTask = Task.CompletedTask;
-            ShowComparison();
+            _choicesTask = ShowComparisonAsync(version);
             return;
         }
         var task = LoadChoicesAsync(scan, version);
@@ -89,7 +98,7 @@ public partial class ComparisonPage : UserControl, IPage
                 return new OlderChoice(r.Id, $"{Labels.Date(r.StartedAt)} · {r.Targets} · {findings}", same);
             })
             .ToList();
-        ShowComparison();
+        await ShowComparisonAsync(version);
     }
 
     private void OlderBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -101,7 +110,7 @@ public partial class ComparisonPage : UserControl, IPage
 
     // ================= Anzeige =================
 
-    private void ShowComparison()
+    private async Task ShowComparisonAsync(int version)
     {
         var scan = _state.Scan;
         var c = _state.Comparison;
@@ -140,7 +149,7 @@ public partial class ComparisonPage : UserControl, IPage
             CompareInfo.Text = "";
             TargetsWarning.Visibility = Visibility.Collapsed;
             foreach (var count in new[] { CountNew, CountResolved, CountAccess, CountAces, CountMembers }) count.Text = "–";
-            FillGrids(null);
+            ApplyRows(null);
             ShowList(null, "Es gibt keinen früheren Lauf mit denselben Zielen. Wählen Sie oben einen Lauf, mit dem verglichen werden soll.");
             return;
         }
@@ -151,7 +160,23 @@ public partial class ComparisonPage : UserControl, IPage
         TargetsWarning.Visibility = sameTargets ? Visibility.Collapsed : Visibility.Visible;
         TargetsWarningText.Text = $"Der ältere Lauf hatte andere Ziele ({Labels.Targets(c.Older.Request.Targets)}) – Unterschiede können auch daher kommen.";
 
-        FillGrids(c);
+        if (!ReferenceEquals(_rowsFor, c))
+        {
+            foreach (var count in new[] { CountNew, CountResolved, CountAccess, CountAces, CountMembers }) count.Text = "…";
+            ApplyRows(null);
+            ShowList(null, "Änderungen werden aufbereitet …");
+            // Läuft schon eine Aufbereitung für diesen Vergleich (Seite erneut gezeigt), auf sie warten
+            if (!ReferenceEquals(_buildingFor, c) || _building is null)
+            {
+                _buildingFor = c;
+                _building = Task.Run(() => BuildRows(c));
+            }
+            var rows = await _building;
+            if (version != _choicesVersion || !ReferenceEquals(c, _state.Comparison)) return;
+            _rows = rows;
+            _rowsFor = c;
+        }
+        ApplyRows(_rows);
         // Erste Kachel mit Inhalt vorwählen (oder die bisherige Auswahl behalten)
         var tiles = new[] { TileNew, TileResolved, TileAccess, TileAces, TileMembers };
         var selected = tiles.FirstOrDefault(t => t.IsChecked == true);
@@ -172,21 +197,20 @@ public partial class ComparisonPage : UserControl, IPage
         NoComparisonText.Text = text;
     }
 
-    private void FillGrids(ComparisonResult? c)
+    /// <summary>Zeilen für alle Listen eines Vergleichs – rein rechnend, läuft im Hintergrund.</summary>
+    private static ComparisonRows BuildRows(ComparisonResult c)
     {
-        if (c is null)
-        {
-            FindingsGrid.ItemsSource = AccessGrid.ItemsSource = AcesGrid.ItemsSource = MembersGrid.ItemsSource = null;
-            return;
-        }
         string Name(string? sid) => sid is null ? "" : AppState.NameIn(c, sid);
 
-        _newFindings = c.NewFindings.OrderByDescending(f => f.Severity).ThenBy(f => f.Path, StringComparer.OrdinalIgnoreCase)
+        var newFindings = c.NewFindings.OrderByDescending(f => f.Severity).ThenBy(f => f.Path, StringComparer.OrdinalIgnoreCase)
             .Select(f => new FindingRow(f.Severity, f.RuleId, f.Path, Name(f.Sid), f.Message)).ToList();
-        _resolvedFindings = c.ResolvedFindings.OrderByDescending(f => f.Severity).ThenBy(f => f.Path, StringComparer.OrdinalIgnoreCase)
+        var resolvedFindings = c.ResolvedFindings.OrderByDescending(f => f.Severity).ThenBy(f => f.Path, StringComparer.OrdinalIgnoreCase)
             .Select(f => new FindingRow(f.Severity, f.RuleId, f.Path, Name(f.Sid), f.Message)).ToList();
-        var access = c.AccessChanges.OrderBy(a => Name(a.Sid), StringComparer.CurrentCultureIgnoreCase).ThenBy(a => a.Path, StringComparer.OrdinalIgnoreCase)
-            .Select(a => new AccessRow(PersonName(c, a.Sid), Name(a.Sid), a.Path, Labels.Of(a.Before), a.Before, Labels.Of(a.After), a.After, a.After > a.Before)).ToList();
+        // Namen je SID nur einmal nachschlagen und sortieren – es können Hunderttausende Zeilen sein
+        var people = c.AccessChanges.Select(a => a.Sid).Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(sid => sid, sid => (Name: Name(sid), Person: PersonName(c, sid)), StringComparer.OrdinalIgnoreCase);
+        var access = c.AccessChanges.OrderBy(a => people[a.Sid].Name, StringComparer.CurrentCultureIgnoreCase).ThenBy(a => a.Path, StringComparer.OrdinalIgnoreCase)
+            .Select(a => new AccessRow(people[a.Sid].Person, people[a.Sid].Name, a.Path, Labels.Of(a.Before), a.Before, Labels.Of(a.After), a.After, a.After > a.Before)).ToList();
         var aces = c.AceChanges.OrderBy(a => a.Path, StringComparer.OrdinalIgnoreCase)
             .Select(a => new AceRow(Labels.Of(a.Kind), a.Path, Name(a.Sid), AceText(a.Before), AceText(a.After)))
             .Concat(c.FoldersAdded.Select(p => new AceRow("Eigene Rechte neu", p, "", "", "")))
@@ -195,15 +219,24 @@ public partial class ComparisonPage : UserControl, IPage
         var members = c.MembershipChanges.OrderBy(m => Name(m.GroupSid), StringComparer.CurrentCultureIgnoreCase)
             .Select(m => new MemberRow(m.Kind == ChangeKind.Hinzugefuegt ? "Hinzugekommen" : m.Kind == ChangeKind.Entfernt ? "Entfernt" : "Geändert",
                 Name(m.GroupSid), Name(m.MemberSid))).ToList();
+        return new ComparisonRows(newFindings, resolvedFindings, access, aces, members);
+    }
 
-        AccessGrid.ItemsSource = access;
-        AcesGrid.ItemsSource = aces;
-        MembersGrid.ItemsSource = members;
-        CountNew.Text = Labels.Number(_newFindings.Count);
-        CountResolved.Text = Labels.Number(_resolvedFindings.Count);
-        CountAccess.Text = Labels.Number(access.Count);
-        CountAces.Text = Labels.Number(aces.Count);
-        CountMembers.Text = Labels.Number(members.Count);
+    private void ApplyRows(ComparisonRows? rows)
+    {
+        // Gleiche Listen nicht neu zuweisen – sonst legt die Tabelle bei jedem Seitenwechsel alle Zeilen neu an
+        _newFindings = rows?.New ?? [];
+        _resolvedFindings = rows?.Resolved ?? [];
+        if (rows is null) FindingsGrid.ItemsSource = null;
+        AccessGrid.ItemsSource = rows?.Access;
+        AcesGrid.ItemsSource = rows?.Aces;
+        MembersGrid.ItemsSource = rows?.Members;
+        if (rows is null) return;
+        CountNew.Text = Labels.Number(rows.New.Count);
+        CountResolved.Text = Labels.Number(rows.Resolved.Count);
+        CountAccess.Text = Labels.Number(rows.Access.Count);
+        CountAces.Text = Labels.Number(rows.Aces.Count);
+        CountMembers.Text = Labels.Number(rows.Members.Count);
     }
 
     private static string PersonName(ComparisonResult c, string sid)
@@ -238,6 +271,45 @@ public partial class ComparisonPage : UserControl, IPage
             ShowList(AcesGrid, AcesGrid.Items.Count == 0 ? "Keine Einträge in den Zugriffssteuerungslisten geändert." : null);
         else if (sender == TileMembers)
             ShowList(MembersGrid, MembersGrid.Items.Count == 0 ? "Keine Gruppenmitgliedschaft hat sich geändert." : null);
+    }
+
+    /// <summary>
+    /// Sortieren per Spaltenkopf im Hintergrund: Die Tabelle selbst sortiert über Reflexion im UI-Thread – bei
+    /// 200.000 Zugriffsänderungen stand die Oberfläche dafür zwei Sekunden still.
+    /// </summary>
+    private async void Grid_Sorting(object sender, DataGridSortingEventArgs e)
+    {
+        e.Handled = true;
+        if (sender is not DataGrid grid || grid.ItemsSource is not System.Collections.IList { Count: > 0 } list) return;
+        var column = e.Column;
+        var property = list[0]!.GetType().GetProperty(column.SortMemberPath);
+        if (property is null) return;
+        var descending = column.SortDirection == ListSortDirection.Ascending;
+        var items = list.Cast<object>().ToList();
+        Mouse.OverrideCursor = Cursors.Wait;
+        try
+        {
+            var sorted = await Task.Run(() =>
+            {
+                // Schlüssel einmal lesen; OrderBy ist stabil – gleiche Werte behalten ihre bisherige Reihenfolge
+                var keyed = items.Select(item => (Key: property.GetValue(item), Item: item));
+                IComparer<object?> order = property.PropertyType == typeof(string) ? new TextOrder() : Comparer<object?>.Default;
+                return (descending ? keyed.OrderByDescending(k => k.Key, order) : keyed.OrderBy(k => k.Key, order)).Select(k => k.Item).ToList();
+            });
+            if (!ReferenceEquals(grid.ItemsSource, list)) return; // inzwischen andere Liste
+            grid.ItemsSource = sorted;
+            foreach (var c in grid.Columns) c.SortDirection = null;
+            column.SortDirection = descending ? ListSortDirection.Descending : ListSortDirection.Ascending;
+        }
+        finally
+        {
+            Mouse.OverrideCursor = null;
+        }
+    }
+
+    private sealed class TextOrder : IComparer<object?>
+    {
+        public int Compare(object? x, object? y) => StringComparer.CurrentCultureIgnoreCase.Compare(x as string, y as string);
     }
 
     private void ShowList(DataGrid? grid, string? emptyText)
