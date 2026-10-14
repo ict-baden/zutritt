@@ -1,29 +1,253 @@
-# Zutritt
+<p align="center">
+  <img src="docs/assets/banner.png" alt="Zutritt – Who can access what? Share and NTFS permissions resolved down to people – with findings, history and a report to sign off." width="100%">
+</p>
 
-**Who can access what on your file shares – and through which group.**
+<p align="center">
+  <a href="https://github.com/ict-baden/zutritt/releases/tag/latest"><img alt="Download: latest" src="https://img.shields.io/badge/Download-latest-2ea44f?logo=github&logoColor=white"></a>
+  <img alt="Windows 10 and 11, x64" src="https://img.shields.io/badge/Windows-10%20%7C%2011%20x64-0078D4">
+  <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white">
+  <img alt="Read-only" src="https://img.shields.io/badge/Access-read--only-2E7D32">
+  <img alt="User interface in German" src="https://img.shields.io/badge/UI-German-6B7280">
+  <img alt="Status: pre-release" src="https://img.shields.io/badge/Status-pre--release-E3A008">
+  <a href="https://github.com/ict-baden/zutritt/actions/workflows/build.yml"><img alt="Build" src="https://github.com/ict-baden/zutritt/actions/workflows/build.yml/badge.svg"></a>
+</p>
 
-Zutritt is a Windows desktop tool (.NET 10, WPF) that reads SMB share permissions and NTFS ACLs, resolves groups down to individual people, flags risky permissions (e.g. *Everyone* can write, orphaned SIDs, rights granted directly to users, hidden inheritance breaks), compares a run with the previous one and produces an Excel or PDF report to sign off during audits (GMP, ISO 27001, NIS2).
+<p align="center">
+  <b><a href="https://github.com/ict-baden/zutritt/releases/tag/latest">Download</a></b>
+  &nbsp;·&nbsp; <a href="#what-zutritt-does">Features</a>
+  &nbsp;·&nbsp; <a href="#quick-start">Quick start</a>
+  &nbsp;·&nbsp; <a href="#the-14-rules">Rules</a>
+  &nbsp;·&nbsp; <a href="#documentation">Documentation</a>
+  &nbsp;·&nbsp; <a href="#limits-honestly">Limits</a>
+</p>
 
-Zutritt only reads – it never changes permissions or files.
+<br>
+
+<p align="center">
+  <b>Who can access what on your file shares – and through which group?</b><br>
+  Zutritt reads SMB share permissions and NTFS ACLs, resolves groups down to individual people,<br>
+  flags risky permissions and writes an Excel or PDF report you can sign off in an audit.
+</p>
+
+<p align="center">
+  <sub>Read-only: Zutritt never changes permissions, files or accounts &nbsp;·&nbsp; no server, no agent, no service &nbsp;·&nbsp; one program for the desktop and for scheduled tasks</sub>
+</p>
 
 > [!NOTE]
-> Full documentation with screenshots is in progress. The application UI and the reports are in German.
+> **The application, its command-line output and the reports are in German.** This documentation is in English and quotes the German labels where you need to find them, for example *Befunde* (findings) or *Wer darf hier rein* (who can get in here).
 
-## Download
+## What Zutritt does
 
-Every push to `main` updates the pre-release **[latest](https://github.com/ict-baden/zutritt/releases/tag/latest)**:
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/overview-dark.png">
+        <img alt="Übersicht page: result tiles for 18,734 folders checked, 41 with their own permissions, 20 people, 2 unreadable, and findings by severity; below it the form for a new scan." src="docs/assets/screenshots/overview-light.png" width="290">
+      </picture>
+      <br><b>Scan shares, servers and folders</b><br>
+      <code>\\server\share</code>, a whole server, local folders or all shares of this PC. Junctions are recorded but not followed.
+    </td>
+    <td width="33%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/findings-dark.png">
+        <img alt="Befunde page: findings grouped by severity, with the detail pane for ZT01 showing explanation and recommendation." src="docs/assets/screenshots/findings-light.png" width="290">
+      </picture>
+      <br><b>14 rules with a clear recommendation</b><br>
+      <i>Everyone</i> can write, orphaned SIDs, rights given to individuals, hidden inheritance breaks, moved folders – each with “why it matters”.
+    </td>
+    <td width="33%" valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/folders-dark.png">
+        <img alt="Ordner page: folder tree with markers, and the tab “Wer darf hier rein” listing each person with the effective right over the share, the NTFS right and the groups the access comes through." src="docs/assets/screenshots/folders-light.png" width="290">
+      </picture>
+      <br><b>Who can get in here?</b><br>
+      Per folder, every person with the effective right over the share and over NTFS – and the group chain it comes through.
+    </td>
+  </tr>
+  <tr>
+    <td valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/people-dark.png">
+        <img alt="Personen page: Anna Becker with her group memberships and all 26 folders she can access, with right and group chain." src="docs/assets/screenshots/people-light.png" width="290">
+      </picture>
+      <br><b>Where can this person go?</b><br>
+      Every folder a person can reach, the effective right and the groups behind it – including nested groups and disabled accounts.
+    </td>
+    <td valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/comparison-dark.png">
+        <img alt="Vergleich page: compared with the run of seven days earlier – 4 new findings, 3 resolved, 79 access changes, 6 ACL changes, 1 membership change." src="docs/assets/screenshots/comparison-light.png" width="290">
+      </picture>
+      <br><b>What changed since the last run?</b><br>
+      New and resolved findings, changed ACL entries and group memberships, and who can now access more or less.
+    </td>
+    <td valign="top">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/report-dark.png">
+        <img alt="Bericht page: save the Excel or PDF report, include the comparison, and a preview of the sign-off block." src="docs/assets/screenshots/report-light.png" width="290">
+      </picture>
+      <br><b>Excel to work with, PDF to sign</b><br>
+      Filterable Excel workbook with every entry; PDF with cover, summary, findings and a sign-off block for the access review.
+    </td>
+  </tr>
+</table>
 
-- `Zutritt-…-x64.msi` – installer for all users
-- `Zutritt.exe` – single file, no installation, no .NET runtime required
-- `Zutritt-…-win-x64-framework.zip` – small variant, requires the .NET 10 Desktop Runtime
+### And also
 
-## Build
+<table>
+  <tr>
+    <td width="50%" valign="top"><b>Effective access, computed like Windows</b><br>Canonical ACE order, deny entries, inheritance, <i>OWNER RIGHTS</i>, share ∩ NTFS – checked against the Windows access check in the test suite</td>
+    <td width="50%" valign="top"><b>Groups down to people</b><br>Local accounts and groups of the scanned server and, on domain-joined PCs, Active Directory – nested, with cycle protection</td>
+  </tr>
+  <tr>
+    <td valign="top"><b>Orphaned is really orphaned</b><br>A SID is only reported as orphaned when the responsible account database was reachable and does not know the SID – an unreachable domain gives <i>Unbekannt</i> (unknown), not a deletion hint</td>
+    <td valign="top"><b>Moved folders</b><br>Detects folders and files that carried their old inherited rights along when moved (ZT14) – usually invisible in Explorer</td>
+  </tr>
+  <tr>
+    <td valign="top"><b>History per user</b><br>Every run is stored unchanged in a SQLite file under <code>%LocalAppData%\Zutritt</code> and can be reopened, compared and reported later</td>
+    <td valign="top"><b>Command line and scheduled tasks</b><br><code>Zutritt.exe scan … --vergleich --bericht …</code> with exit codes 0–3 for monitoring</td>
+  </tr>
+</table>
+
+## Quick start
+
+<table>
+  <tr>
+    <td width="33%" valign="top"><b>① Download</b><br>MSI for all users, or the single <code>Zutritt.exe</code> that runs without installation and without a .NET runtime.</td>
+    <td width="33%" valign="top"><b>② Scan</b><br>Enter <code>\\server</code>, <code>\\server\share</code>, <code>D:\Data</code> or <code>.</code> and click <i>Scan starten</i>. Nothing is changed.</td>
+    <td width="33%" valign="top"><b>③ Review and sign</b><br>Work through <i>Befunde</i>, then save the PDF on the <i>Bericht</i> page and sign it.</td>
+  </tr>
+</table>
+
+**① Download** – from the pre-release [**latest**](https://github.com/ict-baden/zutritt/releases/tag/latest), rebuilt on every push to `main`:
+
+| File | What it is |
+|---|---|
+| `Zutritt-…-x64.msi` | Installer for all users: `C:\Program Files\Zutritt`, Start menu entry, no service, no autostart. No .NET runtime needed. |
+| `Zutritt.exe` | A single file that runs without installation and without a .NET runtime. |
+| `Zutritt-…-framework.zip` | Small variant; needs the .NET 10 Desktop Runtime. |
+
+**② Scan** – Run Zutritt with an account that can read the permissions you want to see. For the share permissions of a server, that account needs administrator rights on the server; without them the share is reported as unreadable (ZT13) and access is rated by NTFS alone. Details: **[Installation & rights →](docs/installation.md)**
+
+**③ Review and sign** – Each finding comes with an explanation and a recommendation. The PDF report ends with a block for *Geprüft von* (reviewed by), *Datum*, *Unterschrift* (signature) and *Bemerkungen* (remarks). Walkthrough: **[Using the app →](docs/usage.md)**
+
+### From the command line
+
+The same `Zutritt.exe` runs without a window when given a command – for example every Monday at 6:00 with a comparison and a PDF to sign:
+
+```bat
+schtasks /create /tn "Zutritt Wochenbericht" /sc weekly /d MO /st 06:00 /tr ^
+  "\"C:\Program Files\Zutritt\Zutritt.exe\" scan \\FS01 --vergleich --bericht D:\Berichte\Zutritt.pdf"
+```
+
+| Exit code | Meaning |
+|---|---|
+| `0` | no findings of severity *Mittel* (medium) or higher |
+| `1` | findings *Mittel*, none *Hoch* (high) |
+| `2` | at least one finding *Hoch* |
+| `3` | error or cancelled (also when a report could not be written) |
+
+All commands, options, logging and encoding: **[Command line →](docs/command-line.md)**
+
+## The 14 rules
+
+ACL findings are reported where an entry is set explicitly – not again on every folder that inherits it.
+
+| ID | Severity | Finding | German title in the app |
+|---|---|---|---|
+| [ZT01](docs/rules.md#zt01--broad-group-can-write) | ![High](https://img.shields.io/badge/High-C62828) | A broad group (*Everyone*, *Authenticated Users*, *Domain Users* …) can write | *Breite Gruppe darf schreiben* |
+| [ZT02](docs/rules.md#zt02--broad-group-can-read) | ![Medium](https://img.shields.io/badge/Medium-EF6C00) | A broad group can read | *Breite Gruppe darf lesen* |
+| [ZT03](docs/rules.md#zt03--right-granted-directly-to-a-person) | ![Medium](https://img.shields.io/badge/Medium-EF6C00) | Right granted directly to a person instead of a group | *Recht direkt an Person vergeben* |
+| [ZT04](docs/rules.md#zt04--orphaned-sid) | ![Medium](https://img.shields.io/badge/Medium-EF6C00) | Orphaned SID (entry or owner points to a deleted account) | *Verwaiste SID* |
+| [ZT05](docs/rules.md#zt05--full-control-for-non-admins) | ![High](https://img.shields.io/badge/High-C62828) | Full control for an account or group that is not an administrator | *Vollzugriff für Nicht-Admins* |
+| [ZT06](docs/rules.md#zt06--deeply-hidden-exception) | ![Low](https://img.shields.io/badge/Low-FBC02D) | Inheritance broken deep in the tree | *Tief versteckte Ausnahme* |
+| [ZT07](docs/rules.md#zt07--deny-entry) | ![Info](https://img.shields.io/badge/Info-BDBDBD) | Explicit deny entry | *Verweigern-Eintrag* |
+| [ZT08](docs/rules.md#zt08--share-everyone-full-control) | ![Info](https://img.shields.io/badge/Info-BDBDBD) | Share permission gives *Everyone* or *Authenticated Users* at least *Change* | *Freigabe: Jeder Vollzugriff* |
+| [ZT09](docs/rules.md#zt09--folder-not-readable) | ![Info](https://img.shields.io/badge/Info-BDBDBD) | Folder, file or target could not be read | *Ordner nicht lesbar* |
+| [ZT10](docs/rules.md#zt10--owner-is-a-user-account) | ![Low](https://img.shields.io/badge/Low-FBC02D) | Owner is a personal user account | *Besitzer ist ein Benutzerkonto* |
+| [ZT11](docs/rules.md#zt11--empty-group-has-rights) | ![Low](https://img.shields.io/badge/Low-FBC02D) | A group without members has rights | *Leere Gruppe berechtigt* |
+| [ZT12](docs/rules.md#zt12--disabled-account-has-rights) | ![Medium](https://img.shields.io/badge/Medium-EF6C00) | A disabled account has its own rights | *Deaktiviertes Konto berechtigt* |
+| [ZT13](docs/rules.md#zt13--share-permissions-not-readable) | ![Info](https://img.shields.io/badge/Info-BDBDBD) | Share permissions could not be read | *Freigabe-Berechtigungen nicht lesbar* |
+| [ZT14](docs/rules.md#zt14--permissions-differ-from-inheritance) | ![Low](https://img.shields.io/badge/Low-FBC02D) | Inherited entries do not match the parent – typically a moved folder | *Rechte weichen von der Vererbung ab* |
+
+Folders whose permissions Windows itself manages (owner *TrustedInstaller*, entries for app packages and capabilities) do not trigger the housekeeping rules ZT02, ZT03, ZT06, ZT10 and ZT14, nor ZT05 for the folder's owner. Every rule in detail: **[Rules reference →](docs/rules.md)**
+
+## Compared with the alternatives
+
+| | icacls / Get-Acl scripts + Excel | Commercial access-governance suites<br><sub>e.g. tenfold, 8MAN, Varonis</sub> | Zutritt |
+|---|---|---|---|
+| Share **and** NTFS permissions | ◐ NTFS easy, share permissions need extra work | ✔︎ | ✔︎ |
+| Groups resolved down to people | ✘ manual | ✔︎ | ✔︎ local SAM and AD of the scanning PC's domain |
+| Effective access (deny, inheritance, share ∩ NTFS) | ✘ | ✔︎ | ✔︎ |
+| Risk findings with recommendations | ✘ | ✔︎ | ✔︎ 14 fixed rules |
+| Comparison with the previous run | ◐ diff by hand | ✔︎ | ✔︎ |
+| Report to sign off | ◐ build it yourself | ✔︎ | ✔︎ PDF with sign-off block, Excel with filters |
+| Change permissions, request and approval workflows | ✔︎ (icacls) | ✔︎ usually | ✘ deliberately read-only |
+| Continuous monitoring, file-access auditing | ✘ | ◐ depends on the product | ✘ runs on demand or as a scheduled task |
+| Server, database or agents to operate | ✘ | usually yes | ✘ one exe, a per-user SQLite file |
+| Language | – | – | German UI and reports |
+
+<sub>✔︎ yes &nbsp;·&nbsp; ◐ partly or with effort &nbsp;·&nbsp; ✘ no. The commercial column describes the category in general, not a tested feature list of a specific product.</sub>
+
+Zutritt answers one question well – *who can access what, and why* – for admins and auditors who need that answer regularly without introducing a new platform.
+
+## Documentation
+
+<table>
+  <tr>
+    <td width="50%" valign="top"><a href="docs/installation.md"><b>Installation &amp; rights</b></a><br><sub>MSI, single exe, ZIP, requirements, which rights the scanning account needs locally and on servers, updates</sub></td>
+    <td width="50%" valign="top"><a href="docs/usage.md"><b>Using the app</b></a><br><sub>Every page with screenshots: overview and scan, findings, folders, people, comparison, report, info – German labels explained</sub></td>
+  </tr>
+  <tr>
+    <td valign="top"><a href="docs/command-line.md"><b>Command line</b></a><br><sub><code>scan</code>, <code>liste</code>, <code>bericht</code>, options, exit codes, scheduled tasks, logging and encoding</sub></td>
+    <td valign="top"><a href="docs/rules.md"><b>Rules reference</b></a><br><sub>All 14 rules: what they mean, why they matter, what to do, and the deliberate exceptions</sub></td>
+  </tr>
+  <tr>
+    <td valign="top"><a href="docs/how-it-works.md"><b>How it works</b></a><br><sub>Scanning, what gets stored, NT4-style ACLs, the effective-access algorithm, identities, comparison</sub></td>
+    <td valign="top"><a href="docs/excel-and-pdf.md"><b>Reports: Excel &amp; PDF</b></a><br><sub>Excel sheets, PDF sections, the sign-off block, size limits and truncation</sub></td>
+  </tr>
+  <tr>
+    <td valign="top"><a href="docs/data-and-privacy.md"><b>Data &amp; privacy</b></a><br><sub>What is read, what is stored where, the per-user database, handling reports confidentially</sub></td>
+    <td valign="top"><a href="docs/limitations.md"><b>Limitations</b></a><br><sub>What Zutritt cannot see or decide – and how it errs on the side of showing more access</sub></td>
+  </tr>
+  <tr>
+    <td colspan="2" valign="top"><a href="docs/development.md"><b>Development</b></a><br><sub>Building with .NET 10, tests (many need administrator rights), architecture, CI and releases, MSI, regenerating the screenshots</sub></td>
+  </tr>
+</table>
+
+## For audits
+
+Periodic reviews of access rights are expected in GMP environments (EU GMP Annex 11, 21 CFR Part 11 context), under ISO/IEC 27001 (control A.5.18 *Access rights*) and NIS2. Zutritt produces the evidence for such a review: what was checked, by whom, when, with which result and what changed since last time – and a page to sign.
+
+> [!CAUTION]
+> Zutritt is **not a validated system** and makes no compliance claim. It is a read-only analysis tool; how it is qualified and used in a regulated process is up to the operator.
+
+## Limits, honestly
+
+- **Rights of the scanning account matter.** Folders it cannot read are reported (ZT09); where a folder cannot even be listed, nothing below it is assessed. Share permissions need administrator rights on the server (ZT13).
+- **Active Directory** is used only when the scanning PC is domain-joined, and only for its own domain. Groups from trusted domains are named but not expanded. AD lookups are tested against a simulated directory only, not yet against a real domain.
+- **When in doubt, Zutritt shows more access, not less:** conditional allow entries count, conditional deny entries are ignored, unreadable share permissions mean “NTFS only”.
+- **Files** are only examined with `--dateien` (*Dateien einbeziehen*), and then only files with their own permissions.
+- **Very large reports** are truncated with a visible notice – the PDF earlier than the Excel workbook.
+- **Pre-release, not code-signed.** SmartScreen may warn.
+- **No licence yet.** The licence has not been decided; the repository contains no licence file.
+
+Everything else: **[Limitations →](docs/limitations.md)**
+
+## Build it yourself
 
 ```powershell
 dotnet build Zutritt.sln
-dotnet test Zutritt.sln   # integration tests create temporary shares and local accounts – run as administrator
+dotnet test Zutritt.sln     # many integration tests create shares and local accounts – run as administrator
+dotnet publish src/Zutritt/Zutritt.csproj -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -o publish
 ```
 
----
+Needs the .NET 10 SDK (`global.json`: 10.0.100, roll forward to the latest feature band). MSI, CI, architecture and screenshots: **[Development →](docs/development.md)**
 
-Part of the ICT-Baden open-source tools.
+<br>
+
+<p align="center">
+  <img src="docs/assets/logo.svg" alt="" width="48"><br>
+  <sub><b>Zutritt</b> · Who can access what? · ICT-Baden</sub>
+</p>
