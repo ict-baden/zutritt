@@ -209,6 +209,21 @@ public sealed class ReportDataBuilderTests
     }
 
     [Fact]
+    public void Bekannte_SID_ohne_Prinzipal_bekommt_deutschen_Namen()
+    {
+        // BESITZERRECHTE steht nicht immer unter den Prinzipalen des Laufs – im Bericht trotzdem keine rohe SID
+        var scan = Scan();
+        scan.Principals.Remove("S-1-3-4");
+        scan.Folders[0].Aces.Add(new AceEntry { Sid = "S-1-3-4", Rights = System.Security.AccessControl.FileSystemRights.ReadAndExecute });
+
+        var data = ReportDataBuilder.Build(scan, null, Rules(), _ => [], CreatedAt);
+
+        var row = Assert.Single(data.Folders[0].Aces, a => a.Sid == "S-1-3-4");
+        Assert.Equal("BESITZERRECHTE", row.Account);
+        Assert.Equal(PrincipalKind.Bekannt, row.Kind);
+    }
+
+    [Fact]
     public void Personen_KeinZugriffZaehltNicht()
     {
         var data = ReportDataBuilder.Build(Scan(), null, Rules(),

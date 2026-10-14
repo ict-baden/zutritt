@@ -464,7 +464,8 @@ internal static class ReportDataBuilder
 
     /// <summary>
     /// Namen zu SIDs: zuerst aus dem aktuellen Lauf, dann aus dem älteren (gelöschte Konten kennt nur
-    /// noch der), sonst die SID selbst – nie leer, damit im Bericht immer etwas Nachprüfbares steht.
+    /// noch der), dann der deutsche Name bekannter Prinzipale (BESITZERRECHTE u. a. stehen nicht immer im
+    /// Lauf), sonst die SID selbst – nie leer, damit im Bericht immer etwas Nachprüfbares steht.
     /// </summary>
     private sealed class NameLookup(ScanResult primary, ScanResult? secondary)
     {
@@ -472,10 +473,12 @@ internal static class ReportDataBuilder
         {
             if (primary.Principals.TryGetValue(sid, out var p)) return p.Label;
             if (secondary is not null && secondary.Principals.TryGetValue(sid, out var o)) return o.Label;
-            return sid;
+            return SidCatalog.GermanName(sid) ?? sid;
         }
 
         public PrincipalKind Kind(string sid) =>
-            primary.Principals.TryGetValue(sid, out var p) ? p.Kind : PrincipalKind.Unbekannt;
+            primary.Principals.TryGetValue(sid, out var p) ? p.Kind
+            : SidCatalog.GermanName(sid) is not null || SidCatalog.IsSpecialIdentity(sid) ? PrincipalKind.Bekannt
+            : PrincipalKind.Unbekannt;
     }
 }
