@@ -115,7 +115,15 @@ internal sealed class ResolveSession
         if (lsa.Status == LookupStatus.Gefunden) return FromLsa(sid, lsa, server);
 
         var nonAccount = WellKnownSids.NonAccountName(sid);
-        if (nonAccount is not null) return Make(sid, nonAccount, PrincipalKind.Bekannt);
+        if (nonAccount is not null)
+        {
+            // „Nicht installiert“ nur, wenn jede zuständige LSA die Dienst-SID sicher nicht kennt – war ein Server nicht
+            // erreichbar oder nicht gefragt, kann der Dienst dort sehr wohl installiert sein.
+            if (sid.StartsWith("S-1-5-80-", StringComparison.OrdinalIgnoreCase)
+                && (lsa.Status != LookupStatus.NichtZugeordnet || _unaskedServers.Count > 0))
+                nonAccount = $"Dienst ({sid})";
+            return Make(sid, nonAccount, PrincipalKind.Bekannt);
+        }
         // VORDEFINIERT-Gruppe, die es auf diesem Rechner nicht gibt (z. B. nur auf Servern): von Windows vergeben,
         // kein gelöschtes Konto – ein Löschhinweis wäre falsch.
         if (WellKnownSids.IsBuiltin(sid)) return Make(sid, sid, PrincipalKind.Unbekannt, isLocal: true);

@@ -295,8 +295,8 @@ public static class FindingRules
             if (ace.IsDeny || ace.Rights == 0) continue;
             var sid = ace.Sid;
             if (SidCatalog.IsAdminLike(sid) || SidCatalog.IsBuiltinAdministrator(sid) || SidCatalog.IsCreatorPlaceholder(sid)) continue;
-            // Sonder-Identitäten zählen nur, wenn sie für Personen stehen (Jeder, Authentifizierte Benutzer …)
-            if (SidCatalog.IsSpecialIdentity(sid) && !SidCatalog.IsBroad(sid)) continue;
+            // Sonder-Identitäten zählen, wenn sie für Personen stehen (Jeder, ANONYMOUS-ANMELDUNG, Diese Organisation …)
+            if (SidCatalog.IsWindowsOrService(sid)) continue;
             return true;
         }
         return false;
@@ -310,19 +310,29 @@ public static class FindingRules
             return "Erbt nichts vom übergeordneten Ordner, obwohl die Vererbung eingeschaltet ist – meist hat ein Programm den "
                 + "Ordner mit eigenen Rechten angelegt. Die Rechte von oben gelten hier erst nach der nächsten Weitergabe.";
         const string Generic = "Geerbte Einträge passen nicht zum übergeordneten Ordner – vermutlich verschoben; es gelten womöglich noch Rechte vom früheren Ort.";
-        var parentPath = PathOrder.Parent(folder.Path);
-        var parent = parentPath is null ? null : ctx.NodeAt(parentPath, isFile: false);
-        if (parent is null) return Generic;
 
-        // Was der übergeordnete Ordner überhaupt weitergibt (je SID, ohne Rechte – für eine verständliche Aufzählung)
+        // Quelle der Vererbung: der nächste gespeicherte Ordner darüber – der Elternordner selbst oder ein Vorfahr, von dem
+        // alles dazwischen unverändert erbt. Dessen Einträge, nicht ein nachgebildeter Elternordner: Der kennt weder
+        // ERSTELLER-BESITZER noch „nur Dateien“, die als „nur vererben“ trotzdem bei Unterordnern und Dateien ankommen.
+        FolderNode? source = null;
+        int distance = 0;
+        for (var p = PathOrder.Parent(folder.Path); p is not null && source is null; p = PathOrder.Parent(p))
+        {
+            distance++;
+            if (ctx.StoredAt(p) is { IsFile: false } stored) source = stored;
+        }
+        if (source is null || source.Error is not null) return Generic;
+
+        // Was dort ankommt (je SID, ohne Rechte – für eine verständliche Aufzählung): Dateien erben „Objekte erben“,
+        // Ordner auch das (als „nur vererben“); „nicht weitergeben“ reicht nur eine Ebene.
         var needed = folder.IsFile ? InheritanceFlags.ObjectInherit : InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
         var passed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        // ERSTELLER-BESITZER wird beim Erben zum Besitzer. Ein nachgebildeter Elternordner kennt den Platzhalter nicht
-        // mehr – dann verrät ihn der eigene geerbte „nur vererben“-Eintrag.
+        // ERSTELLER-BESITZER wird beim Erben zum Besitzer – erkennbar am Platzhalter oben oder am eigenen „nur vererben“-Eintrag.
         bool creator = folder.Aces.Any(a => a.IsInherited && SidCatalog.IsCreatorPlaceholder(a.Sid));
-        foreach (var ace in parent.Aces)
+        foreach (var ace in source.Aces)
         {
             if ((ace.Inheritance & needed) == 0) continue;
+            if (distance > 1 && (ace.Propagation & PropagationFlags.NoPropagateInherit) != 0) continue;
             passed.Add(ace.Sid);
             creator |= SidCatalog.IsCreatorPlaceholder(ace.Sid);
         }

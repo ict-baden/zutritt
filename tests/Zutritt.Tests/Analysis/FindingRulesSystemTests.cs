@@ -49,6 +49,36 @@ public sealed class FindingRulesSystemTests
     }
 
     [Fact]
+    public void ZT14_Meldung_nennt_nur_Konten_die_nicht_von_oben_kommen_auch_ueber_nicht_gespeicherte_Ordner()
+    {
+        // „Nur Dateien“ an der Wurzel kommt über den (nicht gespeicherten) Ordner „P“ ganz normal bei dessen Dateien an –
+        // fremd ist in der verschobenen Datei nur „T\max“.
+        var u = Sid(2001);
+        var b = new ScanBuilder().User(u, @"T\max").Group(Sid(1001), @"T\Einkauf");
+        b.Folder("", 0, Allow(S.Administrators, Full),
+            Allow(Sid(1001), Read, inheritance: InheritanceFlags.ObjectInherit, propagation: PropagationFlags.InheritOnly));
+        var file = new FolderNode
+        {
+            Path = ScanBuilder.Share + @"\P\Q\bericht.xlsx", Depth = 3, IsFile = true, ShareUnc = ScanBuilder.Share,
+            OwnerSid = S.Administrators, InheritanceDiffers = true,
+        };
+        file.Aces.AddRange([Allow(S.Administrators, Full, inherited: true, inheritance: InheritanceFlags.None),
+            Allow(Sid(1001), Read, inherited: true, inheritance: InheritanceFlags.None),
+            Allow(u, Modify, inherited: true, inheritance: InheritanceFlags.None)]);
+        b.Scan.Folders.Add(file);
+        // Ein Ordner darunter erbt den Eintrag „nur Dateien“ als „nur vererben“ – auch das ist nicht fremd
+        var folder = b.Folder(@"\P\R", 2, Allow(S.Administrators, Full, inherited: true),
+            Allow(Sid(1001), Read, inherited: true, inheritance: InheritanceFlags.ObjectInherit, propagation: PropagationFlags.InheritOnly),
+            Allow(u, Modify, inherited: true));
+        folder.InheritanceDiffers = true;
+
+        var messages = FindingRules.Evaluate(b.Scan).Where(f => f.RuleId == "ZT14").ToDictionary(f => f.Path, f => f.Message);
+
+        Assert.EndsWith(@"„T\max“ kommt nicht von dort, sondern vom früheren Ort.", messages[file.Path]);
+        Assert.EndsWith(@"„T\max“ kommt nicht von dort, sondern vom früheren Ort.", messages[folder.Path]);
+    }
+
+    [Fact]
     public void ZT14_nicht_bei_unterbrochener_Vererbung_Fehler_oder_Windows_Ordner()
     {
         var b = new ScanBuilder();
@@ -223,6 +253,38 @@ public sealed class FindingRulesSystemTests
 
         Assert.Equal([withGroup.Path, withEveryone.Path], FindingRules.Evaluate(b.Scan).Where(f => f.RuleId == "ZT06").Select(f => f.Path));
         Assert.False(FindingRules.GrantsBeyondAdmins(adminOnly));
+    }
+
+    [Theory]
+    [InlineData("S-1-5-7")]    // ANONYMOUS-ANMELDUNG
+    [InlineData("S-1-5-15")]   // Diese Organisation
+    [InlineData("S-1-5-113")]  // Lokales Konto
+    [InlineData("S-1-5-14")]   // REMOTE-INTERAKTIVE ANMELDUNG
+    public void Tiefe_Ausnahme_fuer_Sonder_Identitaet_die_fuer_Personen_steht_bleibt_ZT06(string sid)
+    {
+        var b = new ScanBuilder();
+        b.Folder("", 0, Allow(S.Administrators, Full));
+        var f = new FolderNode { Path = ScanBuilder.Share + @"\A\B\C", Depth = 3, ShareUnc = ScanBuilder.Share, OwnerSid = S.Administrators, InheritanceBroken = true };
+        f.Aces.AddRange([Allow(S.System, Full), Allow(S.Administrators, Full), Allow(sid, Modify)]);
+        b.Scan.Folders.Add(f);
+
+        Assert.True(FindingRules.GrantsBeyondAdmins(f));
+        Assert.Contains(("ZT06", (string?)null), Keys(b));
+    }
+
+    [Theory]
+    [InlineData("S-1-5-19")]   // LOKALER DIENST
+    [InlineData("S-1-5-6")]    // DIENST
+    [InlineData("S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464")]
+    [InlineData("S-1-5-82-1-2-3-4-5")]
+    [InlineData("S-1-15-2-1")] // ALLE ANWENDUNGSPAKETE
+    [InlineData("S-1-5-33")]   // SCHREIBGESCHÜTZT
+    [InlineData("S-1-3-4")]    // BESITZERRECHTE
+    public void Tiefe_Ausnahme_nur_fuer_Windows_und_Dienste_ist_kein_ZT06(string sid)
+    {
+        var f = new FolderNode { Path = ScanBuilder.Share + @"\A\B\C", Depth = 3, InheritanceBroken = true };
+        f.Aces.AddRange([Allow(S.System, Full), Allow(S.Administrators, Full), Allow(sid, Modify)]);
+        Assert.False(FindingRules.GrantsBeyondAdmins(f));
     }
 
     [Fact]

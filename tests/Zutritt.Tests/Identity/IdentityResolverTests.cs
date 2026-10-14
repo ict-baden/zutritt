@@ -141,6 +141,19 @@ public class IdentityResolverTests
         Assert.Equal($"Nicht installierter Dienst ({service})", p.Name);
     }
 
+    [Theory]
+    [InlineData(Native.RPC_S_SERVER_UNAVAILABLE)]
+    [InlineData(Native.ERROR_ACCESS_DENIED)]
+    public void Dienst_SID_ohne_sichere_Antwort_heisst_nicht_nicht_installiert(int error)
+    {
+        // Der Server war nicht erreichbar: Dort kann der Dienst installiert sein – bekannt bleibt die SID trotzdem
+        const string service = "S-1-5-80-3906544942-1489856346-3706913989-164347954-1900376235";
+        var p = Scans.Resolver(new FakeLookup().Fail(service, error)).Resolve(service);
+
+        Assert.Equal(PrincipalKind.Bekannt, p.Kind);
+        Assert.Equal($"Dienst ({service})", p.Name);
+    }
+
     [Fact]
     public void Faehigkeitsgruppe_ist_bekannt_und_wird_nicht_als_Gruppe_aufgeklappt()
     {

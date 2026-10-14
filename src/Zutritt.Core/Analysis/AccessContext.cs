@@ -360,6 +360,13 @@ internal sealed class AccessContext
         return null;
     }
 
+    /// <summary>Der in diesem Lauf gespeicherte Knoten genau für diesen Pfad (auch mit Fehler), sonst null.</summary>
+    internal FolderNode? StoredAt(string path)
+    {
+        _stored ??= BuildStoredIndex();
+        return _stored.GetValueOrDefault(PathOrder.Normalize(path));
+    }
+
     private Dictionary<string, FolderNode> BuildStoredIndex()
     {
         var index = new Dictionary<string, FolderNode>(StringComparer.OrdinalIgnoreCase);

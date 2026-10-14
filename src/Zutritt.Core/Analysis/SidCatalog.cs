@@ -145,6 +145,24 @@ public static class SidCatalog
            || sid.Equals(Restricted, StringComparison.OrdinalIgnoreCase)
            || sid.Equals(WriteRestricted, StringComparison.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Windows selbst oder ein Dienst, nie eine Person: SYSTEM, LOKALER DIENST, NETZWERKDIENST, DIENST, virtuelle Konten
+    /// (NT SERVICE\…, IIS-Anwendungspools, VMs, Treiber, geplante Aufgaben, Fenster-Manager), App-Pakete, Fähigkeiten und
+    /// Fähigkeitsgruppen, Integritätsstufen, EINGESCHRÄNKT, SCHREIBGESCHÜTZT, BESITZERRECHTE und NULL SID. Andere
+    /// Sonder-Identitäten stehen für Personen (ANONYMOUS-ANMELDUNG, Diese Organisation, Lokales Konto, REMOTE-INTERAKTIV …).
+    /// </summary>
+    internal static bool IsWindowsOrService(string sid)
+        => WindowsOrServiceFixed.Contains(sid)
+           || Identity.WellKnownSids.IsVirtualAccount(sid)
+           || sid.StartsWith("S-1-15-", StringComparison.OrdinalIgnoreCase)
+           || sid.StartsWith("S-1-16-", StringComparison.OrdinalIgnoreCase)
+           || IsCapabilityGroup(sid);
+
+    private static readonly HashSet<string> WindowsOrServiceFixed = new(StringComparer.OrdinalIgnoreCase)
+    {
+        NullSid, OwnerRights, LocalSystem, LocalService, NetworkService, "S-1-5-6", Restricted, WriteRestricted,
+    };
+
     /// <summary>Deutscher Anzeigename für bekannte SIDs, sonst null.</summary>
     public static string? GermanName(string sid) => GermanNames.GetValueOrDefault(sid);
 

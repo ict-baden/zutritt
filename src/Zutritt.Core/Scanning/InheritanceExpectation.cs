@@ -81,21 +81,22 @@ internal sealed class InheritanceExpectation
         if (node.Error is not null || node.InheritanceBroken) return true;
 
         var effective = new Dictionary<(string Sid, bool Deny), uint>();
-        var toFolders = new Dictionary<(string Sid, bool Deny), uint>();
-        var toFiles = new Dictionary<(string Sid, bool Deny), uint>();
+        // Dateien geben nichts weiter – für sie (der häufigste Fall) keine weiteren Wörterbücher
+        var toFolders = _forFile ? null : new Dictionary<(string Sid, bool Deny), uint>();
+        var toFiles = _forFile ? null : new Dictionary<(string Sid, bool Deny), uint>();
         foreach (var ace in node.Aces)
         {
             if (!ace.IsInherited) continue;
             var mask = Mask(ace);
             if (!ace.InheritOnly) Merge(effective, Key(ace), mask);
-            if (_forFile) continue;
+            if (toFolders is null || toFiles is null) continue;
             bool noPropagate = (ace.Propagation & PropagationFlags.NoPropagateInherit) != 0;
             if (noPropagate) continue;
             if ((ace.Inheritance & InheritanceFlags.ContainerInherit) != 0) Merge(toFolders, Key(ace), mask);
             if ((ace.Inheritance & InheritanceFlags.ObjectInherit) != 0) Merge(toFiles, Key(ace), mask);
         }
 
-        if (!_forFile && (!SameEntries(toFolders, _toFolders) || !SameEntries(toFiles, _toFiles))) return false;
+        if (toFolders is not null && toFiles is not null && (!SameEntries(toFolders, _toFolders) || !SameEntries(toFiles, _toFiles))) return false;
         return EffectiveMatches(effective, node.OwnerSid);
     }
 
