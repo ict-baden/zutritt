@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MSI für Zutritt: Programmdateien nach %ProgramFiles%\Zutritt und ein Startmenü-Eintrag.
+  Zutritt braucht keinen Dienst und keinen Autostart. Die Datenbank legt die App pro Benutzer unter
+  %LocalAppData%\Zutritt an, weil Berechtigungsberichte vertraulich sind.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <Package Name="Zutritt"
+           Manufacturer="ICT-Baden"
+           Version="$(ProductVersion)"
+           UpgradeCode="075F2980-6E82-4EF1-ABB5-936F52A88839"
+           Scope="perMachine"
+           Compressed="yes">
+
+    <!-- AllowSameVersionUpgrades: CI-Builds unterscheiden sich nur in der 4. Stelle, die Windows Installer beim Vergleich
+         ignoriert. Ohne die Option würden sie nebeneinander statt übereinander installiert. -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="Eine neuere Version von Zutritt ist bereits installiert." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Icon Id="ZutrittIcon" SourceFile="$(AssetsDir)\zutritt.ico" />
+    <Property Id="ARPPRODUCTICON" Value="ZutrittIcon" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/ict-baden/zutritt" />
+
+    <!-- Laufende Instanzen beenden, sonst sind die Dateien gesperrt -->
+    <util:CloseApplication Id="CloseZutritt" Target="Zutritt.exe" CloseMessage="yes" TerminateProcess="1" RebootPrompt="no" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Zutritt" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+
+    <Feature Id="Main" Title="Zutritt" Level="1">
+      <!-- Alles aus dem Publish-Ordner (Zutritt.exe, native SQLite-DLL, WPF-DLLs …) -->
+      <Files Include="$(PublishDir)\**" Directory="INSTALLFOLDER">
+        <Exclude Files="$(PublishDir)\*.pdb" />
+      </Files>
+
+      <Component Id="StartMenu" Directory="ProgramMenuFolder" Guid="86F473DA-8A81-4CCA-9A42-5C87B7A2F04E">
+        <Shortcut Id="ZutrittShortcut" Name="Zutritt" Description="Wer darf auf welche Freigabe zugreifen?"
+                  Target="[INSTALLFOLDER]Zutritt.exe" WorkingDirectory="INSTALLFOLDER" Icon="ZutrittIcon" />
+        <RegistryValue Root="HKLM" Key="SOFTWARE\ICT-Baden\Zutritt" Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </Feature>
+  </Package>
+</Wix>

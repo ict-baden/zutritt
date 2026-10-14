@@ -1,0 +1,26 @@
+<Project Sdk="WixToolset.Sdk/5.0.2">
+  <!--
+    MSI für Zutritt. Erwartet die veröffentlichten Programmdateien in $(PublishDir):
+      dotnet publish src/Zutritt/Zutritt.csproj -c Release -r win-x64 -p:PublishSingleFile=true -o publish
+      dotnet build installer/Zutritt.Installer.wixproj -c Release -p:ProductVersion=1.0.0
+  -->
+  <PropertyGroup>
+    <OutputName>Zutritt</OutputName>
+    <OutputType>Package</OutputType>
+    <InstallerPlatform>x64</InstallerPlatform>
+    <ProductVersion Condition="'$(ProductVersion)' == ''">1.0.0</ProductVersion>
+    <PublishDir Condition="'$(PublishDir)' == ''">$(MSBuildThisFileDirectory)..\publish\</PublishDir>
+    <DefineConstants>ProductVersion=$(ProductVersion);PublishDir=$(PublishDir);AssetsDir=$(MSBuildThisFileDirectory)..\src\Zutritt\Assets</DefineConstants>
+    <Cultures>de-DE</Cultures>
+    <!-- ICE38/43/57 schlagen bei Startmenü-Verknüpfungen in perMachine-Paketen fälschlich an (ALLUSERS=1 → Startmenü aller Benutzer).
+         ICE61 warnt vor AllowSameVersionUpgrades, das ist hier gewollt (siehe Package.wxs).
+         ICE60 bemängelt native DLLs (SQLite) ohne Sprache in der Versionsinfo – für Programm-DLLs bedeutungslos. -->
+    <SuppressIces>ICE38;ICE43;ICE57;ICE60;ICE61</SuppressIces>
+    <!-- ICE-Prüfungen brauchen den Windows Installer-Dienst; auf CI-Runnern unnötig langsam/fehleranfällig -->
+    <SuppressValidation Condition="'$(CI)' == 'true'">true</SuppressValidation>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WixToolset.Util.wixext" Version="5.0.2" />
+  </ItemGroup>
+</Project>
