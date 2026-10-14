@@ -292,8 +292,8 @@ internal static class CommandLine
               --bericht <datei>        Bericht schreiben, .xlsx oder .pdf (mehrfach möglich)
               --vergleich              Änderungen seit dem letzten Lauf mit denselben Zielen
                                        ermitteln und in die Berichte aufnehmen
-              --db <pfad>              andere Datenbank (Standard: %ProgramData%\Zutritt\zutritt.db,
-                                       ohne Schreibrecht dort %LocalAppData%\Zutritt\zutritt.db)
+              --db <pfad>              andere Datenbank (Standard: %LocalAppData%\Zutritt\zutritt.db,
+                                       also pro Benutzer)
 
             „liste“ zeigt die gespeicherten Läufe mit ihrer Id, „bericht“ schreibt für einen davon
             nachträglich Berichte.

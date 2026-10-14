@@ -55,7 +55,7 @@ public sealed class AppState : IDisposable
 
     // ================= Öffnen =================
 
-    /// <summary>Normaler Start mit der Datenbank unter %ProgramData% bzw. %LocalAppData%.</summary>
+    /// <summary>Normaler Start mit der Datenbank unter %LocalAppData%\Zutritt.</summary>
     public static AppState Open(string? databasePath = null)
     {
         string path = databasePath ?? "";

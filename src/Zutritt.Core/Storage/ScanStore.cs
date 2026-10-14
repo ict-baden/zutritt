@@ -5,7 +5,7 @@ using Zutritt.Core.Model;
 namespace Zutritt.Core.Storage;
 
 /// <summary>
-/// Speichert Läufe in einer SQLite-Datei (Standard: %ProgramData%\Zutritt\zutritt.db, sonst %LocalAppData%).
+/// Speichert Läufe in einer SQLite-Datei (Standard: %LocalAppData%\Zutritt\zutritt.db).
 /// Gespeicherte Läufe sind unveränderlich: <see cref="Save"/> legt immer einen neuen Lauf an, damit ein
 /// abgezeichneter Stand später genau so wieder geladen werden kann. Threadsicher; Datenbankprobleme kommen
 /// als <see cref="ScanStoreException"/> mit deutscher Meldung.
@@ -65,8 +65,7 @@ public sealed class ScanStore : IDisposable
     }
 
     /// <summary>
-    /// %ProgramData%\Zutritt\zutritt.db, wenn der Ordner beschreibbar ist (er wird dazu angelegt),
-    /// sonst %LocalAppData%\Zutritt\zutritt.db.
+    /// %LocalAppData%\Zutritt\zutritt.db – pro Benutzer, weil ein Lauf vertraulich ist (siehe DatabaseLocation).
     /// </summary>
     public static string DefaultPath => DatabaseLocation.Default;
 

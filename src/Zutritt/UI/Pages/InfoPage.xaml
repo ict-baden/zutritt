@@ -17,7 +17,7 @@
                 </StackPanel>
             </Border>
 
-            <ui:SettingCard Glyph="&#xE8B7;" Header="Datenbank" x:Name="DatabaseCard" Description="%ProgramData%\Zutritt\zutritt.db">
+            <ui:SettingCard Glyph="&#xE8B7;" Header="Datenbank" x:Name="DatabaseCard" Description="%LocalAppData%\Zutritt\zutritt.db">
                 <Button x:Name="DatabaseButton" Content="Ordner öffnen" Click="OpenDatabaseFolder_Click"/>
             </ui:SettingCard>
             <ui:SettingCard Glyph="&#xE7EF;" Header="Herausgeber" Description="ICT-Baden">
