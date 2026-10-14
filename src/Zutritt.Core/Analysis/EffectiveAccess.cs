@@ -176,15 +176,18 @@ public static class EffectiveAccess
         IReadOnlyList<string> via)
     {
         var ntfs = result.Level;
-        var share = ctx.ShareAccessFor(folder, token);
+        var share = ctx.ShareLevels(folder, token);
+        var viaShare = share is { } s ? Rights.CapByShare(ntfs, s.Effective) : (AccessLevel?)null;
+        // Auch ein Verweigern-Eintrag der Freigabe zählt – aber nur, wenn er am Ergebnis etwas ändert
+        bool shareDenied = share is { } t && viaShare < Rights.CapByShare(ntfs, t.Allowed);
         return new AccessGrant
         {
             Path = folder.Path,
             Sid = sid,
             Ntfs = ntfs,
-            ViaShare = share is { } s ? Rights.CapByShare(ntfs, s) : null,
+            ViaShare = viaShare,
             Via = via,
-            ReducedByDeny = result.ReducedByDeny,
+            ReducedByDeny = result.ReducedByDeny || shareDenied,
         };
     }
 

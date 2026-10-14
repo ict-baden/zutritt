@@ -60,7 +60,7 @@ internal static class StorageScans
         scan.Shares.Add(new ShareInfo { Server = "fs01", Name = "Leer", Permissions = [] });
 
         scan.Folders.Add(new FolderNode { Path = @"C:\Daten; Archiv\Ä", Depth = 0 });  // ohne Einträge, ohne Besitzer, ShareUnc null
-        var file = new FolderNode { Path = @"C:\Daten; Archiv\Ä\geheim.txt", Depth = 1, IsFile = true, ShareUnc = "", OwnerSid = SampleScan.Max, Error = "Pfad zu lang:\r\nZeile 2" };
+        var file = new FolderNode { Path = @"C:\Daten; Archiv\Ä\geheim.txt", Depth = 1, IsFile = true, ShareUnc = "", OwnerSid = SampleScan.Max, Error = "Pfad zu lang:\r\nZeile 2", InheritanceDiffers = true };
         file.Aces.Add(new AceEntry { Sid = SampleScan.CreatorOwner, Rights = GenericAll, Inheritance = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, Propagation = PropagationFlags.InheritOnly });
         scan.Folders.Add(file);
 

@@ -227,7 +227,7 @@ public sealed class ScanStoreRoundtripTests
     [InlineData(typeof(ScanRequest), "DeepInheritanceBreakDepth,IncludeFiles,MaxDepth,ResolveGroups,SkipAdminShares,Targets")]
     [InlineData(typeof(ShareInfo), "IsAdminShare,LocalPath,Name,Permissions,PermissionsReadable,Remark,Server,UncPath")]
     [InlineData(typeof(ShareAce), "Access,IsDeny,Sid")]
-    [InlineData(typeof(FolderNode), "Aces,Depth,Error,HasExplicitAces,Id,InheritanceBroken,IsFile,IsRoot,OwnerSid,Path,ShareUnc")]
+    [InlineData(typeof(FolderNode), "Aces,Depth,Error,HasExplicitAces,Id,InheritanceBroken,InheritanceDiffers,IsFile,IsRoot,OwnerSid,Path,ShareUnc")]
     [InlineData(typeof(AceEntry), "Inheritance,InheritOnly,IsDeny,IsInherited,Level,Propagation,Rights,Sid")]
     [InlineData(typeof(Principal), "DisplayName,IsDisabled,IsLocal,Kind,Label,Members,MembersUnknown,Name,Sid")]
     [InlineData(typeof(Finding), "Key,Message,Path,RuleId,Severity,Sid")]

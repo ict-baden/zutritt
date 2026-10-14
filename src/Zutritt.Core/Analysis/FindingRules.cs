@@ -7,6 +7,13 @@ namespace Zutritt.Core.Analysis;
 /// <remarks>
 /// ACL-Befunde entstehen nur aus expliziten (nicht geerbten) Einträgen – sonst würde jeder gespeicherte
 /// Unterordner denselben Befund wiederholen. Je (Regel, Pfad, SID) gibt es höchstens einen Befund.
+/// <para>
+/// Windows-eigene Konten und Ordner erzeugen keine Fehlalarme (geprüft auf C:\Program Files, C:\ProgramData, C:\Users,
+/// C:\Windows\System32): virtuelle Konten und Sonder-Identitäten sind keine Personen, VORDEFINIERT-Gruppen sind nie
+/// „vergessene leere Gruppen“, in von Windows verwalteten Ordnern (<see cref="IsWindowsManaged"/>) entfallen die
+/// Ordnungsregeln, tiefe Ausnahmen nur für Administratoren und Windows verstecken keinen Zugriff, und die
+/// Kompatibilitäts-Verknüpfungen („Anwendungsdaten“ …) sind kein Verweigern-Befund.
+/// </para>
 /// </remarks>
 public static class FindingRules
 {
@@ -23,8 +30,9 @@ public static class FindingRules
     internal const string EmptyGroup = "ZT11";
     internal const string DisabledAccount = "ZT12";
     internal const string ShareUnreadable = "ZT13";
+    internal const string InheritanceDiffers = "ZT14";
 
-    /// <summary>Alle Regeln in fester Reihenfolge (ZT01 … ZT13).</summary>
+    /// <summary>Alle Regeln in fester Reihenfolge (ZT01 … ZT14).</summary>
     public static IReadOnlyList<RuleInfo> All { get; } =
     [
         new(BroadWrite, Severity.Hoch, "Breite Gruppe darf schreiben",
@@ -81,6 +89,15 @@ public static class FindingRules
             "Die Berechtigungen der Freigabe konnten nicht gelesen werden. Die Rechte über das Netz sind deshalb allein aus "
             + "den NTFS-Rechten berechnet und können in Wirklichkeit geringer sein.",
             "Mit Administratorrechten auf dem Server erneut scannen."),
+        new(InheritanceDiffers, Severity.Niedrig, "Rechte weichen von der Vererbung ab",
+            "Der Ordner (oder die Datei) hat geerbte Einträge, die nicht zum übergeordneten Ordner passen. Typisch sind "
+            + "verschobene Ordner: Beim Verschieben innerhalb eines Laufwerks nimmt Windows die alten geerbten Rechte mit, "
+            + "statt die des neuen Ortes zu übernehmen. Hier gelten dann womöglich noch Rechte vom früheren Ort – auch für "
+            + "Personen, die am neuen Ort keinen Zugriff haben sollen –, und Änderungen am übergeordneten Ordner kommen "
+            + "erst nach der nächsten Weitergabe der Rechte an.",
+            "Prüfen, ob die abweichenden Rechte noch gebraucht werden. Sonst die Vererbung neu anwenden: in den erweiterten "
+            + "Sicherheitseinstellungen die Vererbung deaktivieren, dabei die geerbten Einträge entfernen und sie gleich "
+            + "wieder aktivieren – eigene Einträge bleiben erhalten."),
     ];
 
     private static readonly Dictionary<string, RuleInfo> ById = All.ToDictionary(r => r.Id, StringComparer.OrdinalIgnoreCase);
@@ -103,13 +120,21 @@ public static class FindingRules
                     $"{(folder.IsFile ? "Datei" : "Ordner")} nicht lesbar: {folder.Error.TrimEnd('.')} – Berechtigungen hier und darunter nicht geprüft.");
                 continue;
             }
-            EvaluateAces(ctx, sink, folder);
-            EvaluateOwner(ctx, sink, folder);
+            // Ordner, deren Rechte Windows selbst setzt und pflegt: dort nur Befunde, die eine echte Gefahr zeigen
+            bool managed = IsWindowsManaged(folder);
+            EvaluateAces(ctx, sink, folder, managed);
+            EvaluateOwner(ctx, sink, folder, managed);
 
             int threshold = Math.Max(1, scan.Request.DeepInheritanceBreakDepth);
-            if (folder.InheritanceBroken && folder.Depth >= threshold)
+            if (folder.InheritanceBroken && folder.Depth >= threshold && !managed && GrantsBeyondAdmins(folder))
                 sink.Add(DeepBreak, folder.Path, null,
                     $"Vererbung in Tiefe {folder.Depth} unterbrochen (ab Tiefe {threshold} gilt eine Ausnahme als versteckt).");
+
+            // Auch geerbte Windows-Kennungen zählen: Unter App- und Programmordnern legen Installationsprogramme
+            // Rechte oft ohne Weitergabe an – das ist kein verschobener Ordner.
+            if (folder.InheritanceDiffers && !folder.InheritanceBroken && !managed
+                && !folder.Aces.Any(a => SidCatalog.IsWindowsInternal(a.Sid)))
+                sink.Add(InheritanceDiffers, folder.Path, null, DescribeInheritanceDiffers(ctx, folder));
         }
 
         EvaluateShares(ctx, sink);
@@ -117,7 +142,8 @@ public static class FindingRules
         return sink.Sorted();
     }
 
-    private static void EvaluateAces(AccessContext ctx, FindingSink sink, FolderNode folder)
+    /// <param name="managed">Von Windows verwalteter Ordner (siehe <see cref="IsWindowsManaged"/>): nur Befunde, die eine echte Gefahr zeigen.</param>
+    private static void EvaluateAces(AccessContext ctx, FindingSink sink, FolderNode folder, bool managed)
     {
         var scan = ctx.Scan;
         var explicitSids = folder.Aces.Where(a => !a.IsInherited).Select(a => a.Sid)
@@ -137,15 +163,18 @@ public static class FindingRules
                 if (scopes.Net >= AccessLevel.Schreiben)
                     sink.Add(BroadWrite, folder.Path, sid,
                         $"„{who}“ hat „{Rights.Label(scopes.Net)}“{suffix} – praktisch jede angemeldete Person darf hier schreiben.");
-                else if (scopes.Net >= AccessLevel.Auflisten)
+                // Erst ab „Lesen“ (Inhalt auflisten bzw. Datei lesen): Bloßes Durchqueren oder Attribute lesen – etwa
+                // „Jeder: Ordner durchsuchen“ über Freigaben oder die gesperrten Kompatibilitäts-Verknüpfungen von
+                // Windows – zeigt niemandem Daten.
+                else if (scopes.Net >= AccessLevel.Lesen && !managed)
                     sink.Add(BroadRead, folder.Path, sid,
-                        $"„{who}“ hat „{Rights.Label(scopes.Net)}“{suffix} – praktisch jede angemeldete Person "
-                        + (scopes.Net == AccessLevel.Auflisten ? "sieht hier den Inhalt." : "darf hier lesen."));
+                        $"„{who}“ hat „{Rights.Label(scopes.Net)}“{suffix} – praktisch jede angemeldete Person darf hier lesen.");
             }
 
-            if (kind == PrincipalKind.Benutzer && scopes.Raw > AccessLevel.Keine)
+            bool person = kind == PrincipalKind.Benutzer && IsPerson(sid);
+            if (person && scopes.Raw > AccessLevel.Keine)
             {
-                if (!SidCatalog.IsBuiltinAdministrator(sid))
+                if (!SidCatalog.IsBuiltinAdministrator(sid) && !managed)
                     sink.Add(DirectUser, folder.Path, sid,
                         $"„{who}“ hat „{Rights.Label(scopes.Raw)}“ direkt als Person statt über eine Gruppe.");
                 if (principal?.IsDisabled == true)
@@ -164,19 +193,44 @@ public static class FindingRules
                     : $"Die verwaiste SID {sid} hat {entry} – das Konto gibt es nicht mehr.");
             }
 
-            if (scopes.Net == AccessLevel.Vollzugriff && IsNonAdminAccountOrGroup(sid, kind))
+            // In Windows-Ordnern gibt Windows dem Besitzer selbst Vollzugriff (z. B. auf seine Fehlerberichte) –
+            // ändern könnte er die Rechte als Besitzer ohnehin. Vollzugriff für andere bleibt ein Befund.
+            if (scopes.Net == AccessLevel.Vollzugriff && IsNonAdminAccountOrGroup(sid, kind)
+                && !(managed && sid.Equals(folder.OwnerSid, StringComparison.OrdinalIgnoreCase)))
                 sink.Add(FullControlNonAdmin, folder.Path, sid,
                     $"„{who}“ hat Vollzugriff{suffix} und darf damit Berechtigungen ändern und den Besitz übernehmen.");
 
-            if (scopes.HasDeny)
+            if (scopes.HasDeny && !IsCompatibilityLinkDeny(folder, sid))
                 sink.Add(DenyEntry, folder.Path, sid,
                     $"Verweigern-Eintrag für „{who}“ ({Describe(scopes.DeniedMask)} verweigert).");
 
+            // VORDEFINIERT-Gruppen (Hauptbenutzer, Sicherungs-Operatoren …) trägt Windows selbst in Systemordner ein;
+            // dass sie leer sind, ist der Normalfall und keine vergessene Gruppe.
             if (kind == PrincipalKind.Gruppe && principal is { Members.Count: 0, MembersUnknown: false }
+                && !SidCatalog.IsBuiltinGroup(sid)
                 && scan.Request.ResolveGroups && scopes.Raw > AccessLevel.Keine)
                 sink.Add(EmptyGroup, folder.Path, sid,
                     $"Die Gruppe „{who}“ hat keine Mitglieder, ist aber berechtigt („{Rights.Label(scopes.Raw)}“).");
         }
+    }
+
+    /// <summary>
+    /// „Jeder: Ordner auflisten verweigert“, nur für diesen Ordner, sonst nichts: So schützt Windows seine
+    /// Kompatibilitäts-Verknüpfungen („Anwendungsdaten“, „Eigene Dateien“, „All Users“ …) gegen Endlosschleifen beim
+    /// Durchsuchen. Die Sperre nimmt niemandem Daten weg – als Verweigern-Befund wäre sie nur Rauschen.
+    /// </summary>
+    internal static bool IsCompatibilityLinkDeny(FolderNode folder, string sid)
+    {
+        if (!sid.Equals(SidCatalog.Everyone, StringComparison.OrdinalIgnoreCase)) return false;
+        bool any = false;
+        foreach (var ace in folder.Aces)
+        {
+            if (ace.IsInherited || !ace.IsDeny || !ace.Sid.Equals(sid, StringComparison.OrdinalIgnoreCase)) continue;
+            var mask = Rights.MapGeneric(ace.Rights) & ~FileSystemRights.Synchronize;
+            if (mask != FileSystemRights.ListDirectory || ace.Inheritance != InheritanceFlags.None || ace.InheritOnly) return false;
+            any = true;
+        }
+        return any;
     }
 
     /// <summary>
@@ -190,7 +244,8 @@ public static class FindingRules
         && !SidCatalog.IsBuiltinAdministrator(sid)
         && !SidCatalog.IsBroad(sid);
 
-    private static void EvaluateOwner(AccessContext ctx, FindingSink sink, FolderNode folder)
+    /// <param name="managed">Von Windows verwalteter Ordner: Den Besitz setzt Windows selbst (etwa für Fehlerberichte des Benutzers).</param>
+    private static void EvaluateOwner(AccessContext ctx, FindingSink sink, FolderNode folder, bool managed)
     {
         var owner = folder.OwnerSid;
         if (string.IsNullOrEmpty(owner)) return;
@@ -200,10 +255,98 @@ public static class FindingRules
                 // Steht die SID auch als Eintrag in der Liste, nennt der Befund aus EvaluateAces beides
                 sink.Add(Orphaned, folder.Path, owner, $"Besitzer ist die verwaiste SID {owner} – das Konto gibt es nicht mehr.");
                 break;
-            case PrincipalKind.Benutzer when !SidCatalog.IsBuiltinAdministrator(owner):
+            case PrincipalKind.Benutzer when !managed && IsPerson(owner) && !SidCatalog.IsBuiltinAdministrator(owner):
                 sink.Add(OwnerIsUser, folder.Path, owner, $"Besitzer ist das Benutzerkonto „{ctx.Label(owner)}“.");
                 break;
         }
+    }
+
+    /// <summary>
+    /// Benutzerkonto einer Person: Virtuelle Konten (Window Manager\DWM-1, Dienst- und Aufgabenkonten …) meldet Windows
+    /// zwar teils als „Benutzer“, sie gehören aber zum System und nie einer Person.
+    /// </summary>
+    private static bool IsPerson(string sid) => !SidCatalog.IsSpecialIdentity(sid);
+
+    /// <summary>
+    /// Ordner, dessen Rechte Windows selbst setzt und pflegt: Besitzer TrustedInstaller oder ein ausdrücklicher Eintrag für
+    /// eine Windows-interne Kennung (App-Pakete und -Fähigkeiten, SCHREIBGESCHÜTZT, EINGESCHRÄNKT …), die niemand auf
+    /// Datenordnern vergibt. Dort entfallen die Ordnungsregeln (breite Gruppe darf lesen, Recht direkt an Person, Besitzer,
+    /// versteckte Ausnahme, abweichende Vererbung) – „Benutzer dürfen C:\Programme lesen“ ist so gewollt, und ändern
+    /// sollte man dort ohnehin nichts. Was eine echte Gefahr zeigt, bleibt: Schreibrecht breiter Gruppen, Vollzugriff
+    /// für andere als den Besitzer, verwaiste SIDs, Verweigerungen, deaktivierte Konten.
+    /// </summary>
+    internal static bool IsWindowsManaged(FolderNode folder)
+    {
+        if (folder.OwnerSid.Equals(SidCatalog.TrustedInstaller, StringComparison.OrdinalIgnoreCase)) return true;
+        foreach (var ace in folder.Aces)
+            if (!ace.IsInherited && SidCatalog.IsWindowsInternal(ace.Sid)) return true;
+        return false;
+    }
+
+    /// <summary>
+    /// Für ZT06: Lässt die Ausnahme jemanden außer Administratoren und Windows selbst zu? Eine Ausnahme, die nur
+    /// SYSTEM, Administratoren, TrustedInstaller oder Dienste zulässt (so legt Windows z. B. Paket- und Fehlerordner
+    /// unter C:\ProgramData an), schottet ab und versteckt keinen Zugriff.
+    /// </summary>
+    internal static bool GrantsBeyondAdmins(FolderNode folder)
+    {
+        foreach (var ace in folder.Aces)
+        {
+            if (ace.IsDeny || ace.Rights == 0) continue;
+            var sid = ace.Sid;
+            if (SidCatalog.IsAdminLike(sid) || SidCatalog.IsBuiltinAdministrator(sid) || SidCatalog.IsCreatorPlaceholder(sid)) continue;
+            // Sonder-Identitäten zählen, wenn sie für Personen stehen (Jeder, ANONYMOUS-ANMELDUNG, Diese Organisation …)
+            if (SidCatalog.IsWindowsOrService(sid)) continue;
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>Meldung für ZT14, möglichst mit den Konten, deren geerbte Einträge nicht vom übergeordneten Ordner kommen.</summary>
+    private static string DescribeInheritanceDiffers(AccessContext ctx, FolderNode folder)
+    {
+        // Vererbung eingeschaltet, aber nichts geerbt: Ein Programm hat den Ordner mit eigenen Rechten angelegt
+        if (!folder.Aces.Any(a => a.IsInherited))
+            return "Erbt nichts vom übergeordneten Ordner, obwohl die Vererbung eingeschaltet ist – meist hat ein Programm den "
+                + "Ordner mit eigenen Rechten angelegt. Die Rechte von oben gelten hier erst nach der nächsten Weitergabe.";
+        const string Generic = "Geerbte Einträge passen nicht zum übergeordneten Ordner – vermutlich verschoben; es gelten womöglich noch Rechte vom früheren Ort.";
+
+        // Quelle der Vererbung: der nächste gespeicherte Ordner darüber – der Elternordner selbst oder ein Vorfahr, von dem
+        // alles dazwischen unverändert erbt. Dessen Einträge, nicht ein nachgebildeter Elternordner: Der kennt weder
+        // ERSTELLER-BESITZER noch „nur Dateien“, die als „nur vererben“ trotzdem bei Unterordnern und Dateien ankommen.
+        FolderNode? source = null;
+        int distance = 0;
+        for (var p = PathOrder.Parent(folder.Path); p is not null && source is null; p = PathOrder.Parent(p))
+        {
+            distance++;
+            if (ctx.StoredAt(p) is { IsFile: false } stored) source = stored;
+        }
+        if (source is null || source.Error is not null) return Generic;
+
+        // Was dort ankommt (je SID, ohne Rechte – für eine verständliche Aufzählung): Dateien erben „Objekte erben“,
+        // Ordner auch das (als „nur vererben“); „nicht weitergeben“ reicht nur eine Ebene.
+        var needed = folder.IsFile ? InheritanceFlags.ObjectInherit : InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
+        var passed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        // ERSTELLER-BESITZER wird beim Erben zum Besitzer – erkennbar am Platzhalter oben oder am eigenen „nur vererben“-Eintrag.
+        bool creator = folder.Aces.Any(a => a.IsInherited && SidCatalog.IsCreatorPlaceholder(a.Sid));
+        foreach (var ace in source.Aces)
+        {
+            if ((ace.Inheritance & needed) == 0) continue;
+            if (distance > 1 && (ace.Propagation & PropagationFlags.NoPropagateInherit) != 0) continue;
+            passed.Add(ace.Sid);
+            creator |= SidCatalog.IsCreatorPlaceholder(ace.Sid);
+        }
+        var foreign = folder.Aces
+            .Where(a => a.IsInherited && !passed.Contains(a.Sid) && !SidCatalog.IsCreatorPlaceholder(a.Sid)
+                        && !(creator && a.Sid.Equals(folder.OwnerSid, StringComparison.OrdinalIgnoreCase)))
+            .Select(a => a.Sid)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Select(s => $"„{ctx.Label(s)}“")
+            .ToList();
+        if (foreign.Count == 0) return Generic;
+        var names = foreign.Count == 1 ? foreign[0] : string.Join(", ", foreign.Take(foreign.Count - 1)) + " und " + foreign[^1];
+        return $"Geerbte Einträge passen nicht zum übergeordneten Ordner – vermutlich verschoben. {names} "
+            + (foreign.Count == 1 ? "kommt" : "kommen") + " nicht von dort, sondern vom früheren Ort.";
     }
 
     private static void EvaluateShares(AccessContext ctx, FindingSink sink)

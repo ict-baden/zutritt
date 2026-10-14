@@ -73,10 +73,10 @@ public sealed class FindingRulesTests
     public void Regelkatalog_vollstaendig()
     {
         var all = FindingRules.All;
-        Assert.Equal(Enumerable.Range(1, 13).Select(i => $"ZT{i:00}"), all.Select(r => r.Id));
+        Assert.Equal(Enumerable.Range(1, 14).Select(i => $"ZT{i:00}"), all.Select(r => r.Id));
         Assert.Equal(
             [Severity.Hoch, Severity.Mittel, Severity.Mittel, Severity.Mittel, Severity.Hoch, Severity.Niedrig, Severity.Info,
-             Severity.Info, Severity.Info, Severity.Niedrig, Severity.Niedrig, Severity.Mittel, Severity.Info],
+             Severity.Info, Severity.Info, Severity.Niedrig, Severity.Niedrig, Severity.Mittel, Severity.Info, Severity.Niedrig],
             all.Select(r => r.Severity));
         Assert.All(all, r =>
         {
@@ -225,6 +225,8 @@ public sealed class FindingRulesTests
         b.Scan.Folders.Add(new FolderNode { Path = Share + @"\A", Depth = 1, InheritanceBroken = true, ShareUnc = Share });
         b.Scan.Folders.Add(new FolderNode { Path = Share + @"\A\B", Depth = 2, InheritanceBroken = true, ShareUnc = Share });
         b.Scan.Folders.Add(new FolderNode { Path = Share + @"\A\C", Depth = 2, InheritanceBroken = false, ShareUnc = Share });
+        // Die Ausnahmen lassen eine fachliche Gruppe zu (nur Administratoren wäre keine versteckte Freigabe)
+        foreach (var f in b.Scan.Folders) f.Aces.Add(Allow(Sid(1001), Read));
         Assert.Equal([Share + @"\A\B"], FindingRules.Evaluate(b.Scan).Where(f => f.RuleId == "ZT06").Select(f => f.Path));
 
         // Auch bei Schwelle 0 gilt die Wurzel nie als „versteckt“

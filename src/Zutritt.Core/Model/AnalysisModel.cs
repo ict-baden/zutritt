@@ -49,7 +49,10 @@ public sealed record AccessChange(string Path, string Sid, AccessLevel Before, A
 public sealed record MembershipChange(string GroupSid, string MemberSid, ChangeKind Kind);
 
 /// <summary>Kurzinfo für die Liste der gespeicherten Läufe.</summary>
-public sealed record ScanSummary(long Id, DateTimeOffset StartedAt, string Targets, int Folders, int Findings, int HighFindings, string ScannedBy);
+/// <param name="Folders">Gespeicherte Ordner (Wurzeln, eigene Rechte, Fehler) – nicht alle geprüften.</param>
+/// <param name="FoldersVisited">Alle geprüften Ordner, wie <see cref="ScanResult.FoldersVisited"/>.</param>
+public sealed record ScanSummary(long Id, DateTimeOffset StartedAt, string Targets, int Folders, int Findings, int HighFindings, string ScannedBy,
+    long FoldersVisited = 0);
 
 /// <summary>Beschreibung einer Prüfregel für Oberfläche, Bericht und Doku.</summary>
 public sealed record RuleInfo(string Id, Severity Severity, string Title, string Explanation, string Recommendation);

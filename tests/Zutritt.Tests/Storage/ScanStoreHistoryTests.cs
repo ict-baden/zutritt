@@ -45,6 +45,8 @@ public sealed class ScanStoreHistoryTests
         Assert.True(T0.EqualsExact(s.StartedAt));
         Assert.Equal(@"\\FS01\Labor; D:\Daten; alt", s.Targets);
         Assert.Equal(6, s.Folders);          // gespeicherte Ordner
+        Assert.Equal(scan.FoldersVisited, s.FoldersVisited);  // geprüfte Ordner
+        Assert.True(s.FoldersVisited > s.Folders);
         Assert.Equal(5, s.Findings);
         Assert.Equal(2, s.HighFindings);
         Assert.Equal(@"LAB\admin.max", s.ScannedBy);

@@ -272,8 +272,9 @@ public partial class OverviewPage : UserControl, IPage
         public DateTimeOffset StartedAt => Summary.StartedAt;
         public string Date => Labels.Date(Summary.StartedAt);
         public string Targets => Summary.Targets;
-        public int Folders => Summary.Folders;
-        public string FoldersText => Labels.Number(Summary.Folders);
+        // Geprüfte Ordner wie in der Zusammenfassung – gespeichert sind nur die mit eigenen Rechten
+        public long Folders => Summary.FoldersVisited;
+        public string FoldersText => Labels.Number(Summary.FoldersVisited);
         public int Findings => Summary.Findings;
         public string FindingsText => Labels.Number(Summary.Findings);
         public bool HasHigh => Summary.HighFindings > 0;

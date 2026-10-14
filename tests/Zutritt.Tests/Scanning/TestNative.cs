@@ -30,6 +30,17 @@ internal static class TestNative
     [DllImport("netapi32.dll", CharSet = CharSet.Unicode)]
     public static extern int NetShareDel(string? servername, string netname, int reserved);
 
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SHARE_INFO_1501
+    {
+        public uint shi1501_reserved;
+        public nint shi1501_security_descriptor;
+    }
+
+    /// <summary>Nur die Sicherheitsbeschreibung einer Freigabe setzen (Level 1501).</summary>
+    [DllImport("netapi32.dll", CharSet = CharSet.Unicode)]
+    public static extern int NetShareSetInfo(string? servername, string netname, int level, ref SHARE_INFO_1501 buf, out int parmErr);
+
     [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool SetFileSecurity(string fileName, uint securityInformation, byte[] securityDescriptor);
