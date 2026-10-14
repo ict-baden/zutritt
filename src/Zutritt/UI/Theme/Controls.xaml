@@ -76,6 +76,118 @@
         <Setter Property="FontFamily" Value="{StaticResource MonoFont}"/>
         <Setter Property="FontSize" Value="12.5"/>
     </Style>
+    <!-- Pfade in Tabellen: in der Mitte gekürzt (Freigabe vorn und Ordner hinten bleiben lesbar) -->
+    <Style TargetType="ui:PathText">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Tabellenzeile: nur Rahmen und Zellen. Fluent legt je Zeile zusätzlich Zeilenkopf (mit zwei Greifern),
+         Detailbereich und ein Raster für eingefrorene Spalten an – das braucht hier keine Tabelle, kostet aber beim
+         Blättern und Filtern in großen Läufen spürbar Zeit. Gesetzt im Stil „Table“ (ThemeManager). -->
+    <ControlTemplate x:Key="TableRowTemplate" TargetType="DataGridRow">
+        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}" SnapsToDevicePixels="True">
+            <DataGridCellsPresenter ItemsPanel="{TemplateBinding ItemsPanel}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+        </Border>
+    </ControlTemplate>
+
+    <!-- Baumeintrag (Ordnerbaum): wie Fluent aussehend, aber mit weniger Elementen und ohne Animation. Beim
+         Aufklappen eines Ordners mit Tausenden Unterordnern entstehen viele Einträge auf einmal – mit der
+         Fluent-Vorlage kostete jeder ein Vielfaches. Die Teile heißen wie bei WPF (PART_Header, ItemsHost),
+         weil die Virtualisierung des Baums sie sucht. Gesetzt in FoldersPage.BuildContainerStyle. -->
+    <Style x:Key="TreeChevron" TargetType="ToggleButton">
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border Background="Transparent" Width="28" Height="28">
+                        <TextBlock x:Name="Chevron" Text="&#xE76C;" FontFamily="{StaticResource IconFont}" FontSize="10"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5"
+                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Chevron" Property="RenderTransform">
+                                <Setter.Value>
+                                    <RotateTransform Angle="90"/>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <ControlTemplate x:Key="TreeItemTemplate" TargetType="TreeViewItem">
+        <StackPanel>
+            <Border x:Name="Bd" Background="Transparent" CornerRadius="4" MinHeight="32" Margin="0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="28"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Rectangle x:Name="Pill" Width="3" Height="16" RadiusX="1.5" RadiusY="1.5" HorizontalAlignment="Left" VerticalAlignment="Center"
+                               Fill="{DynamicResource TreeViewItemSelectionIndicatorForeground}" Visibility="Collapsed"/>
+                    <ToggleButton x:Name="Expander" Style="{StaticResource TreeChevron}" ClickMode="Press"
+                                  IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"/>
+                    <ContentPresenter x:Name="PART_Header" Grid.Column="1" ContentSource="Header" VerticalAlignment="Center" Margin="2,0,8,0"/>
+                </Grid>
+            </Border>
+            <ItemsPresenter x:Name="ItemsHost" Margin="19,0,0,0" Visibility="Collapsed"/>
+        </StackPanel>
+        <ControlTemplate.Triggers>
+            <Trigger Property="HasItems" Value="False">
+                <Setter TargetName="Expander" Property="Visibility" Value="Hidden"/>
+            </Trigger>
+            <Trigger Property="IsExpanded" Value="True">
+                <Setter TargetName="ItemsHost" Property="Visibility" Value="Visible"/>
+            </Trigger>
+            <!-- Nur die eigene Zeile hervorheben, nicht den ganzen aufgeklappten Zweig -->
+            <Trigger SourceName="Bd" Property="IsMouseOver" Value="True">
+                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource TreeViewItemBackgroundPointerOver}"/>
+            </Trigger>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource TreeViewItemBackgroundSelected}"/>
+                <Setter TargetName="Pill" Property="Visibility" Value="Visible"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="0.45"/>
+            </Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+
+    <!-- Schwere als Punkt in Tabellenzeilen: schlanker als ein SeverityPill je Zeile -->
+    <Style x:Key="SeverityDot" TargetType="Ellipse">
+        <Setter Property="Width" Value="8"/>
+        <Setter Property="Height" Value="8"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Fill" Value="{DynamicResource SevInfo}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Severity}" Value="Hoch">
+                <Setter Property="Fill" Value="{DynamicResource SevHigh}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Severity}" Value="Mittel">
+                <Setter Property="Fill" Value="{DynamicResource SevMedium}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Severity}" Value="Niedrig">
+                <Setter Property="Fill" Value="{DynamicResource SevLow}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Tabellenzelle: wie Fluent, aber mit Innenabstand – sonst stößt gekürzter Text ohne Lücke an die nächste
+         Spalte, und Kopf und Zellen stehen nicht bündig. Der Abstand kommt aus dem Stil „Table“ (ThemeManager). -->
+    <ControlTemplate x:Key="TableCellTemplate" TargetType="DataGridCell">
+        <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
+            <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+        </Border>
+        <ControlTemplate.Triggers>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource DataGridRowSelectedBackgroundThemeBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource DataGridRowSelectedForegroundThemeBrush}"/>
+            </Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
 
     <!-- ========== Fokus ========== -->
     <Style x:Key="FocusRing">
@@ -361,17 +473,25 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ui:StatTile">
-                    <Border Style="{StaticResource Card}" Margin="0" Padding="16,12">
-                        <StackPanel>
-                            <Grid Height="18" HorizontalAlignment="Left">
-                                <TextBlock x:Name="Ic" Text="{TemplateBinding Glyph}" Style="{StaticResource Icon}" FontSize="15"
-                                           Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
-                                <Ellipse x:Name="Dot" Width="10" Height="10" Visibility="Collapsed" VerticalAlignment="Center"/>
+                    <!-- Symbol links neben der Zahl statt darüber: zwei Kachelreihen und die Karte „Neuer Scan“
+                         passen so auch bei 800 Punkten Fensterhöhe untereinander -->
+                    <Border Style="{StaticResource Card}" Margin="0" Padding="16,11,14,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid Width="18" Height="32" Margin="0,0,12,0" VerticalAlignment="Top">
+                                <TextBlock x:Name="Ic" Text="{TemplateBinding Glyph}" Style="{StaticResource Icon}" FontSize="16"
+                                           HorizontalAlignment="Center" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+                                <Ellipse x:Name="Dot" Width="10" Height="10" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Grid>
-                            <TextBlock Text="{TemplateBinding Value}" FontFamily="{StaticResource DisplayFont}" FontSize="26" FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}" Margin="0,6,0,0"/>
-                            <TextBlock Text="{TemplateBinding Label}" Style="{StaticResource Caption}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
-                        </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="{TemplateBinding Value}" FontFamily="{StaticResource DisplayFont}" FontSize="24" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}" Height="32" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="{TemplateBinding Label}" Style="{StaticResource Caption}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"/>
+                            </StackPanel>
+                        </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="Glyph" Value="{x:Null}">

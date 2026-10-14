@@ -97,6 +97,17 @@ public static class Labels
 
     public static string TargetName(string target) => target.Trim() == "." ? "Freigaben dieses Rechners" : target.Trim();
 
+    /// <summary>„MUSTER\QC-Team“ → „QC-Team“ (für enge Spalten; der volle Name steht dann im Tooltip).</summary>
+    public static string WithoutDomain(string name)
+    {
+        int cut = name.LastIndexOf('\\');
+        return cut >= 0 && cut < name.Length - 1 ? name[(cut + 1)..] : name;
+    }
+
+    /// <summary>Gruppenkette „über welche Gruppen“ kurz: „QC-Team › Labor-Alle“ statt mit Domäne vor jedem Namen.</summary>
+    public static string ViaChain(IReadOnlyList<string> via) =>
+        via.Count == 0 ? "direkt berechtigt" : string.Join(" › ", via.Select(WithoutDomain));
+
     /// <summary>Kürzt lange Pfade in der Mitte, damit Anfang (Freigabe) und Ende (Ordner) sichtbar bleiben.</summary>
     public static string ShortenPath(string path, int max = 90)
     {

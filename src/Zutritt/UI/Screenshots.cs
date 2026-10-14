@@ -34,26 +34,7 @@ internal static class Screenshots
         int written = 0;
         foreach (var dark in variants)
         {
-            ThemeManager.Initialize(forceDark: dark);
-            var window = new MainWindow(state, screenshotMode: true)
-            {
-                WindowStyle = WindowStyle.None,
-                ResizeMode = ResizeMode.NoResize,
-                ShowInTaskbar = false,
-                ShowActivated = false,
-                WindowStartupLocation = WindowStartupLocation.Manual,
-                Left = -10000,
-                Top = -10000,
-                // Zuerst klein anlegen: Die Größengrenze fragt Windows schon beim Erzeugen ab, der Haken dagegen
-                // greift erst danach – die endgültige Größe kommt deshalb nach Show()
-                Width = 800,
-                Height = 600,
-            };
-            window.SourceInitialized += (_, _) =>
-                HwndSource.FromHwnd(new WindowInteropHelper(window).Handle)?.AddHook(AllowLargerThanScreen);
-            window.Show();
-            window.Width = Width;
-            window.Height = Height;
+            var window = CreateWindow(state, dark);
             try
             {
                 foreach (var slug in MainWindow.PageSlugs)
@@ -77,6 +58,35 @@ internal static class Screenshots
         return 0;
     }
 
+    /// <summary>
+    /// Hauptfenster außerhalb des Bildschirms in fester Größe, ohne Aktivierung und ohne Mica – auch für die
+    /// versteckte Messung (<c>--messen</c>).
+    /// </summary>
+    internal static MainWindow CreateWindow(AppState state, bool dark)
+    {
+        ThemeManager.Initialize(forceDark: dark);
+        var window = new MainWindow(state, screenshotMode: true)
+        {
+            WindowStyle = WindowStyle.None,
+            ResizeMode = ResizeMode.NoResize,
+            ShowInTaskbar = false,
+            ShowActivated = false,
+            WindowStartupLocation = WindowStartupLocation.Manual,
+            Left = -10000,
+            Top = -10000,
+            // Zuerst klein anlegen: Die Größengrenze fragt Windows schon beim Erzeugen ab, der Haken dagegen
+            // greift erst danach – die endgültige Größe kommt deshalb nach Show()
+            Width = 800,
+            Height = 600,
+        };
+        window.SourceInitialized += (_, _) =>
+            HwndSource.FromHwnd(new WindowInteropHelper(window).Handle)?.AddHook(AllowLargerThanScreen);
+        window.Show();
+        window.Width = Width;
+        window.Height = Height;
+        return window;
+    }
+
     /// <summary>Ohne sichtbaren Desktop ist der „Bildschirm“ oft nur 1024×768 groß – Fenster dürfen hier größer sein.</summary>
     private static nint AllowLargerThanScreen(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
     {
@@ -87,7 +97,7 @@ internal static class Screenshots
         return 0;
     }
 
-    private static void Save(Window window, string file)
+    internal static void Save(Window window, string file)
     {
         window.UpdateLayout();
         var root = (FrameworkElement)window.Content;

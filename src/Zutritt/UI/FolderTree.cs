@@ -99,7 +99,9 @@ public sealed class FolderTree
             chain.Push(current);
         }
 
-        var node = _roots.FirstOrDefault(r => Paths.Equals(r.Key, chain.Pop()));
+        // Einmal vom Stapel nehmen – im Prädikat würde für jede geprüfte Wurzel ein weiterer Teil verbraucht
+        var top = chain.Pop();
+        var node = _roots.FirstOrDefault(r => Paths.Equals(r.Key, top));
         while (node is not null && chain.Count > 0)
         {
             var next = chain.Pop();

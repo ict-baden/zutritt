@@ -1,4 +1,4 @@
-using System.ComponentModel;
+using System.Collections;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -11,7 +11,7 @@ namespace Zutritt.UI.Pages;
 public partial class FindingsPage : UserControl, IPage, ISearchPage
 {
     /// <summary>Zeile der Befundliste.</summary>
-    public sealed class FindingRow(Finding finding, string title, string account)
+    public sealed class FindingRow(Finding finding, string title, string account, string accountName)
     {
         public Finding Finding { get; } = finding;
         public Severity Severity => Finding.Severity;
@@ -20,8 +20,10 @@ public partial class FindingsPage : UserControl, IPage, ISearchPage
         public string Title { get; } = title;
         public string Path => Finding.Path;
         public string Account { get; } = account;
+        /// <summary>Kurzform für die enge Spalte (Anzeigename oder Name ohne Domäne), voller Name im Tooltip.</summary>
+        public string AccountName { get; } = accountName;
         public string Message => Finding.Message;
-        internal string SearchText { get; } = string.Join('\n', finding.RuleId, title, finding.Path, account, finding.Message);
+        internal string SearchText { get; } = string.Join('\n', finding.RuleId, title, finding.Path, account, accountName, finding.Message);
         public override string ToString() => $"{SeverityLabel}, {RuleId}, {Title}, {Path}";
     }
 
@@ -35,6 +37,8 @@ public partial class FindingsPage : UserControl, IPage, ISearchPage
     private ScanResult? _shown;
     private bool _loaded;
     private ListCollectionView? _view;
+    private GridViewColumn? _sortColumn;
+    private bool _descending;
     private string _query = "";
     private string? _rule;
     private readonly HashSet<Severity> _severities = [Severity.Hoch, Severity.Mittel, Severity.Niedrig, Severity.Info];
@@ -60,9 +64,9 @@ public partial class FindingsPage : UserControl, IPage, ISearchPage
         _query = "";
         RuleFilter.SelectedIndex = 0;
         Refresh();
-        FindingsGrid.SelectedIndex = _view is null || _view.IsEmpty ? -1 : 0;
+        FindingsList.SelectedIndex = _view is null || _view.IsEmpty ? -1 : 0;
         await Ui.IdleAsync();
-        if (FindingsGrid.SelectedItem is { } item) FindingsGrid.ScrollIntoView(item);
+        if (FindingsList.SelectedItem is { } item) FindingsList.ScrollIntoView(item);
         await Ui.IdleAsync();
     }
 
@@ -79,12 +83,12 @@ public partial class FindingsPage : UserControl, IPage, ISearchPage
         _loaded = true;
         _shown = _state.Scan;
         var scan = _shown;
-        FindingsGrid.SelectedItem = null;
+        FindingsList.SelectedItem = null;
 
         if (scan is null)
         {
             _view = null;
-            FindingsGrid.ItemsSource = null;
+            FindingsList.ItemsSource = null;
             RuleFilter.ItemsSource = new[] { new RuleChoice(null, "Alle Regeln") };
             RuleFilter.SelectedIndex = 0;
             SetChipCounts(null);
@@ -97,13 +101,14 @@ public partial class FindingsPage : UserControl, IPage, ISearchPage
             .OrderByDescending(f => f.Severity)
             .ThenBy(f => f.RuleId, StringComparer.Ordinal)
             .ThenBy(f => f.Path, StringComparer.OrdinalIgnoreCase)
-            .Select(f => new FindingRow(f, _state.Rule(f.RuleId)?.Title ?? f.Message, _state.NameOf(f.Sid)))
+            .Select(f => new FindingRow(f, _state.Rule(f.RuleId)?.Title ?? f.Message, _state.NameOf(f.Sid), _state.ShortNameOf(f.Sid)))
             .ToList();
 
         _view = new ListCollectionView(rows) { Filter = Matches };
-        _view.GroupDescriptions.Add(new PropertyGroupDescription(nameof(FindingRow.Severity)));
-        foreach (var column in FindingsGrid.Columns) column.SortDirection = null;
-        FindingsGrid.ItemsSource = _view;
+        _view.GroupDescriptions.Add(new SeverityGroups());
+        _sortColumn = null;
+        ListTable.ShowSortArrow(FindingsList, null, false);
+        FindingsList.ItemsSource = _view;
 
         var rules = scan.Findings.Select(f => f.RuleId).Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.Ordinal)
             .Select(id => new RuleChoice(id, _state.Rule(id) is { } r ? $"{id} · {r.Title}" : id));
@@ -115,7 +120,7 @@ public partial class FindingsPage : UserControl, IPage, ISearchPage
         UpdateEmptyState();
         ShowDetail(null);
         // Den schwersten Befund gleich zeigen
-        if (!_view.IsEmpty) FindingsGrid.SelectedIndex = 0;
+        if (!_view.IsEmpty) FindingsList.SelectedIndex = 0;
     }
 
     private void SetChipCounts(ScanResult? scan)
@@ -164,9 +169,9 @@ public partial class FindingsPage : UserControl, IPage, ISearchPage
     private void Refresh()
     {
         if (_view is null) return;
-        var selected = FindingsGrid.SelectedItem;
+        var selected = FindingsList.SelectedItem;
         _view.Refresh();
-        if (selected is not null && _view.Contains(selected) && _view.PassesFilter(selected)) FindingsGrid.SelectedItem = selected;
+        if (selected is not null && _view.Contains(selected) && _view.PassesFilter(selected)) FindingsList.SelectedItem = selected;
         UpdateEmptyState();
     }
 
@@ -180,7 +185,7 @@ public partial class FindingsPage : UserControl, IPage, ISearchPage
         else
         {
             EmptyState.Visibility = Visibility.Collapsed;
-            FindingsGrid.Visibility = Visibility.Visible;
+            FindingsList.Visibility = Visibility.Visible;
         }
     }
 
@@ -191,34 +196,58 @@ public partial class FindingsPage : UserControl, IPage, ISearchPage
         EmptyTitle.Text = title;
         EmptyText.Text = text;
         EmptyState.Visibility = Visibility.Visible;
-        FindingsGrid.Visibility = Visibility.Collapsed;
+        FindingsList.Visibility = Visibility.Collapsed;
     }
 
-    /// <summary>Spaltensortierung innerhalb der Schwere-Gruppen – sonst würden die Gruppen durcheinandergeraten.</summary>
-    private void Grid_Sorting(object sender, DataGridSortingEventArgs e)
+    // ================= Spalten =================
+
+    private static readonly Dictionary<string, Func<FindingRow, string>> SortKeys = new()
     {
-        e.Handled = true;
-        if (_view is null) return;
-        var path = e.Column.SortMemberPath;
-        var direction = e.Column.SortDirection == ListSortDirection.Ascending ? ListSortDirection.Descending : ListSortDirection.Ascending;
-        foreach (var column in FindingsGrid.Columns) column.SortDirection = null;
-        e.Column.SortDirection = direction;
-        using (_view.DeferRefresh())
+        ["Regel"] = r => r.RuleId,
+        ["Titel"] = r => r.Title,
+        ["Pfad"] = r => r.Path,
+        ["Konto"] = r => r.AccountName,
+    };
+
+    /// <summary>Klick auf einen Spaltenkopf sortiert innerhalb der Schwere-Gruppen (sonst gerieten die Gruppen durcheinander).</summary>
+    private void Header_Click(object sender, RoutedEventArgs e)
+    {
+        if (_view is null || e.OriginalSource is not GridViewColumnHeader { Column: { } column }) return;
+        if (!SortKeys.TryGetValue(ListTable.TitleOf(column), out var key)) return;
+        _descending = ReferenceEquals(_sortColumn, column) && !_descending;
+        _sortColumn = column;
+        _view.CustomSort = new RowOrder(key, _descending);
+        ListTable.ShowSortArrow(FindingsList, _sortColumn, _descending);
+    }
+
+    /// <summary>
+    /// Gruppen nach Schwere, direkt gelesen: PropertyGroupDescription löst den Namen je Zeile über Reflexion auf –
+    /// bei 10.000 Befunden kostete jedes Filtern so über eine halbe Sekunde.
+    /// </summary>
+    private sealed class SeverityGroups : System.ComponentModel.GroupDescription
+    {
+        public override object GroupNameFromItem(object item, int level, System.Globalization.CultureInfo culture) => ((FindingRow)item).Severity;
+    }
+
+    /// <summary>Schwere zuerst (wie die Gruppen), darin nach der gewählten Spalte – direkt statt über Reflexion wie SortDescriptions.</summary>
+    private sealed class RowOrder(Func<FindingRow, string> key, bool descending) : IComparer
+    {
+        public int Compare(object? x, object? y)
         {
-            _view.SortDescriptions.Clear();
-            if (path == nameof(FindingRow.Severity))
-                _view.SortDescriptions.Add(new SortDescription(nameof(FindingRow.Severity), direction));
-            else
-            {
-                _view.SortDescriptions.Add(new SortDescription(nameof(FindingRow.Severity), ListSortDirection.Descending));
-                _view.SortDescriptions.Add(new SortDescription(path, direction));
-            }
+            var a = (FindingRow)x!;
+            var b = (FindingRow)y!;
+            int c = b.Severity.CompareTo(a.Severity);
+            if (c != 0) return c;
+            c = StringComparer.CurrentCultureIgnoreCase.Compare(key(a), key(b));
+            if (c != 0) return descending ? -c : c;
+            c = string.CompareOrdinal(a.RuleId, b.RuleId);
+            return c != 0 ? c : StringComparer.OrdinalIgnoreCase.Compare(a.Path, b.Path);
         }
     }
 
     // ================= Detail =================
 
-    private void Grid_SelectionChanged(object sender, SelectionChangedEventArgs e) => ShowDetail(FindingsGrid.SelectedItem as FindingRow);
+    private void List_SelectionChanged(object sender, SelectionChangedEventArgs e) => ShowDetail(FindingsList.SelectedItem as FindingRow);
 
     private void ShowDetail(FindingRow? row)
     {
@@ -254,12 +283,12 @@ public partial class FindingsPage : UserControl, IPage, ISearchPage
 
     private void ShowFolder_Click(object sender, RoutedEventArgs e)
     {
-        if (FindingsGrid.SelectedItem is FindingRow row) _state.ShowFolder(row.Path);
+        if (FindingsList.SelectedItem is FindingRow row) _state.ShowFolder(row.Path);
     }
 
-    private void Grid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    private void List_MouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
-        if (e.OriginalSource is DependencyObject d && ItemsControl.ContainerFromElement(FindingsGrid, d) is DataGridRow { Item: FindingRow row })
+        if (e.OriginalSource is DependencyObject d && ItemsControl.ContainerFromElement(FindingsList, d) is ListViewItem { Content: FindingRow row })
             _state.ShowFolder(row.Path);
     }
 }

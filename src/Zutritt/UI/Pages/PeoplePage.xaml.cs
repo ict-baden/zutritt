@@ -44,7 +44,8 @@ public partial class PeoplePage : UserControl, IPage, ISearchPage
         };
     }
 
-    public sealed record AccessRow(string Path, string Right, AccessLevel Level, string RightDetail, string Via, string Note)
+    /// <param name="Via">Gruppenkette kurz (ohne Domäne), <paramref name="ViaFull"/> vollständig für den Tooltip.</param>
+    public sealed record AccessRow(string Path, string Right, AccessLevel Level, string RightDetail, string Via, string ViaFull, string Note)
     {
         public override string ToString() => $"{Path}, {Right}, {Via}";
     }
@@ -59,13 +60,22 @@ public partial class PeoplePage : UserControl, IPage, ISearchPage
     private List<PersonItem> _all = [];
     private CancellationTokenSource? _counting;
     private Task _countTask = Task.CompletedTask;
+    // Angeforderte Zählungen: Stapel (zuletzt sichtbar zuerst) und Menge gegen doppelte Anforderungen
+    private readonly List<PersonItem> _waiting = [];
+    private readonly HashSet<PersonItem> _queued = new(ReferenceEqualityComparer.Instance);
+    private VirtualizingStackPanel? _panel;
     private Task _detailTask = Task.CompletedTask;
     private int _detailVersion;
+
+    /// <summary>Berechnung des Details der gewählten Person (für die Messung).</summary>
+    internal Task DetailTask => _detailTask;
 
     public PeoplePage(AppState state)
     {
         InitializeComponent();
         _state = state;
+        // Blättern (und das erste Füllen der Liste) zeigt neue Personen – deren Ordner dann zählen
+        PeopleList.AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, _) => RequestVisibleCounts()));
         ShowDetail(null);
     }
 
@@ -79,12 +89,15 @@ public partial class PeoplePage : UserControl, IPage, ISearchPage
         OnShown();
         SearchBox.Text = "";
         ApplyFilter();
-        await _countTask;
         var person = _all.FirstOrDefault(p => p.DisplayName == ScreenshotPerson) ?? _all.FirstOrDefault();
         PeopleList.SelectedItem = person;
         await _detailTask;
         await Ui.IdleAsync();
         if (person is not null) PeopleList.ScrollIntoView(person);
+        await Ui.IdleAsync();
+        // Zahlen der jetzt sichtbaren Personen abwarten
+        RequestVisibleCounts();
+        await _countTask;
         await Ui.IdleAsync();
     }
 
@@ -102,6 +115,9 @@ public partial class PeoplePage : UserControl, IPage, ISearchPage
         _shown = _state.Scan;
         _counting?.Cancel();
         _counting = null;
+        _countTask = Task.CompletedTask;
+        _waiting.Clear();
+        _queued.Clear();
         PeopleList.SelectedItem = null;
         ShowDetail(null);
 
@@ -109,7 +125,6 @@ public partial class PeoplePage : UserControl, IPage, ISearchPage
         {
             _all = [];
             ApplyFilter();
-            _countTask = Task.CompletedTask;
             return;
         }
 
@@ -120,27 +135,67 @@ public partial class PeoplePage : UserControl, IPage, ISearchPage
             .ToList();
         ApplyFilter();
 
-        var cts = new CancellationTokenSource();
-        _counting = cts;
-        var task = CountAsync(scan, _all.ToList(), cts.Token);
+        _counting = new CancellationTokenSource();
+    }
+
+    // ================= Ordner je Person =================
+
+    /// <summary>
+    /// Fordert die Zahl der Ordner für die gerade angezeigten Personen an. Gezählt wird nur, was jemand sieht:
+    /// Bei 3.000 Personen und 50.000 Ordnern bräuchte das Zählen aller Personen minutenlang die ganze CPU.
+    /// </summary>
+    private void RequestVisibleCounts()
+    {
+        if (_shown is not { } scan || _counting is not { } cts) return;
+        var visible = VisibleItems();
+        // Von unten nach oben ablegen: abgearbeitet wird vom Ende her, also die oberste sichtbare Person zuerst
+        for (int i = visible.Count - 1; i >= 0; i--)
+        {
+            var item = visible[i];
+            if (item.FolderCount is null && _queued.Add(item)) _waiting.Add(item);
+        }
+        if (_waiting.Count == 0 || !_countTask.IsCompleted) return;
+        var task = CountWaitingAsync(scan, cts.Token);
         _countTask = task;
         Ui.Run(_state, () => task, "Die Zahl der Ordner je Person ließ sich nicht berechnen");
     }
 
-    /// <summary>Ordner je Person im Hintergrund zählen, in kleinen Paketen, damit die Liste nach und nach Zahlen bekommt.</summary>
-    private static async Task CountAsync(ScanResult scan, List<PersonItem> people, CancellationToken ct)
+    /// <summary>Angelegte Listeneinträge – die sichtbaren plus den kleinen Vorrat der Virtualisierung.</summary>
+    private List<PersonItem> VisibleItems()
     {
-        // Pakete: die Liste bekommt nach und nach Zahlen; je Paket entsteht der Auswertungs-Kontext nur einmal
-        const int Batch = 64;
-        for (int i = 0; i < people.Count; i += Batch)
+        // Neu suchen, wenn die Vorlage der Liste ersetzt wurde (Wechsel Hell/Dunkel in Windows) – sonst blieben
+        // die Zahlen danach bei „…“ stehen
+        if (_panel is null || !_panel.IsDescendantOf(PeopleList)) _panel = Ui.FindChild<VirtualizingStackPanel>(PeopleList);
+        if (_panel is null) return [];
+        return _panel.Children.OfType<ListBoxItem>().Select(c => c.DataContext).OfType<PersonItem>().ToList();
+    }
+
+    /// <summary>
+    /// Zählt die angeforderten Personen in kleinen Paketen im Hintergrund, die zuletzt sichtbar gewordenen zuerst.
+    /// Wer inzwischen weggeblättert wurde, wird übersprungen und erst wieder angefragt, wenn er erneut erscheint.
+    /// </summary>
+    private async Task CountWaitingAsync(ScanResult scan, CancellationToken ct)
+    {
+        // Je Paket entsteht der Auswertungs-Kontext nur einmal
+        const int Batch = 24;
+        while (!ct.IsCancellationRequested)
         {
-            var batch = people.Skip(i).Take(Batch).ToList();
+            var visible = new HashSet<PersonItem>(VisibleItems(), ReferenceEqualityComparer.Instance);
+            var batch = new List<PersonItem>();
+            while (batch.Count < Batch && _waiting.Count > 0)
+            {
+                var item = _waiting[^1];
+                _waiting.RemoveAt(_waiting.Count - 1);
+                _queued.Remove(item);
+                if (item.FolderCount is null && visible.Contains(item)) batch.Add(item);
+            }
+            if (batch.Count == 0) return;
             var counts = await Task.Run(() =>
             {
                 var access = EffectiveAccess.ForPeople(scan, batch.Select(p => p.Sid), ct);
                 return batch.Select(p => access.TryGetValue(p.Sid, out var g) ? g.Count : 0).ToList();
             }, ct);
-            if (ct.IsCancellationRequested) return;
+            if (ct.IsCancellationRequested || !ReferenceEquals(scan, _shown)) return;
             for (int j = 0; j < batch.Count; j++) batch[j].FolderCount = counts[j];
         }
     }
@@ -201,7 +256,7 @@ public partial class PeoplePage : UserControl, IPage, ISearchPage
         AddTag(Facts, "\uE8EC", p.Sid);
 
         Groups.Children.Clear();
-        AccessGrid.ItemsSource = null;
+        AccessTable.ItemsSource = null;
         AccessTitle.Text = "Zugriff";
         GroupsTitle.Text = "Mitglied in";
         AccessStatus.Text = "Wird berechnet …";
@@ -231,10 +286,10 @@ public partial class PeoplePage : UserControl, IPage, ISearchPage
         var rows = grants.Select(g => new AccessRow(
             g.Path, Labels.Of(g.Effective), g.Effective,
             g.ViaShare is { } share ? $"NTFS: {Labels.Of(g.Ntfs)} · über die Freigabe: {Labels.Of(share)}" : $"NTFS: {Labels.Of(g.Ntfs)} · ohne Freigabe-Rechte",
-            g.Via.Count == 0 ? "direkt berechtigt" : string.Join(" › ", g.Via),
+            Labels.ViaChain(g.Via), g.Via.Count == 0 ? "direkt berechtigt" : string.Join(" › ", g.Via),
             g.ReducedByDeny ? "Durch einen Verweigern-Eintrag eingeschränkt"
                 : g.ViaShare is { } capped && capped < g.Ntfs ? "Die Freigabe-Berechtigung begrenzt das NTFS-Recht" : "")).ToList();
-        AccessGrid.ItemsSource = rows;
+        AccessTable.ItemsSource = rows;
         AccessTitle.Text = rows.Count == 1 ? "Zugriff auf 1 Ordner" : $"Zugriff auf {Labels.Number(rows.Count)} Ordner";
         AccessStatus.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         AccessStatus.Text = "Diese Person hat auf keinen der gespeicherten Ordner Zugriff.";

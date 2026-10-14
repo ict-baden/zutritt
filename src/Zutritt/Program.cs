@@ -20,15 +20,22 @@ internal static class Program
     }
 }
 
-internal enum AppMode { Normal, Demo, Screenshots, CommandLine }
+internal enum AppMode { Normal, Demo, Screenshots, Benchmark, CommandLine }
 
-internal sealed record StartOptions(AppMode Mode, string ScreenshotFolder = "", string Theme = "beide")
+/// <param name="BenchmarkFolders">Gespeicherte Ordner des Messlaufs (nur <see cref="AppMode.Benchmark"/>).</param>
+/// <param name="BenchmarkPeople">Personen des Messlaufs (nur <see cref="AppMode.Benchmark"/>).</param>
+internal sealed record StartOptions(AppMode Mode, string ScreenshotFolder = "", string Theme = "beide",
+    int BenchmarkFolders = 50_000, int BenchmarkPeople = 3_000)
 {
     public static StartOptions Parse(string[] args)
     {
         if (args.Length == 0) return new(AppMode.Normal);
         var first = args[0].Trim();
         if (first.Equals("--demo", StringComparison.OrdinalIgnoreCase) && args.Length == 1) return new(AppMode.Demo);
+
+        // Verstecktes Messen (bewusst nicht in --hilfe): großer Demo-Lauf, Zeiten je Seite, optional Bilder
+        // Zutritt.exe --messen [<ordner>] [--ordner N] [--personen N]
+        if (first.Equals("--messen", StringComparison.OrdinalIgnoreCase)) return ParseBenchmark(args) ?? new(AppMode.CommandLine);
 
         if (first.Equals("--screenshots", StringComparison.OrdinalIgnoreCase))
         {
@@ -41,5 +48,21 @@ internal sealed record StartOptions(AppMode Mode, string ScreenshotFolder = "", 
             return new(AppMode.Screenshots, Path.GetFullPath(args[1]), theme);
         }
         return new(AppMode.CommandLine);
+    }
+
+    private static StartOptions? ParseBenchmark(string[] args)
+    {
+        string folder = "";
+        int folders = 50_000, people = 3_000;
+        for (int i = 1; i < args.Length; i++)
+        {
+            var arg = args[i].Trim();
+            bool hasValue = i + 1 < args.Length;
+            if (arg.Equals("--ordner", StringComparison.OrdinalIgnoreCase) && hasValue && int.TryParse(args[i + 1], out var f) && f > 0) { folders = f; i++; }
+            else if (arg.Equals("--personen", StringComparison.OrdinalIgnoreCase) && hasValue && int.TryParse(args[i + 1], out var p) && p > 0) { people = p; i++; }
+            else if (!arg.StartsWith("--", StringComparison.Ordinal) && folder.Length == 0) folder = Path.GetFullPath(arg);
+            else return null;
+        }
+        return new(AppMode.Benchmark, folder, "hell", folders, people);
     }
 }

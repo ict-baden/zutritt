@@ -135,11 +135,80 @@ public static class ThemeManager
         table.Setters.Add(new Setter(VirtualizingPanel.VirtualizationModeProperty, VirtualizationMode.Recycling));
         table.Setters.Add(new Setter(VirtualizingPanel.IsVirtualizingWhenGroupingProperty, true));
         table.Setters.Add(new Setter(VirtualizingPanel.ScrollUnitProperty, ScrollUnit.Pixel));
+        // Vorrat außerhalb der Sicht: eine halbe Seite statt einer ganzen davor und danach – jede Zeile einer
+        // Tabelle kostet beim Filtern und Blättern ein paar Millisekunden
+        table.Setters.Add(new Setter(VirtualizingPanel.CacheLengthProperty, new VirtualizationCacheLength(0.5)));
+        table.Setters.Add(new Setter(VirtualizingPanel.CacheLengthUnitProperty, VirtualizationCacheLengthUnit.Page));
         table.Setters.Add(new Setter(Control.FontSizeProperty, 13.0));
         table.Setters.Add(new Setter(Control.BackgroundProperty, Brushes.Transparent));
         table.Setters.Add(new Setter(Control.BorderThicknessProperty, new Thickness(0)));
         table.Setters.Add(new Setter(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled));
+        // Fluent schaltet beim Gruppieren das logische Scrollen ab – und damit die Virtualisierung. Bei Tausenden
+        // Befunden wären dann alle Zeilen auf einmal angelegt. Pixelweises Scrollen (oben) geht auch mit Gruppen.
+        var grouping = new Trigger { Property = ItemsControl.IsGroupingProperty, Value = true };
+        grouping.Setters.Add(new Setter(ScrollViewer.CanContentScrollProperty, true));
+        table.Triggers.Add(grouping);
+
+        // Zellen und Spaltenköpfe mit gleichem Abstand links, Zellen auch rechts – Text klebt nie an der Nachbarspalte
+        var cell = new Style(typeof(DataGridCell), SetterValue<Style>(dataGrid, DataGrid.CellStyleProperty));
+        cell.Setters.Add(new Setter(Control.PaddingProperty, new Thickness(CellPaddingLeft, 0, CellPaddingRight, 0)));
+        if (Application.Current.TryFindResource("TableCellTemplate") is ControlTemplate cellTemplate)
+            cell.Setters.Add(new Setter(Control.TemplateProperty, cellTemplate));
+        table.Setters.Add(new Setter(DataGrid.CellStyleProperty, cell));
+        var row = new Style(typeof(DataGridRow), SetterValue<Style>(dataGrid, DataGrid.RowStyleProperty));
+        if (Application.Current.TryFindResource("TableRowTemplate") is ControlTemplate rowTemplate)
+            row.Setters.Add(new Setter(Control.TemplateProperty, rowTemplate));
+        table.Setters.Add(new Setter(DataGrid.RowStyleProperty, row));
+        // Den Kopfstil setzt WPF nicht aus DataGrid.ColumnHeaderStyle, wenn Fluent seinen eigenen mitbringt –
+        // dessen Abstand kommt aber aus einer Ressource, die sich hier überschreiben lässt
+        r["DataGridColumnHeaderPadding"] = new Thickness(CellPaddingLeft, 0, 4, 0);
         r["Table"] = table;
+
+        // Schlanke Tabelle (ListView + GridView, siehe ListTable): so dicht und im selben Stil wie „Table“
+        var listItem = new Style(typeof(ListViewItem), _fluent[GridView.GridViewItemContainerStyleKey] as Style);
+        listItem.Setters.Add(new Setter(FrameworkElement.MinHeightProperty, 32.0));
+        listItem.Setters.Add(new Setter(FrameworkElement.MarginProperty, new Thickness(0)));
+        var list = new Style(typeof(ListView), _fluent[typeof(ListView)] as Style);
+        list.Setters.Add(new Setter(Control.BorderThicknessProperty, new Thickness(0)));
+        list.Setters.Add(new Setter(Control.BackgroundProperty, Brushes.Transparent));
+        list.Setters.Add(new Setter(Control.FontSizeProperty, 13.0));
+        list.Setters.Add(new Setter(ListBox.SelectionModeProperty, SelectionMode.Single));
+        list.Setters.Add(new Setter(Selector.IsSynchronizedWithCurrentItemProperty, false));
+        list.Setters.Add(new Setter(Control.HorizontalContentAlignmentProperty, HorizontalAlignment.Stretch));
+        list.Setters.Add(new Setter(ScrollViewer.HorizontalScrollBarVisibilityProperty, ScrollBarVisibility.Disabled));
+        list.Setters.Add(new Setter(ScrollViewer.CanContentScrollProperty, true));
+        list.Setters.Add(new Setter(VirtualizingPanel.IsVirtualizingProperty, true));
+        list.Setters.Add(new Setter(VirtualizingPanel.VirtualizationModeProperty, VirtualizationMode.Recycling));
+        list.Setters.Add(new Setter(VirtualizingPanel.IsVirtualizingWhenGroupingProperty, true));
+        list.Setters.Add(new Setter(VirtualizingPanel.ScrollUnitProperty, ScrollUnit.Pixel));
+        list.Setters.Add(new Setter(VirtualizingPanel.CacheLengthProperty, new VirtualizationCacheLength(0.5)));
+        list.Setters.Add(new Setter(VirtualizingPanel.CacheLengthUnitProperty, VirtualizationCacheLengthUnit.Page));
+        // Den Zeilenstil setzt ListTable direkt an der Liste: Fluent wählt ihn für GridView per Trigger, und
+        // Trigger schlagen Setter
+        r["ListTableItem"] = listItem;
+        r["ListTable"] = list;
+        var listHeader = new Style(typeof(GridViewColumnHeader), _fluent["DefaultGridViewColumnHeaderStyle"] as Style);
+        listHeader.Setters.Add(new Setter(Control.FontWeightProperty, FontWeights.SemiBold));
+        listHeader.Setters.Add(new Setter(Control.BorderThicknessProperty, new Thickness(0, 0, 0, 1)));
+        listHeader.Setters.Add(new Setter(Control.BorderBrushProperty, new DynamicResourceExtension("DividerStrokeColorDefaultBrush")));
+        // Der Füllkopf rechts neben der letzten Spalte bekommt bei Fluent per Trigger oben und unten einen Rand –
+        // der stünde als Strich über der Bildlaufleiste. Wie die übrigen Köpfe nur unten.
+        var padding = new Trigger { Property = GridViewColumnHeader.RoleProperty, Value = GridViewColumnHeaderRole.Padding };
+        padding.Setters.Add(new Setter(Control.BorderThicknessProperty, new Thickness(0, 0, 0, 1)));
+        listHeader.Triggers.Add(padding);
+        r["ListTableHeader"] = listHeader;
+    }
+
+    private const double CellPaddingLeft = 8;
+    private const double CellPaddingRight = 10;
+
+    /// <summary>Wert eines Setters im Stil oder seinen Basisstilen (Fluent legt Zell- und Kopfstil so ab).</summary>
+    private static T? SetterValue<T>(Style? style, DependencyProperty property) where T : class
+    {
+        for (var s = style; s is not null; s = s.BasedOn)
+            foreach (var setter in s.Setters.OfType<Setter>())
+                if (setter.Property == property) return setter.Value as T;
+        return null;
     }
 
     private static T Freeze<T>(T f) where T : Freezable { f.Freeze(); return f; }

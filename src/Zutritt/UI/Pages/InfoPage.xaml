@@ -18,7 +18,12 @@
             </Border>
 
             <ui:SettingCard Glyph="&#xE8B7;" Header="Datenbank" x:Name="DatabaseCard" Description="%LocalAppData%\Zutritt\zutritt.db">
-                <Button x:Name="DatabaseButton" Content="Ordner öffnen" Click="OpenDatabaseFolder_Click"/>
+                <Button x:Name="DatabaseButton" Click="OpenDatabaseFolder_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE838;" FontFamily="{StaticResource IconFont}" FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="Ordner öffnen" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
             </ui:SettingCard>
             <ui:SettingCard Glyph="&#xE7EF;" Header="Herausgeber" Description="ICT-Baden">
                 <TextBlock/>
