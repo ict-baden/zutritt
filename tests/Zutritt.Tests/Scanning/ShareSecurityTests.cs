@@ -1,0 +1,128 @@
+using System.Security.AccessControl;
+using Zutritt.Core.Model;
+using Zutritt.Core.Scanning;
+
+namespace Zutritt.Tests.Scanning;
+
+public sealed class ShareSecurityTests
+{
+    private const string User = "S-1-5-21-1111111111-2222222222-3333333333-1001";
+
+    [Theory]
+    [InlineData(0x001F01FFu, ShareAccess.Vollzugriff)]  // Vollzugriff, wie die Oberfläche ihn setzt
+    [InlineData(0x001301BFu, ShareAccess.Aendern)]      // Ändern
+    [InlineData(0x001200A9u, ShareAccess.Lesen)]        // Lesen
+    [InlineData(0x10000000u, ShareAccess.Vollzugriff)]  // GENERIC_ALL
+    [InlineData(0x80000000u, ShareAccess.Lesen)]        // GENERIC_READ
+    [InlineData(0x40000000u, ShareAccess.Aendern)]      // GENERIC_WRITE
+    [InlineData(0x20000000u, ShareAccess.Lesen)]        // GENERIC_EXECUTE: über SMB lässt sich damit lesen
+    [InlineData(0x00040000u, ShareAccess.Vollzugriff)]  // nur WRITE_DAC: kann sich alles geben
+    [InlineData(0x00080000u, ShareAccess.Vollzugriff)]  // nur WRITE_OWNER
+    [InlineData(0x00000002u, ShareAccess.Aendern)]      // nur Schreiben
+    [InlineData(0x00010000u, ShareAccess.Aendern)]      // nur Löschen
+    [InlineData(0x00000001u, ShareAccess.Lesen)]        // nur Daten lesen
+    [InlineData(0x00100000u, ShareAccess.Keine)]        // nur SYNCHRONIZE
+    [InlineData(0x00020080u, ShareAccess.Keine)]        // nur Attribute + Berechtigungen lesen
+    [InlineData(0x00000000u, ShareAccess.Keine)]
+    public void AllowLevel_bewertet_nach_Bits(uint mask, ShareAccess expected)
+        => Assert.Equal(expected, ShareSecurity.AllowLevel(mask));
+
+    [Theory]
+    [InlineData(0x001F01FFu, ShareAccess.Lesen)]        // Verweigern Vollzugriff sperrt schon das Lesen
+    [InlineData(0x001200A9u, ShareAccess.Lesen)]        // Verweigern Lesen
+    [InlineData(0x00010116u, ShareAccess.Aendern)]      // Verweigern Ändern (nur das Kästchen „Ändern“)
+    [InlineData(0x001301BFu, ShareAccess.Lesen)]        // Ändern enthält Lesen
+    [InlineData(0x000C0000u, ShareAccess.Vollzugriff)]  // WRITE_DAC + WRITE_OWNER
+    [InlineData(0x10000000u, ShareAccess.Lesen)]        // GENERIC_ALL
+    [InlineData(0x40000000u, ShareAccess.Keine)]        // GENERIC_WRITE ohne Löschen: Löschen bleibt möglich
+    [InlineData(0x00010000u, ShareAccess.Keine)]        // nur Löschen gesperrt: nicht als „Ändern verweigert“ werten
+    [InlineData(0x00000001u, ShareAccess.Keine)]        // nur READ_DATA: Ausführen erlaubt weiter Lesen
+    [InlineData(0x00040000u, ShareAccess.Keine)]        // nur WRITE_DAC: Besitz übernehmen bleibt
+    public void DenyLevel_zaehlt_nur_vollstaendige_Sperren(uint mask, ShareAccess expected)
+        => Assert.Equal(expected, ShareSecurity.DenyLevel(mask));
+
+    [Fact]
+    public void Typische_Freigabe_wird_in_Reihenfolge_gelesen()
+    {
+        var r = Parse($"O:BAG:SYD:(D;;0x10116;;;{User})(A;;0x1200a9;;;WD)(A;;FA;;;BA)(A;;0x1301bf;;;AU)");
+        Assert.True(r.Readable);
+        Assert.Null(r.Note);
+        Assert.Equal(
+            [
+                new ShareAce(User, ShareAccess.Aendern, true),
+                new ShareAce("S-1-1-0", ShareAccess.Lesen, false),
+                new ShareAce("S-1-5-32-544", ShareAccess.Vollzugriff, false),
+                new ShareAce("S-1-5-11", ShareAccess.Aendern, false),
+            ], r.Aces);
+    }
+
+    [Fact]
+    public void Null_DACL_heisst_Jeder_Vollzugriff()
+    {
+        var r = Parse("O:BAG:SYD:NO_ACCESS_CONTROL");
+        Assert.True(r.Readable);
+        Assert.Equal([new ShareAce("S-1-1-0", ShareAccess.Vollzugriff, false)], r.Aces);
+    }
+
+    [Fact]
+    public void Leere_DACL_heisst_niemand()
+    {
+        var r = Parse("O:BAG:SYD:");
+        Assert.True(r.Readable);
+        Assert.Empty(r.Aces);
+    }
+
+    [Fact]
+    public void Fehlende_Beschreibung_normale_Freigabe_ist_Jeder_Vollzugriff()
+    {
+        // So meldet es auch Get-SmbShareAccess für eine per NetShareAdd ohne Beschreibung angelegte Freigabe.
+        var r = ShareSecurity.ForMissingDescriptor(isSpecial: false);
+        Assert.True(r.Readable);
+        Assert.Equal([new ShareAce("S-1-1-0", ShareAccess.Vollzugriff, false)], r.Aces);
+    }
+
+    [Fact]
+    public void Fehlende_Beschreibung_admin_Freigabe_ist_nicht_lesbar()
+    {
+        var r = ShareSecurity.ForMissingDescriptor(isSpecial: true);
+        Assert.False(r.Readable);
+        Assert.Empty(r.Aces);
+        Assert.Contains("Administrative Freigabe", r.Note);
+    }
+
+    [Fact]
+    public void Nur_vererben_und_bedeutungslose_Eintraege_entfallen()
+    {
+        var r = Parse($"D:(A;OICIIO;FA;;;WD)(A;;0x100000;;;AU)(D;;DT;;;{User})(A;;0x1200a9;;;BU)");
+        Assert.Equal([new ShareAce("S-1-5-32-545", ShareAccess.Lesen, false)], r.Aces);
+    }
+
+    [Fact]
+    public void Bedingtes_Erlauben_zaehlt_bedingtes_Verweigern_nicht()
+    {
+        // Im Zweifel mehr Zugriff zeigen: Bedingungen kann der Bericht nicht auswerten.
+        var r = Parse("D:(XA;;FA;;;WD;(Member_of {SID(BA)}))(XD;;FA;;;AU;(Member_of {SID(BA)}))");
+        Assert.True(r.Readable);
+        Assert.Equal([new ShareAce("S-1-1-0", ShareAccess.Vollzugriff, false)], r.Aces);
+    }
+
+    [Fact]
+    public void Kaputte_Beschreibung_ist_nicht_lesbar()
+    {
+        var r = ShareSecurity.FromBinary([1, 0, 4, 0x80, 255, 255, 255, 255]);
+        Assert.False(r.Readable);
+        Assert.Empty(r.Aces);
+        Assert.NotNull(r.Note);
+    }
+
+    [Fact]
+    public void Binaerform_wird_gelesen()
+    {
+        var sd = new RawSecurityDescriptor("D:(A;;0x1200a9;;;WD)");
+        var bytes = new byte[sd.BinaryLength];
+        sd.GetBinaryForm(bytes, 0);
+        Assert.Equal([new ShareAce("S-1-1-0", ShareAccess.Lesen, false)], ShareSecurity.FromBinary(bytes).Aces);
+    }
+
+    private static ShareSecurityResult Parse(string sddl) => ShareSecurity.FromDescriptor(new RawSecurityDescriptor(sddl));
+}
