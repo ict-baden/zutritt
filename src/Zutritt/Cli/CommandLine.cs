@@ -41,6 +41,8 @@ internal static class CommandLine
                 "bericht" => Report(Arguments.Parse(rest, flags: ["--vergleich"], values: ["--bericht", "--db"])),
                 "--screenshots" => throw new UsageException("Aufruf: Zutritt.exe --screenshots <ordner> [--theme hell|dunkel|beide]"),
                 "--demo" => throw new UsageException("„--demo“ steht allein: Zutritt.exe --demo"),
+                // Versteckt (nicht in --hilfe): Beispielberichte aus den Demo-Daten für Doku und Vorführung
+                "--demo-bericht" => DemoReport(Arguments.Parse(rest, flags: ["--vergleich"], values: ["--bericht"])),
                 _ => throw new UsageException($"Unbekannter Befehl „{command}“."),
             };
         }
@@ -159,6 +161,18 @@ internal static class CommandLine
         var scan = store.Load(id) ?? throw new InvalidOperationException($"Lauf {id} gibt es nicht. „Zutritt.exe liste“ zeigt die gespeicherten Läufe.");
         var comparison = a.Has("--vergleich") ? CompareWithPrevious(store, scan) : null;
         return WriteReports(scan, comparison, reports) ? ExitClean : ExitError;
+    }
+
+    // ================= Demo-Bericht =================
+
+    /// <summary>Zutritt.exe --demo-bericht --bericht demo.pdf [--vergleich] – Berichte aus den eingebauten Demo-Daten.</summary>
+    private static int DemoReport(Arguments a)
+    {
+        var reports = a.All("--bericht").Select(CheckReportPath).ToList();
+        if (reports.Count == 0) throw new UsageException("Bitte mit --bericht <datei.xlsx|datei.pdf> angeben, wohin der Bericht soll.");
+        var (older, newer) = Demo.DemoData.Create();
+        var comparison = a.Has("--vergleich") ? ScanComparer.Compare(older, newer) : null;
+        return WriteReports(newer, comparison, reports) ? ExitClean : ExitError;
     }
 
     // ================= Bausteine =================

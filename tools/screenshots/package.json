@@ -1,0 +1,8 @@
+{
+  "name": "zutritt-screenshots",
+  "private": true,
+  "description": "Rendert das README-Banner (der Rest kommt aus make-assets.ps1)",
+  "dependencies": {
+    "playwright-core": "1.48.2"
+  }
+}
