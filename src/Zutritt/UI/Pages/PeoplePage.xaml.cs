@@ -130,11 +130,16 @@ public partial class PeoplePage : UserControl, IPage, ISearchPage
     /// <summary>Ordner je Person im Hintergrund zählen, in kleinen Paketen, damit die Liste nach und nach Zahlen bekommt.</summary>
     private static async Task CountAsync(ScanResult scan, List<PersonItem> people, CancellationToken ct)
     {
-        const int Batch = 16;
+        // Pakete: die Liste bekommt nach und nach Zahlen; je Paket entsteht der Auswertungs-Kontext nur einmal
+        const int Batch = 64;
         for (int i = 0; i < people.Count; i += Batch)
         {
             var batch = people.Skip(i).Take(Batch).ToList();
-            var counts = await Task.Run(() => batch.Select(p => EffectiveAccess.ForPerson(scan, p.Sid).Count).ToList(), ct);
+            var counts = await Task.Run(() =>
+            {
+                var access = EffectiveAccess.ForPeople(scan, batch.Select(p => p.Sid), ct);
+                return batch.Select(p => access.TryGetValue(p.Sid, out var g) ? g.Count : 0).ToList();
+            }, ct);
             if (ct.IsCancellationRequested) return;
             for (int j = 0; j < batch.Count; j++) batch[j].FolderCount = counts[j];
         }

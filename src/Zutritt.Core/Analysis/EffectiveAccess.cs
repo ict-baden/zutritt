@@ -106,6 +106,27 @@ public static class EffectiveAccess
         return ForPerson(ctx, personSid);
     }
 
+    /// <summary>
+    /// <see cref="ForPerson(ScanResult, string)"/> für viele Personen auf einmal. Vorbereitete Zugriffslisten und
+    /// Gruppen-Token entstehen nur einmal statt je Person – bei Personen-Übersichten über Tausende Konten der
+    /// Unterschied zwischen Sekunden und Minuten.
+    /// </summary>
+    public static IReadOnlyDictionary<string, IReadOnlyList<AccessGrant>> ForPeople(
+        ScanResult scan, IEnumerable<string> personSids, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(scan);
+        ArgumentNullException.ThrowIfNull(personSids);
+        var ctx = new AccessContext(scan);
+        var result = new Dictionary<string, IReadOnlyList<AccessGrant>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var sid in personSids)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (string.IsNullOrEmpty(sid) || result.ContainsKey(sid)) continue;
+            result[sid] = ForPerson(ctx, sid);
+        }
+        return result;
+    }
+
     /// <summary>Alle Gruppen (transitiv, inkl. bekannter Prinzipale wie Jeder), in denen das Konto Mitglied ist.</summary>
     /// <remarks>
     /// Enthält die SID selbst. Benutzer und Computer (ebenso verwaiste und nicht auflösbare SIDs, hinter denen ein

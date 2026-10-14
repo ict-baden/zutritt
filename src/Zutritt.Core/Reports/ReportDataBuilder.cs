@@ -26,7 +26,9 @@ internal static class ReportDataBuilder
     public static ReportData Build(ScanResult scan, ComparisonResult? comparison)
     {
         ArgumentNullException.ThrowIfNull(scan);
-        return Build(scan, comparison, FindingRules.All, sid => EffectiveAccess.ForPerson(scan, sid), DateTimeOffset.Now);
+        // Ein gemeinsamer Kontext für alle Personen: vorbereitete Zugriffslisten und Gruppen-Token nur einmal
+        var ctx = new AccessContext(scan);
+        return Build(scan, comparison, FindingRules.All, sid => EffectiveAccess.ForPerson(ctx, sid), DateTimeOffset.Now);
     }
 
     /// <summary>Variante mit austauschbarer Auswertung – für Tests ohne <see cref="EffectiveAccess"/>.</summary>
