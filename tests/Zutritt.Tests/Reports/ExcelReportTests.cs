@@ -79,7 +79,7 @@ public sealed class ExcelReportTests(ITestOutputHelper output) : IDisposable
         Assert.Equal(data.Comparison!.Rows.Count, rows.Count);
         Assert.Equal(["Bereich", "Änderung", "Pfad bzw. Gruppe", "Konto", "Vorher", "Nachher"], rows[0].Keys);
         Assert.Contains(rows, r => r["Bereich"] == "Zugriff" && r["Konto"] == @"LAB\max.muster" && r["Vorher"] == "Ändern" && r["Nachher"] == "Vollzugriff");
-        Assert.Contains(rows, r => r["Änderung"] == "behoben" && r["Konto"] == @"LAB\ehemalig");
+        Assert.Contains(rows, r => r["Änderung"] == "Behoben" && r["Konto"] == @"LAB\ehemalig");
 
         var overview = AllText(wb.Worksheet("Übersicht"));
         Assert.Contains("Vergleich mit dem Lauf vom", overview);
@@ -158,6 +158,7 @@ public sealed class ExcelReportTests(ITestOutputHelper output) : IDisposable
         Assert.Equal("1", everyone["Tiefe"]);
         Assert.Equal("Ordner", everyone["Typ"]);
         Assert.Equal("Nein", everyone["Vererbung unterbrochen"]);
+        Assert.Equal("Nein", everyone["Vererbung weicht ab"]);
         Assert.Equal(@"LAB\max.muster", everyone["Besitzer"]);
         Assert.Equal("Integriert", everyone["Art"]);
         Assert.Equal("Ändern", everyone["Recht"]);
@@ -442,5 +443,45 @@ public sealed class ExcelReportTests(ITestOutputHelper output) : IDisposable
         Assert.Equal(100_001, wb.Worksheet("Ordner & Rechte").LastRowUsed()!.RowNumber());
         Assert.Equal(103 * 400 + 1, wb.Worksheet("Zugriffe je Person").LastRowUsed()!.RowNumber());
         Assert.Equal(104, wb.Worksheet("Personen").LastRowUsed()!.RowNumber());
+    }
+
+    [Fact]
+    public void Werte_und_Hervorhebungen_nur_wo_noetig()
+    {
+        // Die Werte werden blockweise eingefügt: Zahlen bleiben Zahlen, ein Apostroph am Anfang (gültiger Ordner- oder
+        // Kontoname) geht nicht als Textkennzeichen verloren, und nur Verweigern-Zeilen sind rot hervorgehoben
+        var scan = Scan();
+        scan.Shares.Add(new ShareInfo { Server = "FS01", Name = "Alt", Remark = "'Altbestand" });
+        using var wb = new XLWorkbook(Write(Data(scan)));
+
+        var share = Rows(wb.Worksheet("Freigaben")).Single(r => r["Freigabe"] == @"\\FS01\Alt");
+        Assert.Equal("'Altbestand", share["Bemerkung"]);
+
+        var ws = wb.Worksheet("Ordner & Rechte");
+        var rows = Rows(ws);
+        int denyColumn = rows[0].Keys.ToList().IndexOf("Erlauben/Verweigern") + 1;
+        int depthColumn = rows[0].Keys.ToList().IndexOf("Tiefe") + 1;
+        for (int i = 0; i < rows.Count; i++)
+        {
+            var cell = ws.Cell(i + 2, denyColumn);
+            bool deny = rows[i]["Erlauben/Verweigern"] == "Verweigern";
+            Assert.Equal(deny, cell.Style.Font.Bold);
+            Assert.Equal(XLDataType.Number, ws.Cell(i + 2, depthColumn).DataType);
+        }
+        Assert.Contains(rows, r => r["Erlauben/Verweigern"] == "Verweigern");
+    }
+
+    [Fact]
+    public void OrdnerUndRechte_KennzeichnetAbweichendeVererbung()
+    {
+        // Verschobener Ordner mit Rechten vom früheren Ort (Regel ZT14): eigene Spalte, damit man danach filtern kann
+        var scan = Scan();
+        scan.Folders.Single(f => f.Path == Archiv).InheritanceDiffers = true;
+        using var wb = new XLWorkbook(Write(Data(scan)));
+
+        var rows = Rows(wb.Worksheet("Ordner & Rechte"));
+        var headers = rows[0].Keys.ToList();
+        Assert.Equal(headers.IndexOf("Vererbung unterbrochen") + 1, headers.IndexOf("Vererbung weicht ab"));
+        Assert.All(rows, r => Assert.Equal(r["Pfad"] == Archiv ? "Ja" : "Nein", r["Vererbung weicht ab"]));
     }
 }

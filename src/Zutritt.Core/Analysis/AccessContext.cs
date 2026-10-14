@@ -256,6 +256,42 @@ internal sealed class AccessContext
         return new AccessResult(granted, allowed, best);
     }
 
+    /// <summary>
+    /// Schlüssel, der für jedes Token dasselbe Ergebnis garantiert: Zugriffsweg, Freigabe, wirksame Einträge in
+    /// Auswertungsreihenfolge und – nur wenn BESITZERRECHTE eingetragen sind – der Besitzer. Mehr fragen
+    /// <see cref="Walk"/>, <see cref="Via"/> und <see cref="ShareLevels"/> vom Knoten nicht ab; der Pfad zählt nicht.
+    /// </summary>
+    internal string EffectKey(FolderNode node)
+    {
+        var prepared = Prepared(node);
+        var key = new System.Text.StringBuilder(32 + prepared.Length * 56);
+        key.Append(LogonFor(node) == LogonKind.Network ? 'N' : 'L').Append('|');
+        key.Append(ShareOf(node) is { } share ? PathOrder.Normalize(share.UncPath).ToUpperInvariant() : "-").Append('|');
+        bool ownerRights = false;
+        foreach (var ace in prepared)
+        {
+            key.Append(ace.Sid.ToUpperInvariant()).Append(ace.IsDeny ? "|D" : "|A").Append(((uint)ace.Mask).ToString("X", System.Globalization.CultureInfo.InvariantCulture)).Append(';');
+            ownerRights |= ace.Sid.Equals(SidCatalog.OwnerRights, StringComparison.OrdinalIgnoreCase);
+        }
+        if (ownerRights) key.Append("|O").Append(node.OwnerSid.ToUpperInvariant());
+        return key.ToString();
+    }
+
+    /// <summary>
+    /// SIDs, von denen mindestens eine im Token stehen muss, damit der Knoten überhaupt etwas gewährt: die der
+    /// Erlauben-Einträge und bei BESITZERRECHTE zusätzlich der Besitzer. Wer keine davon hat, bekommt hier nichts.
+    /// </summary>
+    internal IEnumerable<string> GrantingSids(FolderNode node)
+    {
+        foreach (var ace in Prepared(node))
+        {
+            if (ace.IsDeny) continue;
+            yield return ace.Sid;
+            if (ace.Sid.Equals(SidCatalog.OwnerRights, StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(node.OwnerSid))
+                yield return node.OwnerSid;
+        }
+    }
+
     /// <summary>Eintrag in Auswertungsreihenfolge; generische Rechte schon abgebildet.</summary>
     private readonly record struct PreparedAce(string Sid, FileSystemRights Mask, bool IsDeny);
 

@@ -17,22 +17,30 @@ public static class PdfReport
 {
     /// <summary>Schreibt den PDF-Bericht; mit <paramref name="comparison"/> zusätzlich „Änderungen seit dem letzten Lauf“.</summary>
     /// <exception cref="ReportWriteException">Die Datei konnte nicht geschrieben werden (z. B. im PDF-Betrachter geöffnet).</exception>
-    public static void Write(ScanResult scan, ComparisonResult? comparison, string path)
+    public static void Write(ScanResult scan, ComparisonResult? comparison, string path) => Write(scan, comparison, path, progress: null);
+
+    /// <summary>Wie <see cref="Write(ScanResult, ComparisonResult?, string)"/>, meldet dabei den jeweiligen Arbeitsschritt.</summary>
+    /// <param name="progress">Erhält kurze deutsche Sätze wie „Seiten werden gesetzt …“ (aus dem Hintergrund-Thread).</param>
+    /// <exception cref="ReportWriteException">Die Datei konnte nicht geschrieben werden (z. B. im PDF-Betrachter geöffnet).</exception>
+    public static void Write(ScanResult scan, ComparisonResult? comparison, string path, IProgress<string>? progress)
     {
         ArgumentNullException.ThrowIfNull(scan);
         ReportFile.FullPath(path); // Ziel prüfen, bevor die Auswertung läuft
-        Write(ReportDataBuilder.Build(scan, comparison), path);
+        Write(ReportDataBuilder.Build(scan, comparison, progress), path, progress: progress);
     }
 
-    internal static void Write(ReportData data, string path, PdfLimits? limits = null)
+    internal static void Write(ReportData data, string path, PdfLimits? limits = null, IProgress<string>? progress = null)
     {
         ReportFile.FullPath(path);
+        progress?.Report("Dokument wird aufgebaut …");
         var document = CreateDocument(data, limits);
         lock (RenderGate)
         {
             // Erst vollständig rendern, dann schreiben: scheitert das Rendern, bleibt die Zieldatei unberührt
+            progress?.Report("Seiten werden gesetzt …");
             var renderer = new PdfDocumentRenderer { Document = document };
             renderer.RenderDocument();
+            progress?.Report("PDF wird gespeichert …");
             var pdf = renderer.PdfDocument;
             pdf.Info.Title = ReportText.Title;
             pdf.Info.Author = ReportText.Product;
@@ -540,7 +548,7 @@ public static class PdfReport
                 }
                 // Eine Tabellenzeile kann nicht über Seiten laufen – zu viele Einträge würden abgeschnitten
                 foreach (var ace in s.Permissions.Take(limits.ShareEntries))
-                    CellText(table, row, 3, $"{ace.Account}: {(ace.IsDeny ? "Verweigern " : "")}{Rights.Label(ace.Access)}",
+                    CellText(table, row, 3, $"{ace.Account}: {ace.Right}",
                         color: ace.IsDeny ? WarningColor : null);
                 if (s.Permissions.Count > limits.ShareEntries)
                     CellText(table, row, 3, $"… und {ReportText.Number(s.Permissions.Count - limits.ShareEntries)} weitere Einträge "
@@ -552,8 +560,8 @@ public static class PdfReport
         private void Folders()
         {
             Heading1("Ordner mit eigenen Rechten");
-            Intro("Aufgeführt sind die Wurzeln der Ziele und alle Ordner mit eigenen Rechten (explizite Einträge oder "
-                + "unterbrochene Vererbung). Alle übrigen Ordner erben ihre Rechte vom nächsthöheren aufgeführten Ordner.",
+            Intro("Aufgeführt sind die Wurzeln der Ziele und alle Ordner mit eigenen Rechten (explizite Einträge, unterbrochene "
+                + "oder abweichende Vererbung). Alle übrigen Ordner erben ihre Rechte vom nächsthöheren aufgeführten Ordner.",
                 keepWithNext: data.Folders.Count > 0);
             if (data.Folders.Count == 0)
             {
@@ -573,6 +581,7 @@ public static class PdfReport
                 var meta = new List<string> { $"Tiefe {f.Depth.ToString(CultureInfo.InvariantCulture)}" };
                 if (f.IsFile) meta.Add("Datei");
                 if (f.InheritanceBroken) meta.Add("Vererbung unterbrochen");
+                else if (f.InheritanceDiffers) meta.Add("Vererbung weicht ab (vermutlich verschoben)");
                 meta.Add("Besitzer: " + (f.Owner.Length == 0 ? "unbekannt" : f.Owner));
                 if (f.ShareUnc is { Length: > 0 } share) meta.Add("Freigabe: " + share);
                 var info = _section.AddParagraph();
@@ -593,10 +602,11 @@ public static class PdfReport
                 var explicitAces = f.Aces.Where(a => !a.IsInherited).ToList();
                 var inherited = f.Aces.Where(a => a.IsInherited).ToList();
                 var inheritedText = "Geerbt: " + string.Join(", ", inherited.Select(a =>
-                    $"{a.Account} ({(a.IsDeny ? "verweigert: " : "")}{Rights.Label(a.Level)})"));
+                    $"{a.Account} ({(a.IsDeny ? "verweigert: " : "")}{a.Right})"));
                 if (explicitAces.Count > 0)
                 {
-                    var table = NewTable(5.3, 1.7, 1.9, 2.1, 6.0);
+                    // „Recht“ breit genug für Verweigerungen wie „Löschen, Unterordner und Dateien löschen“ (ohne Trennung im Wort)
+                    var table = NewTable(4.8, 1.9, 2.25, 2.05, 6.0);
                     HeaderRow(table, light: true, "Konto", "Art", "Recht", "Typ", "Gilt für");
                     foreach (var a in explicitAces)
                     {
@@ -604,7 +614,7 @@ public static class PdfReport
                         Color? color = a.IsDeny ? WarningColor : null;
                         CellText(table, row, 0, a.Account, color: color);
                         CellText(table, row, 1, ReportText.Kind(a.Kind), color: color);
-                        CellText(table, row, 2, Rights.Label(a.Level), bold: a.IsDeny, color: color);
+                        CellText(table, row, 2, a.Right, bold: a.IsDeny, color: color);
                         CellText(table, row, 3, ReportText.AllowDeny(a.IsDeny), bold: a.IsDeny, color: color);
                         CellText(table, row, 4, a.AppliesTo, color: color);
                     }
@@ -697,7 +707,7 @@ public static class PdfReport
                     case ChangeArea.Finding:
                         ChangeTable("Befunde", null, rows, [1.8, 5.4, 3.4, 6.4], ["Änderung", "Pfad", "Konto", "Befund"], (t, row, r) =>
                         {
-                            bool added = r.Change == "neu";
+                            bool added = r.Change == ChangeText.New;
                             CellText(t, row, 0, r.Change, bold: added, color: added ? WarningColor : null);
                             CellText(t, row, 1, r.Subject);
                             CellText(t, row, 2, OrDash(r.Account));
@@ -716,9 +726,9 @@ public static class PdfReport
                             });
                         break;
                     case ChangeArea.Membership:
-                        ChangeTable("Gruppenmitgliedschaften", null, rows, [2.5, 7.25, 7.25], ["Änderung", "Gruppe", "Mitglied"], (t, row, r) =>
+                        ChangeTable("Gruppenmitgliedschaften", null, rows, [3.0, 7.0, 7.0], ["Änderung", "Gruppe", "Mitglied"], (t, row, r) =>
                         {
-                            CellText(t, row, 0, r.Change, bold: r.Change == "aufgenommen");
+                            CellText(t, row, 0, r.Change, bold: r.Change == ChangeText.Joined);
                             CellText(t, row, 1, r.Subject);
                             CellText(t, row, 2, OrDash(r.Account));
                         });
@@ -770,14 +780,14 @@ public static class PdfReport
             var groups = AccessGroups(rows);
             Heading2($"Zugriffe von Personen ({ReportText.Number(rows.Count)})");
             Intro("Folge der Änderungen oben: wer jetzt effektiv mehr oder weniger darf (über alle Gruppen, nach Abzug von "
-                + "Verweigerungen) – „mehr Zugriff“ zuerst, je Ordner zusammengefasst. Jede einzelne Person mit Vorher und "
+                + "Verweigerungen) – „Mehr Zugriff“ zuerst, je Ordner zusammengefasst. Jede einzelne Person mit Vorher und "
                 + "Nachher steht im Excel-Bericht (Blatt „Änderungen“).");
             var table = NewTable(2.6, 5.3, 5.9, 3.2);
             HeaderRow(table, "Änderung", "Pfad", "Personen", "Vorher → Nachher");
             foreach (var g in groups.Take(limits.Changes))
             {
                 var row = table.AddRow();
-                CellText(table, row, 0, g[0].Change, bold: g[0].Change == "mehr Zugriff");
+                CellText(table, row, 0, g[0].Change, bold: g[0].Change == ChangeText.MoreAccess);
                 CellText(table, row, 1, g[0].Subject);
                 var names = g.Select(r => OrDash(r.Account)).ToList();
                 const int maxNames = 15;

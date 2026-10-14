@@ -23,36 +23,59 @@ internal static class ReportDataBuilder
         "S-1-1-0", "S-1-5-11", "S-1-5-4", "S-1-5-2",
     };
 
-    public static ReportData Build(ScanResult scan, ComparisonResult? comparison)
+    /// <param name="progress">Meldet, woran gerade gearbeitet wird (deutscher Satz für die Oberfläche).</param>
+    public static ReportData Build(ScanResult scan, ComparisonResult? comparison, IProgress<string>? progress = null) =>
+        Build(scan, comparison, DefaultMaxPersonGrants, progress);
+
+    /// <summary>Mit der echten Auswertung; <paramref name="maxPersonGrants"/> nur für Tests kleiner.</summary>
+    internal static ReportData Build(ScanResult scan, ComparisonResult? comparison, int maxPersonGrants, IProgress<string>? progress = null)
     {
         ArgumentNullException.ThrowIfNull(scan);
-        // Ein gemeinsamer Kontext für alle Personen: vorbereitete Zugriffslisten und Gruppen-Token nur einmal
-        var ctx = new AccessContext(scan);
-        return Build(scan, comparison, FindingRules.All, sid => EffectiveAccess.ForPerson(ctx, sid), DateTimeOffset.Now);
+        // Alle Personen auf einmal: je Ordner-Klasse nur einmal gerechnet, Einzelzugriffe nur für die, die der Bericht
+        // zeigt. Je Person über alle Ordner gerechnet dauerte das bei 3.000 Personen × 50.000 Ordnern drei Minuten.
+        var access = new Lazy<PeopleAccess>(() => PeopleAccess.Compute(new AccessContext(scan),
+            scan.Principals.Values.Where(p => p.Kind == PrincipalKind.Benutzer).Select(p => p.Sid)));
+        return Build(scan, comparison, FindingRules.All, new SummaryAccess(access), DateTimeOffset.Now, maxPersonGrants, progress);
     }
 
     /// <summary>Variante mit austauschbarer Auswertung – für Tests ohne <see cref="EffectiveAccess"/>.</summary>
     internal static ReportData Build(ScanResult scan, ComparisonResult? comparison, IReadOnlyList<RuleInfo> rules,
         Func<string, IReadOnlyList<AccessGrant>> forPerson, DateTimeOffset createdAt, int maxPersonGrants = DefaultMaxPersonGrants)
     {
+        ArgumentNullException.ThrowIfNull(forPerson);
+        return Build(scan, comparison, rules, new ListAccess(forPerson), createdAt, maxPersonGrants, progress: null);
+    }
+
+    private static ReportData Build(ScanResult scan, ComparisonResult? comparison, IReadOnlyList<RuleInfo> rules,
+        IPersonAccess access, DateTimeOffset createdAt, int maxPersonGrants, IProgress<string>? progress)
+    {
         ArgumentNullException.ThrowIfNull(scan);
         ArgumentNullException.ThrowIfNull(rules);
-        ArgumentNullException.ThrowIfNull(forPerson);
 
         var names = new NameLookup(scan, comparison?.Older);
         var ruleMap = new Dictionary<string, RuleInfo>(StringComparer.OrdinalIgnoreCase);
         foreach (var rule in rules) ruleMap.TryAdd(rule.Id, rule);
 
+        progress?.Report("Ordner und Befunde werden aufbereitet …");
         var folders = BuildFolders(scan, names);
-        var people = BuildPeople(scan, forPerson, maxPersonGrants, folders);
+        var findings = BuildFindings(scan, ruleMap, names);
+        progress?.Report($"Effektive Rechte von {ReportText.Number(scan.Principals.Values.Count(p => p.Kind == PrincipalKind.Benutzer))} Personen werden berechnet …");
+        var people = BuildPeople(scan, access, maxPersonGrants, folders);
+        progress?.Report("Gruppen und Freigaben werden aufbereitet …");
         var groups = BuildGroups(scan, names);
         var shares = BuildShares(scan, names);
         var errors = scan.Errors.OrderBy(e => e.Path, PathOrder.Instance).ToList();
+        ComparisonData? changes = null;
+        if (comparison is not null)
+        {
+            progress?.Report("Änderungen seit dem letzten Lauf werden aufbereitet …");
+            changes = BuildComparison(comparison, ruleMap, names);
+        }
 
         return new ReportData
         {
             Header = BuildHeader(scan, createdAt),
-            Findings = BuildFindings(scan, ruleMap, names),
+            Findings = findings,
             Rules = BuildRules(scan, ruleMap),
             Folders = folders,
             People = people,
@@ -60,7 +83,7 @@ internal static class ReportDataBuilder
             Shares = shares,
             Errors = errors,
             Notes = BuildNotes(scan, folders, shares, people, maxPersonGrants),
-            Comparison = comparison is null ? null : BuildComparison(comparison, ruleMap, names),
+            Comparison = changes,
         };
     }
 
@@ -128,6 +151,7 @@ internal static class ReportDataBuilder
                 Depth = f.Depth,
                 IsFile = f.IsFile,
                 InheritanceBroken = f.InheritanceBroken,
+                InheritanceDiffers = f.InheritanceDiffers,
                 Owner = string.IsNullOrEmpty(f.OwnerSid) ? "" : names.Name(f.OwnerSid),
                 OwnerSid = f.OwnerSid,
                 ShareUnc = f.ShareUnc,
@@ -137,8 +161,7 @@ internal static class ReportDataBuilder
             })
             .ToList();
 
-    private static List<PersonRow> BuildPeople(ScanResult scan, Func<string, IReadOnlyList<AccessGrant>> forPerson, int maxGrants,
-        List<FolderRow> folders)
+    private static List<PersonRow> BuildPeople(ScanResult scan, IPersonAccess access, int maxGrants, List<FolderRow> folders)
     {
         var users = scan.Principals.Values
             .Where(p => p.Kind == PrincipalKind.Benutzer)
@@ -155,23 +178,26 @@ internal static class ReportDataBuilder
         int budget = Math.Max(0, maxGrants);
         foreach (var user in users)
         {
-            // Defensiv: nur echte Zugriffe zählen, auch falls die Auswertung „Kein Zugriff“ mitliefert
-            var grants = (forPerson(user.Sid) ?? [])
-                .Where(g => g.Effective > AccessLevel.Keine)
-                .OrderBy(g => rank.TryGetValue(g.Path, out var r) ? r : int.MaxValue)
-                .ThenBy(g => g.Path, PathOrder.Instance)
-                .ToList();
+            var summary = access.Summary(user.Sid);
 
             // Erst sammeln, dann einmal sortieren – der deutsche Namensvergleich ist je Zugriff zu teuer
-            var viaNames = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var g in grants)
-                foreach (var name in g.Via)
-                    if (!string.IsNullOrWhiteSpace(name)) viaNames.Add(name);
-            var via = new SortedSet<string>(viaNames, ReportText.NameOrder);
+            var via = new SortedSet<string>(summary.Via.Where(n => !string.IsNullOrWhiteSpace(n)), ReportText.NameOrder);
 
-            // Einzelzugriffe nur für ganze Personen übernehmen – halbe Listen wären irreführend
-            bool keep = grants.Count <= budget;
-            if (keep) budget -= grants.Count;
+            // Einzelzugriffe nur für ganze Personen übernehmen – halbe Listen wären irreführend. Erst dann anlegen:
+            // Bei großen Läufen sind es zig Millionen, der Bericht zeigt davon höchstens maxGrants.
+            bool keep = summary.Folders <= budget;
+            List<PersonGrantRow> grantRows = [];
+            if (keep)
+            {
+                budget -= summary.Folders;
+                grantRows = access.Grants(user.Sid)
+                    .Where(g => g.Effective > AccessLevel.Keine)
+                    .OrderBy(g => rank.TryGetValue(g.Path, out var r) ? r : int.MaxValue)
+                    .ThenBy(g => g.Path, PathOrder.Instance)
+                    .Select(g => new PersonGrantRow(g.Path, g.Effective, g.Ntfs, g.ViaShare,
+                        g.Via.Count == 0 ? "direkt" : string.Join(" → ", g.Via), g.ReducedByDeny))
+                    .ToList();
+            }
 
             rows.Add(new PersonRow
             {
@@ -179,18 +205,57 @@ internal static class ReportDataBuilder
                 DisplayName = user.DisplayName,
                 Sid = user.Sid,
                 IsDisabled = user.IsDisabled,
-                FolderCount = grants.Count,
-                Highest = grants.Count == 0 ? AccessLevel.Keine : grants.Max(g => g.Effective),
+                FolderCount = summary.Folders,
+                Highest = summary.Highest,
                 ViaGroups = via.ToList(),
-                HasDirect = grants.Any(g => g.Via.Count == 0),
-                Grants = keep
-                    ? grants.Select(g => new PersonGrantRow(g.Path, g.Effective, g.Ntfs, g.ViaShare,
-                        g.Via.Count == 0 ? "direkt" : string.Join(" → ", g.Via), g.ReducedByDeny)).ToList()
-                    : [],
+                HasDirect = summary.HasDirect,
+                Grants = grantRows,
                 GrantsComplete = keep,
             });
         }
         return rows;
+    }
+
+    /// <summary>Zugriffe je Person: Summen für alle, Einzelzugriffe nur für die, die der Bericht aufführt.</summary>
+    private interface IPersonAccess
+    {
+        PersonAccessSummary Summary(string sid);
+        IReadOnlyList<AccessGrant> Grants(string sid);
+    }
+
+    /// <summary>Die echte Auswertung über alle Personen auf einmal (<see cref="PeopleAccess"/>).</summary>
+    private sealed class SummaryAccess(Lazy<PeopleAccess> access) : IPersonAccess
+    {
+        public PersonAccessSummary Summary(string sid) => access.Value.Summary(sid);
+        public IReadOnlyList<AccessGrant> Grants(string sid) => access.Value.Grants(sid);
+    }
+
+    /// <summary>Austauschbare Auswertung je Person (Tests): Summen aus der vollständigen Liste.</summary>
+    private sealed class ListAccess(Func<string, IReadOnlyList<AccessGrant>> forPerson) : IPersonAccess
+    {
+        private string? _sid;
+        private List<AccessGrant> _grants = [];
+
+        public PersonAccessSummary Summary(string sid)
+        {
+            var grants = Load(sid);
+            var via = new HashSet<string>(grants.SelectMany(g => g.Via), StringComparer.Ordinal);
+            return new PersonAccessSummary(grants.Count, grants.Count == 0 ? AccessLevel.Keine : grants.Max(g => g.Effective),
+                via, grants.Any(g => g.Via.Count == 0));
+        }
+
+        public IReadOnlyList<AccessGrant> Grants(string sid) => Load(sid);
+
+        private List<AccessGrant> Load(string sid)
+        {
+            if (_sid != sid)
+            {
+                // Defensiv: nur echte Zugriffe zählen, auch falls die Auswertung „Kein Zugriff“ mitliefert
+                _grants = (forPerson(sid) ?? []).Where(g => g.Effective > AccessLevel.Keine).ToList();
+                _sid = sid;
+            }
+            return _grants;
+        }
     }
 
     private static List<GroupRow> BuildGroups(ScanResult scan, NameLookup names)
@@ -266,7 +331,7 @@ internal static class ReportDataBuilder
                 var aces = s.Permissions.Select(a => new ShareAceRow(names.Name(a.Sid), a.Sid, a.Access, a.IsDeny)).ToList();
                 string text = !s.PermissionsReadable ? "nicht lesbar"
                     : aces.Count == 0 ? "keine Einträge – kein Zugriff über das Netz"
-                    : string.Join("; ", aces.Select(a => $"{a.Account}: {(a.IsDeny ? "Verweigern " : "")}{Rights.Label(a.Access)}"));
+                    : string.Join("; ", aces.Select(a => $"{a.Account}: {a.Right}"));
                 return new ShareRow
                 {
                     Unc = s.UncPath,
@@ -324,8 +389,8 @@ internal static class ReportDataBuilder
 
         var notes = warnings.Select(w => new ReportNote(NoteKind.Warnung, w)).ToList();
         notes.Add(new ReportNote(NoteKind.Hinweis,
-            "Aufgeführt sind die Wurzeln der Ziele und alle Ordner mit eigenen Rechten (explizite Einträge oder unterbrochene "
-            + "Vererbung). Alle übrigen Ordner erben ihre Rechte vom nächsthöheren aufgeführten Ordner."));
+            "Aufgeführt sind die Wurzeln der Ziele und alle Ordner mit eigenen Rechten (explizite Einträge, unterbrochene oder "
+            + "abweichende Vererbung). Alle übrigen Ordner erben ihre Rechte vom nächsthöheren aufgeführten Ordner."));
         notes.Add(new ReportNote(NoteKind.Hinweis,
             "Effektives Recht = alle erlaubten Rechte der Person und ihrer Gruppen zusammen, abzüglich verweigerter Rechte."));
         if (shares.Count > 0 || scan.Folders.Any(f => f.ShareUnc is not null))
@@ -348,9 +413,9 @@ internal static class ReportDataBuilder
         }
 
         foreach (var f in c.NewFindings.OrderByDescending(f => f.Severity).ThenBy(f => f.RuleId).ThenBy(f => f.Path, PathOrder.Instance))
-            rows.Add(new ChangeRow(ChangeArea.Finding, "neu", f.Path, Account(f.Sid), "", Describe(f)));
+            rows.Add(new ChangeRow(ChangeArea.Finding, ChangeText.New, f.Path, Account(f.Sid), "", Describe(f)));
         foreach (var f in c.ResolvedFindings.OrderByDescending(f => f.Severity).ThenBy(f => f.RuleId).ThenBy(f => f.Path, PathOrder.Instance))
-            rows.Add(new ChangeRow(ChangeArea.Finding, "behoben", f.Path, Account(f.Sid), Describe(f), ""));
+            rows.Add(new ChangeRow(ChangeArea.Finding, ChangeText.Resolved, f.Path, Account(f.Sid), Describe(f), ""));
 
         foreach (var a in c.AceChanges.OrderBy(a => a.Path, PathOrder.Instance).ThenBy(a => names.Name(a.Sid), ReportText.NameOrder))
         {
@@ -363,19 +428,19 @@ internal static class ReportDataBuilder
         }
 
         foreach (var m in c.MembershipChanges.OrderBy(m => names.Name(m.GroupSid), ReportText.NameOrder).ThenBy(m => names.Name(m.MemberSid), ReportText.NameOrder))
-            rows.Add(new ChangeRow(ChangeArea.Membership, m.Kind == ChangeKind.Entfernt ? "entfernt" : m.Kind == ChangeKind.Hinzugefuegt ? "aufgenommen" : "geändert",
+            rows.Add(new ChangeRow(ChangeArea.Membership, ChangeText.Membership(m.Kind),
                 names.Name(m.GroupSid), names.Name(m.MemberSid),
                 m.Kind == ChangeKind.Hinzugefuegt ? "" : "Mitglied", m.Kind == ChangeKind.Entfernt ? "" : "Mitglied"));
 
         foreach (var p in c.FoldersAdded.OrderBy(p => p, PathOrder.Instance))
-            rows.Add(new ChangeRow(ChangeArea.Folder, "neu mit eigenen Rechten", p, "", "", "eigene Rechte"));
+            rows.Add(new ChangeRow(ChangeArea.Folder, ChangeText.FolderAdded, p, "", "", "eigene Rechte"));
         foreach (var p in c.FoldersRemoved.OrderBy(p => p, PathOrder.Instance))
-            rows.Add(new ChangeRow(ChangeArea.Folder, "keine eigenen Rechte mehr", p, "", "eigene Rechte", ""));
+            rows.Add(new ChangeRow(ChangeArea.Folder, ChangeText.FolderRemoved, p, "", "eigene Rechte", ""));
 
-        // Folgen für Personen zuletzt, „mehr Zugriff“ (das Risiko) vor „weniger Zugriff“
+        // Folgen für Personen zuletzt, „Mehr Zugriff“ (das Risiko) vor „Weniger Zugriff“
         foreach (var a in c.AccessChanges.OrderBy(a => a.After > a.Before ? 0 : 1).ThenBy(a => a.Path, PathOrder.Instance)
                      .ThenBy(a => names.Name(a.Sid), ReportText.NameOrder))
-            rows.Add(new ChangeRow(ChangeArea.Access, a.After > a.Before ? "mehr Zugriff" : "weniger Zugriff", a.Path, names.Name(a.Sid),
+            rows.Add(new ChangeRow(ChangeArea.Access, a.After > a.Before ? ChangeText.MoreAccess : ChangeText.LessAccess, a.Path, names.Name(a.Sid),
                 Rights.Label(a.Before), Rights.Label(a.After)));
 
         return new ComparisonData

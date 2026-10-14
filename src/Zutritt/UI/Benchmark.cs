@@ -55,7 +55,8 @@ internal static class Benchmark
         try
         {
             await Step(beat, "Lauf öffnen (laden + vergleichen im Hintergrund)", () => state.OpenRunAsync(newer.Id));
-            // Zum Eingrenzen beim Entwickeln: ZUTRITT_MESSEN_SEITEN=befunde,ordner misst nur diese Seiten (ohne Berichte)
+            // Zum Eingrenzen beim Entwickeln: ZUTRITT_MESSEN_SEITEN=befunde,ordner misst nur diese Seiten (ohne Berichte,
+            // außer „berichte“ steht mit in der Liste)
             var only = Environment.GetEnvironmentVariable("ZUTRITT_MESSEN_SEITEN")?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             foreach (var slug in MainWindow.PageSlugs.Where(s => only is null || only.Contains(s)))
             {
@@ -76,7 +77,9 @@ internal static class Benchmark
             window.Close();
         }
 
-        if (Environment.GetEnvironmentVariable("ZUTRITT_MESSEN_SEITEN") is null) await ReportsAsync(loaded, comparison);
+        // Berichte mit, wenn nicht eingegrenzt – oder ausdrücklich: ZUTRITT_MESSEN_SEITEN=berichte misst nur sie
+        var pages = Environment.GetEnvironmentVariable("ZUTRITT_MESSEN_SEITEN");
+        if (pages is null || pages.Contains("berichte", StringComparison.OrdinalIgnoreCase)) await ReportsAsync(loaded, comparison);
         Print();
         return 0;
     }
@@ -153,19 +156,18 @@ internal static class Benchmark
 
     private static async Task ReportsAsync(ScanResult scan, ComparisonResult comparison)
     {
-        // Berichte laufen in der Oberfläche im Hintergrund – hier nur, wie lange man wartet
+        // Berichte laufen in der Oberfläche im Hintergrund – hier nur, wie lange man wartet, und wofür (je Arbeitsschritt)
         var dir = Path.Combine(Path.GetTempPath(), $"Zutritt-Messung-{Guid.NewGuid():N}");
         Directory.CreateDirectory(dir);
         try
         {
-            var sw = Stopwatch.StartNew();
-            var xlsx = Path.Combine(dir, "bericht.xlsx");
-            await Task.Run(() => ExcelReport.Write(scan, comparison, xlsx));
-            Add("Excel-Bericht schreiben (Hintergrund)", sw.Elapsed, $"{new FileInfo(xlsx).Length / 1024} KB");
-            sw.Restart();
-            var pdf = Path.Combine(dir, "bericht.pdf");
-            await Task.Run(() => PdfReport.Write(scan, comparison, pdf));
-            Add("PDF-Bericht schreiben (Hintergrund)", sw.Elapsed, $"{new FileInfo(pdf).Length / 1024} KB");
+            foreach (var (with, label) in new[] { (comparison, "mit Vergleich"), ((ComparisonResult?)null, "ohne Vergleich") })
+            {
+                var xlsx = Path.Combine(dir, "bericht.xlsx");
+                await ReportAsync($"Excel-Bericht {label} (Hintergrund)", xlsx, progress => ExcelReport.Write(scan, with, xlsx, progress));
+                var pdf = Path.Combine(dir, "bericht.pdf");
+                await ReportAsync($"PDF-Bericht {label} (Hintergrund)", pdf, progress => PdfReport.Write(scan, with, pdf, progress));
+            }
         }
         finally
         {
@@ -175,6 +177,41 @@ internal static class Benchmark
                 try { Directory.Delete(dir, recursive: true); }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { await Task.Delay(500); }
             }
+        }
+    }
+
+    /// <summary>Schreibt einen Bericht im Hintergrund und notiert die Gesamtdauer und die Dauer jedes gemeldeten Schritts.</summary>
+    private static async Task ReportAsync(string name, string file, Action<IProgress<string>> write)
+    {
+        var phases = new PhaseClock();
+        var sw = Stopwatch.StartNew();
+        await Task.Run(() => write(phases));
+        sw.Stop();
+        phases.Stop();
+        Add(name, sw.Elapsed, $"{new FileInfo(file).Length / 1024} KB");
+        foreach (var (phase, duration) in phases.Phases) Add($"  · {phase.TrimEnd(' ', '…')}", duration);
+    }
+
+    /// <summary>Misst die Zeit zwischen zwei Fortschrittsmeldungen – synchron, damit nichts über den Dispatcher läuft.</summary>
+    private sealed class PhaseClock : IProgress<string>
+    {
+        private readonly Stopwatch _clock = Stopwatch.StartNew();
+        private string? _current;
+        private TimeSpan _since;
+
+        public List<(string Phase, TimeSpan Duration)> Phases { get; } = [];
+
+        public void Report(string value)
+        {
+            Stop();
+            _current = value;
+            _since = _clock.Elapsed;
+        }
+
+        public void Stop()
+        {
+            if (_current is not null) Phases.Add((_current, _clock.Elapsed - _since));
+            _current = null;
         }
     }
 

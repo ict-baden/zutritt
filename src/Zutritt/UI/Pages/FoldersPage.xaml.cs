@@ -89,6 +89,26 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
         await Ui.IdleAsync();
     }
 
+    /// <summary>
+    /// Für das zusätzliche Bild „ordner-verschoben“: den ersten Ordner mit abweichender Vererbung (ZT14) mit seinen – allesamt
+    /// geerbten – Einträgen zeigen.
+    /// false, wenn der Lauf keinen hat.
+    /// </summary>
+    internal async Task<bool> PrepareMovedScreenshotAsync()
+    {
+        OnShown();
+        await _treeTask;
+        if (_shown?.Folders.FirstOrDefault(f => f is { InheritanceDiffers: true, InheritanceBroken: false, Error: null }) is not { } moved)
+            return false;
+        SearchBox.Text = "";
+        await SelectPathAsync(moved.Path);
+        Tabs.SelectedItem = TabAces;
+        await Ui.IdleAsync();
+        if (_current is not null) await RevealAsync(_current);
+        await Ui.IdleAsync();
+        return true;
+    }
+
     public void FocusSearch()
     {
         SearchBox.Focus();
@@ -315,11 +335,14 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
             var tip = share is null ? null
                 : !share.PermissionsReadable ? "Freigabe-Berechtigungen nicht lesbar"
                 : "Freigabe-Berechtigungen:\n" + string.Join("\n", share.Permissions.Select(p =>
-                    $"{_state.NameOf(p.Sid)}: {(p.IsDeny ? "verweigert " : "")}{Labels.Of(p.Access)}"));
+                    $"{_state.NameOf(p.Sid)}: {Rights.Label(p)}"));
             AddFact("\uE8CE", $"Freigabe {unc}", tip);
         }
         AddFact("\uE77B", folder.OwnerSid.Length > 0 ? $"Besitzer: {_state.NameOf(folder.OwnerSid)}" : "Besitzer unbekannt");
         if (folder.InheritanceBroken) AddFact("\uE72E", "Vererbung unterbrochen", "Rechte von oben gelten hier nicht – nur die eigenen Einträge.");
+        else if (folder.InheritanceDiffers)
+            AddFact("\uE8DE", "Vererbung weicht ab", "Die geerbten Einträge passen nicht zum übergeordneten Ordner – vermutlich verschoben. "
+                + "Hier gelten womöglich noch Rechte vom früheren Ort (Befund ZT14).", caution: true);
         else AddFact("\uE71B", "Erbt vom übergeordneten Ordner");
         AddFact("\uE81E", folder.IsRoot ? "Scan-Wurzel" : $"Ebene {folder.Depth}");
         if (folder.IsFile) AddFact("\uE7C3", "Datei");
@@ -345,11 +368,13 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
         LoadPeople(scan, folder);
     }
 
-    private void AddFact(string glyph, string text, string? tooltip = null, bool critical = false)
+    /// <param name="caution">Auffällig, aber kein Fehler (z. B. abweichende Vererbung): Symbol in Warnfarbe.</param>
+    private void AddFact(string glyph, string text, string? tooltip = null, bool critical = false, bool caution = false)
     {
         var icon = new TextBlock { Text = glyph, Style = (Style)FindResource("Icon"), FontSize = 12, Margin = new Thickness(0, 0, 6, 0) };
         var label = new TextBlock { Text = text, Style = (Style)FindResource("TagText"), VerticalAlignment = VerticalAlignment.Center };
-        icon.SetResourceReference(TextBlock.ForegroundProperty, critical ? "SystemFillColorCriticalBrush" : "TextFillColorSecondaryBrush");
+        icon.SetResourceReference(TextBlock.ForegroundProperty,
+            critical ? "SystemFillColorCriticalBrush" : caution ? "SystemFillColorCautionBrush" : "TextFillColorSecondaryBrush");
         if (critical) label.SetResourceReference(TextBlock.ForegroundProperty, "SystemFillColorCriticalBrush");
         var content = new StackPanel { Orientation = Orientation.Horizontal };
         content.Children.Add(icon);

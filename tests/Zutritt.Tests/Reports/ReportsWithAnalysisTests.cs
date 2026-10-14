@@ -48,6 +48,31 @@ public sealed class ReportsWithAnalysisTests : IDisposable
     }
 
     [AnalysisFact]
+    public void Builder_Personen_gleich_der_Rechnung_je_Person()
+    {
+        // Der Builder rechnet alle Personen auf einmal (PeopleAccess); Ergebnis wie EffectiveAccess.ForPerson je Person –
+        // auch die Einzelzugriffe, ihre Reihenfolge und welche Personen bei knappem Budget nur Summen bekommen
+        var older = ReportSamples.Realistic(new DateTimeOffset(2026, 10, 7, 8, 0, 0, TimeSpan.FromHours(2)), changed: false);
+        var newer = ReportSamples.Realistic(new DateTimeOffset(2026, 10, 14, 8, 0, 0, TimeSpan.FromHours(2)), changed: true);
+        var comparison = ScanComparer.Compare(older, newer);
+        foreach (var (scan, budget) in new[] { (EvaluatedScan(), 200_000), (newer, 200_000), (newer, 500) })
+        {
+            var ctx = new AccessContext(scan);
+            var expected = ReportDataBuilder.Build(scan, comparison, FindingRules.All, sid => EffectiveAccess.ForPerson(ctx, sid),
+                ReportSamples.CreatedAt, budget);
+            var actual = ReportDataBuilder.Build(scan, comparison, budget);
+
+            Assert.Equal(expected.People.Select(Describe), actual.People.Select(Describe));
+            Assert.Equal(expected.PersonGrantsTruncated, actual.PersonGrantsTruncated);
+        }
+        Assert.True(ReportDataBuilder.Build(newer, null, 500).PersonGrantsTruncated, "Das kleine Budget soll Personen kürzen");
+
+        static string Describe(PersonRow p) =>
+            $"{p.Sid}|{p.Name}|{p.FolderCount}|{p.Highest}|{p.HasDirect}|{p.GrantsComplete}|{string.Join(";", p.ViaGroups)}|"
+            + string.Join(";", p.Grants.Select(g => $"{g.Path}>{g.Effective}>{g.Ntfs}>{g.ViaShare}>{g.Via}>{g.ReducedByDeny}"));
+    }
+
+    [AnalysisFact]
     public void Excel_UndPdf_UeberDieOeffentlicheApi()
     {
         var older = EvaluatedScan(new DateTimeOffset(2026, 10, 7, 9, 0, 0, TimeSpan.FromHours(2)));

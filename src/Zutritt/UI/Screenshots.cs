@@ -47,6 +47,17 @@ internal static class Screenshots
                     Save(window, file);
                     Console.WriteLine($"  {Path.GetFileName(file)}");
                     written++;
+
+                    // Dazu der verschobene Ordner mit abweichender Vererbung (ZT14): Kennzeichen im Baum und im Kopf, allesamt geerbte Einträge
+                    if (window.PageFor(slug) is Pages.FoldersPage folders && await folders.PrepareMovedScreenshotAsync())
+                    {
+                        await Task.Delay(400);
+                        await Ui.IdleAsync();
+                        file = Path.Combine(folder, $"{slug}-verschoben-{(dark ? "dunkel" : "hell")}.png");
+                        Save(window, file);
+                        Console.WriteLine($"  {Path.GetFileName(file)}");
+                        written++;
+                    }
                 }
             }
             finally

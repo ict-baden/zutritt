@@ -79,7 +79,7 @@ internal static class ReportText
     /// <summary>Kurzbeschreibung eines Eintrags, z. B. „Ändern · Erlauben · explizit · Diesen Ordner, Unterordner und Dateien“.</summary>
     public static string Ace(AceEntry ace, bool isFile, bool withMask = false)
     {
-        var text = $"{Rights.Label(ace.Level)} · {AllowDeny(ace.IsDeny)} · {Origin(ace.IsInherited)} · {AppliesTo(ace.Inheritance, ace.Propagation, isFile)}";
+        var text = $"{Rights.EntryLabel(ace.Rights, ace.IsDeny)} · {AllowDeny(ace.IsDeny)} · {Origin(ace.IsInherited)} · {AppliesTo(ace.Inheritance, ace.Propagation, isFile)}";
         return withMask ? $"{text} ({Mask(ace.Rights)})" : text;
     }
 

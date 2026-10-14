@@ -159,6 +159,8 @@ public sealed class FolderTreeNode : INotifyPropertyChanged
     public bool IsIntermediate => Folder is null;
     public bool IsTop => Parent is null;
     public bool InheritanceBroken => Folder?.InheritanceBroken == true;
+    /// <summary>Geerbte Einträge passen nicht zum Elternordner – meist ein verschobener Ordner (Regel ZT14).</summary>
+    public bool InheritanceDiffers => Folder is { InheritanceDiffers: true, InheritanceBroken: false };
     public bool HasError => Folder?.Error is not null;
     public bool IsFile => Folder?.IsFile == true;
     /// <summary>Schwerster eigener Befund ("Hoch" … "Info") oder leer.</summary>

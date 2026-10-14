@@ -70,6 +70,8 @@ internal sealed record FolderRow
     public int Depth { get; init; }
     public bool IsFile { get; init; }
     public bool InheritanceBroken { get; init; }
+    /// <summary>Geerbte Einträge passen nicht zum Elternordner – meist verschoben (siehe <see cref="FolderNode.InheritanceDiffers"/>, Regel ZT14).</summary>
+    public bool InheritanceDiffers { get; init; }
     /// <summary>Name des Besitzers, leer wenn unbekannt.</summary>
     public string Owner { get; init; } = "";
     public string OwnerSid { get; init; } = "";
@@ -81,7 +83,11 @@ internal sealed record FolderRow
 
 internal sealed record AceRow(
     string Account, string Sid, PrincipalKind Kind, AccessLevel Level, FileSystemRights Rights,
-    bool IsDeny, bool IsInherited, string AppliesTo);
+    bool IsDeny, bool IsInherited, string AppliesTo)
+{
+    /// <summary>Recht für Menschen; bei Verweigerungen, was gesperrt ist (siehe <see cref="Model.Rights.EntryLabel"/>).</summary>
+    public string Right => Model.Rights.EntryLabel(Rights, IsDeny);
+}
 
 internal sealed record PersonRow
 {
@@ -130,7 +136,11 @@ internal sealed record ShareRow
     public required string PermissionsText { get; init; }
 }
 
-internal sealed record ShareAceRow(string Account, string Sid, ShareAccess Access, bool IsDeny);
+internal sealed record ShareAceRow(string Account, string Sid, ShareAccess Access, bool IsDeny)
+{
+    /// <summary>Recht für Menschen; Verweigern ausgeschrieben („Verweigert: alles (ab Lesen)“, siehe <see cref="Rights.DenyLabel"/>).</summary>
+    public string Right => IsDeny ? Rights.DenyLabel(Access) : Rights.Label(Access);
+}
 
 internal enum NoteKind { Hinweis, Warnung }
 
@@ -169,4 +179,22 @@ internal static class ChangeArea
     public const string Access = "Zugriff";
 
     public static IReadOnlyList<string> Order { get; } = [Finding, Ace, Membership, Folder, Access];
+}
+
+/// <summary>
+/// Werte der Spalte „Änderung“: am Zellanfang groß wie „Hinzugefügt“/„Geändert“, damit die Spalte einheitlich aussieht
+/// und der Excel-Filter gleiche Werte zusammenfasst.
+/// </summary>
+internal static class ChangeText
+{
+    public const string New = "Neu";
+    public const string Resolved = "Behoben";
+    public const string Joined = "Aufgenommen";
+    public const string FolderAdded = "Neu mit eigenen Rechten";
+    public const string FolderRemoved = "Keine eigenen Rechte mehr";
+    public const string MoreAccess = "Mehr Zugriff";
+    public const string LessAccess = "Weniger Zugriff";
+
+    /// <summary>Mitgliedschaft: wer in eine Gruppe kommt, wird „aufgenommen“ – sonst wie Einträge.</summary>
+    public static string Membership(ChangeKind kind) => kind == ChangeKind.Hinzugefuegt ? Joined : ReportText.Change(kind);
 }
