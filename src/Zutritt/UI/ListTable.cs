@@ -156,7 +156,7 @@ public static class ListTable
             }
             var header = new StackPanel { Orientation = Orientation.Horizontal };
             header.Children.Add(new TextBlock { Text = title });
-            var arrow = new TextBlock { Text = descending ? "" : "", FontSize = 9, Margin = new Thickness(6, 1, 0, 0), VerticalAlignment = VerticalAlignment.Center };
+            var arrow = new TextBlock { Text = descending ? "\uE70D" : "\uE70E", FontSize = 9, Margin = new Thickness(6, 1, 0, 0), VerticalAlignment = VerticalAlignment.Center };
             arrow.SetResourceReference(TextBlock.FontFamilyProperty, "IconFont");
             header.Children.Add(arrow);
             AutomationProperties.SetName(header, $"{title}, {(descending ? "absteigend" : "aufsteigend")} sortiert");

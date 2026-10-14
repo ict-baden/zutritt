@@ -146,9 +146,17 @@
                             <DataGrid x:Name="AcesGrid" Style="{DynamicResource Table}" Margin="0,8,0,0"
                                       AutomationProperties.Name="Einträge der Zugriffssteuerungsliste">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Konto" Binding="{Binding Account}" Width="2.2*" MinWidth="130" ElementStyle="{StaticResource CellText}"/>
-                                    <DataGridTextColumn Header="Art" Binding="{Binding Kind}" Width="84" MinWidth="84" ElementStyle="{StaticResource CellText}"/>
-                                    <DataGridTemplateColumn Header="Recht" SortMemberPath="Level" Width="*" MinWidth="84">
+                                    <!-- Kurzname wie in den Befunden („Vertrieb-Leitung“ statt „KONZERN\Vertrieb-…“), der volle Name im Tooltip -->
+                                    <DataGridTemplateColumn Header="Konto" SortMemberPath="AccountName" Width="1.5*" MinWidth="110">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding AccountName}" ToolTip="{Binding Account}" ToolTipService.InitialShowDelay="700"
+                                                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="Art" Binding="{Binding Kind}" Width="120" MinWidth="120" ElementStyle="{StaticResource CellText}"/>
+                                    <DataGridTemplateColumn Header="Recht" SortMemberPath="Level" Width="*" MinWidth="80">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock x:Name="T" Text="{Binding Right}" Style="{StaticResource CellText}"/>
@@ -161,7 +169,7 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTextColumn Header="Herkunft" Binding="{Binding Origin}" Width="86" MinWidth="86" ElementStyle="{StaticResource CellText}"/>
+                                    <DataGridTextColumn Header="Herkunft" Binding="{Binding Origin}" Width="84" MinWidth="84" ElementStyle="{StaticResource CellText}"/>
                                     <DataGridTextColumn Header="Gilt für" Binding="{Binding AppliesTo}" Width="1.3*" MinWidth="100" ElementStyle="{StaticResource CellText}"/>
                                 </DataGrid.Columns>
                             </DataGrid>

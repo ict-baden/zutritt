@@ -89,12 +89,48 @@ internal static class ConsoleSession
     private static StreamWriter CreateWriter(Stream stream, nint handle, Target target, bool attached)
     {
         if (target == Target.File)
-        {
-            if (Native.GetFileSizeEx(handle, out var size) && size == 0)
-                stream.Write(Encoding.UTF8.Preamble);
-            return new StreamWriter(stream, new UTF8Encoding(false)) { AutoFlush = true };
-        }
+            return new StreamWriter(new BomOnFirstWrite(stream, handle), new UTF8Encoding(false)) { AutoFlush = true };
         return new StreamWriter(stream, PipeEncoding(attached)) { AutoFlush = true };
+    }
+
+    /// <summary>
+    /// Schreibt das UTF-8-BOM erst mit der ersten Ausgabe – und nur, wenn die Datei dann noch leer ist. Sofort
+    /// geschrieben, bekäme jede umgeleitete Datei drei Bytes, auch wenn nichts hineingeht (<c>2&gt; fehler.txt</c> wäre
+    /// nie leer), und bei <c>&gt; log.txt 2&gt;&amp;1</c> ginge das BOM an die Ausgabe, die zuerst schreibt.
+    /// </summary>
+    private sealed class BomOnFirstWrite(Stream inner, nint handle) : Stream
+    {
+        private bool _started;
+
+        public override bool CanRead => false;
+        public override bool CanSeek => false;
+        public override bool CanWrite => true;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+
+        public override void Write(byte[] buffer, int offset, int count) => Write(buffer.AsSpan(offset, count));
+
+        public override void Write(ReadOnlySpan<byte> buffer)
+        {
+            if (buffer.IsEmpty) return;
+            if (!_started)
+            {
+                _started = true;
+                if (Native.GetFileSizeEx(handle, out var size) && size == 0) inner.Write(Encoding.UTF8.Preamble);
+            }
+            inner.Write(buffer);
+        }
+
+        public override void Flush() => inner.Flush();
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) inner.Dispose();
+            base.Dispose(disposing);
+        }
     }
 
     /// <summary>Kodierung, mit der der Aufrufer die Pipe liest: die Codepage seiner Konsole.</summary>
@@ -137,7 +173,7 @@ internal static class ConsoleSession
                     '→' => "->",
                     '←' => "<-",
                     '•' or '·' => "*",
-                    ' ' or ' ' => " ",
+                    '\u00A0' or '\u202F' => " ",
                     _ => "?",
                 };
                 _pos = 0;

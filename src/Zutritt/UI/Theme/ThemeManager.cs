@@ -191,6 +191,11 @@ public static class ThemeManager
         listHeader.Setters.Add(new Setter(Control.FontWeightProperty, FontWeights.SemiBold));
         listHeader.Setters.Add(new Setter(Control.BorderThicknessProperty, new Thickness(0, 0, 0, 1)));
         listHeader.Setters.Add(new Setter(Control.BorderBrushProperty, new DynamicResourceExtension("DividerStrokeColorDefaultBrush")));
+        // Der Füllkopf rechts neben der letzten Spalte bekommt bei Fluent per Trigger oben und unten einen Rand –
+        // der stünde als Strich über der Bildlaufleiste. Wie die übrigen Köpfe nur unten.
+        var padding = new Trigger { Property = GridViewColumnHeader.RoleProperty, Value = GridViewColumnHeaderRole.Padding };
+        padding.Setters.Add(new Setter(Control.BorderThicknessProperty, new Thickness(0, 0, 0, 1)));
+        listHeader.Triggers.Add(padding);
         r["ListTableHeader"] = listHeader;
     }
 

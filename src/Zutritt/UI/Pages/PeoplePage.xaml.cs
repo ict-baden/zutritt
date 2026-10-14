@@ -163,7 +163,9 @@ public partial class PeoplePage : UserControl, IPage, ISearchPage
     /// <summary>Angelegte Listeneinträge – die sichtbaren plus den kleinen Vorrat der Virtualisierung.</summary>
     private List<PersonItem> VisibleItems()
     {
-        _panel ??= Ui.FindChild<VirtualizingStackPanel>(PeopleList);
+        // Neu suchen, wenn die Vorlage der Liste ersetzt wurde (Wechsel Hell/Dunkel in Windows) – sonst blieben
+        // die Zahlen danach bei „…“ stehen
+        if (_panel is null || !_panel.IsDescendantOf(PeopleList)) _panel = Ui.FindChild<VirtualizingStackPanel>(PeopleList);
         if (_panel is null) return [];
         return _panel.Children.OfType<ListBoxItem>().Select(c => c.DataContext).OfType<PersonItem>().ToList();
     }

@@ -10,7 +10,8 @@ namespace Zutritt.UI.Pages;
 /// <summary>Ordner: Baum der gespeicherten Ordner, rechts Einträge, „Wer darf hier rein“ und Befunde.</summary>
 public partial class FoldersPage : UserControl, IPage, ISearchPage
 {
-    public sealed record AceRow(string Account, string Kind, string Right, AccessLevel Level, bool IsDeny, string Origin, string AppliesTo)
+    /// <param name="AccountName">Kurzform für die enge Spalte (Anzeigename oder Name ohne Domäne), <paramref name="Account"/> voll im Tooltip.</param>
+    public sealed record AceRow(string Account, string AccountName, string Kind, string Right, AccessLevel Level, bool IsDeny, string Origin, string AppliesTo)
     {
         public override string ToString() => $"{Account}, {Right}, {Origin}, {AppliesTo}";
     }
@@ -327,7 +328,7 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
         AcesGrid.ItemsSource = folder.Aces.Select(a =>
         {
             var p = _state.PrincipalOf(a.Sid);
-            return new AceRow(_state.NameOf(a.Sid), p is null ? "Unbekannt" : Labels.Of(p.Kind),
+            return new AceRow(_state.NameOf(a.Sid), _state.ShortNameOf(a.Sid), p is null ? "Unbekannt" : Labels.Of(p.Kind),
                 (a.IsDeny ? "Verweigern: " : "") + Labels.RightsText(a), a.Level, a.IsDeny,
                 a.IsInherited ? "geerbt" : "explizit", Labels.AppliesTo(a, folder.IsFile));
         }).ToList();
@@ -338,8 +339,8 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
         FindingsGrid.ItemsSource = findings;
         FindingsGrid.Visibility = findings.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         FindingsEmpty.Visibility = findings.Count > 0 ? Visibility.Collapsed : Visibility.Visible;
-        TabFindings.Header = findings.Count > 0 ? $"Befunde ({findings.Count})" : "Befunde";
-        TabAces.Header = $"Einträge ({folder.Aces.Count})";
+        TabFindings.Header = findings.Count > 0 ? $"Befunde ({Labels.Number(findings.Count)})" : "Befunde";
+        TabAces.Header = $"Einträge ({Labels.Number(folder.Aces.Count)})";
 
         LoadPeople(scan, folder);
     }
@@ -403,7 +404,7 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
             BroadNotice.Visibility = Visibility.Visible;
         }
         PeopleTable.ItemsSource = people;
-        TabPeople.Header = $"Wer darf hier rein ({people.Count})";
+        TabPeople.Header = $"Wer darf hier rein ({Labels.Number(people.Count)})";
         PeopleStatus.Visibility = people.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         PeopleStatus.Text = scan.Request.ResolveGroups
             ? "Keine einzelne Person hat hier Zugriff."

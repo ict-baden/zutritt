@@ -63,7 +63,7 @@
             <Grid>
                 <!-- Schlanke Tabelle statt DataGrid (siehe ListTable): beim Filtern von Tausenden Befunden wird jede
                      sichtbare Zeile neu angelegt -->
-                <ListView x:Name="FindingsList" Style="{DynamicResource ListTable}" ui:ListTable.Columns="76, 1.35*:110, 1.65*:120, 1*:80"
+                <ListView x:Name="FindingsList" Style="{DynamicResource ListTable}" ui:ListTable.Columns="70, 1.75*:130, 1.35*:110, 0.9*:80"
                           SelectionChanged="List_SelectionChanged" MouseDoubleClick="List_MouseDoubleClick"
                           GridViewColumnHeader.Click="Header_Click" AutomationProperties.Name="Befunde">
                     <ListView.GroupStyle>
@@ -87,7 +87,7 @@
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" Margin="8,12,0,4">
                                         <ui:SeverityPill Severity="{Binding Name}"/>
-                                        <TextBlock Text="{Binding ItemCount}" Style="{StaticResource Caption}" FontSize="13"
+                                        <TextBlock Text="{Binding ItemCount, StringFormat={}{0:N0}, ConverterCulture=de-DE}" Style="{StaticResource Caption}" FontSize="13"
                                                    Margin="8,0,0,0" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </DataTemplate>
@@ -97,7 +97,7 @@
                     <ListView.View>
                         <GridView AllowsColumnReorder="False">
                             <!-- Schwere als Punkt vor der Regel: spart eine Spalte, die Gruppen nennen die Schwere ohnehin -->
-                            <GridViewColumn x:Name="ColRule" Header="Regel" Width="76">
+                            <GridViewColumn x:Name="ColRule" Header="Regel" Width="70">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" Background="Transparent" ToolTip="{Binding SeverityLabel}">
