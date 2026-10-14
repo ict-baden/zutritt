@@ -160,7 +160,10 @@ public sealed class PdfReportTests : IDisposable
         Assert.Contains("Gekürzt: 2 von 13 Befunde gezeigt – vollständig im Excel-Bericht.", text);
         Assert.Contains("Gekürzt: 1 von 6 Ordner gezeigt", text);
         Assert.Contains("Gekürzt: 1 von 3 Personen gezeigt", text);
-        Assert.Contains("Gekürzt: 1 von 11 Änderungen gezeigt", text);
+        // Änderungen: Grenze je Bereich, damit kein Bereich ganz verdrängt wird; Zugriffe je Ordner zusammengefasst
+        Assert.Contains("Gekürzt: 1 von 3 Änderungen gezeigt", text); // Berechtigungseinträge
+        Assert.Contains("Gekürzt: 1 von 2 Ordnern gezeigt", text);    // Zugriffe von Personen (QC, Archiv)
+        Assert.Contains("Änderungen (5 von 11)", text);
         Assert.Contains("Dieses PDF zeigt bei langen Listen nur einen Teil – vollständig ist der Excel-Bericht: Befunde (2 von 13)", text);
         // Nur die Hoch-Befunde sind noch drin
         Assert.Contains("Vollzugriff für Nicht-Admins", text);
@@ -202,12 +205,79 @@ public sealed class PdfReportTests : IDisposable
         var doc = PdfReport.CreateDocument(Data(scan));
 
         var section = doc.Sections.Cast<Section>().Single();
-        var cover = section.Elements.OfType<MigraDoc.DocumentObjectModel.Tables.Table>().First(t => PdfDom.Text(t).StartsWith("Ziele\n\t"));
+        var cover = section.Elements.OfType<MigraDoc.DocumentObjectModel.Tables.Table>().First(t => PdfDom.Text(t).StartsWith("Ziele (150)\n\t"));
         var targets = PdfDom.Text(cover.Rows[0].Cells[1]);
-        Assert.Contains(@"\\FS000\Daten", targets);
-        Assert.DoesNotContain(@"\\FS149\Daten", targets);
-        Assert.Contains("gekürzt – vollständig im Excel-Bericht", targets);
+        Assert.Contains(@"\\FS004\Daten", targets);
+        Assert.DoesNotContain(@"\\FS005\Daten", targets);
+        Assert.Contains("… und 145 weitere (gekürzt – vollständig im Excel-Bericht)", targets);
         Assert.Contains(@"\\FS000\Daten (+149 weitere)", PdfDom.Text(section.Headers.Primary));
+
+        // Das Deckblatt bleibt eine Seite – auch mit Vergleich und Inhaltsverzeichnis
+        var pages = PdfLayout.Pages(PdfReport.CreateDocument(Data(scan, Comparison())));
+        Assert.DoesNotContain(pages[1], i => i.Object is Paragraph p && PdfDom.Text(p).Contains("Vertraulich – enthält"));
+        Assert.Contains(pages[1], i => i.Object is Paragraph p && p.Style == StyleNames.Heading1 && PdfDom.Text(p).Trim() == "Zusammenfassung");
+    }
+
+    [Fact]
+    public void Deckblatt_InhaltsverzeichnisVerweistAufJedenAbschnitt()
+    {
+        var doc = PdfReport.CreateDocument(DataWithComparison());
+        var section = doc.Sections.Cast<Section>().Single();
+        var paragraphs = section.Elements.OfType<Paragraph>().ToList();
+
+        // Einträge mit Seitenverweis; jeder Verweis zeigt auf genau eine Überschrift mit diesem Namen
+        var entries = paragraphs
+            .Select(p => (Text: PdfDom.Text(p).Split('\t')[0], Ref: p.Elements.OfType<MigraDoc.DocumentObjectModel.Fields.PageRefField>().SingleOrDefault()))
+            .Where(e => e.Ref is not null)
+            .ToList();
+        Assert.Equal(["Zusammenfassung", "Befunde", "Prüfregeln und Empfehlungen", "Freigaben", "Ordner mit eigenen Rechten",
+            "Personen-Übersicht", "Änderungen seit dem letzten Lauf", "Nicht geprüfte Bereiche", "Prüfung und Freigabe"], entries.Select(e => e.Text));
+        foreach (var (title, pageRef) in entries)
+        {
+            var target = Assert.Single(paragraphs, p => p.Elements.OfType<MigraDoc.DocumentObjectModel.Fields.BookmarkField>().Any(b => b.Name == pageRef!.Name));
+            Assert.Equal(title, PdfDom.Text(target).Trim());
+        }
+
+        // Ohne Vergleich und ohne Fehler fehlen die Einträge dazu
+        var plain = PdfDom.Text(PdfReport.CreateDocument(Data(new ScanResult { Request = new ScanRequest { Targets = [@"C:\Leer"] } })));
+        Assert.DoesNotContain("Änderungen seit dem letzten Lauf", plain);
+        Assert.DoesNotContain("Nicht geprüfte Bereiche", plain);
+    }
+
+    [Fact]
+    public void Seitenumbruch_KeineUeberschriftAllein_KeineVerschlucktenZeilen()
+    {
+        // Verschieden lange Befundlisten schieben die folgenden Abschnitte über alle Stellen der Seite – so landet
+        // jede Überschrift irgendwann am Seitenende. Früher stand sie dort allein, ihr Inhalt erst auf der nächsten Seite.
+        var problems = new List<string>();
+        for (int k = 0; k < 40; k++)
+        {
+            var scan = Scan();
+            for (int i = 0; i < k; i++)
+                scan.Findings.Add(F("ZT03", Severity.Mittel, Root + $@"\Projekt{i:D2}", Max, "Recht direkt vergeben."));
+            problems.AddRange(PdfLayout.Problems(PdfReport.CreateDocument(Data(scan))).Select(p => $"{k} Befunde mehr: {p}"));
+            problems.AddRange(PdfLayout.Problems(PdfReport.CreateDocument(Data(scan, Comparison()))).Select(p => $"{k} Befunde mehr, mit Vergleich: {p}"));
+        }
+        Assert.True(problems.Count == 0, string.Join("\n", problems));
+    }
+
+    [Fact]
+    public void Seitenumbruch_GrosserLauf_OrdnerkopfBleibtBeiSeinerTabelle()
+    {
+        var scan = Large(folders: 120, acesPerFolder: 6, users: 40);
+        for (int i = 0; i < 120; i += 3)
+            scan.Findings.Add(F(i % 2 == 0 ? "ZT01" : "ZT05", i % 2 == 0 ? Severity.Hoch : Severity.Mittel, scan.Folders[i].Path, Everyone, "Breite Gruppe."));
+        var data = ReportDataBuilder.Build(scan, null, Rules(), sid => [G(Root, sid, AccessLevel.Lesen, @"LAB\Gruppe-01")], CreatedAt);
+        var doc = PdfReport.CreateDocument(data);
+
+        var problems = PdfLayout.Problems(doc);
+        Assert.True(problems.Count == 0, string.Join("\n", problems));
+
+        // Tabellenköpfe wiederholen sich auf Folgeseiten
+        var tables = doc.Sections.Cast<Section>().Single().Elements.OfType<MigraDoc.DocumentObjectModel.Tables.Table>()
+            .Where(t => t.Rows.Count > 1 && t.Columns.Count > 2 && !t.Rows[0].Shading.Color.IsEmpty).ToList();
+        Assert.NotEmpty(tables);
+        Assert.All(tables, t => Assert.True(t.Rows[0].HeadingFormat, PdfDom.Text(t.Rows[0].Cells[0])));
     }
 
     [Fact]

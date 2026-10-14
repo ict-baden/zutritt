@@ -74,4 +74,34 @@ public sealed class ReportsWithAnalysisTests : IDisposable
         using var doc = PdfReader.Open(pdf, PdfDocumentOpenMode.Import);
         Assert.True(doc.PageCount > 1);
     }
+
+    [AnalysisFact]
+    public void Pdf_WirklichkeitsnaherLaufMitVergleich_SauberUmbrochen()
+    {
+        // 300 Ordner, 80 Personen, rund 470 Befunde, ~1.000 Änderungen: hier standen Überschriften wie „Ordner mit
+        // eigenen Rechten“ und „Personen-Übersicht“ allein am Seitenende
+        static ScanResult Evaluated(DateTimeOffset started, bool changed)
+        {
+            var scan = ReportSamples.Realistic(started, changed);
+            scan.Findings.AddRange(FindingRules.Evaluate(scan));
+            return scan;
+        }
+        var older = Evaluated(new DateTimeOffset(2026, 10, 7, 8, 0, 0, TimeSpan.FromHours(2)), changed: false);
+        var newer = Evaluated(new DateTimeOffset(2026, 10, 14, 8, 0, 0, TimeSpan.FromHours(2)), changed: true);
+        var data = ReportDataBuilder.Build(newer, ScanComparer.Compare(older, newer));
+        Assert.True(data.Findings.Count > 300 && data.Comparison!.Rows.Count > 500,
+            $"Zu wenig Stoff für den Test: {data.Findings.Count} Befunde, {data.Comparison!.Rows.Count} Änderungen");
+
+        var doc = PdfReport.CreateDocument(data);
+        var problems = PdfLayout.Problems(doc);
+        Assert.True(problems.Count == 0, string.Join("\n", problems));
+
+        // Abzeichnen-Block mit Überschrift auf einer Seite, und zwar der letzten
+        var pages = PdfLayout.Pages(doc);
+        var signOff = pages.FindIndex(p => p.Any(i => i.Object is MigraDoc.DocumentObjectModel.Paragraph h
+            && h.Style == MigraDoc.DocumentObjectModel.StyleNames.Heading1 && PdfDom.Text(h).Trim() == "Prüfung und Freigabe"));
+        Assert.Equal(pages.Count - 1, signOff);
+        Assert.Contains(pages[signOff], i => i.Object is MigraDoc.DocumentObjectModel.Tables.Table t && t.Rows.Count == 7
+            && i.StartRow == 0 && i.EndRow == 6);
+    }
 }

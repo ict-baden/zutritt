@@ -136,22 +136,33 @@ public static class ExcelReport
         {
             Section($"Vergleich mit dem Lauf vom {ReportText.DateTime(c.OlderStartedAt)}");
             if (!c.HasChanges) Pair("Ergebnis", "Keine Änderungen seit dem letzten Lauf.");
+            // Reihenfolge wie im Blatt „Änderungen“: Befunde, Ursachen, Folgen für Personen
             Number("Neue Befunde", c.NewFindings, warn: c.NewFindings > 0);
             Number("Behobene Befunde", c.ResolvedFindings);
-            Number("Personen-Zugriffe erweitert", c.MoreAccess);
-            Number("Personen-Zugriffe eingeschränkt", c.LessAccess);
             Number("Geänderte Berechtigungseinträge", c.AceChanges);
+            Number("Geänderte Gruppenmitgliedschaften", c.MembershipChanges);
             Number("Ordner neu mit eigenen Rechten", c.FoldersAdded);
             Number("Ordner ohne eigene Rechte mehr", c.FoldersRemoved);
-            Number("Geänderte Gruppenmitgliedschaften", c.MembershipChanges);
+            Number("Personen-Zugriffe erweitert", c.MoreAccess, warn: c.MoreAccess > 0);
+            Number("Personen-Zugriffe eingeschränkt", c.LessAccess);
             row++;
         }
 
+        // Warnungen zuerst – auch die zur Kürzung dieser Mappe –, dann die Lesehilfen
         Section("Hinweise");
-        foreach (var note in data.Notes)
+        foreach (var note in data.Notes.Where(n => n.Kind == NoteKind.Warnung))
             Note(note.Kind, note.Text);
         foreach (var text in truncated)
             Note(NoteKind.Warnung, text);
+        foreach (var note in data.Notes.Where(n => n.Kind != NoteKind.Warnung))
+            Note(note.Kind, note.Text);
+        row++;
+
+        // Wegweiser für Prüfer, die die Mappe zum ersten Mal sehen
+        Section("Blätter dieser Mappe");
+        foreach (var sheet in workbook.Worksheets.Where(w => w != ws))
+            if (SheetDescriptions.TryGetValue(sheet.Name, out var description))
+                Pair(ReportText.Quote(sheet.Name), description);
 
         ws.PageSetup.PaperSize = XLPaperSize.A4Paper;
         ws.PageSetup.PageOrientation = XLPageOrientation.Portrait;
@@ -214,6 +225,20 @@ public static class ExcelReport
             row++;
         }
     }
+
+    /// <summary>Kurzbeschreibung je Blatt für den Wegweiser in der Übersicht.</summary>
+    private static readonly Dictionary<string, string> SheetDescriptions = new()
+    {
+        ["Befunde"] = "Alle Befunde nach Schwere – mit Regel, Pfad, Konto, Meldung und Empfehlung.",
+        ["Ordner & Rechte"] = "Jeder aufgeführte Ordner mit jedem Berechtigungseintrag (eine Zeile je Eintrag, auch geerbte).",
+        ["Personen"] = "Je Benutzerkonto: Anzahl Ordner mit Zugriff, höchstes Recht und über welche Gruppen.",
+        ["Zugriffe je Person"] = "Jede Person je Ordner mit effektivem Recht, NTFS- und Freigabe-Recht und der Gruppenkette.",
+        ["Gruppen"] = "Mitglieder direkt und gesamt (auch verschachtelt) und in wie vielen Ordner-ACLs die Gruppe steht.",
+        ["Freigaben"] = "Freigaben mit Pfad, Bemerkung und Freigabe-Berechtigungen.",
+        ["Prüfregeln"] = "Prüfumfang: alle Regeln mit Erklärung, Empfehlung und Anzahl der Befunde.",
+        ["Änderungen"] = "Unterschiede zum vorherigen Lauf: Befunde, Einträge, Mitgliedschaften, Ordner, Zugriffe von Personen.",
+        ["Fehler"] = "Pfade, die nicht gelesen werden konnten – dort ist nichts geprüft.",
+    };
 
     private static void SetNumber(IXLCell cell, long value)
     {
@@ -369,10 +394,12 @@ public static class ExcelReport
     {
         var ws = wb.Worksheets.Add(sheetName);
         var widths = new double[cols.Count];
+        bool wrapped = false;
         for (int c = 0; c < cols.Count; c++)
         {
             ws.Cell(1, c + 1).Value = cols[c].Header;
-            widths[c] = cols[c].Header.Length + 3; // Platz für den Filter-Knopf
+            widths[c] = HeaderWidth(cols[c].Header, out bool twoLines);
+            wrapped |= twoLines;
         }
 
         int row = 1;
@@ -411,6 +438,10 @@ public static class ExcelReport
         header.Style.Fill.BackgroundColor = Accent;
         header.Style.Font.FontColor = XLColor.White;
         header.Style.Font.Bold = true;
+        // Lange Überschriften zweizeilig statt breiter Spalten für „Ja“/„Nein“
+        header.Style.Alignment.WrapText = true;
+        header.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+        if (wrapped) ws.Row(1).Height = 30;
         ws.SheetView.FreezeRows(1);
 
         for (int c = 0; c < cols.Count; c++)
@@ -425,6 +456,27 @@ public static class ExcelReport
         ws.PageSetup.FitToPages(1, 0);
         ws.PageSetup.SetRowsToRepeatAtTop(1, 1);
         Footer(ws);
+    }
+
+    /// <summary>
+    /// Breite, die eine Spaltenüberschrift braucht (in Zeichen, plus Platz für den Filter-Knopf). Ab zwei Wörtern
+    /// und 14 Zeichen wird sie auf zwei Zeilen verteilt – möglichst gleich lang.
+    /// </summary>
+    internal static double HeaderWidth(string header, out bool twoLines)
+    {
+        const int filterButton = 3;
+        twoLines = false;
+        var words = header.Split(' ');
+        if (header.Length <= 14 || words.Length < 2) return header.Length + filterButton;
+        int best = header.Length;
+        for (int i = 1; i < words.Length; i++)
+        {
+            int first = string.Join(' ', words[..i]).Length;
+            int second = string.Join(' ', words[i..]).Length;
+            best = Math.Min(best, Math.Max(first, second));
+        }
+        twoLines = true;
+        return best + filterButton;
     }
 
     private static double DisplayLength(XLCellValue value) =>

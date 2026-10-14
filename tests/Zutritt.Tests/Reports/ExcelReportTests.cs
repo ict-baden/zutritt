@@ -330,6 +330,94 @@ public sealed class ExcelReportTests(ITestOutputHelper output) : IDisposable
         Assert.Empty(Directory.GetFileSystemEntries(_temp.Path));
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Mappe_JedesBlatt_FilterFixierteKopfzeileBreitenUndFormate(bool withComparison)
+    {
+        var path = Write(withComparison ? DataWithComparison() : Data());
+        using var wb = new XLWorkbook(path);
+
+        // „Änderungen“ gibt es nur mit Vergleich
+        Assert.Equal(withComparison, wb.Worksheets.Any(w => w.Name == "Änderungen"));
+
+        foreach (var ws in wb.Worksheets.Where(w => w.Name != "Übersicht"))
+        {
+            var table = Assert.Single(ws.Tables);
+            int lastCol = ws.LastColumnUsed()!.ColumnNumber();
+            int lastRow = ws.LastRowUsed()!.RowNumber();
+            // Tabelle über alle Zeilen und Spalten, Filter an, Kopfzeile fixiert und beim Drucken wiederholt
+            Assert.Equal($"A1:{ws.Cell(lastRow, lastCol).Address}", table.RangeAddress.ToString());
+            Assert.True(table.ShowAutoFilter, ws.Name);
+            Assert.Equal(1, ws.SheetView.SplitRow);
+            Assert.Equal(0, ws.SheetView.SplitColumn);
+            Assert.Equal((1, 1), (ws.PageSetup.FirstRowToRepeatAtTop, ws.PageSetup.LastRowToRepeatAtTop));
+            Assert.Equal(XLPageOrientation.Landscape, ws.PageSetup.PageOrientation);
+            Assert.Equal(1, ws.PageSetup.PagesWide);
+
+            for (int c = 1; c <= lastCol; c++)
+            {
+                var head = ws.Cell(1, c);
+                Assert.False(string.IsNullOrWhiteSpace(head.GetString()), $"{ws.Name}: Spalte {c} ohne Überschrift");
+                Assert.True(head.Style.Font.Bold);
+                Assert.Equal(XLColor.White, head.Style.Font.FontColor);
+                Assert.True(head.Style.Alignment.WrapText);
+                // Breit genug für die (ggf. zweizeilige) Überschrift, aber nie uferlos
+                double width = ws.Column(c).Width;
+                Assert.InRange(width, ExcelReport.HeaderWidth(head.GetString(), out _), 90);
+                // Kurze Werte (Ja/Nein, Zahlen) stehen nicht in überbreiten Spalten – sofern die Überschrift umbrechen kann
+                int longest = Enumerable.Range(2, lastRow - 1).Max(r => ws.Cell(r, c).GetFormattedString().Length);
+                if (longest <= 12 && head.GetString().Contains(' ')) Assert.True(width <= 22, $"{ws.Name}: Spalte „{head.GetString()}“ ist {width} breit");
+            }
+            // Zweizeilige Überschriften brauchen eine höhere Kopfzeile
+            if (Enumerable.Range(1, lastCol).Any(c => ws.Cell(1, c).GetString().Length > 14 && ws.Cell(1, c).GetString().Contains(' ')))
+                Assert.Equal(30, ws.Row(1).Height);
+        }
+
+        // Zahlen sind Zahlen mit Tausendertrennzeichen (Excel zeigt sie in der Sprache des Betrachters, de-DE: 1.234)
+        foreach (var (sheet, header) in new[] { ("Personen", "Ordner mit Zugriff"), ("Gruppen", "Mitglieder direkt"), ("Gruppen", "Mitglieder gesamt (Personen)"),
+                     ("Gruppen", "In Ordner-ACLs"), ("Prüfregeln", "Befunde") })
+        {
+            var ws = wb.Worksheet(sheet);
+            int col = ws.Row(1).CellsUsed().Single(c => c.GetString() == header).Address.ColumnNumber;
+            Assert.All(Enumerable.Range(2, ws.LastRowUsed()!.RowNumber() - 1), r =>
+            {
+                Assert.True(ws.Cell(r, col).Value.IsNumber, $"{sheet}/{header} Zeile {r}");
+                Assert.Equal("#,##0", ws.Cell(r, col).Style.NumberFormat.Format);
+            });
+        }
+        var depth = wb.Worksheet("Ordner & Rechte");
+        Assert.All(Enumerable.Range(2, depth.LastRowUsed()!.RowNumber() - 1), r => Assert.True(depth.Cell(r, 2).Value.IsNumber));
+
+        // Übersicht: Zähler als Zahlen, Zeitangaben deutsch (TT.MM.JJJJ HH:MM)
+        var overview = wb.Worksheet("Übersicht");
+        IXLCell ValueOf(string label) => overview.CellsUsed().Single(c => c.Address.ColumnNumber == 1 && c.GetString() == label).CellRight();
+        Assert.Matches(@"^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2} – \d{2}:\d{2} Uhr$", ValueOf("Zeitraum").GetString());
+        Assert.Matches(@"^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2} mit Zutritt ", ValueOf("Bericht erstellt").GetString());
+        foreach (var label in new[] { "Ordner geprüft", "Ordner mit eigenen Rechten", "Freigaben", "Personen mit Zugriff", "Gesamt" })
+        {
+            Assert.True(ValueOf(label).Value.IsNumber, label);
+            Assert.Equal("#,##0", ValueOf(label).Style.NumberFormat.Format);
+        }
+        Assert.Equal(withComparison, overview.CellsUsed().Any(c => c.GetString().StartsWith("Vergleich mit dem Lauf vom 07.10.2026 09:00")));
+
+        // Wegweiser: jedes vorhandene Blatt mit Beschreibung, kein fehlendes
+        var guide = overview.CellsUsed().Where(c => c.Address.ColumnNumber == 1 && c.GetString().StartsWith('„')).Select(c => c.GetString()).ToList();
+        Assert.Equal(wb.Worksheets.Skip(1).Select(w => ReportText.Quote(w.Name)), guide);
+        Assert.All(guide, g => Assert.False(string.IsNullOrWhiteSpace(overview.CellsUsed().Single(c => c.GetString() == g).CellRight().GetString())));
+    }
+
+    [Fact]
+    public void Ueberschrift_LangeWirdZweizeilig_KurzeBleibtEinzeilig()
+    {
+        Assert.Equal(7, ExcelReport.HeaderWidth("Pfad", out bool wrapped));
+        Assert.False(wrapped);
+        Assert.Equal(15, ExcelReport.HeaderWidth("Vererbung unterbrochen", out wrapped)); // „unterbrochen“ + Filter-Knopf
+        Assert.True(wrapped);
+        Assert.Equal(22, ExcelReport.HeaderWidth("Erlauben/Verweigern", out wrapped)); // ohne Leerzeichen nicht trennbar
+        Assert.False(wrapped);
+    }
+
     [Fact]
     public void GrosserLauf_ImZeitbudget()
     {
