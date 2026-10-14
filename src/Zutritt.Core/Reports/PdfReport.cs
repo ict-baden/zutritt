@@ -27,16 +27,28 @@ public static class PdfReport
     internal static void Write(ReportData data, string path, PdfLimits? limits = null)
     {
         ReportFile.FullPath(path);
-        // Erst vollständig rendern, dann schreiben: scheitert das Rendern, bleibt die Zieldatei unberührt
-        var renderer = new PdfDocumentRenderer { Document = CreateDocument(data, limits) };
-        renderer.RenderDocument();
-        var pdf = renderer.PdfDocument;
-        pdf.Info.Title = ReportText.Title;
-        pdf.Info.Author = ReportText.Product;
-        pdf.Info.Subject = ReportText.Clean(string.Join("; ", data.Header.Targets));
-        pdf.Info.Creator = $"{ReportText.Product} {data.Header.ReportVersion}".TrimEnd();
-        ReportFile.Write(path, stream => pdf.Save(stream, false));
+        var document = CreateDocument(data, limits);
+        lock (RenderGate)
+        {
+            // Erst vollständig rendern, dann schreiben: scheitert das Rendern, bleibt die Zieldatei unberührt
+            var renderer = new PdfDocumentRenderer { Document = document };
+            renderer.RenderDocument();
+            var pdf = renderer.PdfDocument;
+            pdf.Info.Title = ReportText.Title;
+            pdf.Info.Author = ReportText.Product;
+            pdf.Info.Subject = ReportText.Clean(string.Join("; ", data.Header.Targets));
+            pdf.Info.Creator = $"{ReportText.Product} {data.Header.ReportVersion}".TrimEnd();
+            ReportFile.Write(path, stream => pdf.Save(stream, false));
+        }
     }
+
+    /// <summary>
+    /// Nur ein MigraDoc-Satz zur Zeit im Prozess. MigraDoc 6.2.4 merkt sich die zuletzt benutzte Schrift in
+    /// statischen Feldern ohne Sperre (FontHandler): setzen zwei Threads gleichzeitig, misst einer mit der Schrift
+    /// des anderen – Umbrüche verschieben sich, Text kann in falscher Größe erscheinen. Gilt für jedes Rendern
+    /// (auch die Umbruchprüfung in den Tests).
+    /// </summary>
+    internal static readonly Lock RenderGate = new();
 
     /// <summary>Baut das MigraDoc-Dokument (ohne zu rendern) – für Tests und Vorschau.</summary>
     internal static Document CreateDocument(ReportData data, PdfLimits? limits = null)
@@ -436,7 +448,7 @@ public static class PdfReport
                     if (start > 0) Spacer(6);
                     FindingGroup(shown.GetRange(start, end - start), totals[key]);
                 }
-                Truncated(data.Findings.Count, limits.Findings, "Befunde");
+                Truncated(data.Findings.Count, limits.Findings, "Befunden");
             }
 
             Heading2("Prüfregeln und Empfehlungen");
@@ -623,7 +635,7 @@ public static class PdfReport
                 if (f.Aces.Count == 0)
                     Paragraph("Keine Einträge – niemand hat Zugriff (nur der Besitzer kann Berechtigungen ändern).", small: true);
             }
-            Truncated(data.Folders.Count, limits.Folders, "Ordner");
+            Truncated(data.Folders.Count, limits.Folders, "Ordnern");
         }
 
         private void People()
@@ -798,7 +810,7 @@ public static class PdfReport
                 CellText(table, row, 1, e.Message);
             }
             KeepStart(table);
-            Truncated(data.Errors.Count, limits.Errors, "Einträge");
+            Truncated(data.Errors.Count, limits.Errors, "Einträgen");
         }
 
         private void SignOff()
@@ -815,7 +827,7 @@ public static class PdfReport
             reference.Style = IntroStyle;
             reference.Format.SpaceAfter = 6;
             text.Append(reference, $"Bezieht sich auf den Lauf vom {ReportText.Period(h.StartedAt, h.FinishedAt)} auf "
-                + $"{(h.Machine.Length == 0 ? "unbekanntem Rechner" : h.Machine)} – Ziele: {ShortTargets()}; Bericht erstellt am "
+                + $"{(h.Machine.Length == 0 ? "unbekanntem Rechner" : h.Machine)} – {(h.Targets.Count == 1 ? "Ziel" : "Ziele")}: {ShortTargets()}; Bericht erstellt am "
                 + $"{ReportText.DateTime(h.CreatedAt)}, ", ContentWidth, SmallSize);
             reference.AddNumPagesField();
             reference.AddText(" Seiten.");
@@ -909,6 +921,7 @@ public static class PdfReport
             p.Format.SpaceAfter = points;
         }
 
+        /// <summary>Hinweis auf eine gekürzte Liste; <paramref name="what"/> im Dativ Plural („von 302 Ordnern“).</summary>
         private void Truncated(int total, int shown, string what)
         {
             if (total <= shown) return;

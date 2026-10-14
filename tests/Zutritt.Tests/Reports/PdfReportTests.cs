@@ -157,8 +157,8 @@ public sealed class PdfReportTests : IDisposable
         var doc = PdfReport.CreateDocument(DataWithComparison(), limits);
         var text = PdfDom.Text(doc);
 
-        Assert.Contains("Gekürzt: 2 von 13 Befunde gezeigt – vollständig im Excel-Bericht.", text);
-        Assert.Contains("Gekürzt: 1 von 6 Ordner gezeigt", text);
+        Assert.Contains("Gekürzt: 2 von 13 Befunden gezeigt – vollständig im Excel-Bericht.", text);
+        Assert.Contains("Gekürzt: 1 von 6 Ordnern gezeigt", text);
         Assert.Contains("Gekürzt: 1 von 3 Personen gezeigt", text);
         // Änderungen: Grenze je Bereich, damit kein Bereich ganz verdrängt wird; Zugriffe je Ordner zusammengefasst
         Assert.Contains("Gekürzt: 1 von 3 Änderungen gezeigt", text); // Berechtigungseinträge
@@ -336,6 +336,31 @@ public sealed class PdfReportTests : IDisposable
         Parallel.For(0, 4, i => PdfReport.Write(data, Path.Combine(_temp.Path, $"parallel-{i}.pdf")));
         Assert.Equal(4, Directory.GetFiles(_temp.Path, "parallel-*.pdf").Length);
         Assert.All(Directory.GetFiles(_temp.Path), p => Assert.True(PageCount(p) > 1));
+    }
+
+    [Fact]
+    public void Parallel_GleicherSatzWieNacheinander()
+    {
+        // MigraDoc merkt sich die zuletzt benutzte Schrift statisch und ohne Sperre: ohne RenderGate setzt ein
+        // paralleler Bericht mit fremder Schrift – andere Umbrüche, im Extremfall falsche Schriftgröße
+        var scan = Large(folders: 120, acesPerFolder: 6, users: 40);
+        for (int i = 0; i < 120; i += 3)
+            scan.Findings.Add(F(i % 2 == 0 ? "ZT01" : "ZT05", i % 2 == 0 ? Severity.Hoch : Severity.Mittel, scan.Folders[i].Path, Everyone, "Breite Gruppe."));
+        var data = ReportDataBuilder.Build(scan, null, Rules(), sid => [G(Root, sid, AccessLevel.Lesen, @"LAB\Gruppe-01")], CreatedAt);
+
+        var reference = PageContents(Write(data, "nacheinander.pdf"));
+        Parallel.For(0, 6, i => Write(data, $"parallel-{i}.pdf"));
+        for (int i = 0; i < 6; i++)
+            Assert.Equal(reference, PageContents(Path.Combine(_temp.Path, $"parallel-{i}.pdf")));
+    }
+
+    /// <summary>Inhalt jeder Seite (Zeichenbefehle mit Positionen) als Prüfsumme – gleich gesetzt heißt gleich.</summary>
+    private static List<string> PageContents(string path)
+    {
+        using var pdf = PdfReader.Open(path, PdfDocumentOpenMode.Modify);
+        return pdf.Pages.Cast<PdfSharp.Pdf.PdfPage>()
+            .Select(p => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(p.Contents.CreateSingleContent().Stream!.UnfilteredValue)))
+            .ToList();
     }
 
     [Fact]

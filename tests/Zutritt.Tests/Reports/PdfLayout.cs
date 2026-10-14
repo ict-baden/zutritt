@@ -19,7 +19,8 @@ internal static class PdfLayout
     public static List<List<Item>> Pages(Document document)
     {
         var renderer = new DocumentRenderer(document);
-        renderer.PrepareDocument();
+        // Wie im Bericht nie parallel zu einem anderen Satz – sonst misst MigraDoc mit fremden Schriften (siehe RenderGate)
+        lock (PdfReport.RenderGate) renderer.PrepareDocument();
         var pages = new List<List<Item>>();
         for (int page = 1; page <= renderer.FormattedDocument!.PageCount; page++)
             pages.Add((renderer.GetRenderInfoFromPage(page) ?? [])
