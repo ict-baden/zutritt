@@ -1,5 +1,7 @@
+using System.Security.AccessControl;
 using System.Text;
 using MigraDoc.DocumentObjectModel;
+using MigraDoc.DocumentObjectModel.Tables;
 using PdfSharp.Pdf.IO;
 using Zutritt.Core.Model;
 using Zutritt.Core.Reports;
@@ -61,7 +63,7 @@ public sealed class PdfReportTests : IDisposable
         var headings = PdfDom.Headings(doc);
         Assert.Equal("Änderungen seit dem letzten Lauf", headings[^3]);
         var text = PdfDom.Text(doc);
-        Assert.Contains("mehr Zugriff", text);
+        Assert.Contains("Mehr Zugriff", text);
         Assert.Contains(@"LAB\ehemalig", text);
         Assert.Contains("Vergleich mit dem letzten Lauf", text);
     }
@@ -122,12 +124,12 @@ public sealed class PdfReportTests : IDisposable
     {
         var doc = PdfReport.CreateDocument(Data());
         var section = doc.Sections.Cast<Section>().Single();
-        var table = section.Elements.OfType<MigraDoc.DocumentObjectModel.Tables.Table>().Last();
-        var labels = table.Rows.Cast<MigraDoc.DocumentObjectModel.Tables.Row>().Select(r => PdfDom.Text(r.Cells[0]).Trim()).ToList();
+        var table = section.Elements.OfType<Table>().Last();
+        var labels = table.Rows.Cast<Row>().Select(r => PdfDom.Text(r.Cells[0]).Trim()).ToList();
 
         Assert.Equal(["Geprüft von", "Datum", "Unterschrift", "Bemerkungen", "", "", ""], labels);
         Assert.Equal(table.Rows.Count - 1, table.Rows[0].KeepWith);
-        Assert.All(table.Rows.Cast<MigraDoc.DocumentObjectModel.Tables.Row>(), r => Assert.True(r.Cells[1].Borders.Bottom.Visible));
+        Assert.All(table.Rows.Cast<Row>(), r => Assert.True(r.Cells[1].Borders.Bottom.Visible));
     }
 
     [Fact]
@@ -182,12 +184,14 @@ public sealed class PdfReportTests : IDisposable
 
         var doc = PdfReport.CreateDocument(data);
         var section = doc.Sections.Cast<Section>().Single();
-        var shares = section.Elements.OfType<MigraDoc.DocumentObjectModel.Tables.Table>()
+        var shares = section.Elements.OfType<Table>()
             .Single(t => PdfDom.Text(t).StartsWith("Freigabe\n\tPfad\n\t"));
-        var row = shares.Rows.Cast<MigraDoc.DocumentObjectModel.Tables.Row>().Single(r => PdfDom.Text(r.Cells[0]).Contains("Viele"));
+        var row = shares.Rows.Cast<Row>().Single(r => PdfDom.Text(r.Cells[0]).Contains("Viele"));
         Assert.Equal(21, row.Cells[3].Elements.Count);
         var cell = PdfDom.Text(row.Cells[3]).Replace("\n", ""); // lange SIDs werden umbrochen
-        Assert.Contains($"{Domain}-8000: Verweigern Lesen", cell);
+        // Verweigern „ab Lesen“ sperrt alles – so steht es da, nicht als „Verweigern Lesen“
+        Assert.Contains($"{Domain}-8000: Verweigert: alles (ab Lesen)", cell);
+        Assert.DoesNotContain("Verweigern Lesen", cell);
         Assert.Contains("… und 130 weitere Einträge (vollständig im Excel-Bericht)", cell);
         Assert.Contains("Freigabe-Berechtigungen (höchstens 20 Einträge je Freigabe, betrifft 1 Freigabe)", PdfDom.Text(doc));
 
@@ -205,7 +209,7 @@ public sealed class PdfReportTests : IDisposable
         var doc = PdfReport.CreateDocument(Data(scan));
 
         var section = doc.Sections.Cast<Section>().Single();
-        var cover = section.Elements.OfType<MigraDoc.DocumentObjectModel.Tables.Table>().First(t => PdfDom.Text(t).StartsWith("Ziele (150)\n\t"));
+        var cover = section.Elements.OfType<Table>().First(t => PdfDom.Text(t).StartsWith("Ziele (150)\n\t"));
         var targets = PdfDom.Text(cover.Rows[0].Cells[1]);
         Assert.Contains(@"\\FS004\Daten", targets);
         Assert.DoesNotContain(@"\\FS005\Daten", targets);
@@ -274,7 +278,7 @@ public sealed class PdfReportTests : IDisposable
         Assert.True(problems.Count == 0, string.Join("\n", problems));
 
         // Tabellenköpfe wiederholen sich auf Folgeseiten
-        var tables = doc.Sections.Cast<Section>().Single().Elements.OfType<MigraDoc.DocumentObjectModel.Tables.Table>()
+        var tables = doc.Sections.Cast<Section>().Single().Elements.OfType<Table>()
             .Where(t => t.Rows.Count > 1 && t.Columns.Count > 2 && !t.Rows[0].Shading.Color.IsEmpty).ToList();
         Assert.NotEmpty(tables);
         Assert.All(tables, t => Assert.True(t.Rows[0].HeadingFormat, PdfDom.Text(t.Rows[0].Cells[0])));
@@ -391,5 +395,53 @@ public sealed class PdfReportTests : IDisposable
 
         Assert.True(sw.Elapsed < TimeSpan.FromMinutes(3), $"PDF-Bericht brauchte {sw.Elapsed}");
         Assert.InRange(PageCount(path), 50, 400);
+    }
+
+    [Fact]
+    public void Ordner_MitAbweichenderVererbung_SoGekennzeichnet()
+    {
+        var scan = Scan();
+        scan.Folders.Single(f => f.Path == Archiv).InheritanceDiffers = true;
+        var text = PdfDom.Text(PdfReport.CreateDocument(Data(scan)));
+        Assert.Contains("Tiefe 1 · Vererbung weicht ab (vermutlich verschoben) · Besitzer:", text);
+        Assert.Contains("unterbrochene oder abweichende Vererbung", text);
+    }
+
+    [Fact]
+    public void Ordner_VerweigernNenntGesperrteRechte_OhneUmbruchImWort()
+    {
+        // „Nur Löschen verweigert“ hieß als Stufe „Kein Zugriff“ – jetzt steht da, was gesperrt ist, und passt in die Spalte
+        var scan = Scan();
+        scan.Folders.Single(f => f.Path == Archiv).Aces.Insert(0, new AceEntry
+        {
+            Sid = Erika, Rights = FileSystemRights.Delete | FileSystemRights.DeleteSubdirectoriesAndFiles,
+            IsDeny = true, Inheritance = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit,
+        });
+        var doc = PdfReport.CreateDocument(Data(scan));
+        var rows = doc.Sections.Cast<Section>().Single().Elements.OfType<Table>()
+            .Where(t => t.Columns.Count == 5 && t.Rows.Count > 0 && PdfDom.Text(t.Rows[0].Cells[2]).Trim() == "Recht")
+            .SelectMany(t => t.Rows.Cast<Row>().Skip(1))
+            .Where(r => PdfDom.Text(r.Cells[3]).Trim() == "Verweigern")
+            .Select(r => PdfDom.Text(r.Cells[2]).TrimEnd('\n'))
+            .ToList();
+        Assert.Contains("Löschen, Unterordner und Dateien löschen", rows);
+        Assert.DoesNotContain("Kein Zugriff", rows);
+        Assert.All(rows, r => Assert.DoesNotContain('\n', r));
+    }
+
+    [Fact]
+    public void Aenderungen_SpalteAenderung_OhneUmbruchImWort()
+    {
+        // „Aufgenommen“ (jetzt groß geschrieben) passte nicht mehr in die Spalte und wurde mitten im Wort umbrochen
+        var doc = PdfReport.CreateDocument(DataWithComparison());
+        var section = doc.Sections.Cast<Section>().Single();
+        var tables = section.Elements.OfType<Table>()
+            .Where(t => PdfDom.Text(t.Rows[0].Cells[0]).Trim() == "Änderung").ToList();
+        Assert.NotEmpty(tables);
+        var labels = tables.SelectMany(t => t.Rows.Cast<Row>().Skip(1))
+            .Select(r => PdfDom.Text(r.Cells[0]).TrimEnd('\n')).ToList();
+        Assert.Contains("Aufgenommen", labels);
+        Assert.All(labels, l => Assert.DoesNotContain('\n', l));
+        Assert.All(labels, l => Assert.True(char.IsUpper(l[0]), l));
     }
 }

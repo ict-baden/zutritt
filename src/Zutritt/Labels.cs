@@ -38,21 +38,8 @@ public static class Labels
 
     public static string Of(ShareAccess access) => Rights.Label(access);
 
-    /// <summary>
-    /// Recht eines Eintrags für Menschen. Verweigern-Einträge betreffen oft nur Einzelrechte (z. B. Löschen),
-    /// die keine eigene Stufe ergeben – dann das Einzelrecht nennen statt „Kein Zugriff“.
-    /// </summary>
-    public static string RightsText(AceEntry ace)
-    {
-        if (ace.Level != AccessLevel.Keine) return Rights.Label(ace.Level);
-        var r = Rights.MapGeneric(ace.Rights);
-        var parts = new List<string>();
-        if ((r & (FileSystemRights.Delete | FileSystemRights.DeleteSubdirectoriesAndFiles)) != 0) parts.Add("Löschen");
-        if ((r & FileSystemRights.ChangePermissions) != 0) parts.Add("Berechtigungen ändern");
-        if ((r & FileSystemRights.TakeOwnership) != 0) parts.Add("Besitz übernehmen");
-        if ((r & (FileSystemRights.WriteAttributes | FileSystemRights.WriteExtendedAttributes)) != 0) parts.Add("Attribute schreiben");
-        return parts.Count > 0 ? string.Join(", ", parts) : "Spezielle Rechte";
-    }
+    /// <summary>Recht eines Eintrags für Menschen – bei Verweigerungen, was gesperrt ist (siehe <see cref="Rights.EntryLabel"/>).</summary>
+    public static string RightsText(AceEntry ace) => Rights.EntryLabel(ace.Rights, ace.IsDeny);
 
     /// <summary>Wofür ein Eintrag gilt – mit denselben Worten wie der Windows-Dialog „Erweiterte Sicherheitseinstellungen“.</summary>
     public static string AppliesTo(AceEntry ace, bool isFile)

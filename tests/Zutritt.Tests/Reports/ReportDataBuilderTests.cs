@@ -316,7 +316,8 @@ public sealed class ReportDataBuilderTests
         Assert.StartsWith("keine Einträge", data.Shares.Single(s => s.Unc == @"\\FS01\Leer").PermissionsText);
         var admin = data.Shares.Single(s => s.Unc == @"\\FS01\C$");
         Assert.True(admin.IsAdminShare);
-        Assert.Equal(@"VORDEFINIERT\Administratoren: Vollzugriff; LAB\max.muster: Verweigern Ändern", admin.PermissionsText);
+        // Verweigern „ab Ändern“: Lesen bleibt möglich – ausgeschrieben, was gesperrt ist
+        Assert.Equal(@"VORDEFINIERT\Administratoren: Vollzugriff; LAB\max.muster: Verweigert: Ändern und Vollzugriff (ab Ändern)", admin.PermissionsText);
         Assert.Contains(data.Notes, n => n.Kind == NoteKind.Warnung && n.Text.Contains("Bei 1 Freigabe waren die Freigabe-Berechtigungen nicht lesbar"));
     }
 
@@ -385,22 +386,22 @@ public sealed class ReportDataBuilderTests
         // Reihenfolge der Bereiche: Befunde, dann Ursachen, zuletzt die (oft zahlreichen) Folgen für Personen
         Assert.Equal(["Befund", "Befund", "Berechtigung", "Berechtigung", "Berechtigung", "Mitgliedschaft", "Mitgliedschaft",
             "Ordner", "Ordner", "Zugriff", "Zugriff"], c.Rows.Select(r => r.Area));
-        Assert.Equal(["mehr Zugriff", "weniger Zugriff"], c.Rows.Where(r => r.Area == "Zugriff").Select(r => r.Change));
+        Assert.Equal(["Mehr Zugriff", "Weniger Zugriff"], c.Rows.Where(r => r.Area == "Zugriff").Select(r => r.Change));
 
         var neu = c.Rows[0];
-        Assert.Equal("neu", neu.Change);
+        Assert.Equal("Neu", neu.Change);
         Assert.Equal(Austausch, neu.Subject);
         Assert.Equal("Jeder", neu.Account);
         Assert.StartsWith("ZT01 Breite Gruppe darf schreiben (Hoch)", neu.After);
 
         var behoben = c.Rows[1];
-        Assert.Equal("behoben", behoben.Change);
+        Assert.Equal("Behoben", behoben.Change);
         Assert.Equal(@"LAB\ehemalig", behoben.Account); // nur im älteren Lauf bekannt
 
         var mehr = c.Rows.Single(r => r.Area == "Zugriff" && r.Account == @"LAB\max.muster");
-        Assert.Equal(("mehr Zugriff", "Ändern", "Vollzugriff"), (mehr.Change, mehr.Before, mehr.After));
+        Assert.Equal(("Mehr Zugriff", "Ändern", "Vollzugriff"), (mehr.Change, mehr.Before, mehr.After));
         var weniger = c.Rows.Single(r => r.Area == "Zugriff" && r.Account == @"LAB\klaus.alt");
-        Assert.Equal("weniger Zugriff", weniger.Change);
+        Assert.Equal("Weniger Zugriff", weniger.Change);
 
         var added = c.Rows.Single(r => r.Area == "Berechtigung" && r.Change == "Hinzugefügt");
         Assert.Equal("", added.Before);
@@ -410,10 +411,15 @@ public sealed class ReportDataBuilderTests
         Assert.Contains("(0x", mask.Before);
         Assert.NotEqual(mask.Before, mask.After);
 
-        var removedMember = c.Rows.Single(r => r.Area == "Mitgliedschaft" && r.Change == "entfernt");
+        var removedMember = c.Rows.Single(r => r.Area == "Mitgliedschaft" && r.Change == "Entfernt");
         Assert.Equal(@"LAB\QC-Team", removedMember.Subject);
         Assert.Equal(@"LAB\ehemalig", removedMember.Account);
-        Assert.Contains(c.Rows, r => r.Area == "Mitgliedschaft" && r.Change == "aufgenommen" && r.Account == @"LAB\max.muster");
+        Assert.Contains(c.Rows, r => r.Area == "Mitgliedschaft" && r.Change == "Aufgenommen" && r.Account == @"LAB\max.muster");
+
+        // Einheitliche Schreibweise der Spalte „Änderung“: am Zellanfang groß, wie „Hinzugefügt“ und „Geändert“
+        Assert.Equal(["Aufgenommen", "Behoben", "Entfernt", "Geändert", "Hinzugefügt", "Keine eigenen Rechte mehr", "Mehr Zugriff", "Neu",
+            "Neu mit eigenen Rechten", "Weniger Zugriff"], c.Rows.Select(r => r.Change).Distinct().Order(StringComparer.Ordinal));
+        Assert.All(c.Rows, r => Assert.True(char.IsUpper(r.Change[0]), r.Change));
     }
 
     [Fact]

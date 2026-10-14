@@ -5,7 +5,7 @@ namespace Zutritt.Demo;
 
 /// <summary>
 /// Eingebauter Demo-Lauf: erfundener Fileserver \\FS01 eines Pharma-Mittelständlers mit den Freigaben Labor, QM
-/// und Produktion, deutschen Namen und allen Befund-Arten (ZT01–ZT13), dazu ein Lauf eine Woche früher für den
+/// und Produktion, deutschen Namen und allen Befund-Arten (ZT01–ZT14), dazu ein Lauf eine Woche früher für den
 /// Vergleich. Keine echten Kundendaten. Die Befunde sind hier von Hand gesetzt (passend zu den Regeln), damit die
 /// Demo ohne Auswertung auskommt und immer gleich aussieht.
 /// </summary>
@@ -190,7 +190,9 @@ public static class DemoData
             Scan.Shares.Add(new ShareInfo
             {
                 Server = "FS01", Name = "QM", LocalPath = @"D:\Freigaben\QM", Remark = "Qualitätsmanagement",
-                Permissions = [new ShareAce(AuthUsers, ShareAccess.Aendern, false), new ShareAce(Administrators, ShareAccess.Vollzugriff, false)],
+                // Der externe Auditor darf über das Netz höchstens lesen – Verweigern „ab Ändern“ (Lesen bleibt erlaubt)
+                Permissions = [new ShareAce(AuthUsers, ShareAccess.Aendern, false), new ShareAce(Administrators, ShareAccess.Vollzugriff, false),
+                    new ShareAce(ExtAuditor, ShareAccess.Aendern, true)],
             });
             Scan.Shares.Add(new ShareInfo
             {
@@ -306,6 +308,18 @@ public static class DemoData
                 A(ProduktionAlle, Read, deny: true), I(System, Full), I(Administrators, Full), I(QmTeam, Modify), I(QmLeser, Read));
             Finding("ZT07", Severity.Info, S + @"\SOPs\Archiv", ProduktionAlle, "Verweigern-Eintrag für „MUSTER\\Produktion-Alle“ (Lesen).");
 
+            if (!older)
+            {
+                // Neu seit dem letzten Lauf: Jemand hat „Labormethoden“ aus der Freigabe Labor hierher verschoben (gleiches
+                // Laufwerk D:). Windows nimmt dabei die alten geerbten Rechte mit – Labor-Alle darf dort weiter ändern,
+                // das QM-Team kommt nicht hinein, und die Einträge von „SOPs“ fehlen ganz.
+                var moved = Folder(S, @"\SOPs\Labormethoden", 2, broken: false, Administrators,
+                    I(System, Full), I(Administrators, Full), I(LaborAlle, Modify));
+                moved.InheritanceDiffers = true;
+                Finding("ZT14", Severity.Niedrig, S + @"\SOPs\Labormethoden", null,
+                    "Geerbte Einträge passen nicht zum übergeordneten Ordner – vermutlich verschoben. „MUSTER\\Labor-Alle“ kommt nicht von dort, sondern vom früheren Ort.");
+            }
+
             Folder(S, @"\Audits", 1, broken: true, Administrators,
                 A(System, Full), A(Administrators, Full), A(QmLeitung, Modify), A(Geschaeftsleitung, Read));
             Folder(S, @"\Audits\2026", 2, broken: false, Administrators,
@@ -392,11 +406,12 @@ public static class DemoData
 
         // ================= Bausteine =================
 
-        private void Folder(string share, string relative, int depth, bool broken, string owner, params AceEntry[] aces)
+        private FolderNode Folder(string share, string relative, int depth, bool broken, string owner, params AceEntry[] aces)
         {
             var f = new FolderNode { Path = share + relative, Depth = depth, InheritanceBroken = broken, ShareUnc = share, OwnerSid = owner };
             f.Aces.AddRange(aces);
             Scan.Folders.Add(f);
+            return f;
         }
 
         private void Unreadable(string share, string relative, int depth, string error)

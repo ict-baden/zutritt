@@ -30,26 +30,33 @@ public static class ExcelReport
 
     /// <summary>Schreibt den Excel-Bericht für <paramref name="scan"/>; mit <paramref name="comparison"/> zusätzlich das Blatt „Änderungen“.</summary>
     /// <exception cref="ReportWriteException">Die Datei konnte nicht geschrieben werden (z. B. in Excel geöffnet).</exception>
-    public static void Write(ScanResult scan, ComparisonResult? comparison, string path)
+    public static void Write(ScanResult scan, ComparisonResult? comparison, string path) => Write(scan, comparison, path, progress: null);
+
+    /// <summary>Wie <see cref="Write(ScanResult, ComparisonResult?, string)"/>, meldet dabei den jeweiligen Arbeitsschritt.</summary>
+    /// <param name="progress">Erhält kurze deutsche Sätze wie „Arbeitsmappe wird gespeichert …“ (aus dem Hintergrund-Thread).</param>
+    /// <exception cref="ReportWriteException">Die Datei konnte nicht geschrieben werden (z. B. in Excel geöffnet).</exception>
+    public static void Write(ScanResult scan, ComparisonResult? comparison, string path, IProgress<string>? progress)
     {
         ArgumentNullException.ThrowIfNull(scan);
         ReportFile.FullPath(path); // Ziel prüfen, bevor die Auswertung läuft
-        Write(ReportDataBuilder.Build(scan, comparison), path);
+        Write(ReportDataBuilder.Build(scan, comparison, progress), path, progress);
     }
 
-    internal static void Write(ReportData data, string path) => ReportFile.Write(path, stream =>
+    internal static void Write(ReportData data, string path, IProgress<string>? progress = null) => ReportFile.Write(path, stream =>
     {
-        using var workbook = Create(data);
+        using var workbook = Create(data, MaxRows, progress);
+        progress?.Report("Arbeitsmappe wird gespeichert …");
         workbook.SaveAs(stream);
     });
 
     /// <summary>Baut die Arbeitsmappe im Speicher; <paramref name="maxRows"/> nur für Tests kleiner.</summary>
-    internal static XLWorkbook Create(ReportData data, int maxRows = MaxRows)
+    internal static XLWorkbook Create(ReportData data, int maxRows = MaxRows, IProgress<string>? progress = null)
     {
         ArgumentNullException.ThrowIfNull(data);
         var workbook = new XLWorkbook();
         try
         {
+            progress?.Report("Arbeitsmappe wird gefüllt …");
             var truncated = new List<string>();
             AddFindings(workbook, data, maxRows, truncated);
             AddFolders(workbook, data, maxRows, truncated);
@@ -230,7 +237,8 @@ public static class ExcelReport
     private static readonly Dictionary<string, string> SheetDescriptions = new()
     {
         ["Befunde"] = "Alle Befunde nach Schwere – mit Regel, Pfad, Konto, Meldung und Empfehlung.",
-        ["Ordner & Rechte"] = "Jeder aufgeführte Ordner mit jedem Berechtigungseintrag (eine Zeile je Eintrag, auch geerbte).",
+        ["Ordner & Rechte"] = "Jeder aufgeführte Ordner mit jedem Berechtigungseintrag (eine Zeile je Eintrag, auch geerbte); "
+            + "„Vererbung weicht ab“ kennzeichnet z. B. verschobene Ordner mit Rechten vom früheren Ort.",
         ["Personen"] = "Je Benutzerkonto: Anzahl Ordner mit Zugriff, höchstes Recht und über welche Gruppen.",
         ["Zugriffe je Person"] = "Jede Person je Ordner mit effektivem Recht, NTFS- und Freigabe-Recht und der Gruppenkette.",
         ["Gruppen"] = "Mitglieder direkt und gesamt (auch verschachtelt) und in wie vielen Ordner-ACLs die Gruppe steht.",
@@ -274,17 +282,19 @@ public static class ExcelReport
             new("Tiefe", r => r.Folder.Depth, Format: "0"),
             new("Typ", r => r.Folder.IsFile ? "Datei" : "Ordner"),
             new("Vererbung unterbrochen", r => ReportText.YesNo(r.Folder.InheritanceBroken)),
+            // Verschobene Ordner, die alte geerbte Rechte mitgenommen haben (Regel ZT14)
+            new("Vererbung weicht ab", r => ReportText.YesNo(r.Folder.InheritanceDiffers)),
             new("Besitzer", r => Text(r.Folder.Owner), MaxWidth: 40),
             new("Konto", r => Text(r.Ace?.Account), MaxWidth: 40),
             new("Art", r => r.Ace is null ? "" : ReportText.Kind(r.Ace.Kind)),
-            new("Recht", r => r.Ace is null ? "" : Rights.Label(r.Ace.Level)),
+            new("Recht", r => r.Ace?.Right ?? "", MaxWidth: 40),
             new("Erlauben/Verweigern", r => r.Ace is null ? "" : ReportText.AllowDeny(r.Ace.IsDeny),
-                Style: (cell, r) => { if (r.Ace?.IsDeny == true) { cell.Style.Font.FontColor = Warning; cell.Style.Font.Bold = true; } }),
+                Style: (cell, _) => { cell.Style.Font.FontColor = Warning; cell.Style.Font.Bold = true; }, StyleIf: r => r.Ace?.IsDeny == true),
             new("Geerbt/explizit", r => r.Ace is null ? "" : ReportText.Origin(r.Ace.IsInherited)),
             new("Gilt für", r => r.Ace?.AppliesTo ?? "", MaxWidth: 45),
             new("Freigabe", r => Text(r.Folder.ShareUnc), MaxWidth: 40),
             new("Hinweis", r => r.Folder.Error is null ? "" : Text("Nicht lesbar: " + r.Folder.Error), MaxWidth: 60,
-                Style: (cell, r) => { if (r.Folder.Error is not null) cell.Style.Font.FontColor = Warning; }),
+                Style: (cell, _) => cell.Style.Font.FontColor = Warning, StyleIf: r => r.Folder.Error is not null),
             new("SID", r => r.Ace?.Sid ?? "", MaxWidth: 50),
             new("Rechte-Maske", r => r.Ace is null ? "" : ReportText.Mask(r.Ace.Rights)),
         ]);
@@ -306,7 +316,7 @@ public static class ExcelReport
         // Nur bei gekürzten Einzelzugriffen: sonst hielte man eine Person ohne Zeilen in „Zugriffe je Person“ für unberechtigt
         if (data.PersonGrantsTruncated)
             cols.Insert(4, new("Einzelzugriffe aufgeführt", p => p.GrantsComplete ? "Ja" : "Nein – nur die Summe",
-                MaxWidth: 26, Style: (cell, p) => { if (!p.GrantsComplete) cell.Style.Font.FontColor = Warning; }));
+                MaxWidth: 26, Style: (cell, _) => cell.Style.Font.FontColor = Warning, StyleIf: p => !p.GrantsComplete));
         AddTable(wb, "Personen", "Personen", data.People, data.People.Count, maxRows, "Keine Benutzerkonten im Lauf.", truncated, cols);
     }
 
@@ -334,7 +344,7 @@ public static class ExcelReport
             new("Mitglieder direkt", g => g.DirectCount, Format: "#,##0"),
             new("Mitglieder gesamt (Personen)", g => g.TotalPeople, Format: "#,##0"),
             new("Vollständig", g => ReportText.YesNo(g.Complete),
-                Style: (cell, g) => { if (!g.Complete) cell.Style.Font.FontColor = Warning; }),
+                Style: (cell, _) => cell.Style.Font.FontColor = Warning, StyleIf: g => !g.Complete),
             new("In Ordner-ACLs", g => g.UsedInFolders, Format: "#,##0"),
             new("Direkte Mitglieder", g => Text(string.Join("; ", g.DirectMembers)), MaxWidth: 80),
             new("Hinweis", g => Text(g.Note), MaxWidth: 70),
@@ -349,7 +359,7 @@ public static class ExcelReport
             new("Pfad", s => Text(s.LocalPath), MaxWidth: 50),
             new("Bemerkung", s => Text(s.Remark), MaxWidth: 40),
             new("Freigabe-Rechte", s => Text(s.PermissionsText), MaxWidth: 90,
-                Style: (cell, s) => { if (!s.Readable) cell.Style.Font.FontColor = Warning; }),
+                Style: (cell, _) => cell.Style.Font.FontColor = Warning, StyleIf: s => !s.Readable),
             new("Admin-Freigabe", s => ReportText.YesNo(s.IsAdminShare)),
             new("Rechte lesbar", s => ReportText.YesNo(s.Readable)),
         ]);
@@ -386,8 +396,10 @@ public static class ExcelReport
 
     // ---- Tabellen-Helfer --------------------------------------------------------------------------
 
+    /// <param name="Style">Hervorhebung einer Zelle – nur für Zeilen, auf die <paramref name="StyleIf"/> zutrifft (ohne: alle).</param>
     private sealed record Col<T>(
-        string Header, Func<T, XLCellValue> Value, double MaxWidth = 30, string? Format = null, Action<IXLCell, T>? Style = null);
+        string Header, Func<T, XLCellValue> Value, double MaxWidth = 30, string? Format = null, Action<IXLCell, T>? Style = null,
+        Func<T, bool>? StyleIf = null);
 
     private static void AddTable<T>(XLWorkbook wb, string sheetName, string tableName, IEnumerable<T> rows, int total, int maxRows,
         string emptyText, List<string> truncated, IReadOnlyList<Col<T>> cols)
@@ -402,21 +414,30 @@ public static class ExcelReport
             wrapped |= twoLines;
         }
 
-        int row = 1;
-        foreach (var item in rows)
+        var items = rows.Take(Math.Max(0, maxRows)).ToList();
+        foreach (var item in items.Take(WidthSampleRows))
+            for (int c = 0; c < cols.Count; c++)
+                widths[c] = Math.Max(widths[c], DisplayLength(cols[c].Value(item)));
+
+        // Alle Werte auf einmal einfügen: Zelle für Zelle legt ClosedXML je Zelle ein Objekt an – bei Hunderttausenden
+        // Zeilen mal 16 Spalten der größte Teil der Zeit. Hervorhebungen danach nur dort, wo sie nötig sind.
+        if (items.Count > 0)
         {
-            if (row > maxRows) break;
-            row++;
+            ws.Cell(2, 1).InsertData(items.Select(item =>
+            {
+                var values = new object[cols.Count];
+                for (int c = 0; c < cols.Count; c++) values[c] = Raw(cols[c].Value(item));
+                return values;
+            }));
             for (int c = 0; c < cols.Count; c++)
             {
-                var col = cols[c];
-                var value = col.Value(item);
-                var cell = ws.Cell(row, c + 1);
-                cell.Value = value;
-                col.Style?.Invoke(cell, item);
-                if (row <= WidthSampleRows) widths[c] = Math.Max(widths[c], DisplayLength(value));
+                if (cols[c].Style is not { } style) continue;
+                var applies = cols[c].StyleIf;
+                for (int i = 0; i < items.Count; i++)
+                    if (applies is null || applies(items[i])) style(ws.Cell(i + 2, c + 1), items[i]);
             }
         }
+        int row = items.Count + 1;
         int written = row - 1;
         if (written == 0)
         {
@@ -479,6 +500,10 @@ public static class ExcelReport
         return best + filterButton;
     }
 
+    /// <summary>Wert für <c>InsertData</c>: der nackte Text bzw. die Zahl (eine verpackte <see cref="XLCellValue"/> würde dort zu Text).</summary>
+    private static object Raw(XLCellValue value) =>
+        value.IsText ? value.GetText() : value.IsNumber ? value.GetNumber() : value.IsBoolean ? value.GetBoolean() : value.IsBlank ? Blank.Value : value.ToString();
+
     private static double DisplayLength(XLCellValue value) =>
         value.IsText ? value.GetText().Length : value.IsBlank ? 0 : 8;
 
@@ -508,10 +533,14 @@ public static class ExcelReport
         wb.Properties.Created = data.Header.CreatedAt == default ? DateTime.Now : data.Header.CreatedAt.LocalDateTime;
     }
 
-    /// <summary>Text für eine Zelle: ungültige XML-Zeichen ersetzt, auf die Excel-Grenze gekürzt.</summary>
+    /// <summary>
+    /// Text für eine Zelle: ungültige XML-Zeichen ersetzt, auf die Excel-Grenze gekürzt. Ein Apostroph am Anfang
+    /// (NTFS erlaubt „'Alt“ als Ordnernamen) nimmt ClosedXML als Textkennzeichen und entfernt ihn – deshalb verdoppelt.
+    /// </summary>
     private static string Text(string? text)
     {
         var clean = ReportText.Clean(text);
+        if (clean.StartsWith('\'')) clean = "'" + clean;
         if (clean.Length <= MaxCellText) return clean;
         int cut = MaxCellText - 1;
         if (char.IsHighSurrogate(clean[cut - 1])) cut--; // kein halbes Zeichen stehen lassen

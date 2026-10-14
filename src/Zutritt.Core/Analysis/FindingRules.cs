@@ -446,37 +446,7 @@ public static class FindingRules
     /// </summary>
     internal static string Describe(FileSystemRights rights)
     {
-        const FileSystemRights Full = FileSystemRights.FullControl & ~FileSystemRights.Synchronize;
-        const FileSystemRights Modify = FileSystemRights.Modify & ~FileSystemRights.Synchronize;
-        var mask = Rights.MapGeneric(rights) & ~FileSystemRights.Synchronize;
-
-        bool Has(FileSystemRights r) => (mask & r) != 0;
-        var parts = new List<string>();
-        if ((mask & Full) == Full) parts.Add("Vollzugriff");
-        else
-        {
-            if ((mask & Modify) == Modify) parts.Add("Ändern");
-            else
-            {
-                if (Has(FileSystemRights.ReadData)) parts.Add("Lesen");
-                if (Has(FileSystemRights.WriteData | FileSystemRights.AppendData)) parts.Add("Schreiben");
-                if (Has(FileSystemRights.Delete)) parts.Add("Löschen");
-            }
-            if (Has(FileSystemRights.DeleteSubdirectoriesAndFiles)) parts.Add("Unterordner und Dateien löschen");
-            if (Has(FileSystemRights.ChangePermissions)) parts.Add("Berechtigungen ändern");
-            if (Has(FileSystemRights.TakeOwnership)) parts.Add("Besitz übernehmen");
-            if (parts.Count == 0)
-            {
-                // Nur Kleinigkeiten – dann genau diese nennen
-                if (Has(FileSystemRights.ExecuteFile)) parts.Add("Ordner durchsuchen bzw. Datei ausführen");
-                if (Has(FileSystemRights.ReadAttributes | FileSystemRights.ReadExtendedAttributes)) parts.Add("Attribute lesen");
-                if (Has(FileSystemRights.WriteAttributes | FileSystemRights.WriteExtendedAttributes)) parts.Add("Attribute schreiben");
-                if (Has(FileSystemRights.ReadPermissions)) parts.Add("Berechtigungen lesen");
-            }
-            if (parts.Count == 0) parts.Add("Synchronisieren");
-        }
-
-        var quoted = parts.Select(p => $"„{p}“").ToList();
+        var quoted = Rights.Parts(rights).Select(p => $"„{p}“").ToList();
         return quoted.Count == 1 ? quoted[0] : string.Join(", ", quoted.Take(quoted.Count - 1)) + " und " + quoted[^1];
     }
 

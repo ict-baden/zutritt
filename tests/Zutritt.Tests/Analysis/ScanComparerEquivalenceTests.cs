@@ -87,7 +87,7 @@ public sealed class ScanComparerEquivalenceTests
 
     private static T Pick<T>(Random random, IReadOnlyList<T> items) => items[random.Next(items.Count)];
 
-    private static ScanResult RandomScan(Random random)
+    internal static ScanResult RandomScan(Random random)
     {
         var b = new ScanBuilder();
         b.Scan.Request = b.Scan.Request with { ResolveGroups = random.Next(4) > 0 };

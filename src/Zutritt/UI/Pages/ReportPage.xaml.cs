@@ -90,16 +90,19 @@ public partial class ReportPage : UserControl, IPage
         var path = dialog.FileName;
         var comparison = IncludeChanges.IsChecked == true ? _state.Comparison : null;
         SetBusy(true, path);
+        // Die Berichte melden ihre Arbeitsschritte aus dem Hintergrund; Progress bringt sie auf den UI-Thread
+        var phase = new Progress<string>(text => { if (_busy) ResultPhase.Text = text; });
+        var clock = Stopwatch.StartNew();
         try
         {
             await Task.Run(() =>
             {
-                if (pdf) PdfReport.Write(scan, comparison, path);
-                else ExcelReport.Write(scan, comparison, path);
+                if (pdf) PdfReport.Write(scan, comparison, path, phase);
+                else ExcelReport.Write(scan, comparison, path, phase);
             });
             _lastPath = path;
             _lastFolder = Path.GetDirectoryName(path);
-            ShowDone(path, pdf);
+            ShowDone(path, pdf, clock.Elapsed);
         }
         catch (Exception ex) when (!_state.Strict)
         {
@@ -124,14 +127,19 @@ public partial class ReportPage : UserControl, IPage
         ResultTitle.Text = "Bericht wird erstellt …";
         ResultPath.Text = path ?? "";
         ResultButtons.Visibility = Visibility.Collapsed;
+        ResultPhase.Text = "Wird vorbereitet …";
+        ResultWorking.Visibility = Visibility.Visible;
     }
 
-    private void ShowDone(string path, bool pdf)
+    private void ShowDone(string path, bool pdf, TimeSpan duration)
     {
         ResultCard.Visibility = Visibility.Visible;
+        ResultWorking.Visibility = Visibility.Collapsed;
         ResultIcon.Text = "\uE73E";
         ResultIcon.SetResourceReference(TextBlock.ForegroundProperty, "SystemFillColorSuccessBrush");
-        ResultTitle.Text = pdf ? "PDF-Bericht gespeichert" : "Excel-Bericht gespeichert";
+        // Die Dauer erst ab ein paar Sekunden nennen – bei großen Läufen erklärt sie das Warten
+        var took = duration.TotalSeconds >= 5 ? $" nach {Labels.Duration(duration)}" : "";
+        ResultTitle.Text = (pdf ? "PDF-Bericht gespeichert" : "Excel-Bericht gespeichert") + took;
         ResultPath.Text = path;
         ResultButtons.Visibility = Visibility.Visible;
     }

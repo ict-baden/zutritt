@@ -58,6 +58,12 @@
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                         <TextBlock x:Name="ResultTitle" Style="{StaticResource BodyStrong}"/>
                         <ui:PathText x:Name="ResultPath" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Stretch"/>
+                        <!-- Während des Erstellens: woran gerade gearbeitet wird (große Läufe brauchen eine Weile) -->
+                        <StackPanel x:Name="ResultWorking" Visibility="Collapsed">
+                            <ProgressBar IsIndeterminate="True" Margin="0,10,0,6"/>
+                            <TextBlock x:Name="ResultPhase" Style="{StaticResource Caption}" TextWrapping="Wrap"
+                                       AutomationProperties.LiveSetting="Polite"/>
+                        </StackPanel>
                     </StackPanel>
                     <StackPanel x:Name="ResultButtons" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
                         <Button Content="Öffnen" Click="OpenResult_Click" Margin="0,0,8,0"/>
