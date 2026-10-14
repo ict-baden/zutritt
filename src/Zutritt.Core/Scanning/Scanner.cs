@@ -12,10 +12,12 @@ namespace Zutritt.Core.Scanning;
 /// </summary>
 /// <remarks>
 /// Gespeichert werden (in <see cref="ScanResult.Folders"/>) die Wurzel jedes Ziels, jeder Knoten mit unterbrochener
-/// Vererbung, expliziten Einträgen oder Fehler – und zusätzlich Ordner, deren wirksame Einträge sich trotz reiner
-/// Vererbung vom Elternordner unterscheiden (ERSTELLER-BESITZER, „nur dieser Ordner“, verschobene Ordner) bzw. deren
-/// Elternordner nicht lesbar war. Alle anderen Ordner haben dieselben Rechte wie der nächsthöhere gespeicherte und
-/// werden nur gezählt. Verknüpfungen (Junctions, symbolische Links) unterhalb der Wurzel werden erfasst, aber nicht verfolgt.
+/// Vererbung, expliziten Einträgen oder Fehler – und zusätzlich Ordner, deren wirksame oder weitergegebene Einträge
+/// sich trotz reiner Vererbung vom Elternordner unterscheiden (ERSTELLER-BESITZER, „nur dieser Ordner“, verschobene
+/// Ordner) bzw. deren Elternordner einen Fehler hatte. Alle anderen Ordner erben genau vom nächsthöheren gespeicherten
+/// und werden nur gezählt. Mit <see cref="ScanRequest.IncludeFiles"/> ebenso Dateien mit eigenen Einträgen oder mit
+/// anderen Rechten, als sie vom Ordner erben würden (verschobene Dateien). Verknüpfungen (Junctions, symbolische Links)
+/// unterhalb der Wurzel werden erfasst, aber nicht verfolgt.
 /// </remarks>
 public sealed class Scanner
 {

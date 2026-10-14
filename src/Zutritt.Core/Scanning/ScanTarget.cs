@@ -41,7 +41,15 @@ internal static partial class TargetParser
             error = $"Gerätepfade werden nicht unterstützt: „{raw}“";
             return null;
         }
-        t = LongPath.FromExtended(t);
+        var readable = LongPath.FromExtended(t);
+        // „\\?\Volume{…}\“ und andere Gerätenamen: ohne Laufwerk wären sie sonst ein relativer Pfad zum aktuellen
+        // Verzeichnis – der Scanner prüfte still einen ganz anderen Ordner.
+        if (LongPath.IsDevicePath(t, readable))
+        {
+            error = $"Gerätepfade werden nicht unterstützt: „{raw}“";
+            return null;
+        }
+        t = readable;
 
         try
         {

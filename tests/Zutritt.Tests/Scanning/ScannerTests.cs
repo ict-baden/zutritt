@@ -67,6 +67,7 @@ public sealed class ScannerTests
         Assert.Empty(result.Errors);
         Assert.All(result.Folders, f => Assert.Null(f.Error));
         Assert.All(result.Folders, f => Assert.NotEqual("", f.OwnerSid));
+        Derivation.AssertDerivable(result, tmp.Path);
     }
 
     [Fact]
@@ -85,6 +86,45 @@ public sealed class ScannerTests
         Assert.Equal(8, result.FoldersVisited);
         // Dateien stehen direkt hinter ihrem Ordner.
         Assert.Equal(P(tmp, "a"), result.Folders[result.Folders.IndexOf(file) - 1].Path);
+    }
+
+    [Fact]
+    public async Task Verschobene_Datei_mit_alten_Rechten_wird_erfasst()
+    {
+        // Regression: Verschieben auf demselben Laufwerk behält die alten geerbten Einträge. Eine Datei aus
+        // „Öffentlich“ bleibt in „Personal“ für „Jeder“ lesbar – ohne eigenen Eintrag, deshalb bisher nicht erfasst.
+        using var tmp = new TempFolder();
+        var open = tmp.Sub("Oeffentlich");
+        var hr = tmp.Sub("Personal");
+        Grant(open, Everyone, FileSystemRights.ReadAndExecute);
+        WriteFile(Path.Combine(open, "gehalt.xlsx"));
+        File.Move(Path.Combine(open, "gehalt.xlsx"), Path.Combine(hr, "gehalt.xlsx"));
+        WriteFile(Path.Combine(hr, "normal.txt"));
+        WriteFile(Path.Combine(open, "normal.txt"));
+
+        var result = await Scan(new ScanRequest { Targets = [tmp.Path], IncludeFiles = true });
+
+        var moved = Assert.Single(result.Folders, f => f.IsFile);
+        Assert.Equal(Path.Combine(hr, "gehalt.xlsx"), moved.Path);
+        Assert.False(moved.HasExplicitAces);
+        Assert.Contains(moved.Aces, a => a.Sid == Everyone && a.IsInherited);
+        Assert.Equal(3, result.FilesVisited);
+    }
+
+    [Fact]
+    public async Task Datei_mit_Ersteller_Besitzer_gilt_als_normal_geerbt()
+    {
+        // ERSTELLER-BESITZER wird beim Anlegen durch den Besitzer ersetzt – das ist keine Abweichung.
+        using var tmp = new TempFolder();
+        var dir = tmp.Sub("P");
+        SetExplicitAces(dir, $"D:(A;OICIIO;GA;;;CO)(A;OI;0x1200a9;;;{NetworkService})(A;OICI;FA;;;{CurrentUserSid})");
+        WriteFile(Path.Combine(dir, "neu.txt"));
+
+        var result = await Scan(new ScanRequest { Targets = [tmp.Path], IncludeFiles = true });
+
+        Assert.Equal(1, result.FilesVisited);
+        Assert.DoesNotContain(result.Folders, f => f.IsFile);
+        Assert.Contains(AclReader.Read(Path.Combine(dir, "neu.txt"), 0, true).Aces, a => a.Sid == CurrentUserSid && a.Level == AccessLevel.Vollzugriff);
     }
 
     [Fact]
@@ -228,6 +268,7 @@ public sealed class ScannerTests
 
         Assert.Equal([top], result.Folders.Select(f => f.Path));
         Assert.Equal(5, result.FoldersVisited);
+        Derivation.AssertDerivable(result, top);
     }
 
     [Fact]
@@ -248,6 +289,28 @@ public sealed class ScannerTests
         Assert.False(moved.InheritanceBroken);
         Assert.Contains(moved.Aces, a => a.Sid == NetworkService && a.IsInherited);
         Assert.DoesNotContain(result.Folders, f => f.Path == P(tmp, "B"));
+        Derivation.AssertDerivable(result, tmp.Path);
+    }
+
+    [Fact]
+    public async Task Verschobener_Ordner_mit_gleichen_Rechten_aber_anderer_Weitergabe_wird_gespeichert()
+    {
+        // Regression: „A“ gibt Netzwerkdienst „Ändern“ nur eine Ebene weiter (NP). Der aus „X“ verschobene Ordner
+        // hat dasselbe Recht – aber vererbbar, also auch in „g“ darunter. Gleiche Rechte wie „A“ reichten bisher,
+        // um „A\m“ nicht zu speichern; die Auswertung leitete „g“ dann von „A“ ab und übersah das Recht dort.
+        using var tmp = new TempFolder();
+        tmp.Sub("A");
+        tmp.Sub("X", "m", "g");
+        Grant(P(tmp, "A"), NetworkService, FileSystemRights.Modify, InheritanceFlags.ContainerInherit, PropagationFlags.NoPropagateInherit);
+        Grant(P(tmp, "X"), NetworkService, FileSystemRights.Modify, InheritanceFlags.ContainerInherit);
+        Directory.Move(P(tmp, "X", "m"), P(tmp, "A", "m"));
+
+        var result = await Scan(tmp.Path);
+
+        var moved = Assert.Single(result.Folders, f => f.Path == P(tmp, "A", "m"));
+        Assert.False(moved.HasExplicitAces);
+        Assert.DoesNotContain(result.Folders, f => f.Path == P(tmp, "A", "m", "g"));
+        Derivation.AssertDerivable(result, tmp.Path);
     }
 
     [Fact]
@@ -261,6 +324,26 @@ public sealed class ScannerTests
 
         Assert.Equal([tmp.Path, P(tmp, "P"), P(tmp, "P", "c")], result.Folders.Select(f => f.Path));
         Assert.DoesNotContain(result.Folders[2].Aces, a => a.Sid == NetworkService);
+        Derivation.AssertDerivable(result, tmp.Path);
+    }
+
+    [Fact]
+    public async Task Alle_Vererbungsarten_werden_ableitbar_und_ohne_Ueberspeichern_erfasst()
+    {
+        // Wie Windows vererbt: generische Rechte (GA) werden beim Kind aufgeteilt, „nur Unterordner“ (CI),
+        // „nur Dateien“ (OI), „eine Ebene“ (CINP) und „nur vererben“ (CIIO).
+        using var tmp = new TempFolder();
+        var top = tmp.Sub("P");
+        SetExplicitAces(top, $"D:(A;OICI;FA;;;{CurrentUserSid})(A;CI;0x1200a9;;;{NetworkService})(A;OI;0x1301bf;;;{PowerUsers})"
+            + $"(A;CINP;0x1301bf;;;{BackupOperators})(A;OICI;GA;;;LS)(A;CIIO;0x1301bf;;;IU)");
+        tmp.Sub("P", "c1", "c2", "c3", "c4");
+
+        var result = await Scan(tmp.Path);
+
+        // c1 verliert „nur Dateien“ und gewinnt „nur vererben“, c2 verliert „eine Ebene“, ab c3 alles wie c2.
+        Assert.Equal([tmp.Path, top, P(tmp, "P", "c1"), P(tmp, "P", "c1", "c2")], result.Folders.Select(f => f.Path));
+        Assert.Equal(6, result.FoldersVisited);
+        Derivation.AssertDerivable(result, tmp.Path);
     }
 
     [Fact]

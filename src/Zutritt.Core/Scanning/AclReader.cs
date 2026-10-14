@@ -59,7 +59,10 @@ public static class AclReader
             if (path.Contains('\0')) return Failed(path, depth, isFile, "Ungültiger Pfad");
             // Vollständige Pfade nur normalisieren, wenn nötig – GetFullPath kürzt Leerzeichen und Punkte am Namensende.
             full = LongPath.FromExtended(path);
-            if (!Path.IsPathFullyQualified(full) || LongPath.NeedsNormalization(full)) full = Path.GetFullPath(full);
+            // „\\?\Volume{…}\x“ (Bereitstellungspunkt ohne Laufwerk) unverändert lassen: Ohne Präfix wäre es ein
+            // relativer Pfad, und gelesen würde ein Ordner unter dem aktuellen Verzeichnis.
+            if (LongPath.IsDevicePath(path, full)) full = path;
+            else if (!Path.IsPathFullyQualified(full) || LongPath.NeedsNormalization(full)) full = Path.GetFullPath(full);
         }
         catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException)
         {
@@ -199,6 +202,14 @@ public static class AclReader
     internal static string? ParentOf(string fullPath)
     {
         var trimmed = fullPath.TrimEnd('\\');
+        if (fullPath.StartsWith(@"\\?\", StringComparison.Ordinal) || fullPath.StartsWith(@"\\.\", StringComparison.Ordinal))
+        {
+            // Gerätepfad („\\?\Volume{…}\x“): Die Wurzel ist der Gerätename mit „\“ – ohne ihn öffnete man das Gerät.
+            int root = trimmed.IndexOf('\\', 4);
+            if (root < 0) return null;
+            int last = trimmed.LastIndexOf('\\');
+            return last == root ? trimmed[..(root + 1)] : trimmed[..last];
+        }
         int cut = trimmed.LastIndexOf('\\');
         if (cut < 0) return null;
         if (trimmed.StartsWith(@"\\", StringComparison.Ordinal))

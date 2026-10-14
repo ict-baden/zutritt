@@ -74,6 +74,7 @@ public sealed class TargetParserTests
     [InlineData(@"\\FS01\\Labor")]
     [InlineData(@"\\.\PhysicalDrive0")]
     [InlineData(@"\\?\GLOBALROOT\Device\HarddiskVolume1")]
+    [InlineData(@"\\?\Volume{7754b835-8f11-4608-8817-76a29c12a80a}\Daten")] // war: relativer Pfad zum aktuellen Verzeichnis
     [InlineData(@"\\FS*\Labor")]
     [InlineData("C:\\Da\0ten")]
     public void Ungueltig(string? raw)

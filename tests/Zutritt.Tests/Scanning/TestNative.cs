@@ -47,4 +47,27 @@ internal static class TestNative
     [DllImport("advapi32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool SetKernelObjectSecurity(Microsoft.Win32.SafeHandles.SafeFileHandle handle, uint securityInformation, byte[] securityDescriptor);
+
+    public const uint UNPROTECTED_DACL_SECURITY_INFORMATION = 0x20000000;
+    private const int SE_FILE_OBJECT = 1;
+
+    /// <summary>Wie der Explorer: setzt die DACL, ergänzt geerbte Einträge und markiert sie „automatisch geerbt“.</summary>
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode)]
+    public static extern int SetNamedSecurityInfo(string objectName, int objectType, uint securityInfo, nint owner, nint group, byte[] dacl, nint sacl);
+
+    public static int SetNamedDacl(string path, byte[] dacl)
+        => SetNamedSecurityInfo(path, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION | UNPROTECTED_DACL_SECURITY_INFORMATION, 0, 0, dacl, 0);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetVolumeNameForVolumeMountPoint(string mountPoint, char[] volumeName, int length);
+
+    /// <summary>„\\?\Volume{…}\“ für eine Laufwerkswurzel wie „C:\“.</summary>
+    public static string VolumeGuidPath(string driveRoot)
+    {
+        var buffer = new char[64];
+        if (!GetVolumeNameForVolumeMountPoint(driveRoot, buffer, buffer.Length))
+            throw new System.ComponentModel.Win32Exception(Marshal.GetLastPInvokeError(), "GetVolumeNameForVolumeMountPoint");
+        return new string(buffer).TrimEnd('\0');
+    }
 }

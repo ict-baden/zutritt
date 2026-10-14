@@ -12,7 +12,18 @@ public sealed class LongPathTests
     [InlineData(@"\\FS01\Labor\QC", @"\\?\UNC\FS01\Labor\QC")]
     [InlineData(@"\\?\C:\Daten", @"\\?\C:\Daten")]
     [InlineData(@"C:\Ordner mit Leerzeichen am Ende ", @"\\?\C:\Ordner mit Leerzeichen am Ende ")]
+    [InlineData(@"\\.\C:\Daten", @"\\?\C:\Daten")]                                // Gerätepfad, kein Server „.“
+    [InlineData(@"\\?\Volume{0c1d}\Daten", @"\\?\Volume{0c1d}\Daten")]
     public void ToExtended(string path, string expected) => Assert.Equal(expected, LongPath.ToExtended(path));
+
+    [Theory]
+    [InlineData(@"\\?\Volume{0c1d}\Daten", true)]
+    [InlineData(@"\\?\GLOBALROOT\Device\HarddiskVolume1", true)]
+    [InlineData(@"\\?\C:\Daten", false)]
+    [InlineData(@"\\?\UNC\FS01\Labor", false)]
+    [InlineData(@"C:\Daten", false)]
+    [InlineData(@"Daten", false)]
+    public void IsDevicePath(string path, bool expected) => Assert.Equal(expected, LongPath.IsDevicePath(path, LongPath.FromExtended(path)));
 
     [Theory]
     [InlineData(@"\\?\C:\Daten", @"C:\Daten")]
@@ -113,11 +124,44 @@ public sealed class NodeSignatureTests
     }
 
     [Fact]
-    public void Nur_vererben_zaehlt_nicht()
+    public void Nur_vererben_zaehlt_nicht_fuer_den_Ordner_selbst_aber_fuer_die_Weitergabe()
     {
         var a = Node(Ace("S-1-5-18", FileSystemRights.FullControl));
         var b = Node(Ace("S-1-5-18", FileSystemRights.FullControl), Ace("S-1-3-0", (FileSystemRights)0x10000000, prop: PropagationFlags.InheritOnly));
-        Assert.Equal(NodeSignature.Of(a), NodeSignature.Of(b));
+        Assert.Equal(NodeSignature.Effective(a), NodeSignature.Effective(b));
+        // b gibt ERSTELLER-BESITZER an Unterordner weiter, a nicht – die Unterordner sähen verschieden aus.
+        Assert.NotEqual(NodeSignature.Of(a), NodeSignature.Of(b));
+    }
+
+    [Fact]
+    public void Gleiche_Rechte_aber_andere_Weitergabe_unterscheidet()
+    {
+        // „Nur eine Ebene“ (NP) gegenüber normal vererbbar: dieselben Rechte am Ordner, aber nicht an den Enkeln.
+        var once = Node(Ace("S-1-5-20", FileSystemRights.Modify, inh: InheritanceFlags.ContainerInherit, prop: PropagationFlags.NoPropagateInherit));
+        var always = Node(Ace("S-1-5-20", FileSystemRights.Modify, inh: InheritanceFlags.ContainerInherit));
+        Assert.Equal(NodeSignature.Effective(once), NodeSignature.Effective(always));
+        Assert.NotEqual(NodeSignature.Of(once), NodeSignature.Of(always));
+
+        // Nur Dateien (OI) gehen nicht an Unterordner weiter.
+        var filesOnly = Node(Ace("S-1-5-20", FileSystemRights.Modify, inh: InheritanceFlags.ObjectInherit));
+        Assert.Equal(NodeSignature.Of(Node(Ace("S-1-5-20", FileSystemRights.Modify, inh: InheritanceFlags.None))), NodeSignature.Of(filesOnly));
+    }
+
+    [Fact]
+    public void Normale_Vererbung_ergibt_beim_Kind_dieselbe_Signatur()
+    {
+        // So schreibt Windows die Einträge beim Erben: generische Rechte aufgeteilt in einen wirksamen und einen
+        // Nur-vererben-Eintrag, NP-Einträge ohne Vererbungskennzeichen, Container-Einträge unverändert.
+        var parent = Node(
+            Ace("S-1-5-19", (FileSystemRights)0x10000000, inherited: false),
+            Ace("S-1-5-32-551", FileSystemRights.Modify, inherited: false, inh: InheritanceFlags.ContainerInherit, prop: PropagationFlags.NoPropagateInherit),
+            Ace("S-1-5-32-545", FileSystemRights.ReadAndExecute));
+        var child = Node(
+            Ace("S-1-5-19", FileSystemRights.FullControl, inh: InheritanceFlags.None),
+            Ace("S-1-5-19", (FileSystemRights)0x10000000, prop: PropagationFlags.InheritOnly),
+            Ace("S-1-5-32-551", FileSystemRights.Modify, inh: InheritanceFlags.None),
+            Ace("S-1-5-32-545", FileSystemRights.ReadAndExecute));
+        Assert.Equal(NodeSignature.Of(parent), NodeSignature.Of(child));
     }
 
     [Fact]

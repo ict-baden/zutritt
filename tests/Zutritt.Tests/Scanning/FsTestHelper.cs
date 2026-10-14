@@ -45,6 +45,19 @@ internal static class FsTestHelper
             throw new Win32Exception(Marshal.GetLastPInvokeError(), $"SetKernelObjectSecurity {path}");
     }
 
+    /// <summary>
+    /// Explizite Einträge setzen wie der Explorer: geerbte Einträge des Elternordners bleiben, alles ist „automatisch
+    /// geerbt“ markiert. Anders als <see cref="Grant"/> auch mit generischen Rechten (GA) möglich.
+    /// </summary>
+    public static void SetExplicitAces(string path, string sddl)
+    {
+        var dacl = new RawSecurityDescriptor(sddl).DiscretionaryAcl!;
+        var bytes = new byte[dacl.BinaryLength];
+        dacl.GetBinaryForm(bytes, 0);
+        int status = TestNative.SetNamedDacl(path, bytes);
+        if (status != 0) throw new Win32Exception(status, $"SetNamedSecurityInfo {path}");
+    }
+
     /// <summary>Eigene Vollzugriffsrechte zurückholen (ohne vorher zu lesen – das kann gesperrt sein).</summary>
     public static void RestoreAccess(string path)
         => SetRawDacl(path, $"D:(A;OICI;FA;;;{CurrentUserSid})(A;OICI;FA;;;SY)(A;OICI;FA;;;BA)", protect: false);

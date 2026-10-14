@@ -42,6 +42,9 @@ internal sealed class ScanRun
     private LocalShareMap? _localMap;
     private bool _walkingLocal;
     private bool _localMapChecked;
+    private FolderNode? _fileExpectationFolder;
+    private string? _fileExpectationOwner;
+    private string? _fileExpectation;
 
     /// <param name="progressIntervalMs">Mindestabstand zwischen zwei Fortschrittsmeldungen innerhalb einer Phase.</param>
     public ScanRun(ScanResult result, IProgress<ScanProgress>? progress, long progressIntervalMs, CancellationToken ct)
@@ -145,10 +148,12 @@ internal sealed class ScanRun
         }
         foreach (var read in shares)
         {
+            // Jede Freigabe gehört ins Ergebnis, auch wenn ihr Ordner schon über eine andere Freigabe auf demselben
+            // Pfad geprüft wird – sonst fehlten deren Freigabe-Rechte (z. B. „Jeder: Vollzugriff“) im Bericht.
+            AddShare(read);
             if (read.Share.LocalPath.Length == 0)
             {
                 // Ohne lokalen Pfad (Rechte fehlen) lässt sich die Freigabe hier nicht prüfen – wenigstens nennen.
-                AddShare(read);
                 AddError(read.Share.UncPath, "Lokaler Pfad der Freigabe nicht lesbar – Freigabe nicht geprüft");
                 continue;
             }
@@ -158,7 +163,6 @@ internal sealed class ScanRun
             }
             catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException)
             {
-                AddShare(read);
                 AddError(read.Share.UncPath, $"Ungültiger lokaler Pfad der Freigabe: „{read.Share.LocalPath}“");
             }
         }
@@ -260,7 +264,8 @@ internal sealed class ScanRun
 
     private string? RootShareUnc(Root root)
     {
-        if (!root.IsLocal) return root.Unc?.ShareUnc;
+        // Schreibweise der gelesenen Freigabe übernehmen, damit Ordner und Freigabeliste genau zusammenpassen.
+        if (!root.IsLocal) return root.Lookup?.Read?.Share.UncPath ?? root.Unc?.ShareUnc;
         var read = _localMap?.Longest(root.Path);
         if (read is null) return null;
         AddShare(read);
@@ -300,16 +305,21 @@ internal sealed class ScanRun
             _entries.Sort(static (a, b) => StringComparer.OrdinalIgnoreCase.Compare(a.Name, b.Name));
             if (_request.IncludeFiles)
             {
+                // Rechte des Ordners nur als Maßstab, wenn sie lesbar waren (signature ist dann gesetzt).
+                var folder = signature is null ? null : node;
                 foreach (var entry in _entries)
-                    if (!entry.IsDirectory) VisitFile(LongPath.Combine(item.Path, entry.Name), item.Depth + 1, descriptor, node.ShareUnc);
+                    if (!entry.IsDirectory) VisitFile(LongPath.Combine(item.Path, entry.Name), item.Depth + 1, descriptor, folder, node.ShareUnc);
             }
+            // Von einem Ordner mit Fehler (auch nur teilweise auflistbar) leitet die Auswertung nichts ab – seine
+            // Unterordner müssen deshalb selbst gespeichert werden.
+            var childSignature = node.Error is null ? signature : null;
             for (int i = _entries.Count - 1; i >= 0; i--)
             {
                 var entry = _entries[i];
                 if (!entry.IsDirectory) continue;
                 var child = LongPath.Combine(item.Path, entry.Name);
                 if (_rootPaths.Contains(child)) continue; // eigenes Ziel, wird mit eigener Wurzel geprüft
-                stack.Push(new Pending(child, item.Depth + 1, signature, descriptor, ChildShareUnc(child, item.ShareUnc), entry.IsLink));
+                stack.Push(new Pending(child, item.Depth + 1, childSignature, descriptor, ChildShareUnc(child, item.ShareUnc), entry.IsLink));
             }
         }
 
@@ -317,19 +327,37 @@ internal sealed class ScanRun
         Report(node.Path);
     }
 
-    private void VisitFile(string path, int depth, byte[]? parentDescriptor, string? shareUnc)
+    /// <param name="folder">Ordner der Datei, wenn seine Rechte lesbar waren – sonst zählen nur eigene Einträge.</param>
+    private void VisitFile(string path, int depth, byte[]? parentDescriptor, FolderNode? folder, string? shareUnc)
     {
         _ct.ThrowIfCancellationRequested();
         var node = AclReader.Read(path, depth, isFile: true, followLinks: false, parentDescriptor, readParent: false,
             wantDescriptor: false, out _);
         _result.FilesVisited++;
         node.ShareUnc = shareUnc;
-        if (node.Error is not null || node.InheritanceBroken || node.HasExplicitAces)
+        if (node.Error is not null || node.InheritanceBroken || node.HasExplicitAces || DiffersFromFolder(node, folder))
         {
             _result.Folders.Add(node);
             if (node.Error is not null) AddError(node.Path, node.Error);
         }
         Report(path);
+    }
+
+    /// <summary>
+    /// Hat die Datei andere Rechte, als sie vom Ordner erben würde? Typisch für verschobene Dateien: Sie behalten ihre
+    /// alten geerbten Einträge – eine Datei aus „Öffentlich“ bleibt in „Personal“ für „Jeder“ lesbar.
+    /// </summary>
+    private bool DiffersFromFolder(FolderNode file, FolderNode? folder)
+    {
+        if (folder is null) return false;
+        // Die Erwartung hängt nur vom Besitzer ab (ERSTELLER-BESITZER) – meist für alle Dateien eines Ordners derselbe.
+        if (!ReferenceEquals(folder, _fileExpectationFolder) || file.OwnerSid != _fileExpectationOwner)
+        {
+            _fileExpectationFolder = folder;
+            _fileExpectationOwner = file.OwnerSid;
+            _fileExpectation = NodeSignature.InheritedByFile(folder, file.OwnerSid);
+        }
+        return NodeSignature.Effective(file) != _fileExpectation;
     }
 
     /// <summary>

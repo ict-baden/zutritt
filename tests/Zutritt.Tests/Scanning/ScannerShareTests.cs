@@ -113,6 +113,41 @@ public sealed class ScannerShareTests
     }
 
     [AdminFact]
+    public async Task Punkt_nennt_auch_Freigaben_auf_demselben_Ordner()
+    {
+        // Regression: Zwei Freigaben auf einem Ordner – geprüft wird er einmal, aber beide Freigaben (mit ihren
+        // Rechten) gehören ins Ergebnis. Bisher fehlte die zweite, ihr „Jeder: Lesen“ bzw. „Vollzugriff“ ging verloren.
+        using var tmp = new TempFolder();
+        using var narrow = new TestShare(tmp.Path, "D:(A;;0x1200a9;;;WD)");
+        using var wide = new TestShare(tmp.Path, "D:(A;;FA;;;WD)");
+
+        var result = await Plain().RunAsync(new ScanRequest { Targets = ["."], MaxDepth = 0 });
+
+        var root = Assert.Single(result.Folders, f => f.Path.Equals(tmp.Path, StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(wide.Unc, root.ShareUnc, ignoreCase: true); // der weitere Zugriff zählt
+        Assert.Equal([new ShareAce("S-1-1-0", ShareAccess.Lesen, false)],
+            Assert.Single(result.Shares, s => s.UncPath.Equals(narrow.Unc, StringComparison.OrdinalIgnoreCase)).Permissions);
+        Assert.Equal([new ShareAce("S-1-1-0", ShareAccess.Vollzugriff, false)],
+            Assert.Single(result.Shares, s => s.UncPath.Equals(wide.Unc, StringComparison.OrdinalIgnoreCase)).Permissions);
+    }
+
+    [AdminFact]
+    public async Task UNC_Ziel_in_anderer_Schreibweise_passt_genau_zur_Freigabe()
+    {
+        using var tmp = new TempFolder();
+        tmp.Sub("a");
+        using var share = new TestShare(tmp.Path, ShareSddl);
+        var typed = $@"\\localhost\{share.Name.ToUpperInvariant()}";
+
+        var result = await Plain().RunAsync(new ScanRequest { Targets = [typed], MaxDepth = 1 });
+
+        var info = Assert.Single(result.Shares);
+        Assert.Equal(share.Name, info.Name); // Schreibweise des Servers
+        Assert.All(result.Folders, f => Assert.Equal(info.UncPath, f.ShareUnc));
+        Assert.Equal(typed, result.Folders[0].Path); // Pfade bleiben, wie angegeben
+    }
+
+    [AdminFact]
     public async Task Lokaler_Pfad_bekommt_die_naechste_Freigabe()
     {
         using var tmp = new TempFolder();

@@ -259,7 +259,33 @@ public sealed class AclReaderTests
     [InlineData(@"\\FS01\Labor\QC", @"\\FS01\Labor")]
     [InlineData(@"\\FS01\Labor\QC\Roh", @"\\FS01\Labor\QC")]
     [InlineData(@"\\FS01", null)]
+    [InlineData(@"\\?\Volume{0c1d}\x\y", @"\\?\Volume{0c1d}\x")]
+    [InlineData(@"\\?\Volume{0c1d}\x", @"\\?\Volume{0c1d}\")]   // Wurzel mit „\“, sonst öffnete man das Laufwerk selbst
+    [InlineData(@"\\?\Volume{0c1d}\", null)]
+    [InlineData(@"\\.\C:\x", @"\\.\C:\")]
     public void ParentOf(string path, string? expected) => Assert.Equal(expected, AclReader.ParentOf(path));
+
+    [Fact]
+    public void Volume_GUID_Pfad_liest_denselben_Ordner()
+    {
+        // Regression: „\\?\Volume{…}\x“ wurde zu „<aktuelles Verzeichnis>\Volume{…}\x“ – also ein ganz anderer Pfad.
+        using var tmp = new TempFolder();
+        var dir = tmp.Sub("vol");
+        Grant(dir, NetworkService, FileSystemRights.Modify);
+        var volume = TestNative.VolumeGuidPath(Path.GetPathRoot(dir)!);
+        var viaVolume = volume + dir[3..];
+        var viaDevice = @"\\.\" + dir;
+
+        var expected = AclReader.Read(dir, 1, false);
+        foreach (var path in new[] { viaVolume, viaDevice })
+        {
+            var node = AclReader.Read(path, 1, false);
+            Assert.Null(node.Error);
+            Assert.Equal(path, node.Path);
+            Assert.Equal(expected.Aces, node.Aces);
+            Assert.Equal(expected.OwnerSid, node.OwnerSid);
+        }
+    }
 
     [Fact]
     public void Nicht_vorhandener_Pfad()

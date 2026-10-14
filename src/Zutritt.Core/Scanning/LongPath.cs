@@ -14,6 +14,8 @@ internal static class LongPath
     public static string ToExtended(string path)
     {
         if (path.StartsWith(ExtendedPrefix, StringComparison.Ordinal)) return path;
+        // „\\.\“ ist ebenfalls ein Gerätepfad, kein UNC-Server namens „.“.
+        if (path.StartsWith(@"\\.\", StringComparison.Ordinal)) return ExtendedPrefix + path[4..];
         if (path.StartsWith(@"\\", StringComparison.Ordinal)) return ExtendedUncPrefix + path[2..];
         return ExtendedPrefix + path;
     }
@@ -25,6 +27,15 @@ internal static class LongPath
         if (path.StartsWith(ExtendedPrefix, StringComparison.Ordinal)) return path[ExtendedPrefix.Length..];
         return path;
     }
+
+    /// <summary>
+    /// „\\?\“-Pfad ohne Laufwerk und ohne UNC (z. B. „\\?\Volume{…}\x“)? <paramref name="readable"/> ist
+    /// <see cref="FromExtended"/> von <paramref name="path"/>.
+    /// </summary>
+    public static bool IsDevicePath(string path, string readable)
+        => path.StartsWith(ExtendedPrefix, StringComparison.Ordinal)
+           && !readable.StartsWith(@"\\", StringComparison.Ordinal)
+           && !Path.IsPathFullyQualified(readable);
 
     /// <summary>Kind-Pfad bilden, ohne den Namen anzufassen (Path.Combine würde nichts kürzen, prüft aber Zeichen).</summary>
     public static string Combine(string directory, string name)
