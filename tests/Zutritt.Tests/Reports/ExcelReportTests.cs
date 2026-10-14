@@ -399,7 +399,7 @@ public sealed class ExcelReportTests(ITestOutputHelper output) : IDisposable
             Assert.True(ValueOf(label).Value.IsNumber, label);
             Assert.Equal("#,##0", ValueOf(label).Style.NumberFormat.Format);
         }
-        Assert.Equal(withComparison, overview.CellsUsed().Any(c => c.GetString().StartsWith("Vergleich mit dem Lauf vom 07.10.2026 09:00")));
+        Assert.Equal(withComparison, overview.CellsUsed().Any(c => c.GetString().StartsWith($"Vergleich mit dem Lauf vom {ReportText.DateTime(Comparison().Older.StartedAt)}")));
 
         // Wegweiser: jedes vorhandene Blatt mit Beschreibung, kein fehlendes
         var guide = overview.CellsUsed().Where(c => c.Address.ColumnNumber == 1 && c.GetString().StartsWith('„')).Select(c => c.GetString()).ToList();

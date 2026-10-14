@@ -38,7 +38,13 @@ public sealed class SystemFolderFindingsTests
         var result = await ScanAsync(@"C:\Program Files\WindowsPowerShell", maxDepth: null);
         if (result is null) return;
 
-        Assert.DoesNotContain(result.Findings, f => f.RuleId is "ZT02" or "ZT06" or "ZT04" or "ZT14");
+        // Nur Ordner, die Windows selbst verwaltet (Besitzer TrustedInstaller): Was Installer oder Admins dort
+        // zusätzlich angelegt haben, kann echte Befunde haben (z. B. auf GitHub-Runnern ein Modul mit Schreibrecht
+        // für Authentifizierte Benutzer).
+        var managed = result.Folders.Where(f => f.OwnerSid == SidCatalog.TrustedInstaller)
+            .Select(f => f.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        Assert.NotEmpty(managed);
+        Assert.DoesNotContain(result.Findings, f => managed.Contains(f.Path) && f.RuleId is "ZT02" or "ZT06" or "ZT04" or "ZT14");
         // App-Pakete, Fähigkeiten und Dienste sind bekannt – weder verwaist noch unbekannt
         Assert.DoesNotContain(result.Principals.Values, p => p.Kind is PrincipalKind.Verwaist or PrincipalKind.Unbekannt);
     }
