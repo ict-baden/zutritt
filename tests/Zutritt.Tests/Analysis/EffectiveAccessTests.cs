@@ -297,18 +297,57 @@ public sealed class EffectiveAccessTests
         Assert.Equal(AccessLevel.Aendern, Assert.Single(EffectiveAccess.ForPerson(b.Scan, u)).Effective);
     }
 
-    [Fact]
-    public void Freigabe_Verweigern_sperrt_den_Netzzugriff()
+    /// <summary>
+    /// Verweigern bei Freigaben heißt „ab dieser Stufe gesperrt“ (siehe <see cref="ShareAce"/>): Verweigern „Ändern“
+    /// lässt Lesen zu, „ab Lesen“ (so speichert der Scanner Verweigern „Vollzugriff“ der Oberfläche) sperrt alles.
+    /// </summary>
+    [Theory]
+    [InlineData(ShareAccess.Lesen, AccessLevel.Keine)]
+    [InlineData(ShareAccess.Aendern, AccessLevel.Lesen)]
+    [InlineData(ShareAccess.Vollzugriff, AccessLevel.Aendern)]
+    public void Freigabe_Verweigern_sperrt_ab_der_genannten_Stufe(ShareAccess deniedFrom, AccessLevel expected)
     {
         var u = Sid(2001); var g = Sid(1001);
         var b = new ScanBuilder().User(u, @"T\u").Group(g, @"T\Praktikanten", u)
-            .WithShare(new ShareAce(S.Everyone, ShareAccess.Vollzugriff, false), new ShareAce(g, ShareAccess.Aendern, true));
-        var f = b.Folder("", 0, Allow(u, Modify));
+            .WithShare(new ShareAce(S.Everyone, ShareAccess.Vollzugriff, false), new ShareAce(g, deniedFrom, true));
+        var f = b.Folder("", 0, Allow(u, Full));
         var grant = EffectiveAccessInternals.Grant(b.Scan, f, u);
-        Assert.Equal(AccessLevel.Aendern, grant.Ntfs);
-        Assert.Equal(AccessLevel.Keine, grant.ViaShare);
-        Assert.Empty(EffectiveAccess.ForPerson(b.Scan, u));
-        Assert.Empty(EffectiveAccess.PeopleForFolder(b.Scan, f));
+        Assert.Equal(AccessLevel.Vollzugriff, grant.Ntfs);
+        Assert.Equal(expected, grant.ViaShare);
+        Assert.True(grant.ReducedByDeny);
+        if (expected == AccessLevel.Keine)
+        {
+            Assert.Empty(EffectiveAccess.ForPerson(b.Scan, u));
+            Assert.Empty(EffectiveAccess.PeopleForFolder(b.Scan, f));
+        }
+        else
+        {
+            Assert.Equal(expected, Assert.Single(EffectiveAccess.ForPerson(b.Scan, u)).Effective);
+        }
+    }
+
+    [Fact]
+    public void Freigabe_Verweigern_ohne_Wirkung_auf_das_Ergebnis_zaehlt_nicht_als_Einschraenkung()
+    {
+        // NTFS erlaubt ohnehin nur Lesen – „Ändern verweigert“ auf der Freigabe nimmt nichts weg
+        var u = Sid(2001); var g = Sid(1001);
+        var b = new ScanBuilder().User(u, @"T\u").Group(g, @"T\Praktikanten", u)
+            .WithShare(new ShareAce(S.Everyone, ShareAccess.Vollzugriff, false), new ShareAce(g, ShareAccess.Aendern, true));
+        var f = b.Folder("", 0, Allow(u, Read));
+        var grant = EffectiveAccessInternals.Grant(b.Scan, f, u);
+        Assert.Equal(AccessLevel.Lesen, grant.ViaShare);
+        Assert.False(grant.ReducedByDeny);
+    }
+
+    [Fact]
+    public void Freigabe_mehrere_Verweigerungen_die_strengste_gilt()
+    {
+        var u = Sid(2001); var g = Sid(1001);
+        var b = new ScanBuilder().User(u, @"T\u").Group(g, @"T\Praktikanten", u)
+            .WithShare(new ShareAce(S.Everyone, ShareAccess.Vollzugriff, false),
+                new ShareAce(g, ShareAccess.Vollzugriff, true), new ShareAce(u, ShareAccess.Aendern, true));
+        var f = b.Folder("", 0, Allow(u, Full));
+        Assert.Equal(AccessLevel.Lesen, EffectiveAccessInternals.Grant(b.Scan, f, u).ViaShare);
     }
 
     [Fact]

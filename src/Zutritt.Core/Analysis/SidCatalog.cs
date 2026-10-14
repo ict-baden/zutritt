@@ -16,6 +16,8 @@ public static class SidCatalog
     public const string Interactive = "S-1-5-4";
     public const string AnonymousLogon = "S-1-5-7";
     public const string AuthenticatedUsers = "S-1-5-11";
+    public const string Restricted = "S-1-5-12";
+    public const string WriteRestricted = "S-1-5-33";
     public const string LocalSystem = "S-1-5-18";
     public const string LocalService = "S-1-5-19";
     public const string NetworkService = "S-1-5-20";
@@ -95,8 +97,9 @@ public static class SidCatalog
         || sid.Equals(CreatorGroupServer, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
-    /// Sonder-Identität statt Konto oder Gruppe: Jeder, NT-AUTORITÄT\… (eine Unterautorität), Dienst-SIDs,
-    /// Platzhalter, App-Pakete, Integritätsstufen. Domänen- und VORDEFINIERT-SIDs gehören nicht dazu.
+    /// Sonder-Identität statt Konto oder Gruppe: Jeder, NT-AUTORITÄT\… (eine Unterautorität), Dienst-SIDs und andere
+    /// virtuelle Konten, Platzhalter, App-Pakete und Fähigkeiten, Integritätsstufen. Domänen- und VORDEFINIERT-SIDs
+    /// gehören nicht dazu – wohl aber die Fähigkeitsgruppen, die nur so aussehen (S-1-5-32-x-y-…).
     /// </summary>
     internal static bool IsSpecialIdentity(string sid)
     {
@@ -108,13 +111,39 @@ public static class SidCatalog
                 return true;
             case "5":
                 if (parts.Length == 4) return true; // S-1-5-18, S-1-5-11 …
-                // Anmeldesitzung (S-1-5-5-x-y), Dienste, Authentifizierungspakete, „Lokales Konto“, IIS, VMs,
-                // Fenster-Manager, Treiber
-                return parts[3] is "5" or "64" or "80" or "82" or "83" or "84" or "90" or "96" or "113" or "114";
+                if (IsCapabilityGroup(sid)) return true;
+                // Anmeldesitzung (S-1-5-5-x-y), Dienste, Authentifizierungspakete, „Lokales Konto“, IIS, VMs, Treiber,
+                // geplante Aufgaben, Fenster-Manager, Schriftartentreiber
+                return parts[3] is "5" or "64" or "80" or "82" or "83" or "84" or "87" or "90" or "96" or "113" or "114";
             default:
                 return false;
         }
     }
+
+    /// <summary>
+    /// Fähigkeitsgruppe (S-1-5-32-x-y-…, mehr als eine Zahl nach 32): Windows leitet sie wie die Fähigkeits-SIDs
+    /// S-1-15-3-… aus dem Namen einer Fähigkeit ab. Sie sieht aus wie eine VORDEFINIERT-Gruppe, hat aber keine
+    /// Mitglieder und lässt sich nicht in einen Namen übersetzen.
+    /// </summary>
+    internal static bool IsCapabilityGroup(string sid)
+        => sid.StartsWith("S-1-5-32-", StringComparison.OrdinalIgnoreCase) && sid.AsSpan(9).Contains('-');
+
+    /// <summary>Echte VORDEFINIERT-Gruppe dieses Rechners (S-1-5-32-RID), keine Fähigkeitsgruppe.</summary>
+    internal static bool IsBuiltinGroup(string sid)
+        => sid.StartsWith("S-1-5-32-", StringComparison.OrdinalIgnoreCase) && !IsCapabilityGroup(sid);
+
+    /// <summary>
+    /// Kennung, die nur Windows selbst in Zugriffslisten einträgt – nie ein Administrator auf Datenordnern:
+    /// TrustedInstaller, App-Pakete und Fähigkeiten (S-1-15-2-…, S-1-15-3-…), Fähigkeitsgruppen, EINGESCHRÄNKT (S-1-5-12)
+    /// und SCHREIBGESCHÜTZT (S-1-5-33). Dienst-SIDs gehören bewusst nicht dazu: Die vergeben Administratoren auch selbst.
+    /// </summary>
+    internal static bool IsWindowsInternal(string sid)
+        => sid.Equals(TrustedInstaller, StringComparison.OrdinalIgnoreCase)
+           || sid.StartsWith("S-1-15-2-", StringComparison.OrdinalIgnoreCase)
+           || sid.StartsWith("S-1-15-3-", StringComparison.OrdinalIgnoreCase)
+           || IsCapabilityGroup(sid)
+           || sid.Equals(Restricted, StringComparison.OrdinalIgnoreCase)
+           || sid.Equals(WriteRestricted, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Deutscher Anzeigename für bekannte SIDs, sonst null.</summary>
     public static string? GermanName(string sid) => GermanNames.GetValueOrDefault(sid);

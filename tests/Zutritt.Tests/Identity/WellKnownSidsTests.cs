@@ -78,6 +78,12 @@ public class WellKnownSidsTests
     [InlineData("S-1-16-8192", "Verbindlichkeitsstufe")]
     [InlineData("S-1-5-5-0-99", "Anmeldesitzung")]
     [InlineData("S-1-5-96-0-1", "Virtuelles Systemkonto")]
+    [InlineData("S-1-5-80-1-2-3-4-5", "Nicht installierter Dienst")]
+    [InlineData("S-1-5-82-1-2-3-4-5", "IIS-Anwendungspool")]
+    [InlineData("S-1-5-83-0-1-2-3-4", "Virtueller Computer")]
+    [InlineData("S-1-5-84-0-0-0-0-0", "Treiber im Benutzermodus")]
+    [InlineData("S-1-5-87-1-2-3-4-5", "Geplante Aufgabe")]
+    [InlineData("S-1-5-32-70329670-3585251103-1149629936-3204666536-4257240719-2613976102-450591375-1666047922", "Fähigkeitsgruppe")]
     public void SIDs_ohne_Konto_haben_einen_beschreibenden_Namen(string sid, string prefix)
     {
         var name = WellKnownSids.NonAccountName(sid);
@@ -87,9 +93,30 @@ public class WellKnownSidsTests
 
     [Theory]
     [InlineData("S-1-5-21-1-2-3-1001")]
-    [InlineData("S-1-5-80-1-2-3-4-5")]
     [InlineData("S-1-5-32-544")]
-    public void Konten_und_Dienst_SIDs_koennen_verwaisen(string sid) => Assert.Null(WellKnownSids.NonAccountName(sid));
+    public void Konten_koennen_verwaisen(string sid) => Assert.Null(WellKnownSids.NonAccountName(sid));
+
+    [Theory]
+    [InlineData("S-1-5-32-544", true, false)]
+    [InlineData("S-1-5-32-999", true, false)]
+    [InlineData("S-1-5-32-70329670-3585251103-1149629936-3204666536-4257240719-2613976102-450591375-1666047922", false, true)]
+    [InlineData("S-1-5-21-1-2-3-544", false, false)]
+    public void Faehigkeitsgruppen_sind_keine_VORDEFINIERT_Gruppen(string sid, bool builtin, bool capabilityGroup)
+    {
+        Assert.Equal(builtin, WellKnownSids.IsBuiltin(sid));
+        Assert.Equal(capabilityGroup, WellKnownSids.IsCapabilityGroup(sid));
+    }
+
+    [Theory]
+    [InlineData("S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464", true)] // TrustedInstaller
+    [InlineData("S-1-5-90-0-2", true)]   // Window Manager\DWM-2
+    [InlineData("S-1-5-96-0-0", true)]   // Font Driver Host\UMFD-0
+    [InlineData("S-1-5-82-1-2-3-4-5", true)]
+    [InlineData("S-1-5-87-1-2-3-4-5", true)]
+    [InlineData("S-1-5-18", false)]
+    [InlineData("S-1-5-21-1-2-3-1001", false)]
+    [InlineData("S-1-5-800-1", false)]
+    public void Virtuelle_Konten(string sid, bool expected) => Assert.Equal(expected, WellKnownSids.IsVirtualAccount(sid));
 
     [Fact]
     public void EntraID_Konten_sind_nicht_pruefbar()

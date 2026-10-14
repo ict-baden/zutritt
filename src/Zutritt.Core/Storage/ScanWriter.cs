@@ -112,8 +112,8 @@ internal static class ScanWriter
         if (folders.Count == 0) return ids;
 
         using var folder = Command(db, tx, """
-            INSERT INTO folder (scan_id, ord, path, depth, is_file, share_unc, owner_sid, inheritance_broken, error)
-            VALUES ($scan_id, $ord, $path, $depth, $is_file, $share_unc, $owner_sid, $inheritance_broken, $error)
+            INSERT INTO folder (scan_id, ord, path, depth, is_file, share_unc, owner_sid, inheritance_broken, inheritance_differs, error)
+            VALUES ($scan_id, $ord, $path, $depth, $is_file, $share_unc, $owner_sid, $inheritance_broken, $inheritance_differs, $error)
             RETURNING id;
             """);
         Param(folder, "$scan_id", SqliteType.Integer, scanId);
@@ -124,6 +124,7 @@ internal static class ScanWriter
         var fShare = Param(folder, "$share_unc", SqliteType.Text);
         var fOwner = Param(folder, "$owner_sid", SqliteType.Text);
         var fBroken = Param(folder, "$inheritance_broken", SqliteType.Integer);
+        var fDiffers = Param(folder, "$inheritance_differs", SqliteType.Integer);
         var fError = Param(folder, "$error", SqliteType.Text);
         folder.Prepare();
 
@@ -151,6 +152,7 @@ internal static class ScanWriter
             fShare.Value = Nullable(f.ShareUnc);
             fOwner.Value = Text(f.OwnerSid);
             fBroken.Value = Bit(f.InheritanceBroken);
+            fDiffers.Value = Bit(f.InheritanceDiffers);
             fError.Value = Nullable(f.Error);
             var folderId = (long)folder.ExecuteScalar()!;
             ids[i] = folderId;

@@ -94,7 +94,7 @@ public sealed class ScanStore : IDisposable
 
     /// <summary>
     /// Alle Läufe, neueste zuerst (nach Startzeit). <see cref="ScanSummary.Folders"/> zählt die gespeicherten
-    /// Ordner (Wurzeln, eigene Rechte, Fehler), nicht alle besuchten.
+    /// Ordner (Wurzeln, eigene Rechte, Fehler), <see cref="ScanSummary.FoldersVisited"/> alle geprüften.
     /// </summary>
     public IReadOnlyList<ScanSummary> List() =>
         Run("Die Liste der Läufe konnte nicht gelesen werden.", () => ScanReader.List(_db));

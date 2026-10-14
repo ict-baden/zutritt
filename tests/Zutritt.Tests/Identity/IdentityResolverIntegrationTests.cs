@@ -61,13 +61,33 @@ public class IdentityResolverIntegrationTests
     }
 
     [Fact]
-    public void Dienst_SID_eines_nicht_installierten_Dienstes_ist_verwaist_App_Faehigkeit_nicht()
+    public void Dienst_SID_eines_nicht_installierten_Dienstes_ist_nicht_verwaist_sondern_bekannt()
     {
+        // Windows trägt in seine Ordner auch Dienste ein, die hier nicht installiert sind (gefunden in
+        // C:\ProgramData\Microsoft\Network\Connections und C:\Windows\System32\SleepStudy) – kein gelöschtes Konto.
         using var resolver = IdentityResolver.CreateDefault();
 
-        Assert.Equal(PrincipalKind.Verwaist, resolver.Resolve("S-1-5-80-1111111111-2222222222-3333333333-4444444444-1234567890").Kind);
+        var service = resolver.Resolve("S-1-5-80-1111111111-2222222222-3333333333-4444444444-1234567890");
+        Assert.Equal(PrincipalKind.Bekannt, service.Kind);
+        Assert.StartsWith("Nicht installierter Dienst", service.Name);
         var capability = resolver.Resolve("S-1-15-3-1024-1065365936-1281604716-3511738428-1654721687-432734479-3232135806-4053264122-3456934681");
         Assert.Equal(PrincipalKind.Bekannt, capability.Kind);
+    }
+
+    [Theory]
+    // Fähigkeitsgruppe aus C:\ProgramData\Microsoft\Provisioning – sah aus wie eine VORDEFINIERT-Gruppe und war „Unbekannt“
+    [InlineData("S-1-5-32-989523358-1667815365-316973287-129935811-3358257576-2796868252-2781088163-715581871", "Fähigkeitsgruppe")]
+    // Fenster-Manager und Schriftartentreiber: Windows meldet sie (falls die Sitzung läuft) als Benutzer
+    [InlineData("S-1-5-90-0-1", null)]
+    [InlineData("S-1-5-96-0-0", null)]
+    [InlineData("S-1-5-87-1-2-3-4-5", "Geplante Aufgabe")]
+    public void Windows_eigene_Kennungen_sind_weder_Personen_noch_verwaist(string sid, string? namePrefix)
+    {
+        using var resolver = IdentityResolver.CreateDefault();
+        var p = resolver.Resolve(sid);
+        Assert.Equal(PrincipalKind.Bekannt, p.Kind);
+        if (namePrefix is not null) Assert.StartsWith(namePrefix, p.Name);
+        Assert.Empty(p.Members);
     }
 
     [Fact]

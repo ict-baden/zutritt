@@ -140,7 +140,7 @@ internal static class CommandLine
         Console.WriteLine();
         Console.WriteLine($"{"Id",6}  {"Datum",-18}  {"Ordner",7}  {"Befunde",7}  {"Hoch",5}  Ziele");
         foreach (var r in runs)
-            Console.WriteLine($"{r.Id,6}  {Labels.Date(r.StartedAt),-18}  {Labels.Number(r.Folders),7}  {Labels.Number(r.Findings),7}  {Labels.Number(r.HighFindings),5}  {r.Targets}");
+            Console.WriteLine($"{r.Id,6}  {Labels.Date(r.StartedAt),-18}  {Labels.Number(r.FoldersVisited),7}  {Labels.Number(r.Findings),7}  {Labels.Number(r.HighFindings),5}  {r.Targets}");
         return ExitClean;
     }
 

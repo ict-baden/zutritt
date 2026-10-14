@@ -20,9 +20,11 @@ internal sealed class ScanRun
 
     /// <summary>
     /// Noch zu prüfender Ordner. <see cref="ParentSignature"/> null = Rechte des Elternordners unbekannt;
-    /// <see cref="ParentDescriptor"/> = rohe Beschreibung des Elternordners (für Zugriffslisten im NT4-Stil).
+    /// <see cref="ParentDescriptor"/> = rohe Beschreibung des Elternordners (für Zugriffslisten im NT4-Stil);
+    /// <see cref="Expected"/> = was der Ordner vom Elternordner erben müsste, null = unbekannt (Wurzel, Fehler).
     /// </summary>
-    private readonly record struct Pending(string Path, int Depth, string? ParentSignature, byte[]? ParentDescriptor, string? ShareUnc, bool IsLink);
+    private readonly record struct Pending(string Path, int Depth, string? ParentSignature, byte[]? ParentDescriptor, string? ShareUnc, bool IsLink,
+        InheritanceExpectation? Expected);
 
     private readonly ScanResult _result;
     private readonly ScanRequest _request;
@@ -45,6 +47,8 @@ internal sealed class ScanRun
     private FolderNode? _fileExpectationFolder;
     private string? _fileExpectationOwner;
     private string? _fileExpectation;
+    private FolderNode? _fileInheritanceFolder;
+    private InheritanceExpectation? _fileInheritance;
 
     /// <param name="progressIntervalMs">Mindestabstand zwischen zwei Fortschrittsmeldungen innerhalb einer Phase.</param>
     public ScanRun(ScanResult result, IProgress<ScanProgress>? progress, long progressIntervalMs, CancellationToken ct)
@@ -254,7 +258,7 @@ internal sealed class ScanRun
 
         // Tiefensuche mit eigenem Stapel statt Rekursion: Bäume mit Hunderten Ebenen sprengen so keinen Aufrufstapel.
         var stack = new Stack<Pending>();
-        stack.Push(new Pending(root.Path, 0, null, null, shareUnc, IsLink: false));
+        stack.Push(new Pending(root.Path, 0, null, null, shareUnc, IsLink: false, Expected: null));
         while (stack.Count > 0)
         {
             _ct.ThrowIfCancellationRequested();
@@ -285,10 +289,12 @@ internal sealed class ScanRun
         _result.FoldersVisited++;
         node.ShareUnc = item.ShareUnc;
         var signature = NodeSignature.Of(node);
+        // Geerbte Einträge, die der Elternordner so nicht vergibt: verschobener Ordner (Befund ZT14)
+        node.InheritanceDiffers = item.Expected is not null && !item.Expected.Matches(node);
 
         // Gespeichert wird, was die Auswertung nicht vom nächsthöheren gespeicherten Ordner ableiten kann.
         bool store = item.Depth == 0 || node.Error is not null || node.InheritanceBroken || node.HasExplicitAces
-                     || item.ParentSignature is null || signature != item.ParentSignature;
+                     || item.ParentSignature is null || signature != item.ParentSignature || node.InheritanceDiffers;
         if (store) _result.Folders.Add(node);
 
         if (descend)
@@ -311,15 +317,19 @@ internal sealed class ScanRun
                     if (!entry.IsDirectory) VisitFile(LongPath.Combine(item.Path, entry.Name), item.Depth + 1, descriptor, folder, node.ShareUnc);
             }
             // Von einem Ordner mit Fehler (auch nur teilweise auflistbar) leitet die Auswertung nichts ab – seine
-            // Unterordner müssen deshalb selbst gespeichert werden.
+            // Unterordner müssen deshalb selbst gespeichert werden. Ob sie richtig erben, lässt sich dann auch nicht sagen.
             var childSignature = node.Error is null ? signature : null;
+            InheritanceExpectation? expected = null;
             for (int i = _entries.Count - 1; i >= 0; i--)
             {
                 var entry = _entries[i];
                 if (!entry.IsDirectory) continue;
                 var child = LongPath.Combine(item.Path, entry.Name);
                 if (_rootPaths.Contains(child)) continue; // eigenes Ziel, wird mit eigener Wurzel geprüft
-                stack.Push(new Pending(child, item.Depth + 1, childSignature, descriptor, ChildShareUnc(child, item.ShareUnc), entry.IsLink));
+                // Einmal je Ordner und nur, wenn er Unterordner hat
+                if (childSignature is not null) expected ??= InheritanceExpectation.ForSubfolders(node);
+                stack.Push(new Pending(child, item.Depth + 1, childSignature, descriptor, ChildShareUnc(child, item.ShareUnc), entry.IsLink,
+                    childSignature is null ? null : expected));
             }
         }
 
@@ -335,7 +345,17 @@ internal sealed class ScanRun
             wantDescriptor: false, out _);
         _result.FilesVisited++;
         node.ShareUnc = shareUnc;
-        if (node.Error is not null || node.InheritanceBroken || node.HasExplicitAces || DiffersFromFolder(node, folder))
+        if (folder is not null)
+        {
+            // Die Erwartung gilt für alle Dateien des Ordners – einmal je Ordner bilden.
+            if (!ReferenceEquals(folder, _fileInheritanceFolder))
+            {
+                _fileInheritanceFolder = folder;
+                _fileInheritance = InheritanceExpectation.ForFiles(folder);
+            }
+            node.InheritanceDiffers = !_fileInheritance!.Matches(node);
+        }
+        if (node.Error is not null || node.InheritanceBroken || node.HasExplicitAces || node.InheritanceDiffers || DiffersFromFolder(node, folder))
         {
             _result.Folders.Add(node);
             if (node.Error is not null) AddError(node.Path, node.Error);

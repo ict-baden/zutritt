@@ -18,6 +18,11 @@ namespace Zutritt.Core.Scanning;
 /// und werden nur gezählt. Mit <see cref="ScanRequest.IncludeFiles"/> ebenso Dateien mit eigenen Einträgen oder mit
 /// anderen Rechten, als sie vom Ordner erben würden (verschobene Dateien). Verknüpfungen (Junctions, symbolische Links)
 /// unterhalb der Wurzel werden erfasst, aber nicht verfolgt.
+/// <para>
+/// Passen die geerbten Einträge eines Ordners oder einer Datei nicht zu dem, was der Elternordner nach den Regeln von
+/// Windows vererbt, setzt der Scanner <see cref="FolderNode.InheritanceDiffers"/> (und speichert den Knoten) – das
+/// unterscheidet echte Abweichungen (verschobene Ordner) von den normalen Fällen oben.
+/// </para>
 /// </remarks>
 public sealed class Scanner
 {

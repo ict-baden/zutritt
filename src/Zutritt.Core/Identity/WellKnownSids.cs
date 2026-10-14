@@ -131,8 +131,30 @@ public static class WellKnownSids
     /// <summary>
     /// VORDEFINIERT-Gruppe: gleiche SID auf jedem Rechner, aber Mitglieder je Rechner verschieden. Diese SIDs legt
     /// Windows selbst fest – fehlt eine auf einem Rechner, wurde kein Konto gelöscht; sie ist deshalb nie „verwaist“.
+    /// Fähigkeitsgruppen (<see cref="IsCapabilityGroup"/>) sehen nur so aus und gehören nicht dazu.
     /// </summary>
-    public static bool IsBuiltin(string sid) => sid.StartsWith(BuiltinPrefix, StringComparison.OrdinalIgnoreCase);
+    public static bool IsBuiltin(string sid) => sid.StartsWith(BuiltinPrefix, StringComparison.OrdinalIgnoreCase) && !IsCapabilityGroup(sid);
+
+    /// <summary>
+    /// Fähigkeitsgruppe (S-1-5-32-x-y-…): Windows leitet sie zusammen mit der Fähigkeits-SID S-1-15-3-… aus dem Namen
+    /// einer Fähigkeit ab (DeriveCapabilitySidsFromName). Keine VORDEFINIERT-Gruppe, ohne Mitglieder und ohne Namen.
+    /// </summary>
+    public static bool IsCapabilityGroup(string sid)
+        => sid.StartsWith(BuiltinPrefix, StringComparison.OrdinalIgnoreCase) && sid.AsSpan(BuiltinPrefix.Length).Contains('-');
+
+    /// <summary>
+    /// Virtuelles Konto, das Windows für Dienste, IIS-Anwendungspools, virtuelle Computer, Treiber, geplante Aufgaben,
+    /// den Fenster-Manager (DWM-1 …) oder den Schriftartentreiber (UMFD-0 …) anlegt. Gehört nie einer Person – auch
+    /// wenn Windows manche davon als „Benutzer“ meldet.
+    /// </summary>
+    public static bool IsVirtualAccount(string sid)
+    {
+        if (!sid.StartsWith("S-1-5-", StringComparison.OrdinalIgnoreCase)) return false;
+        var rest = sid.AsSpan(6);
+        int dash = rest.IndexOf('-');
+        if (dash < 0) return false;
+        return rest[..dash] is "80" or "82" or "83" or "84" or "87" or "90" or "96";
+    }
 
     /// <summary>Konto einer Domäne oder einer lokalen Kontendatenbank (S-1-5-21-…).</summary>
     public static bool IsAccountSid(string sid) => sid.StartsWith("S-1-5-21-", StringComparison.OrdinalIgnoreCase);
@@ -146,17 +168,29 @@ public static class WellKnownSids
     }
 
     /// <summary>
-    /// Name für SIDs, die keine Konten sind und deshalb nie „verwaist“ sein können (App-Fähigkeiten,
-    /// Anwendungspakete, Verbindlichkeitsstufen, Sitzungs- und virtuelle Systemkonten). Null für alle anderen.
+    /// Name für SIDs, die keine Konten sind und deshalb nie „verwaist“ sein können (App-Fähigkeiten und
+    /// Fähigkeitsgruppen, Anwendungspakete, Verbindlichkeitsstufen, Sitzungen, virtuelle Konten). Null für alle anderen.
     /// Windows kann viele davon nicht in Namen übersetzen; als verwaist gemeldet wären sie Fehlalarme.
     /// </summary>
+    /// <remarks>
+    /// Dienst-SIDs (NT SERVICE\…) leitet Windows aus dem Dienstnamen ab; übersetzen lassen sie sich nur, solange der
+    /// Dienst installiert ist. Windows trägt in seine eigenen Ordner auch Dienste ein, die es auf diesem Rechner (noch)
+    /// nicht gibt – das ist kein gelöschtes Konto, und den Eintrag zu entfernen wäre der falsche Rat. Wird der Dienst
+    /// installiert, gilt der Eintrag wieder.
+    /// </remarks>
     public static string? NonAccountName(string sid)
     {
         static bool Has(string s, string prefix) => s.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
         if (Has(sid, "S-1-15-3-")) return $"Anwendungsfähigkeit ({sid})";
         if (Has(sid, "S-1-15-2-")) return $"Anwendungspaket ({sid})";
+        if (IsCapabilityGroup(sid)) return $"Fähigkeitsgruppe ({sid})";
         if (Has(sid, "S-1-16-")) return $"Verbindlichkeitsstufe ({sid})";
         if (Has(sid, "S-1-5-5-")) return $"Anmeldesitzung ({sid})";
+        if (Has(sid, "S-1-5-80-")) return $"Nicht installierter Dienst ({sid})";
+        if (Has(sid, "S-1-5-82-")) return $"IIS-Anwendungspool ({sid})";
+        if (Has(sid, "S-1-5-83-")) return $"Virtueller Computer ({sid})";
+        if (Has(sid, "S-1-5-84-")) return $"Treiber im Benutzermodus ({sid})";
+        if (Has(sid, "S-1-5-87-")) return $"Geplante Aufgabe ({sid})";
         if (Has(sid, "S-1-5-90-") || Has(sid, "S-1-5-96-")) return $"Virtuelles Systemkonto ({sid})";
         return null;
     }

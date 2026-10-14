@@ -63,11 +63,6 @@ internal sealed class Membership
 /// </summary>
 internal sealed class AccessContext
 {
-    // Kanonische Masken der Freigabe-Stufen (wie die Windows-Oberfläche sie schreibt)
-    private const uint ShareReadMask = 0x1200A9;
-    private const uint ShareChangeMask = 0x1301BF;
-    private const uint ShareFullMask = 0x1F01FF;
-
     private readonly Dictionary<string, List<string>> _directGroups = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, ShareInfo> _shares = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<(string Sid, LogonKind Logon), Membership> _tokens = new(TokenKeyComparer.Instance);
@@ -308,35 +303,39 @@ internal sealed class AccessContext
 
     /// <summary>
     /// Freigabe-Recht für das Token, null wenn der Knoten unter keiner (bekannten, lesbaren) Freigabe liegt.
-    /// Die Stufen werden als Masken verrechnet: Erlauben ODER-verknüpft, Verweigern abgezogen. Weil eine
-    /// verweigerte Stufe (auch „Ändern“) immer die Lesebits enthält, bleibt nach jeder passenden
-    /// Verweigerung kein Freigabe-Zugriff übrig – so verhält sich auch Windows bei Häkchen in der Oberfläche.
+    /// Erlauben: die höchste gewährte Stufe aller passenden Einträge (die Stufen bauen aufeinander auf, mehrere
+    /// Einträge ergeben also nie mehr als den höchsten). Verweigern: Ein Eintrag sperrt laut <see cref="ShareAce"/> seine
+    /// Stufe und alle höheren – übrig bleibt höchstens die Stufe darunter. Verweigern „Ändern“ lässt Lesen also zu,
+    /// Verweigern „Vollzugriff“ der Windows-Oberfläche (gespeichert als „ab Lesen“) sperrt alles.
     /// </summary>
-    public ShareAccess? ShareAccessFor(FolderNode node, Membership token)
+    public ShareAccess? ShareAccessFor(FolderNode node, Membership token) => ShareLevels(node, token)?.Effective;
+
+    /// <summary>
+    /// Wie <see cref="ShareAccessFor"/>, zusätzlich mit der Stufe vor den Verweigerungen – daraus ergibt sich, ob ein
+    /// Verweigern-Eintrag der Freigabe Rechte entzogen hat.
+    /// </summary>
+    public (ShareAccess Allowed, ShareAccess Effective)? ShareLevels(FolderNode node, Membership token)
     {
         var share = ShareOf(node);
         if (share is null || !share.PermissionsReadable) return null;
-        uint allow = 0, deny = 0;
+        var allowed = ShareAccess.Keine;
+        // Höher als jede echte Stufe = nichts verweigert
+        var deniedFrom = ShareAccess.Vollzugriff + 1;
         foreach (var ace in share.Permissions)
         {
             if (!token.Contains(ace.Sid)) continue;
-            var mask = ShareMask(ace.Access);
-            if (ace.IsDeny) deny |= mask; else allow |= mask;
+            if (ace.IsDeny)
+            {
+                // „Keine“ legt der Scanner nie an; käme es doch vor, sperrt es nichts (lieber Zugriff zeigen)
+                if (ace.Access > ShareAccess.Keine && ace.Access < deniedFrom) deniedFrom = ace.Access;
+            }
+            else if (ace.Access > allowed)
+            {
+                allowed = ace.Access;
+            }
         }
-        var effective = allow & ~deny;
-        if ((effective & ShareFullMask) == ShareFullMask) return ShareAccess.Vollzugriff;
-        if ((effective & ShareChangeMask) == ShareChangeMask) return ShareAccess.Aendern;
-        if ((effective & ShareReadMask) == ShareReadMask) return ShareAccess.Lesen;
-        return ShareAccess.Keine;
+        return (allowed, allowed < deniedFrom ? allowed : deniedFrom - 1);
     }
-
-    private static uint ShareMask(ShareAccess access) => access switch
-    {
-        ShareAccess.Vollzugriff => ShareFullMask,
-        ShareAccess.Aendern => ShareChangeMask,
-        ShareAccess.Lesen => ShareReadMask,
-        _ => 0,
-    };
 
     // ---------- Ordner, die nicht gespeichert sind ----------
 

@@ -9,8 +9,8 @@ namespace Zutritt.Core.Storage;
 /// <summary>Baut gespeicherte Läufe wieder auf. Beschädigte Daten führen zu einem Fehler, nie zu stillen Ersatzwerten.</summary>
 internal static class ScanReader
 {
-    private const string SummaryColumns = "id, started_at, targets, folder_count, finding_count, high_finding_count, scanned_by";
-    private const int SummaryColumnCount = 7;
+    private const string SummaryColumns = "id, started_at, targets, folder_count, finding_count, high_finding_count, scanned_by, folders_visited";
+    private const int SummaryColumnCount = 8;
 
     public static ScanResult? Load(SqliteConnection db, long id)
     {
@@ -68,7 +68,8 @@ internal static class ScanReader
         Folders: r.GetInt32(3),
         Findings: r.GetInt32(4),
         HighFindings: r.GetInt32(5),
-        ScannedBy: r.GetString(6));
+        ScannedBy: r.GetString(6),
+        FoldersVisited: r.GetInt64(7));
 
     private static ScanResult? LoadScan(SqliteConnection db, SqliteTransaction tx, long id)
     {
@@ -137,7 +138,7 @@ internal static class ScanReader
     {
         var byId = new Dictionary<long, FolderNode>();
         using (var cmd = Command(db, tx, """
-            SELECT id, path, depth, is_file, share_unc, owner_sid, inheritance_broken, error
+            SELECT id, path, depth, is_file, share_unc, owner_sid, inheritance_broken, error, inheritance_differs
             FROM folder WHERE scan_id = $id ORDER BY ord;
             """, scan.Id))
         using (var r = cmd.ExecuteReader())
@@ -154,6 +155,7 @@ internal static class ScanReader
                     OwnerSid = r.GetString(5),
                     InheritanceBroken = r.GetBoolean(6),
                     Error = NullableText(r, 7),
+                    InheritanceDiffers = r.GetBoolean(8),
                 };
                 scan.Folders.Add(node);
                 byId[node.Id] = node;

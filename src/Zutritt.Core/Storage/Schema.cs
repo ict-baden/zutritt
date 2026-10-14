@@ -142,7 +142,13 @@ internal static class Schema
         ) WITHOUT ROWID;
         """;
 
-    private static readonly string[] Migrations = [V1];
+    // Version 2: Kennzeichen „geerbte Rechte weichen vom Elternordner ab“ (FolderNode.InheritanceDiffers, Regel ZT14).
+    // Ältere Läufe kannten es nicht – 0 ist für sie richtig, ihre Befunde sind ohnehin gespeichert.
+    private const string V2 = """
+        ALTER TABLE folder ADD COLUMN inheritance_differs INTEGER NOT NULL DEFAULT 0;
+        """;
+
+    private static readonly string[] Migrations = [V1, V2];
 
     /// <summary>Verbindung einstellen, Datei prüfen und auf den aktuellen Stand bringen.</summary>
     /// <param name="path">Voller Pfad der Datei (für Meldungen und den Blick in den Dateikopf).</param>

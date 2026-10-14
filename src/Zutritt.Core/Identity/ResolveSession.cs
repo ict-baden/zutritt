@@ -262,7 +262,12 @@ internal sealed class ResolveSession
 
     private static Principal FromLsa(string sid, AccountLookupResult r, string? server)
     {
-        var p = Make(sid, r.FullName, r.Kind);
+        // Virtuelle Konten (Window Manager\DWM-1, Font Driver Host\UMFD-0 …) meldet Windows teils als Benutzer –
+        // als Person gezählt, ergäben sie Fehlalarme wie „Recht direkt an Person vergeben“.
+        var kind = WellKnownSids.IsVirtualAccount(sid) && r.Kind is PrincipalKind.Benutzer or PrincipalKind.Gruppe or PrincipalKind.Unbekannt
+            ? PrincipalKind.Bekannt
+            : r.Kind;
+        var p = Make(sid, r.FullName, kind);
         p.DisplayName = r.Name;
         if (p.Kind == PrincipalKind.Verwaist)
         {

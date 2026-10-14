@@ -49,5 +49,25 @@ internal sealed class TestShare : IDisposable
         }
     }
 
+    /// <summary>Freigabe-Berechtigungen nachträglich setzen (NetShareSetInfo, wie die Oberfläche „Berechtigungen“).</summary>
+    public void SetSddl(string sddl)
+    {
+        var raw = new RawSecurityDescriptor(sddl);
+        var bytes = new byte[raw.BinaryLength];
+        raw.GetBinaryForm(bytes, 0);
+        nint sd = Marshal.AllocHGlobal(bytes.Length);
+        try
+        {
+            Marshal.Copy(bytes, 0, sd, bytes.Length);
+            var info = new TestNative.SHARE_INFO_1501 { shi1501_security_descriptor = sd };
+            int status = TestNative.NetShareSetInfo(null, Name, 1501, ref info, out int parmErr);
+            if (status != 0) throw new Win32Exception(status, $"NetShareSetInfo {Name} fehlgeschlagen (Parameter {parmErr})");
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(sd);
+        }
+    }
+
     public void Dispose() => TestNative.NetShareDel(null, Name, 0);
 }

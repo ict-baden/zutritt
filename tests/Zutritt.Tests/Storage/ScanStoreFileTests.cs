@@ -16,7 +16,7 @@ public sealed class ScanStoreFileTests
         var c = store.Connection;
 
         Assert.Equal(Schema.CurrentVersion, TestDb.Scalar(c, "PRAGMA user_version;"));
-        Assert.Equal(1, Schema.CurrentVersion);
+        Assert.Equal(2, Schema.CurrentVersion);
         Assert.Equal(0x5A545254, TestDb.Scalar(c, "PRAGMA application_id;"));
         Assert.Equal("wal", TestDb.Text(c, "PRAGMA journal_mode;"));
         Assert.Equal(1, TestDb.Scalar(c, "PRAGMA foreign_keys;"));
@@ -169,6 +169,36 @@ public sealed class ScanStoreFileTests
         Assert.Contains("neueren Zutritt-Version", ex.Message);
         Assert.Contains("99", ex.Message);
         using (var raw = TestDb.Raw(db.File)) Assert.Equal(99, TestDb.Scalar(raw, "PRAGMA user_version;"));
+        File.Delete(db.File);
+    }
+
+    [Fact]
+    public void Datenbank_mit_Schema_1_wird_migriert_und_alte_Laeufe_bleiben_lesbar()
+    {
+        using var db = new TestDb();
+        var old = SampleScan.Create();
+        using (var store = db.Open()) store.Save(old);
+        // Stand von Schema 1 nachbauen: ohne die Spalte für „Vererbung weicht ab“
+        using (var raw = TestDb.Raw(db.File))
+        {
+            TestDb.Execute(raw, "ALTER TABLE folder DROP COLUMN inheritance_differs; PRAGMA user_version = 1;");
+            Assert.Equal(0, TestDb.Scalar(raw, "SELECT count(*) FROM pragma_table_info('folder') WHERE name = 'inheritance_differs';"));
+        }
+
+        using (var store = db.Open())
+        {
+            Assert.Equal(2, TestDb.Scalar(store.Connection, "PRAGMA user_version;"));
+            var loaded = store.Load(old.Id)!;
+            Assert.All(loaded.Folders, f => Assert.False(f.InheritanceDiffers));
+            Assert.Equal(old.Folders.Count, loaded.Folders.Count);
+
+            // Neue Läufe speichern das Kennzeichen
+            var scan = SampleScan.Create();
+            scan.Folders[1].InheritanceDiffers = true;
+            var id = store.Save(scan);
+            Assert.Equal([false, true], store.Load(id)!.Folders.Take(2).Select(f => f.InheritanceDiffers));
+            Assert.Equal(2, store.List().Count);
+        }
         File.Delete(db.File);
     }
 

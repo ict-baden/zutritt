@@ -40,7 +40,10 @@ public sealed class ScanResult
     public ScanRequest Request { get; set; } = new() { Targets = [] };
 
     public List<ShareInfo> Shares { get; } = [];
-    /// <summary>Nur Ordner/Dateien mit eigener Berechtigung (explizite Einträge oder unterbrochene Vererbung) und alle Wurzeln.</summary>
+    /// <summary>
+    /// Nur Ordner/Dateien mit eigener Berechtigung (explizite Einträge, unterbrochene Vererbung, andere geerbte Rechte
+    /// als vom Elternordner zu erwarten), mit Fehler und alle Wurzeln.
+    /// </summary>
     public List<FolderNode> Folders { get; } = [];
     /// <summary>Alle vorkommenden Konten/Gruppen, Schlüssel = SID.</summary>
     public Dictionary<string, Principal> Principals { get; } = new(StringComparer.OrdinalIgnoreCase);
@@ -68,6 +71,23 @@ public sealed record ShareInfo
     public bool PermissionsReadable { get; init; } = true;
 }
 
+/// <summary>Ein Eintrag der Freigabe-Berechtigungen (SMB), vereinfacht auf eine <see cref="ShareAccess"/>-Stufe.</summary>
+/// <param name="Sid">Konto oder Gruppe.</param>
+/// <param name="Access">
+/// Erlauben (<paramref name="IsDeny"/> = false): die höchste Stufe, die der Eintrag gewährt.
+/// <para>
+/// Verweigern (<paramref name="IsDeny"/> = true): die <b>niedrigste Stufe, ab der verweigert wird</b> – diese Stufe und
+/// alle höheren sind gesperrt, die darunter bleiben möglich. Die Stufen bauen aufeinander auf (Ändern enthält Lesen,
+/// Vollzugriff enthält Ändern), deshalb lässt sich jede Sperre so beschreiben:
+/// Verweigern „Vollzugriff“ der Windows-Oberfläche (0x1F01FF, alle drei Häkchen) sperrt schon das Lesen und steht als
+/// <see cref="ShareAccess.Lesen"/> hier (kein Zugriff über die Freigabe), Verweigern „Ändern“ (0x10116) als
+/// <see cref="ShareAccess.Aendern"/> (Lesen bleibt erlaubt), ein Eintrag, der nur „Berechtigungen ändern“ und „Besitz
+/// übernehmen“ sperrt, als <see cref="ShareAccess.Vollzugriff"/> (Ändern bleibt erlaubt). Einträge, die keine Stufe
+/// vollständig sperren (etwa nur „Löschen“), legt der Scanner gar nicht erst an – sonst sähe der Bericht weniger
+/// Zugriff, als tatsächlich besteht.
+/// </para>
+/// </param>
+/// <param name="IsDeny">Verweigern- statt Erlauben-Eintrag.</param>
 public sealed record ShareAce(string Sid, ShareAccess Access, bool IsDeny);
 
 /// <summary>Ein Ordner (oder eine Datei) mit Berechtigungen.</summary>
@@ -85,6 +105,12 @@ public sealed class FolderNode
     public string OwnerSid { get; set; } = "";
     /// <summary>Vererbung von oben ist abgeschaltet (Schutz der DACL).</summary>
     public bool InheritanceBroken { get; init; }
+    /// <summary>
+    /// Die geerbten Einträge passen nicht zu dem, was der übergeordnete Ordner vererbt – typisch für verschobene
+    /// Ordner und Dateien, die ihre alten geerbten Rechte mitgenommen haben. Nur gesetzt, wenn der Scanner das sicher
+    /// feststellen konnte: nie bei Wurzeln, unterbrochener Vererbung oder einem nicht lesbaren Elternordner.
+    /// </summary>
+    public bool InheritanceDiffers { get; set; }
     public bool HasExplicitAces => Aces.Any(a => !a.IsInherited);
     public List<AceEntry> Aces { get; } = [];
     /// <summary>Der Ordner konnte nicht gelesen werden (Zugriff verweigert, Pfad zu lang …).</summary>

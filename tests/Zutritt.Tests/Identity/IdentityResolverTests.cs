@@ -117,6 +117,47 @@ public class IdentityResolverTests
         Assert.Equal("max", p.DisplayName);
     }
 
+    [Theory]
+    [InlineData("S-1-5-90-0-2", "Window Manager", "DWM-2")]
+    [InlineData("S-1-5-96-0-0", "Font Driver Host", "UMFD-0")]
+    [InlineData("S-1-5-82-1-2-3-4-5", "IIS APPPOOL", "DefaultAppPool")]
+    public void Virtuelle_Konten_sind_keine_Personen_auch_wenn_die_LSA_Benutzer_sagt(string sid, string domain, string name)
+    {
+        // So gefunden in C:\ProgramData\Microsoft\Windows\WER: „Window Manager\DWM-2“ als Benutzer → ZT03/ZT10
+        var lookup = new FakeLookup().Map(sid, domain, name, Use.User);
+        var p = Scans.Resolver(lookup).Resolve(sid);
+
+        Assert.Equal(PrincipalKind.Bekannt, p.Kind);
+        Assert.Equal($@"{domain}\{name}", p.Name);
+    }
+
+    [Fact]
+    public void Nicht_uebersetzbare_Dienst_SID_ist_bekannt_nicht_verwaist()
+    {
+        const string service = "S-1-5-80-3906544942-1489856346-3706913989-164347954-1900376235";
+        var p = Scans.Resolver(new FakeLookup().Fail(service, Native.ERROR_NONE_MAPPED)).Resolve(service);
+
+        Assert.Equal(PrincipalKind.Bekannt, p.Kind);
+        Assert.Equal($"Nicht installierter Dienst ({service})", p.Name);
+    }
+
+    [Fact]
+    public void Faehigkeitsgruppe_ist_bekannt_und_wird_nicht_als_Gruppe_aufgeklappt()
+    {
+        const string capabilityGroup = "S-1-5-32-989523358-1667815365-316973287-129935811-3358257576-2796868252-2781088163-715581871";
+        var lookup = new FakeLookup().Fail(capabilityGroup, Native.ERROR_NONE_MAPPED);
+        var machine = new FakeMachineDirectory(null, Machine);
+        var scan = Scans.On(@"C:\Daten", capabilityGroup);
+
+        Scans.Resolver(lookup, machine).ResolveAll(scan, expandGroups: true);
+
+        var p = scan.Principals[capabilityGroup];
+        Assert.Equal(PrincipalKind.Bekannt, p.Kind);
+        Assert.StartsWith("Fähigkeitsgruppe", p.Name);
+        Assert.False(p.MembersUnknown);
+        Assert.Empty(p.Members);
+    }
+
     [Fact]
     public void Geloeschtes_Konto_laut_LSA_ist_verwaist_mit_SID_als_Name()
     {
