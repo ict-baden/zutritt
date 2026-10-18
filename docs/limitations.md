@@ -10,7 +10,7 @@ What Zutritt cannot see or decide, stated plainly. Where it has to guess, it err
 
 - **Pre-release.** Builds of `main` are published as the release [`latest`](https://github.com/ict-baden/zutritt/releases/tag/latest); there is no tagged version yet.
 - **Not code-signed yet.** Signing starts once Artifact Signing is set up for ICT-Baden; until then SmartScreen may warn about `Zutritt.exe` and the MSI. Every release has `SHA256SUMS.txt` to check the files ([Installation › Verifying the download](installation.md#verifying-the-download)).
-- **German only.** User interface, command-line output and reports are German.
+- **German only.** User interface, command-line output and reports are German. A multilingual interface (English, German, Spanish, French, Chinese) is planned for version 1.0.
 - **Windows x64 only, by design**, Windows 10 1809 or later. The task itself is bound to Windows: NTFS permissions, SMB share permissions (`NetShareEnum`, `NetShareGetInfo`), the local account databases of servers (SAM, LSA) and Active Directory are Windows concepts with Windows-only APIs. The Windows-specific code is kept in `Zutritt.Platform.Windows`; the analysis core `Zutritt.Core` – rules, effective access, comparison, storage, reports – is platform-neutral and its tests also run on Linux in CI. A front end on another platform over stored runs would therefore be possible; scanning stays on Windows.
 - **Security fixes** are provided for the newest released version only ([SECURITY.md](../SECURITY.md)).
 
