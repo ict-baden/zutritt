@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Automation.Peers;
 using System.Windows.Documents;
 using System.Windows.Media;
+using Zutritt.Core.Model;
 
 namespace Zutritt.UI;
 
@@ -19,6 +20,8 @@ namespace Zutritt.UI;
 public sealed class PathText : FrameworkElement
 {
     private const string Ellipsis = "…";
+    // Trenner gescannter Windows-Pfade als Text (zum Messen und Zusammensetzen)
+    private static readonly string Sep = WindowsPath.Separator.ToString();
 
     public static readonly DependencyProperty TextProperty = DependencyProperty.Register(nameof(Text), typeof(string), typeof(PathText),
         new FrameworkPropertyMetadata("", FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender, OnTextChanged));
@@ -167,13 +170,13 @@ public sealed class PathText : FrameworkElement
         if (measure(text) <= max) return text;
 
         // „\\server“ bzw. „D:“ als erster Teil, der Rest nach Backslash getrennt
-        string lead = text.StartsWith(@"\\", StringComparison.Ordinal) ? @"\\" : "";
-        var parts = text[lead.Length..].Split('\\');
+        string lead = WindowsPath.IsUnc(text) ? WindowsPath.UncPrefix : "";
+        var parts = text[lead.Length..].Split(WindowsPath.Separator);
         int n = parts.Length;
         if (n >= 3)
         {
             var widths = parts.Select(measure).ToArray();
-            double sep = measure(@"\"), gap = measure(@"\" + Ellipsis + @"\"), leadWidth = measure(lead);
+            double sep = measure(Sep), gap = measure(Sep + Ellipsis + Sep), leadWidth = measure(lead);
             int bestHead = -1, bestTail = 0;
             for (int head = 1; head <= n - 2; head++)
             {
@@ -199,7 +202,7 @@ public sealed class PathText : FrameworkElement
             }
             if (bestHead > 0)
             {
-                var candidate = lead + string.Join('\\', parts, 0, bestHead) + @"\" + Ellipsis + @"\" + string.Join('\\', parts, n - bestTail, bestTail);
+                var candidate = lead + string.Join(WindowsPath.Separator, parts, 0, bestHead) + Sep + Ellipsis + Sep + string.Join(WindowsPath.Separator, parts, n - bestTail, bestTail);
                 if (measure(candidate) <= max) return candidate;
             }
         }
@@ -209,7 +212,7 @@ public sealed class PathText : FrameworkElement
         {
             for (int tail = n - 1; tail >= 1; tail--)
             {
-                var candidate = Ellipsis + @"\" + string.Join('\\', parts, n - tail, tail);
+                var candidate = Ellipsis + Sep + string.Join(WindowsPath.Separator, parts, n - tail, tail);
                 if (measure(candidate) <= max) return candidate;
             }
         }
