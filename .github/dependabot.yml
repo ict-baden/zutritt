@@ -1,0 +1,29 @@
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      nuget:
+        patterns: ["*"]
+    # Diese Sprünge wechseln die Lizenz und sind nach richtlinien/02 nicht erlaubt (siehe CLAUDE.md):
+    ignore:
+      # PDFsharp und MigraDoc: 6.2.x ist MIT, ab 6.5.0 AGPL-3.0 – nur Patch-Updates
+      - dependency-name: "PDFsharp*"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
+      # SixLabors.Fonts (über ClosedXML): 1.x ist Apache-2.0, ab 2.0 Six Labors Split License
+      - dependency-name: "SixLabors.*"
+        update-types: ["version-update:semver-major"]
+      # WiX: 5.x ist MS-RL, ab 6.0 gilt die OSMF-EULA (Gebühr für Firmen)
+      - dependency-name: "WixToolset.*"
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+  # Banner der Doku (playwright-core); liegt bei Zutritt in tools/screenshots statt tools/banner
+  - package-ecosystem: npm
+    directory: "/tools/screenshots"
+    schedule:
+      interval: monthly

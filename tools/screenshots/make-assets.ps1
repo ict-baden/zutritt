@@ -6,11 +6,11 @@
     1. Baut Zutritt (Release) und rendert mit „Zutritt.exe --screenshots“ jede Seite hell und dunkel
        (Demo-Daten, geht auch ohne sichtbaren Desktop).
     2. Schreibt mit dem versteckten Schalter „--demo-bericht“ einen Demo-Bericht mit Vergleich und rendert
-       ausgewählte Seiten mit PyMuPDF (Python-Modul „fitz“, pip install pymupdf).
+       ausgewählte Seiten mit pypdfium2 (pip install pypdfium2 pillow; freizügige Lizenzen, kein PyMuPDF/AGPL).
     3. Rendert banner.html mit Chrome über playwright-core (npm install in diesem Ordner).
 
 .EXAMPLE
-    cd tools\screenshots; npm install; .\make-assets.ps1
+    cd tools\screenshots; pip install pypdfium2 pillow; npm install; .\make-assets.ps1
 #>
 $ErrorActionPreference = 'Stop'
 $repo = Resolve-Path (Join-Path $PSScriptRoot '..\..')

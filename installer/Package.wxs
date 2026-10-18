@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  MSI für Zutritt: Programmdateien nach %ProgramFiles%\Zutritt und ein Startmenü-Eintrag.
-  Zutritt braucht keinen Dienst und keinen Autostart. Die Datenbank legt die App pro Benutzer unter
+  MSI für Zutritt (nach der Vorlage aus ict-baden/richtlinien): Programmdateien nach %ProgramFiles%\Zutritt und ein
+  Startmenü-Eintrag. Zutritt braucht keinen Dienst und keinen Autostart. Die Datenbank legt die App pro Benutzer unter
   %LocalAppData%\Zutritt an, weil Berechtigungsberichte vertraulich sind.
+  UpgradeCode und die GUID der Startmenü-Komponente nie ändern: sonst installiert sich ein Update neben die alte
+  Version, statt sie zu ersetzen.
+  Manufacturer wird „ICT-Baden GmbH“, sobald die Firmierung steht (OFFEN.md), zusammen mit LICENSE und
+  Directory.Build.props.
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
@@ -21,6 +25,7 @@
     <Icon Id="ZutrittIcon" SourceFile="$(AssetsDir)\zutritt.ico" />
     <Property Id="ARPPRODUCTICON" Value="ZutrittIcon" />
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/ict-baden/zutritt" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/ict-baden/zutritt/blob/main/SUPPORT.md" />
 
     <!-- Laufende Instanzen beenden, sonst sind die Dateien gesperrt -->
     <util:CloseApplication Id="CloseZutritt" Target="Zutritt.exe" CloseMessage="yes" TerminateProcess="1" RebootPrompt="no" />
@@ -37,7 +42,7 @@
       </Files>
 
       <Component Id="StartMenu" Directory="ProgramMenuFolder" Guid="86F473DA-8A81-4CCA-9A42-5C87B7A2F04E">
-        <Shortcut Id="ZutrittShortcut" Name="Zutritt" Description="Wer darf auf welche Freigabe zugreifen?"
+        <Shortcut Id="ZutrittShortcut" Name="Zutritt" Description="Zeigt, wer auf Dateifreigaben worauf zugreifen darf – mit Befunden, Vergleich und Bericht"
                   Target="[INSTALLFOLDER]Zutritt.exe" WorkingDirectory="INSTALLFOLDER" Icon="ZutrittIcon" />
         <RegistryValue Root="HKLM" Key="SOFTWARE\ICT-Baden\Zutritt" Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
       </Component>

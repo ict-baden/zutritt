@@ -1,7 +1,7 @@
 <Project Sdk="WixToolset.Sdk/5.0.2">
   <!--
     MSI für Zutritt. Erwartet die veröffentlichten Programmdateien in $(PublishDir):
-      dotnet publish src/Zutritt/Zutritt.csproj -c Release -r win-x64 -p:PublishSingleFile=true -o publish
+      dotnet publish src/Zutritt/Zutritt.csproj -c Release -r win-x64 -p:PublishSingleFile=true -p:SelfContained=true -o publish
       dotnet build installer/Zutritt.Installer.wixproj -c Release -p:ProductVersion=0.1.0
   -->
   <PropertyGroup>
