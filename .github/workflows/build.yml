@@ -259,7 +259,7 @@ jobs:
           name: ${{ env.APP }}-${{ steps.version.outputs.version }}
           path: dist/*
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 7
 
       - name: Release erstellen (nur bei Tag v*)
         if: github.ref_type == 'tag' && github.event_name == 'push'
