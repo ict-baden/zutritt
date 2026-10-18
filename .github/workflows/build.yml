@@ -32,7 +32,7 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-dotnet@v6
         with:
@@ -71,7 +71,7 @@ jobs:
       id-token: write # Anmeldung bei Azure Artifact Signing (OIDC) und Herkunftsnachweis
       attestations: write # Herkunftsnachweis
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-dotnet@v6
         with:
