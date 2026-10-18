@@ -66,12 +66,31 @@ public sealed class FakePlatformTests
         Assert.Equal(1, platform.ResolversCreated);
     }
 
+    [Fact]
+    public async Task Server_ohne_Antwort_haelt_den_Lauf_nicht_an()
+    {
+        using var never = new ManualResetEventSlim(false);
+        var platform = new FakeScanPlatform { HangOnShares = never };
+        var scanner = new Scanner(platform, (_, _) => { }, _ => []) { ShareTimeout = TimeSpan.FromMilliseconds(300) };
+        try
+        {
+            var scan = await scanner.RunAsync(new ScanRequest { Targets = [WindowsPath.Server("FS01")] });
+            var error = Assert.Single(scan.Errors);
+            Assert.Contains("keine Antwort innerhalb von 300 Millisekunden", error.Message);
+        }
+        finally
+        {
+            never.Set();
+        }
+    }
+
     /// <summary>Plattform im Speicher: Ordner mit Rechten und Fehlern, Freigaben gibt es keine.</summary>
     private sealed class FakeScanPlatform : IScanPlatform
     {
         private readonly Dictionary<string, (bool ExplicitAce, string? ListError)> _folders = new(StringComparer.OrdinalIgnoreCase);
 
         public FakeDirectory Directory { get; } = new();
+        public ManualResetEventSlim? HangOnShares { get; init; }
         public int ResolversCreated { get; private set; }
 
         public FakeScanPlatform Folder(string path, bool explicitAce = false, string? listError = null)
@@ -94,12 +113,16 @@ public sealed class FakePlatformTests
             var t = WindowsPath.TrimEnd(raw!.Trim());
             if (!WindowsPath.IsUnc(t)) return new ScanTarget(TargetKind.LocalPath, t);
             var parts = WindowsPath.Segments(t);
-            return new ScanTarget(TargetKind.UncPath, t, parts[0], parts[1]);
+            return parts.Length == 1 ? new ScanTarget(TargetKind.Server, t, parts[0]) : new ScanTarget(TargetKind.UncPath, t, parts[0], parts[1]);
         }
 
         public string? FullLocalPath(string path) => path;
 
-        public ShareListing EnumerateShares(string server) => new([], "Kein Serverdienst", ServerServiceStopped: true);
+        public ShareListing EnumerateShares(string server)
+        {
+            HangOnShares?.Wait();
+            return new([], "Kein Serverdienst", ServerServiceStopped: true);
+        }
 
         public ShareLookup LookupShare(string server, string share) => new(null, "Netzwerkpfad nicht gefunden", NotFound: false);
 

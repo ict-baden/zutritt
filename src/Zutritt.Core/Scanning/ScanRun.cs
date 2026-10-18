@@ -33,6 +33,9 @@ internal sealed class ScanRun
     private readonly CancellationToken _ct;
     private readonly Stopwatch _clock = Stopwatch.StartNew();
     private readonly long _progressIntervalMs;
+
+    /// <summary>Zeitlimit je Freigabeliste bzw. einzelner Freigabe eines Servers.</summary>
+    public TimeSpan ShareTimeout { get; init; } = TimeBudget.Shares;
     private long _lastReport;
     private string _phase = PhaseTargets;
 
@@ -124,7 +127,7 @@ internal sealed class ScanRun
                 break;
 
             case TargetKind.Server:
-                var listing = _platform.EnumerateShares(target.Server!);
+                var listing = EnumerateShares(target.Server!);
                 if (listing.Error is not null) { AddError(target.Path, listing.Error); break; }
                 var shares = listing.Shares.Where(s => !(_request.SkipAdminShares && s.Share.IsAdminShare)).ToList();
                 if (shares.Count == 0) { AddError(target.Path, "Keine Datenträger-Freigaben gefunden"); break; }
@@ -174,7 +177,7 @@ internal sealed class ScanRun
     private ShareListing LocalListing()
     {
         if (_localListing is not null) return _localListing;
-        _localListing = _platform.EnumerateShares(".");
+        _localListing = EnumerateShares(".");
         _localMap = new LocalShareMap(_localListing.Shares, includeAdminShares: !_request.SkipAdminShares, _platform.FullLocalPath);
         return _localListing;
     }
@@ -182,9 +185,20 @@ internal sealed class ScanRun
     private ShareLookup LookupShare(string server, string share)
     {
         var key = WindowsPath.Unc(server, share);
-        if (!_lookups.TryGetValue(key, out var lookup)) _lookups[key] = lookup = _platform.LookupShare(server, share);
+        if (!_lookups.TryGetValue(key, out var lookup))
+        {
+            _lookups[key] = lookup = TimeBudget.TryRun(() => _platform.LookupShare(server, share), ShareTimeout, out var read)
+                ? read
+                : new ShareLookup(null, $"Freigabe „{key}“: keine Antwort innerhalb von {TimeBudget.Describe(ShareTimeout)}", NotFound: false);
+        }
         return lookup;
     }
+
+    /// <summary>Freigaben eines Servers mit Zeitlimit – ein Server, der nicht antwortet, hält den Lauf nicht an.</summary>
+    private ShareListing EnumerateShares(string server)
+        => TimeBudget.TryRun(() => _platform.EnumerateShares(server), ShareTimeout, out var listing)
+            ? listing
+            : new ShareListing([], $"Freigaben von „{server}“: keine Antwort innerhalb von {TimeBudget.Describe(ShareTimeout)}");
 
     private void AddRoot(Root root)
     {

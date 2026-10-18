@@ -78,6 +78,9 @@ public sealed class Scanner
     /// </summary>
     internal long ProgressIntervalMs { get; init; } = 100;
 
+    /// <summary>Zeitlimit je Freigabeliste bzw. einzelner Freigabe eines Servers (Tests setzen es kurz).</summary>
+    internal TimeSpan ShareTimeout { get; init; } = TimeBudget.Shares;
+
     /// <summary>Lauf im Hintergrund ausführen.</summary>
     /// <exception cref="ArgumentException">Keine Ziele angegeben oder negative Tiefe – ein Fehler des Aufrufers.</exception>
     /// <exception cref="PlatformNotSupportedException">Keine Systemanbindung (nicht unter Windows).</exception>
@@ -109,7 +112,7 @@ public sealed class Scanner
             Request = request,
         };
 
-        var run = new ScanRun(platform, result, progress, ProgressIntervalMs, ct);
+        var run = new ScanRun(platform, result, progress, ProgressIntervalMs, ct) { ShareTimeout = ShareTimeout };
         run.Execute();
 
         run.SetPhase(ScanRun.PhaseAccounts, "");

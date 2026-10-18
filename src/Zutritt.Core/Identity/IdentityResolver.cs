@@ -55,6 +55,9 @@ public sealed class IdentityResolver : IDisposable
         _owned = [.. owned];
     }
 
+    /// <summary>Zeitlimit je Anfrage an ein Verzeichnis oder eine Kontenauflösung (siehe <see cref="ResolveSession.CallTimeout"/>).</summary>
+    internal TimeSpan CallTimeout { get; init; } = Platform.TimeBudget.Directory;
+
     /// <summary>
     /// Maximale Verschachtelungstiefe beim Auflösen von Gruppen (Gruppen in der ACL = Tiefe 0). Tiefer liegende
     /// Gruppen werden mit <see cref="Principal.MembersUnknown"/> markiert und als Hinweis im Lauf vermerkt.
@@ -78,7 +81,7 @@ public sealed class IdentityResolver : IDisposable
             {
                 var machine = _directories.Where(d => d is IMachineDirectory).ToList();
                 var others = _directories.Where(d => d is not IMachineDirectory).ToList();
-                _adHoc = new ResolveSession(machine, others, _lookupFactory is null ? [] : [_lookupFactory(null)]);
+                _adHoc = new ResolveSession(machine, others, _lookupFactory is null ? [] : [_lookupFactory(null)]) { CallTimeout = CallTimeout };
                 _adHocCreatedUtc = DateTime.UtcNow;
             }
             return _adHoc.Resolve(sid);
@@ -204,7 +207,7 @@ public sealed class IdentityResolver : IDisposable
         // Die LSA dieses Rechners zuletzt: Sie kennt die eigene Domäne auch dann, wenn ein Server nicht antwortet.
         if (_lookupFactory is not null) lookups.Add(_lookupFactory(null));
 
-        return new ResolveSession(machineDirectories, others, lookups, unasked);
+        return new ResolveSession(machineDirectories, others, lookups, unasked) { CallTimeout = CallTimeout };
     }
 
     private static IEnumerable<string> CollectSids(ScanResult result)

@@ -1,4 +1,5 @@
 using Zutritt.Core.Model;
+using Zutritt.Core.Platform;
 
 namespace Zutritt.Core.Identity;
 
@@ -17,6 +18,8 @@ internal sealed class ResolveSession
     private readonly IReadOnlyList<IAccountLookup> _lookups;
     private readonly IReadOnlyList<string> _unaskedServers;
     private readonly HashSet<IAccountLookup> _deadLookups = [];
+    // Verzeichnisse, die nicht rechtzeitig geantwortet haben – in dieser Runde nicht mehr gefragt
+    private readonly HashSet<IDirectory> _deadDirectories = [];
     private readonly Dictionary<string, Principal> _principals = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, MembersAnswer> _members = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<ScanError> _problems = [];
@@ -37,6 +40,13 @@ internal sealed class ResolveSession
         _lookups = lookups;
         _unaskedServers = unaskedServers ?? [];
     }
+
+    /// <summary>
+    /// Zeitlimit je Anfrage an ein Verzeichnis oder eine Kontenauflösung. Antwortet eine Quelle nicht rechtzeitig, gilt
+    /// sie für den Rest der Runde als nicht erreichbar (Konten daraus bleiben „Unbekannt“) – ein hängender
+    /// Domänencontroller hält den Lauf so höchstens einmal auf.
+    /// </summary>
+    public TimeSpan CallTimeout { get; init; } = TimeBudget.Directory;
 
     /// <summary>Probleme mit Quellen (Server, Domäne) und Hinweise, als Fehler für den Lauf.</summary>
     public IReadOnlyList<ScanError> Problems => _problems;
@@ -135,16 +145,17 @@ internal sealed class ResolveSession
 
     private LookupOutcome Ask(IDirectory directory, string sid)
     {
+        if (_deadDirectories.Contains(directory)) return LookupOutcome.Unreachable(NoAnswer(directory));
         try
         {
             if (directory is IAuthoritativeDirectory authoritative)
             {
-                var outcome = authoritative.Find(sid);
+                if (!TimeBudget.TryRun(() => authoritative.Find(sid), CallTimeout, out var outcome)) return GaveUp(directory, LookupOutcome.Unreachable);
                 if (outcome.State == LookupState.NichtErreichbar) Note(authoritative.SourceName, outcome.Error ?? "Verzeichnis nicht erreichbar.");
                 if (outcome.State == LookupState.Gefunden && outcome.Principal is null) return LookupOutcome.NotResponsible;
                 return outcome;
             }
-            var p = directory.Lookup(sid);
+            if (!TimeBudget.TryRun(() => directory.Lookup(sid), CallTimeout, out var p)) return GaveUp(directory, LookupOutcome.Unreachable);
             return p is null ? LookupOutcome.NotResponsible : LookupOutcome.Found(p);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -157,16 +168,17 @@ internal sealed class ResolveSession
 
     private MembersOutcome AskMembers(IDirectory directory, string groupSid)
     {
+        if (_deadDirectories.Contains(directory)) return MembersOutcome.Unreachable(NoAnswer(directory));
         try
         {
             if (directory is IAuthoritativeDirectory authoritative)
             {
-                var outcome = authoritative.FindMembers(groupSid);
+                if (!TimeBudget.TryRun(() => authoritative.FindMembers(groupSid), CallTimeout, out var outcome)) return GaveUp(directory, MembersOutcome.Unreachable);
                 if (outcome.State == LookupState.NichtErreichbar) Note(authoritative.SourceName, outcome.Error ?? "Verzeichnis nicht erreichbar.");
                 if (outcome.State == LookupState.Gefunden && outcome.Members is null) return MembersOutcome.NotResponsible;
                 return outcome;
             }
-            var members = directory.GetMembers(groupSid);
+            if (!TimeBudget.TryRun(() => directory.GetMembers(groupSid), CallTimeout, out var members)) return GaveUp(directory, MembersOutcome.Unreachable);
             return members is null ? MembersOutcome.NotResponsible : MembersOutcome.Found(members);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -234,7 +246,14 @@ internal sealed class ResolveSession
             AccountLookupResult r;
             try
             {
-                r = lookup.Lookup(sid);
+                if (!TimeBudget.TryRun(() => lookup.Lookup(sid), CallTimeout, out r))
+                {
+                    Note(LsaSource(lookup.Server), $"Kontenauflösung antwortet nicht innerhalb von {TimeBudget.Describe(CallTimeout)}. "
+                        + "Betroffene Konten bleiben „Unbekannt“.");
+                    _deadLookups.Add(lookup);
+                    error = true;
+                    continue;
+                }
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -308,6 +327,18 @@ internal sealed class ResolveSession
     }
 
     private static bool IsValidSid(string sid) => SidText.IsValid(sid);
+
+    /// <summary>Verzeichnis hat nicht rechtzeitig geantwortet: einmal vermerken, in dieser Runde nicht mehr fragen.</summary>
+    private T GaveUp<T>(IDirectory directory, Func<string, T> unreachable)
+    {
+        _deadDirectories.Add(directory);
+        var message = NoAnswer(directory);
+        Note(SourceOf(directory), message);
+        return unreachable(message);
+    }
+
+    private string NoAnswer(IDirectory directory) =>
+        $"Verzeichnis antwortet nicht innerhalb von {TimeBudget.Describe(CallTimeout)} – Konten und Gruppen aus dieser Quelle bleiben „Unbekannt“.";
 
     private static string LsaSource(string? server) => WindowsPath.Server(server ?? Environment.MachineName);
 
