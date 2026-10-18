@@ -1,0 +1,57 @@
+name: Fehler melden / Bug report
+description: Etwas funktioniert nicht wie beschrieben. / Something does not work as documented.
+labels: [fehler]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Danke! Bitte keine Passwörter, internen Hostnamen oder Kundendaten einfügen – dieses Issue ist öffentlich.
+        Bei Zutritt heißt das auch: keine echten Server-, Freigabe-, Pfad- und Kontonamen, und **keine Berichte (Excel, PDF) oder `zutritt.db` anhängen** – sie zeigen, wer worauf zugreifen darf.
+        Thanks! Please do not paste passwords, internal host names or customer data – this issue is public.
+        Replace server, share, path and account names, and never attach reports or `zutritt.db`.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Von der Seite *Info* oder aus der ersten Zeile von `Zutritt.exe --hilfe`. / From the *Info* page or the first line of `Zutritt.exe --hilfe`.
+      placeholder: 0.1.0-ci.12
+    validations:
+      required: true
+  - type: dropdown
+    id: variante
+    attributes:
+      label: Variante / Package
+      options: [MSI, Einzeldatei / single exe, ZIP (framework), aus dem Quellcode / from source]
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Betriebssystem / OS
+      placeholder: Windows 11 24H2
+  - type: textarea
+    id: schritte
+    attributes:
+      label: Schritte zum Nachstellen / Steps to reproduce
+      placeholder: |
+        1. …
+        2. …
+    validations:
+      required: true
+  - type: textarea
+    id: erwartet
+    attributes:
+      label: Erwartet und tatsächlich / Expected and actual
+    validations:
+      required: true
+  - type: textarea
+    id: umgebung
+    attributes:
+      label: Umgebung (anonymisiert) / Environment (anonymised)
+      description: Domäne oder Arbeitsgruppe, Windows-Version des Servers (oder NAS), Größe des Laufs, Zutritt als Administrator gestartet? / Domain or workgroup, server Windows version (or NAS), size of the run, started as administrator?
+  - type: textarea
+    id: protokoll
+    attributes:
+      label: Ausgabe der Befehlszeile (anonymisiert) / Command-line output (anonymised)
+      description: Ohne Server-, Pfad- und Kontonamen. / Without server, path and account names.
+      render: text
