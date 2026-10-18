@@ -12,15 +12,15 @@ internal sealed class LocalShareMap
 
     /// <param name="shares">Freigaben dieses Rechners; ohne lokalen Pfad werden sie übergangen.</param>
     /// <param name="includeAdminShares">Administrative Freigaben (C$ …) mitzählen – sonst gehörte jeder Pfad zu C$.</param>
-    public LocalShareMap(IEnumerable<ShareRead> shares, bool includeAdminShares)
+    /// <param name="fullPath">Lokalen Pfad vollständig machen (<see cref="Platform.IScanPlatform.FullLocalPath"/>), null = ungültig.</param>
+    public LocalShareMap(IEnumerable<ShareRead> shares, bool includeAdminShares, Func<string, string?> fullPath)
     {
         foreach (var read in shares)
         {
             var share = read.Share;
             if (share.LocalPath.Length == 0 || (share.IsAdminShare && !includeAdminShares)) continue;
-            string path;
-            try { path = LongPath.TrimEndSeparator(Path.GetFullPath(share.LocalPath)); }
-            catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException) { continue; }
+            if (fullPath(share.LocalPath) is not { } full) continue;
+            var path = WindowsPath.TrimEnd(full);
 
             if (!_byPath.TryGetValue(path, out var existing) || Prefer(read, existing)) _byPath[path] = read;
         }
@@ -38,7 +38,7 @@ internal sealed class LocalShareMap
         int bestLength = -1;
         foreach (var (sharePath, read) in _byPath)
         {
-            if (sharePath.Length > bestLength && LongPath.IsSameOrBelow(path, sharePath))
+            if (sharePath.Length > bestLength && WindowsPath.IsSameOrBelow(path, sharePath))
             {
                 best = read;
                 bestLength = sharePath.Length;

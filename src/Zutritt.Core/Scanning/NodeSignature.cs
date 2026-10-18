@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using System.Text;
 using Zutritt.Core.Model;
 
@@ -60,9 +59,9 @@ internal static class NodeSignature
         var expected = new FolderNode { Path = folder.Path, IsFile = true };
         foreach (var ace in folder.Aces)
         {
-            if ((ace.Inheritance & InheritanceFlags.ObjectInherit) == 0) continue;
+            if ((ace.Inheritance & AceInheritance.ObjectInherit) == 0) continue;
             var sid = ace.Sid.Equals(CreatorOwner, StringComparison.OrdinalIgnoreCase) ? fileOwnerSid : ace.Sid;
-            expected.Aces.Add(ace with { Sid = sid, Inheritance = InheritanceFlags.None, Propagation = PropagationFlags.None });
+            expected.Aces.Add(ace with { Sid = sid, Inheritance = AceInheritance.None, Propagation = AcePropagation.None });
         }
         return Effective(expected);
     }
@@ -75,7 +74,7 @@ internal static class NodeSignature
     /// wieder als vererbbare an (ERSTELLER-BESITZER bleibt dabei als Platzhalter erhalten).
     /// </summary>
     private static bool PassesToSubfolders(AceEntry ace)
-        => (ace.Inheritance & InheritanceFlags.ContainerInherit) != 0 && (ace.Propagation & PropagationFlags.NoPropagateInherit) == 0;
+        => (ace.Inheritance & AceInheritance.ContainerInherit) != 0 && (ace.Propagation & AcePropagation.NoPropagateInherit) == 0;
 
     private static void Merge(Dictionary<(string Sid, bool Deny), uint> into, (string Sid, bool Deny) key, uint mask)
         => into[key] = into.TryGetValue(key, out var existing) ? existing | mask : mask;

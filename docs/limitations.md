@@ -8,10 +8,11 @@ What Zutritt cannot see or decide, stated plainly. Where it has to guess, it err
 
 ## Status
 
-- **Pre-release.** Builds come from GitHub Actions; there is no stable release yet.
-- **Not code-signed.** SmartScreen may warn about `Zutritt.exe` and the MSI.
-- **German only.** User interface, command-line output and reports are German.
-- **Windows x64 only**, Windows 10 1809 or later.
+- **Pre-release.** Builds of `main` are published as the release [`latest`](https://github.com/ict-baden/zutritt/releases/tag/latest); there is no tagged version yet.
+- **Not code-signed yet.** Signing starts once Artifact Signing is set up for ICT-Baden; until then SmartScreen may warn about `Zutritt.exe` and the MSI. Every release has `SHA256SUMS.txt` to check the files ([Installation › Verifying the download](installation.md#verifying-the-download)).
+- **German only.** User interface, command-line output and reports are German. A multilingual interface (English, German, Spanish, French, Chinese) is planned for version 1.0.
+- **Windows x64 only, by design**, Windows 10 1809 or later. The task itself is bound to Windows: NTFS permissions, SMB share permissions (`NetShareEnum`, `NetShareGetInfo`), the local account databases of servers (SAM, LSA) and Active Directory are Windows concepts with Windows-only APIs. The Windows-specific code is kept in `Zutritt.Platform.Windows`; the analysis core `Zutritt.Core` – rules, effective access, comparison, storage, reports – is platform-neutral and its tests also run on Linux in CI. A front end on another platform over stored runs would therefore be possible; scanning stays on Windows.
+- **Security fixes** are provided for the newest released version only ([SECURITY.md](../SECURITY.md)).
 
 ## Rights of the scanning account
 
@@ -56,6 +57,7 @@ These decisions are deliberate:
 - **Junctions and symbolic links** are recorded but not followed. What they point to is only scanned if it is a target itself or lies under one.
 - **Depth is relative to the target.** [ZT06](rules.md#zt06--deeply-hidden-exception) counts levels below the scanned target; a deeper target finds fewer “deep” exceptions.
 - **One folder after another.** A scan reads the tree sequentially; large servers take time accordingly.
+- **Time limits for sources that do not answer.** A directory (Active Directory, the account database of a server) or an LSA account lookup that does not answer within **60 seconds** is not asked again in that run: its accounts stay *Unbekannt* and the run gets a note (*… antwortet nicht innerhalb von 60 Sekunden …*). Listing the shares of a server and reading the details of a share get **2 minutes**; after that the server or share counts as unreadable and the run continues with the other targets. A call that timed out keeps running in the background until Windows gives up; its late answer is discarded.
 
 ## Comparison
 

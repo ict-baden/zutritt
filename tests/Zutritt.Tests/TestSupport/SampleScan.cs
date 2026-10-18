@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using Zutritt.Core.Model;
 
 namespace Zutritt.Tests.TestSupport;
@@ -29,9 +28,9 @@ public static class SampleScan
     public const string Klaus = Domain + "-2003";      // deaktiviert
     public const string Verwaist = Domain + "-2999";   // gelöschtes Konto
 
-    public const FileSystemRights Read = FileSystemRights.ReadAndExecute | FileSystemRights.Synchronize;
-    public const FileSystemRights Modify = FileSystemRights.Modify | FileSystemRights.Synchronize;
-    public const FileSystemRights Full = FileSystemRights.FullControl;
+    public const FileRights Read = FileRights.ReadAndExecute | FileRights.Synchronize;
+    public const FileRights Modify = FileRights.Modify | FileRights.Synchronize;
+    public const FileRights Full = FileRights.FullControl;
 
     public static ScanResult Create(DateTimeOffset? started = null)
     {
@@ -79,9 +78,9 @@ public static class SampleScan
         klaus.IsDisabled = true;
         scan.Principals[Verwaist] = new Principal { Sid = Verwaist, Name = Verwaist, Kind = PrincipalKind.Verwaist };
 
-        const InheritanceFlags CIOI = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
-        AceEntry Ace(string sid, FileSystemRights r, bool inherited = false, bool deny = false) =>
-            new() { Sid = sid, Rights = r, IsInherited = inherited, IsDeny = deny, Inheritance = CIOI, Propagation = PropagationFlags.None };
+        const AceInheritance CIOI = AceInheritance.ContainerInherit | AceInheritance.ObjectInherit;
+        AceEntry Ace(string sid, FileRights r, bool inherited = false, bool deny = false) =>
+            new() { Sid = sid, Rights = r, IsInherited = inherited, IsDeny = deny, Inheritance = CIOI, Propagation = AcePropagation.None };
 
         FolderNode F(string rel, int depth, bool broken, string owner, params AceEntry[] aces)
         {

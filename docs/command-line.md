@@ -16,6 +16,9 @@ Zutritt.exe bericht <id> --bericht <datei> [--vergleich] [--db <pfad>]
 Zutritt.exe --demo                  window with built-in demo data
 Zutritt.exe --screenshots <ordner> [--theme hell|dunkel|beide]
 Zutritt.exe --hilfe                 help (also --help, -h, /?)
+Zutritt.exe --version               version and build (also -v)
+Zutritt.exe --info                  version, licence, links, database and log location
+Zutritt.exe --lizenzen              licence text and third-party licences
 ```
 
 | Command | Does |
@@ -23,6 +26,7 @@ Zutritt.exe --hilfe                 help (also --help, -h, /?)
 | `scan` | Scans the targets, saves the run, optionally compares with the previous run and writes reports |
 | `liste` | Lists the saved runs with their ID |
 | `bericht` | Writes reports for a saved run afterwards |
+| `--version`, `--info`, `--lizenzen` | Information about Zutritt itself – see [Other switches](#other-switches) |
 
 Commands and options are not case-sensitive. Options start with `--`; everything else is a target (for `scan`) or the run ID (for `bericht`). An unknown command or option ends with an error message and exit code 3.
 
@@ -162,7 +166,9 @@ Things to decide when you create the task:
 
 ## Logs and encoding
 
-To keep a log of a scheduled run, redirect inside a `.cmd` file:
+Independently of any redirection, Zutritt keeps a short log of its own for support – start, options, counts and errors, no permissions or account names – in `%LocalAppData%\Zutritt\logs` for 7 days ([Data & privacy › Log](data-and-privacy.md#log)).
+
+To keep the output of a scheduled run, redirect inside a `.cmd` file:
 
 ```bat
 @echo off
@@ -190,7 +196,12 @@ Known pitfalls:
 | Switch | Does |
 |---|---|
 | `--demo` | Opens the window with two built-in demo runs (domain *MUSTER*, server *FS01*) in a temporary database that is deleted on exit. Must be the only argument. |
-| `--screenshots <ordner>` | Renders every page of the demo as PNG into the folder – light, dark or both (default), chosen with `--theme hell`, `dunkel` or `beide`. Used for this documentation; works without a visible desktop. |
+| `--screenshots <ordner>` | Renders every page of the demo as PNG into the folder – light, dark or both (default), chosen with `--theme hell`, `dunkel` or `beide`. Used for this documentation; the window stays off-screen, but the Windows session must be connected – in a disconnected session it stops with exit code 3 instead of writing empty images. |
+| `--version`, `-v` | Prints name, version and build, e.g. `Zutritt 0.1.0-ci.12 (Build abc1234)`. Use it when you report a problem. |
+| `--info` | Prints what the *Info* page shows: version and build, .NET version, © and licence, where the licence texts are, links to source code, help and support, privacy, Impressum and website, the database and log location, and *Diese Software sendet keine Daten an ICT-Baden.* |
+| `--lizenzen` | Prints the MIT licence of Zutritt followed by `THIRD-PARTY-NOTICES.txt` – the licences of all libraries it contains. Also `--licenses`. |
+
+`--version`, `--info`, `--lizenzen` and `--demo` stand alone: extra arguments end with an error and exit code 3. Otherwise they end with exit code 0.
 
 ---
 

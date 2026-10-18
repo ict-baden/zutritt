@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using Zutritt.Core.Model;
 
 namespace Zutritt.Core.Scanning;
@@ -11,7 +10,8 @@ internal sealed record ShareSecurityResult(List<ShareAce> Aces, bool Readable, s
 }
 
 /// <summary>
-/// Übersetzt die Sicherheitsbeschreibung einer Freigabe in <see cref="ShareAce"/>-Einträge.
+/// Stufen der Freigabe-Berechtigungen aus Zugriffsmasken. Die Sicherheitsbeschreibung selbst liest die Plattform
+/// (unter Windows <c>Zutritt.Platform.Windows.Scanning.ShareDescriptor</c>).
 /// Leitlinie: Im Zweifel lieber zu viel Zugriff zeigen als zu wenig – ein Audit darf nichts übersehen.
 /// </summary>
 internal static class ShareSecurity
@@ -27,54 +27,6 @@ internal static class ShareSecurity
     public static ShareSecurityResult ForMissingDescriptor(bool isSpecial) => isSpecial
         ? ShareSecurityResult.NotReadable("Freigabe-Berechtigungen nicht lesbar: Administrative Freigabe ohne eigene Berechtigungen – es gilt die interne Windows-Vorgabe (in der Regel nur Administratoren)")
         : new([new ShareAce(Everyone, ShareAccess.Vollzugriff, false)], true, null);
-
-    public static ShareSecurityResult FromBinary(byte[] descriptor)
-    {
-        RawSecurityDescriptor sd;
-        try { sd = new RawSecurityDescriptor(descriptor, 0); }
-        catch (Exception e) when (e is ArgumentException or OverflowException)
-        {
-            return ShareSecurityResult.NotReadable("Freigabe-Berechtigungen nicht lesbar: Sicherheitsbeschreibung ist beschädigt");
-        }
-        return FromDescriptor(sd);
-    }
-
-    public static ShareSecurityResult FromDescriptor(RawSecurityDescriptor sd)
-    {
-        // NULL-DACL (keine Zugriffsliste): Windows prüft dann nichts, jeder hat Vollzugriff.
-        if ((sd.ControlFlags & ControlFlags.DiscretionaryAclPresent) == 0 || sd.DiscretionaryAcl is null)
-            return new([new ShareAce(Everyone, ShareAccess.Vollzugriff, false)], true, null);
-
-        var aces = new List<ShareAce>();
-        foreach (GenericAce ace in sd.DiscretionaryAcl)
-        {
-            if (ace is not QualifiedAce q)
-            {
-                // Eintragstyp ohne SID (veraltet/unbekannt) – lieber als „nicht lesbar“ melden als still weglassen,
-                // dann rechnet die Auswertung nur mit NTFS (obere Grenze).
-                return ShareSecurityResult.NotReadable($"Freigabe-Berechtigungen nicht vollständig auswertbar: unbekannter Eintragstyp {(int)ace.AceType}");
-            }
-            // Nur-vererben-Einträge wirken nie auf die Freigabe selbst.
-            if ((ace.PropagationFlags & PropagationFlags.InheritOnly) != 0) continue;
-
-            var sid = q.SecurityIdentifier.Value;
-            switch (q.AceQualifier)
-            {
-                case AceQualifier.AccessAllowed:
-                    // Bedingte Erlauben-Einträge zählen voll: lieber Zugriff zeigen, der nur unter Bedingungen gilt.
-                    var allow = AllowLevel((uint)q.AccessMask);
-                    if (allow != ShareAccess.Keine) aces.Add(new ShareAce(sid, allow, false));
-                    break;
-                case AceQualifier.AccessDenied:
-                    // Bedingte Verweigerungen gelten nicht immer – sie zu zählen könnte Zugriff verstecken.
-                    if (q.IsCallback) break;
-                    var deny = DenyLevel((uint)q.AccessMask);
-                    if (deny != ShareAccess.Keine) aces.Add(new ShareAce(sid, deny, true));
-                    break;
-            }
-        }
-        return new(aces, true, null);
-    }
 
     /// <summary>
     /// Erlauben-Eintrag: höchste Stufe, für die mindestens ein kennzeichnendes Bit gesetzt ist

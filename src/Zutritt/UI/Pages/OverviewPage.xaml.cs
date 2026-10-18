@@ -4,6 +4,7 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.Win32;
 using Zutritt.Core.Identity;
+using Zutritt.Platform.Windows;
 using Zutritt.Core.Model;
 using Zutritt.Core.Scanning;
 
@@ -192,7 +193,7 @@ public partial class OverviewPage : UserControl, IPage
         {
             var scan = await Task.Run(async () =>
             {
-                var scanner = new Scanner(IdentityResolver.CreateDefault());
+                var scanner = WindowsPlatform.CreateScanner();
                 return await scanner.RunAsync(request, progress, cts.Token);
             });
             ProgressPhase.Text = "Speichern und vergleichen …";

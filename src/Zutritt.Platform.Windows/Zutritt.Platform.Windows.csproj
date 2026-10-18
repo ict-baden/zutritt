@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Alles Windows-Eigene: NTFS-Rechte und Freigaben (Win32, NetApi), Konten (LSA, SAM, Active Directory).
+         Zutritt.Core bleibt plattformneutral (net10.0) und spricht nur über Zutritt.Core.Platform.IScanPlatform hierher. -->
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <RootNamespace>Zutritt.Platform.Windows</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Description>Windows-Anbindung für Zutritt: NTFS-Rechte, SMB-Freigaben, lokale Konten und Active Directory.</Description>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Version)' == ''">
+    <!-- Eine Versionsnummer für alle Teile (steht im Bericht und im Lauf): die Basisversion steht nur in
+         src/Zutritt/Zutritt.csproj, CI-Builds setzen -p:Version für alle Projekte -->
+    <Version>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)../Zutritt/Zutritt.csproj')), '(?&lt;=&lt;Version&gt;)[^&lt;]+'))</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Zutritt.Core\Zutritt.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.DirectoryServices.AccountManagement" Version="10.0.13" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Zutritt.Tests" />
+  </ItemGroup>
+</Project>

@@ -214,7 +214,7 @@ public sealed class ReportDataBuilderTests
         // BESITZERRECHTE steht nicht immer unter den Prinzipalen des Laufs – im Bericht trotzdem keine rohe SID
         var scan = Scan();
         scan.Principals.Remove("S-1-3-4");
-        scan.Folders[0].Aces.Add(new AceEntry { Sid = "S-1-3-4", Rights = System.Security.AccessControl.FileSystemRights.ReadAndExecute });
+        scan.Folders[0].Aces.Add(new AceEntry { Sid = "S-1-3-4", Rights = FileRights.ReadAndExecute });
 
         var data = ReportDataBuilder.Build(scan, null, Rules(), _ => [], CreatedAt);
 

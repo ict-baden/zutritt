@@ -1,7 +1,6 @@
 using Zutritt.Core.Identity;
 using Zutritt.Core.Model;
 using Zutritt.Tests.TestSupport;
-using Use = Zutritt.Core.Identity.Native.SidNameUse;
 
 namespace Zutritt.Tests.Identity;
 
@@ -99,17 +98,14 @@ public class IdentityResolverTests
     // ---------- Rückfall LSA: Arten, verwaist, unbekannt ----------
 
     [Theory]
-    [InlineData((int)Use.User, PrincipalKind.Benutzer)]
-    [InlineData((int)Use.Group, PrincipalKind.Gruppe)]
-    [InlineData((int)Use.Alias, PrincipalKind.Gruppe)]
-    [InlineData((int)Use.WellKnownGroup, PrincipalKind.Bekannt)]
-    [InlineData((int)Use.Computer, PrincipalKind.Computer)]
-    [InlineData((int)Use.Label, PrincipalKind.Bekannt)]
-    [InlineData((int)Use.Unknown, PrincipalKind.Unbekannt)]
-    [InlineData((int)Use.Invalid, PrincipalKind.Unbekannt)]
-    public void LSA_Rueckfall_bildet_die_Kontoart_ab(int use, PrincipalKind kind)
+    [InlineData(PrincipalKind.Benutzer)]
+    [InlineData(PrincipalKind.Gruppe)]
+    [InlineData(PrincipalKind.Bekannt)]
+    [InlineData(PrincipalKind.Computer)]
+    [InlineData(PrincipalKind.Unbekannt)]
+    public void LSA_Rueckfall_bildet_die_Kontoart_ab(PrincipalKind kind)
     {
-        var lookup = new FakeLookup().Map(Max, "LAB", "max", (Use)use);
+        var lookup = new FakeLookup().Map(Max, "LAB", "max", kind);
         var p = Scans.Resolver(lookup, new FakeDirectory()).Resolve(Max);
 
         Assert.Equal(kind, p.Kind);
@@ -124,7 +120,7 @@ public class IdentityResolverTests
     public void Virtuelle_Konten_sind_keine_Personen_auch_wenn_die_LSA_Benutzer_sagt(string sid, string domain, string name)
     {
         // So gefunden in C:\ProgramData\Microsoft\Windows\WER: „Window Manager\DWM-2“ als Benutzer → ZT03/ZT10
-        var lookup = new FakeLookup().Map(sid, domain, name, Use.User);
+        var lookup = new FakeLookup().Map(sid, domain, name, PrincipalKind.Benutzer);
         var p = Scans.Resolver(lookup).Resolve(sid);
 
         Assert.Equal(PrincipalKind.Bekannt, p.Kind);
@@ -135,15 +131,15 @@ public class IdentityResolverTests
     public void Nicht_uebersetzbare_Dienst_SID_ist_bekannt_nicht_verwaist()
     {
         const string service = "S-1-5-80-3906544942-1489856346-3706913989-164347954-1900376235";
-        var p = Scans.Resolver(new FakeLookup().Fail(service, Native.ERROR_NONE_MAPPED)).Resolve(service);
+        var p = Scans.Resolver(new FakeLookup().Fail(service, LookupErrors.NoneMapped)).Resolve(service);
 
         Assert.Equal(PrincipalKind.Bekannt, p.Kind);
         Assert.Equal($"Nicht installierter Dienst ({service})", p.Name);
     }
 
     [Theory]
-    [InlineData(Native.RPC_S_SERVER_UNAVAILABLE)]
-    [InlineData(Native.ERROR_ACCESS_DENIED)]
+    [InlineData(LookupErrors.RpcServerUnavailable)]
+    [InlineData(LookupErrors.AccessDenied)]
     public void Dienst_SID_ohne_sichere_Antwort_heisst_nicht_nicht_installiert(int error)
     {
         // Der Server war nicht erreichbar: Dort kann der Dienst installiert sein – bekannt bleibt die SID trotzdem
@@ -158,7 +154,7 @@ public class IdentityResolverTests
     public void Faehigkeitsgruppe_ist_bekannt_und_wird_nicht_als_Gruppe_aufgeklappt()
     {
         const string capabilityGroup = "S-1-5-32-989523358-1667815365-316973287-129935811-3358257576-2796868252-2781088163-715581871";
-        var lookup = new FakeLookup().Fail(capabilityGroup, Native.ERROR_NONE_MAPPED);
+        var lookup = new FakeLookup().Fail(capabilityGroup, LookupErrors.NoneMapped);
         var machine = new FakeMachineDirectory(null, Machine);
         var scan = Scans.On(@"C:\Daten", capabilityGroup);
 
@@ -174,7 +170,7 @@ public class IdentityResolverTests
     [Fact]
     public void Geloeschtes_Konto_laut_LSA_ist_verwaist_mit_SID_als_Name()
     {
-        var lookup = new FakeLookup().Map(Max, "LAB", "irgendwas", Use.DeletedAccount);
+        var lookup = new FakeLookup().Map(Max, "LAB", "irgendwas", PrincipalKind.Verwaist);
         var p = Scans.Resolver(lookup).Resolve(Max);
 
         Assert.Equal(PrincipalKind.Verwaist, p.Kind);
@@ -184,7 +180,7 @@ public class IdentityResolverTests
     [Fact]
     public void Nicht_zugeordnete_SID_ist_verwaist()
     {
-        var p = Scans.Resolver(new FakeLookup().Fail(Max, Native.ERROR_NONE_MAPPED)).Resolve(Max);
+        var p = Scans.Resolver(new FakeLookup().Fail(Max, LookupErrors.NoneMapped)).Resolve(Max);
 
         Assert.Equal(PrincipalKind.Verwaist, p.Kind);
         Assert.Equal(Max, p.Name);
@@ -193,11 +189,11 @@ public class IdentityResolverTests
     }
 
     [Theory]
-    [InlineData(Native.ERROR_TRUSTED_DOMAIN_FAILURE)]
-    [InlineData(Native.ERROR_TRUSTED_RELATIONSHIP_FAILURE)]
-    [InlineData(Native.RPC_S_SERVER_UNAVAILABLE)]
-    [InlineData(Native.ERROR_NO_LOGON_SERVERS)]
-    [InlineData(Native.ERROR_ACCESS_DENIED)]
+    [InlineData(LookupErrors.TrustedDomainFailure)]
+    [InlineData(LookupErrors.TrustedRelationshipFailure)]
+    [InlineData(LookupErrors.RpcServerUnavailable)]
+    [InlineData(LookupErrors.NoLogonServers)]
+    [InlineData(LookupErrors.AccessDenied)]
     public void Fremde_Domaene_nicht_erreichbar_ist_unbekannt_nicht_verwaist(int error)
     {
         var scan = Scans.On(@"C:\Daten", Max);
@@ -227,7 +223,7 @@ public class IdentityResolverTests
     public void Zustaendiges_Verzeichnis_erreichbar_ohne_Konto_ist_verwaist_auch_wenn_die_LSA_versagt()
     {
         var ad = new FakeAuthoritativeDirectory("lab.local", Dom + "-");
-        var p = Scans.Resolver(new FakeLookup().Fail(Max, Native.RPC_S_SERVER_UNAVAILABLE), ad).Resolve(Max);
+        var p = Scans.Resolver(new FakeLookup().Fail(Max, LookupErrors.RpcServerUnavailable), ad).Resolve(Max);
 
         Assert.Equal(PrincipalKind.Verwaist, p.Kind);
     }
@@ -249,7 +245,7 @@ public class IdentityResolverTests
     {
         // Typisch für SID-Historie nach einer Domänenmigration: Die alte SID gehört zu einem lebenden Konto.
         var ad = new FakeAuthoritativeDirectory("lab.local", Dom + "-");
-        var lookup = new FakeLookup().Map(Max, "NEU", "max.muster", Use.User);
+        var lookup = new FakeLookup().Map(Max, "NEU", "max.muster", PrincipalKind.Benutzer);
         var p = Scans.Resolver(lookup, ad).Resolve(Max);
 
         Assert.Equal(PrincipalKind.Benutzer, p.Kind);
@@ -345,7 +341,7 @@ public class IdentityResolverTests
     {
         var scan = Scans.On(@"C:\Daten", Max);
         scan.Errors.Add(new ScanError(@"C:\Daten\Geheim", "Zugriff verweigert"));
-        var resolver = Scans.Resolver(new FakeLookup().Fail(Max, Native.RPC_S_SERVER_UNAVAILABLE));
+        var resolver = Scans.Resolver(new FakeLookup().Fail(Max, LookupErrors.RpcServerUnavailable));
 
         resolver.ResolveAll(scan, expandGroups: true);
         resolver.ResolveAll(scan, expandGroups: true);
@@ -424,8 +420,8 @@ public class IdentityResolverTests
     public void Lokales_Konto_aus_der_LSA_wird_als_lokal_erkannt()
     {
         var lookup = new FakeLookup()
-            .Map(Machine + "-1001", Environment.MachineName.ToLowerInvariant(), "anna", Use.User)
-            .Map(Max, "LAB", "max", Use.User);
+            .Map(Machine + "-1001", Environment.MachineName.ToLowerInvariant(), "anna", PrincipalKind.Benutzer)
+            .Map(Max, "LAB", "max", PrincipalKind.Benutzer);
         var r = Scans.Resolver(lookup);
 
         Assert.True(r.Resolve(Machine + "-1001").IsLocal);
@@ -622,7 +618,7 @@ public class IdentityResolverTests
     public void Gruppe_die_kein_Verzeichnis_kennt_hat_unbekannte_Mitglieder()
     {
         // Gruppe nur über die LSA bekannt (z. B. aus einer vertrauten Domäne ohne eigenes Verzeichnis).
-        var lookup = new FakeLookup().Map(GroupA, "FREMD", "Gruppe", Use.Group);
+        var lookup = new FakeLookup().Map(GroupA, "FREMD", "Gruppe", PrincipalKind.Gruppe);
         var scan = Scans.On(@"C:\Daten", GroupA);
 
         Scans.Resolver(lookup).ResolveAll(scan, expandGroups: true);
@@ -768,7 +764,7 @@ public class IdentityResolverTests
             .AddMember(WellKnownSids.BuiltinAdministrators, Fs02 + "-500"));
         var scan = Scans.On(@"\\FS01\A", WellKnownSids.BuiltinAdministrators);
         scan.Folders.Add(Scans.Folder(@"\\FS02\B", "", WellKnownSids.BuiltinAdministrators));
-        var lookup = new FakeLookup().Map(Dom + "-512", "LAB", "Domänen-Admins", Use.Group);
+        var lookup = new FakeLookup().Map(Dom + "-512", "LAB", "Domänen-Admins", PrincipalKind.Gruppe);
 
         MachineAware(lookup, null, fs01, fs02).ResolveAll(scan, expandGroups: true);
 
@@ -810,8 +806,8 @@ public class IdentityResolverTests
     {
         var lookups = new Dictionary<string, FakeLookup>(StringComparer.OrdinalIgnoreCase)
         {
-            ["FS01"] = new FakeLookup("FS01") { DefaultError = Native.RPC_S_SERVER_UNAVAILABLE },
-            [""] = new FakeLookup().Map(Max, "LAB", "max", Use.User),
+            ["FS01"] = new FakeLookup("FS01") { DefaultError = LookupErrors.RpcServerUnavailable },
+            [""] = new FakeLookup().Map(Max, "LAB", "max", PrincipalKind.Benutzer),
         };
         var resolver = new IdentityResolver([], s => lookups[s ?? ""], machineDirectoryFactory: null, askScannedServers: true, owned: []);
         var scan = Scans.On(@"\\FS01\Labor", Max, Erika, Dom + "-2003");
@@ -826,7 +822,7 @@ public class IdentityResolverTests
         Assert.Equal(3, lookups[""].Calls);
         var note = Assert.Single(scan.Errors);
         Assert.Equal(@"\\FS01", note.Path);
-        Assert.Contains("RPC-Server nicht verfügbar", note.Message);
+        Assert.Contains("Fehler 1722", note.Message); // Text der Plattform, hier der Attrappe
     }
 
     [Fact]

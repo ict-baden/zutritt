@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using Zutritt.Core.Model;
 
 namespace Zutritt.Core.Reports;
@@ -82,7 +81,7 @@ internal sealed record FolderRow
 }
 
 internal sealed record AceRow(
-    string Account, string Sid, PrincipalKind Kind, AccessLevel Level, FileSystemRights Rights,
+    string Account, string Sid, PrincipalKind Kind, AccessLevel Level, FileRights Rights,
     bool IsDeny, bool IsInherited, string AppliesTo)
 {
     /// <summary>Recht für Menschen; bei Verweigerungen, was gesperrt ist (siehe <see cref="Model.Rights.EntryLabel"/>).</summary>

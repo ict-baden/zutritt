@@ -125,10 +125,28 @@ internal static class Screenshots
             dc.DrawRectangle(brush, null, new Rect(0, 0, width, height));
         bitmap.Render(background);
         bitmap.Render(root);
+        if (IsEmpty(bitmap))
+            throw new InvalidOperationException(
+                "WPF hat ein leeres Bild gezeichnet. Das passiert in einer getrennten Sitzung (Remotedesktop geschlossen, " +
+                "ohne abzumelden) – in einer angemeldeten, verbundenen Sitzung erneut starten.");
 
         var encoder = new PngBitmapEncoder();
         encoder.Frames.Add(BitmapFrame.Create(bitmap));
         using var stream = File.Create(file);
         encoder.Save(stream);
+    }
+
+    /// <summary>
+    /// Ganz durchsichtig? Die Fläche darunter ist deckend, ein gelungenes Bild hat also überall Deckkraft. Ohne
+    /// diese Prüfung landen leere Bilder unbemerkt in der Doku.
+    /// </summary>
+    private static bool IsEmpty(BitmapSource bitmap)
+    {
+        int stride = bitmap.PixelWidth * 4;
+        var pixels = new byte[stride * bitmap.PixelHeight];
+        bitmap.CopyPixels(pixels, stride, 0);
+        for (int alpha = 3; alpha < pixels.Length; alpha += 4)
+            if (pixels[alpha] != 0) return false;
+        return true;
     }
 }

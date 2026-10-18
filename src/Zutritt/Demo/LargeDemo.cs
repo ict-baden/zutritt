@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using Zutritt.Core.Analysis;
 using Zutritt.Core.Model;
 
@@ -24,11 +23,11 @@ internal static class LargeDemo
     private const string DomainAdmins = Domain + "-512";
     private const string DomainUsers = Domain + "-513";
 
-    private const FileSystemRights Read = FileSystemRights.ReadAndExecute | FileSystemRights.Synchronize;
-    private const FileSystemRights Modify = FileSystemRights.Modify | FileSystemRights.Synchronize;
-    private const FileSystemRights Full = FileSystemRights.FullControl;
-    private const FileSystemRights DeleteOnly = FileSystemRights.Delete | FileSystemRights.DeleteSubdirectoriesAndFiles;
-    private const InheritanceFlags CIOI = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
+    private const FileRights Read = FileRights.ReadAndExecute | FileRights.Synchronize;
+    private const FileRights Modify = FileRights.Modify | FileRights.Synchronize;
+    private const FileRights Full = FileRights.FullControl;
+    private const FileRights DeleteOnly = FileRights.Delete | FileRights.DeleteSubdirectoriesAndFiles;
+    private const AceInheritance CIOI = AceInheritance.ContainerInherit | AceInheritance.ObjectInherit;
 
     private static readonly string[] Departments =
         ["Vertrieb", "Einkauf", "Entwicklung", "Produktion", "Qualität", "Labor", "Personal", "Finanzen", "IT", "Logistik", "Marketing", "Geschäftsleitung"];
@@ -38,19 +37,6 @@ internal static class LargeDemo
         ["Angebote", "Auswertungen", "Besprechungen", "Dokumentation", "Entwürfe", "Freigaben", "Korrespondenz", "Messdaten", "Präsentationen",
          "Prüfberichte", "Rechnungen", "Statistik", "Unterlagen", "Zeichnungen", "Zertifikate", "Checklisten"];
     private static readonly string[] ProjectParts = ["Verträge", "Angebote", "Messdaten", "Freigaben"];
-    private static readonly string[] FirstNames =
-        ["Anna", "Ben", "Clara", "David", "Emma", "Felix", "Greta", "Hannah", "Jonas", "Julia", "Karl", "Lea", "Lena", "Leon", "Lukas", "Maria",
-         "Marie", "Max", "Mia", "Moritz", "Noah", "Paul", "Sophie", "Tim", "Tom", "Laura", "Elias", "Emil", "Ida", "Jakob", "Johanna", "Lina",
-         "Luis", "Mila", "Nele", "Niklas", "Ole", "Paula", "Peter", "Petra", "Ralf", "Sabine", "Sandra", "Stefan", "Susanne", "Thomas", "Ute",
-         "Werner", "Yvonne", "Zoe", "Frank", "Heike", "Jürgen", "Katrin", "Michael", "Monika", "Andreas", "Birgit", "Christian", "Daniela"];
-    private static readonly string[] LastNames =
-        ["Müller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner", "Becker", "Schulz", "Hoffmann", "Schäfer", "Koch", "Bauer",
-         "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann", "Braun", "Krüger", "Hofmann", "Hartmann", "Lange",
-         "Schmitt", "Werner", "Schmitz", "Krause", "Meier", "Lehmann", "Schmid", "Schulze", "Maier", "Köhler", "Herrmann", "König", "Walter",
-         "Mayer", "Huber", "Kaiser", "Fuchs", "Peters", "Lang", "Scholz", "Möller", "Weiß", "Jung", "Hahn", "Schubert", "Vogel", "Friedrich",
-         "Keller", "Günther", "Frank", "Berger", "Winkler", "Roth", "Beck", "Lorenz", "Baumann", "Franke", "Albrecht", "Schuster", "Simon",
-         "Ludwig", "Böhm", "Winter", "Kraus", "Martin", "Schumacher", "Krämer", "Vogt", "Stein", "Jäger", "Otto", "Sommer", "Groß", "Seidel", "Heinrich"];
-
     /// <summary>Älterer Lauf (eine Woche vorher) und aktueller Lauf, beide noch ohne Id.</summary>
     public static (ScanResult Older, ScanResult Newer) Create(int folders, int people)
     {
@@ -97,7 +83,7 @@ internal static class LargeDemo
             Machine = "ADMIN-PC12",
             ScannedBy = @"KONZERN\adm.zutritt",
             ToolVersion = AppInfo.Version,
-            Request = new ScanRequest { Targets = [@"\\" + Server] },
+            Request = new ScanRequest { Targets = [WindowsPath.Server(Server)] },
         };
         private readonly List<string> _users = [];
         private readonly List<string> _disabledUsers = [];
@@ -134,18 +120,15 @@ internal static class LargeDemo
             Known(System, @"NT-AUTORITÄT\SYSTEM");
             Known(CreatorOwner, "ERSTELLER-BESITZER");
 
-            var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            // Durchnummerierte Konten statt Personennamen – auch die Messdaten nennen keine Personen
             for (int i = 0; i < peopleTarget; i++)
             {
-                var first = FirstNames[_rng.Next(FirstNames.Length)];
-                var last = LastNames[_rng.Next(LastNames.Length)];
-                var account = Ascii($"{first}.{last}").ToLowerInvariant();
-                for (int n = 2; !used.Add(account); n++) account = Ascii($"{first}.{last}{n}").ToLowerInvariant();
+                var number = (i + 1).ToString("00000", Labels.German);
                 var sid = NextSid();
                 bool disabled = _rng.Next(100) < 3;
                 _scan.Principals[sid] = new Principal
                 {
-                    Sid = sid, Name = @"KONZERN\" + account, DisplayName = $"{first} {last}", Kind = PrincipalKind.Benutzer, IsDisabled = disabled,
+                    Sid = sid, Name = @"KONZERN\benutzer" + number, DisplayName = "Benutzer " + number, Kind = PrincipalKind.Benutzer, IsDisabled = disabled,
                 };
                 _users.Add(sid);
                 if (disabled) _disabledUsers.Add(sid);
@@ -187,15 +170,13 @@ internal static class LargeDemo
 
         private string NextSid() => $"{Domain}-{_rid++}";
 
-        private static string Ascii(string s) => s.Replace("ä", "ae").Replace("ö", "oe").Replace("ü", "ue").Replace("ß", "ss")
-            .Replace("Ä", "Ae").Replace("Ö", "Oe").Replace("Ü", "Ue");
 
         private void Known(string sid, string name) =>
-            _scan.Principals[sid] = new Principal { Sid = sid, Name = name, DisplayName = name.Split('\\').Last(), Kind = PrincipalKind.Bekannt };
+            _scan.Principals[sid] = new Principal { Sid = sid, Name = name, DisplayName = AccountName.LastPart(name), Kind = PrincipalKind.Bekannt };
 
         private string Group(string sid, string name, params string[] members)
         {
-            var g = new Principal { Sid = sid, Name = name, DisplayName = name.Split('\\').Last(), Kind = PrincipalKind.Gruppe, IsLocal = name.StartsWith("VORDEFINIERT", StringComparison.Ordinal) };
+            var g = new Principal { Sid = sid, Name = name, DisplayName = AccountName.LastPart(name), Kind = PrincipalKind.Gruppe, IsLocal = name.StartsWith("VORDEFINIERT", StringComparison.Ordinal) };
             g.Members.AddRange(members);
             _scan.Principals[sid] = g;
             return sid;
@@ -221,7 +202,7 @@ internal static class LargeDemo
         /// <summary>Gespeicherter Ordner; erbt die vererbbaren Einträge des Elternordners, wenn die Vererbung nicht unterbrochen ist.</summary>
         private FolderNode Folder(FolderNode? parent, string name, bool broken, string owner, params AceEntry[] explicitAces)
         {
-            var path = parent is null ? $@"\\{Server}\{name}" : parent.Path + @"\" + name;
+            var path = parent is null ? WindowsPath.Unc(Server, name) : WindowsPath.Join(parent.Path, name);
             var share = parent is null ? path : parent.ShareUnc;
             var node = new FolderNode
             {
@@ -230,15 +211,15 @@ internal static class LargeDemo
             node.Aces.AddRange(explicitAces);
             if (parent is not null && !broken)
                 foreach (var ace in parent.Aces)
-                    if ((ace.Inheritance & InheritanceFlags.ContainerInherit) != 0)
-                        node.Aces.Add(ace.IsInherited ? ace : ace with { IsInherited = true, Propagation = PropagationFlags.None });
+                    if ((ace.Inheritance & AceInheritance.ContainerInherit) != 0)
+                        node.Aces.Add(ace.IsInherited ? ace : ace with { IsInherited = true, Propagation = AcePropagation.None });
             _scan.Folders.Add(node);
             return node;
         }
 
         private void Unreadable(FolderNode parent, string name, string error)
         {
-            var path = parent.Path + @"\" + name;
+            var path = WindowsPath.Join(parent.Path, name);
             _scan.Errors.Add(new ScanError(path, error));
             _scan.Folders.Add(new FolderNode { Path = path, Depth = parent.Depth + 1, ShareUnc = parent.ShareUnc, Error = error });
         }
@@ -248,10 +229,10 @@ internal static class LargeDemo
 
         private void Home(int count)
         {
-            var root = Root("Home", A(DomainUsers, FileSystemRights.ReadData | FileSystemRights.Synchronize, inheritance: InheritanceFlags.None));
+            var root = Root("Home", A(DomainUsers, FileRights.ReadData | FileRights.Synchronize, inheritance: AceInheritance.None));
             foreach (var user in _users.Take(count))
             {
-                var account = _scan.Principals[user].Name.Split('\\')[1];
+                var account = AccountName.LastPart(_scan.Principals[user].Name);
                 // Meist legt ein Skript den Ordner an (Besitzer Administratoren), manchmal die Person selbst
                 var owner = _rng.Next(10) == 0 ? user : Administrators;
                 Folder(root, account, broken: false, owner, A(user, Modify));
@@ -275,7 +256,7 @@ internal static class LargeDemo
 
         private void Projects(int count)
         {
-            var root = Root("Projekte", A(DomainUsers, Read, inheritance: InheritanceFlags.None));
+            var root = Root("Projekte", A(DomainUsers, Read, inheritance: AceInheritance.None));
             int perProject = 1 + ProjectParts.Length;
             int projects = Math.Max(1, count / perProject);
             const int FirstYear = 2014, Years = 13;
@@ -285,7 +266,7 @@ internal static class LargeDemo
                 int yearIndex = p * Years / projects;
                 var year = years[yearIndex];
                 int number = p - yearIndex * projects / Years + 1;
-                var name = $"P{FirstYear + yearIndex}-{number:000} {LastNames[_rng.Next(LastNames.Length)]} {Topics[_rng.Next(Topics.Length)]}";
+                var name = $"P{FirstYear + yearIndex}-{number:000} {Topics[_rng.Next(Topics.Length)]}";
                 var dept = _departments[Departments[_rng.Next(Departments.Length)]];
                 string team = dept.All;
                 if (yearIndex >= Years - 5)
@@ -359,7 +340,7 @@ internal static class LargeDemo
                     var customers = Folder(dept, "Kundenakten", broken: false, Administrators, A(_departments["Einkauf"].Readers, Read));
                     int n = budget * 2 / 3;
                     for (int i = 0; i < n; i++)
-                        Folder(customers, $"K{i + 10001} {LastNames[_rng.Next(LastNames.Length)]} GmbH", broken: false, Administrators, A(lead, Full));
+                        Folder(customers, $"K{i + 10001} Kunde", broken: false, Administrators, A(lead, Full));
                     made += n + 1;
                     budget -= n + 1;
                 }
@@ -388,11 +369,11 @@ internal static class LargeDemo
             }
         }
 
-        private static AceEntry A(string sid, FileSystemRights rights, bool deny = false, bool inheritOnly = false,
-            InheritanceFlags inheritance = CIOI) => new()
+        private static AceEntry A(string sid, FileRights rights, bool deny = false, bool inheritOnly = false,
+            AceInheritance inheritance = CIOI) => new()
         {
             Sid = sid, Rights = rights, IsDeny = deny, Inheritance = inheritance,
-            Propagation = inheritOnly ? PropagationFlags.InheritOnly : PropagationFlags.None,
+            Propagation = inheritOnly ? AcePropagation.InheritOnly : AcePropagation.None,
         };
     }
 }

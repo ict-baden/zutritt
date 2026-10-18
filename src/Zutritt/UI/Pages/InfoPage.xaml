@@ -10,9 +10,10 @@
                            RenderOptions.BitmapScalingMode="HighQuality"/>
                     <StackPanel Margin="20,0,0,0" VerticalAlignment="Center">
                         <TextBlock Text="Zutritt" Style="{StaticResource SubtitleText}"/>
-                        <TextBlock x:Name="VersionText" Text="Version 1.0.0" Style="{StaticResource Caption}"/>
+                        <TextBlock x:Name="VersionText" Text="" Style="{StaticResource Caption}"/>
                         <TextBlock Text="Zeigt, wer auf Dateifreigaben worauf zugreifen darf – mit Befunden, Vergleich und Bericht."
                                    Style="{StaticResource Caption}"/>
+                        <TextBlock x:Name="CopyrightText" Text="" Style="{StaticResource Caption}" Margin="0,4,0,0"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -25,23 +26,47 @@
                     </StackPanel>
                 </Button>
             </ui:SettingCard>
-            <ui:SettingCard Glyph="&#xE7EF;" Header="Herausgeber" Description="ICT-Baden">
+            <ui:SettingCard Glyph="&#xE72E;" Header="Nur lesend, Daten bleiben hier" x:Name="ReadOnlyCard"
+                            Description="Zutritt liest Freigaben, NTFS-Rechte und Gruppenmitgliedschaften. An Rechten, Dateien und Konten ändert es nichts. Diese Software sendet keine Daten an ICT-Baden.">
                 <TextBlock/>
             </ui:SettingCard>
-            <ui:SettingCard Glyph="&#xE8D7;" Header="Lizenz" Description="Die Lizenz ist noch nicht festgelegt.">
-                <TextBlock/>
+
+            <TextBlock Text="Lizenz" Style="{StaticResource SectionText}"/>
+            <ui:SettingCard Glyph="&#xE8D7;" Header="MIT-Lizenz" x:Name="LicenseCard"
+                            Description="Freie Nutzung, Änderung und Weitergabe, solange Copyright und Lizenztext erhalten bleiben.">
+                <Button x:Name="LicenseButton" Click="ShowLicense_Click" Content="Lizenztext anzeigen"/>
             </ui:SettingCard>
-            <ui:SettingCard Glyph="&#xE71B;" Header="Quellcode und Fragen" Description="github.com/ict-baden/zutritt">
-                <Button Click="OpenRepository_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE8A7;" FontFamily="{StaticResource IconFont}" FontSize="13" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock Text="Im Browser öffnen" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
+            <ui:SettingCard Glyph="&#xE8F1;" Header="Drittanbieter-Lizenzen"
+                            Description="Bibliotheken, die Zutritt mitbringt – mit Version, Quelle, Copyright und Lizenztext.">
+                <Button x:Name="NoticesButton" Click="ShowNotices_Click" Content="Anzeigen"/>
             </ui:SettingCard>
-            <ui:SettingCard Glyph="&#xE72E;" Header="Nur lesend"
-                            Description="Zutritt liest Freigaben, NTFS-Rechte und Gruppenmitgliedschaften. An Rechten, Dateien und Konten ändert es nichts.">
-                <TextBlock/>
+
+            <TextBlock Text="Hilfe und Links" Style="{StaticResource SectionText}"/>
+            <ui:SettingCard Glyph="&#xE897;" Header="Hilfe &amp; Support"
+                            Description="Fehler melden und Fragen stellen über GitHub – verbindlich mit einem Supportvertrag.">
+                <Button Click="OpenSupport_Click" Content="Öffnen" AutomationProperties.Name="Hilfe und Support öffnen"/>
+            </ui:SettingCard>
+            <ui:SettingCard Glyph="&#xE9D9;" Header="Diagnosepaket erstellen"
+                            Description="Version, Systemangaben und Protokoll der letzten 7 Tage als ZIP für den Support.">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Ohne Namen und Adressen" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <CheckBox x:Name="AnonymizeDiagnostics" Style="{StaticResource ToggleSwitch}" IsChecked="True" VerticalAlignment="Center"
+                              Margin="0,0,16,0" AutomationProperties.Name="Diagnosepaket ohne Namen, Pfade und Adressen"/>
+                    <Button Click="CreateDiagnostics_Click" Content="Erstellen …"/>
+                </StackPanel>
+            </ui:SettingCard>
+            <ui:SettingCard Glyph="&#xE943;" Header="Quellcode (GitHub)" Description="github.com/ict-baden/zutritt">
+                <Button Click="OpenRepository_Click" Content="Öffnen" AutomationProperties.Name="Quellcode auf GitHub öffnen"/>
+            </ui:SettingCard>
+            <ui:SettingCard Glyph="&#xE8A1;" Header="Datenschutz"
+                            Description="Welche Daten Zutritt wo speichert, welche Verbindungen es aufbaut und wie man alles löscht.">
+                <Button Click="OpenPrivacy_Click" Content="Öffnen" AutomationProperties.Name="Datenschutz öffnen"/>
+            </ui:SettingCard>
+            <ui:SettingCard Glyph="&#xE779;" Header="Impressum" x:Name="ImpressumCard" Description="ICT-Baden">
+                <Button Click="OpenImpressum_Click" Content="Öffnen" AutomationProperties.Name="Impressum öffnen"/>
+            </ui:SettingCard>
+            <ui:SettingCard Glyph="&#xE774;" Header="Webseite" Description="ICT-Baden auf GitHub">
+                <Button Click="OpenWebsite_Click" Content="Öffnen" AutomationProperties.Name="Webseite öffnen"/>
             </ui:SettingCard>
 
             <TextBlock Text="Befehlszeile und geplante Aufgaben" Style="{StaticResource SectionText}"/>
@@ -70,7 +95,7 @@
                         <TextBlock Grid.Row="3" Text="Exitcode 3" Style="{StaticResource BodyStrong}" FontSize="13" Margin="0,0,16,0"/>
                         <TextBlock Grid.Row="3" Grid.Column="1" Text="Fehler oder Abbruch" Style="{StaticResource Body}" FontSize="13"/>
                     </Grid>
-                    <TextBlock Style="{StaticResource Caption}" Margin="0,12,0,0" Text="Alle Befehle und Optionen: Zutritt.exe --hilfe"/>
+                    <TextBlock Style="{StaticResource Caption}" Margin="0,12,0,0" Text="Alle Befehle und Optionen: Zutritt.exe --hilfe · Version und diese Angaben als Text: Zutritt.exe --info"/>
                 </StackPanel>
             </Border>
 

@@ -2,12 +2,12 @@
 
 # Installation & rights
 
-Which file to download, what it needs, and which rights the scanning account needs.
+Which file to download, how to check it, how to roll it out, and which rights the scanning account needs.
 
-**Contents:** [Requirements](#requirements) · [Downloads](#downloads) · [MSI installer](#msi-installer) · [Single exe and ZIP](#single-exe-and-zip) · [Rights for scanning](#rights-for-scanning) · [Recommended setup](#recommended-setup) · [Updates and uninstalling](#updates-and-uninstalling)
+**Contents:** [Requirements](#requirements) · [Downloads](#downloads) · [Verifying the download](#verifying-the-download) · [MSI installer](#msi-installer) · [Deploying with Intune or Group Policy](#deploying-with-intune-or-group-policy) · [Single exe and ZIP](#single-exe-and-zip) · [Rights for scanning](#rights-for-scanning) · [Recommended setup](#recommended-setup) · [Updates and uninstalling](#updates-and-uninstalling) · [Supported versions](#supported-versions)
 
 > [!IMPORTANT]
-> **Pre-release.** Zutritt is built and tested in GitHub Actions on every push to `main` (and for pull requests and `v*` tags), but it is not yet released as a stable version. Program and MSI are **not code-signed**; Windows SmartScreen may warn when you start them.
+> **Pre-release, not code-signed yet.** Zutritt is built and tested in GitHub Actions on every push to `main`, but there is no tagged version yet. Program and MSI are signed as soon as Artifact Signing is set up for ICT-Baden; until then Windows SmartScreen may warn when you start them. Check the files against `SHA256SUMS.txt` – see [Verifying the download](#verifying-the-download).
 
 ## Requirements
 
@@ -19,40 +19,81 @@ Which file to download, what it needs, and which rights the scanning account nee
 | **Active Directory** | Optional. Domain accounts are resolved and domain groups expanded only when the scanning PC is a **member of the domain** and a domain controller is reachable. |
 | **Language** | The user interface, the command-line output and the reports are German, regardless of the Windows display language. |
 
+**Why Windows only.** What Zutritt reads – NTFS permissions, SMB share permissions, the local account databases of servers (SAM, LSA) and Active Directory – exists only on Windows and is only reachable through Windows APIs. The program is therefore a Windows (WPF) application. Its analysis core – rules, effective access, comparison, storage and reports – is platform-neutral and tested on Linux as well ([Development › Architecture](development.md#architecture)).
+
 ## Downloads
 
-All files are attached to the pre-release [**latest**](https://github.com/ict-baden/zutritt/releases/tag/latest), which GitHub Actions rebuilds on every push to `main`. Tagged versions (`v1.2.3`) get their own release with the same files.
+**[latest](https://github.com/ict-baden/zutritt/releases/tag/latest)** is the newest build of `main`, updated in place on every push and marked *Latest* until the first tagged version exists. Its file names never change, so these links always give the newest build:
 
 | File | Runtime | Use it for |
 |---|---|---|
-| `Zutritt-<version>-x64.msi` | included | Installing for all users of a PC, also through software distribution. |
-| `Zutritt.exe` | included | Running without installation, e.g. from an admin share or a USB stick. |
-| `Zutritt-<version>-win-x64-framework.zip` | .NET 10 Desktop Runtime | A small download where the runtime is already installed. |
+| [`Zutritt-x64.msi`](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt-x64.msi) | included | Installing for all users of a PC, also through Intune or Group Policy. |
+| [`Zutritt.exe`](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt.exe) | included | Running without installation, e.g. from an admin share or a USB stick. |
+| [`Zutritt-win-x64-framework.zip`](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt-win-x64-framework.zip) | .NET 10 Desktop Runtime | A small download where the runtime is already installed. |
+| [`SHA256SUMS.txt`](https://github.com/ict-baden/zutritt/releases/download/latest/SHA256SUMS.txt) | – | SHA-256 checksums of all files in the release. |
+| [`Zutritt-sbom.cdx.json`](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt-sbom.cdx.json) | – | Bill of materials (CycloneDX): every library the program contains, and the .NET, Windows Desktop and Windows SDK runtime packs with their versions. |
 
-Builds from `main` carry versions like `0.1.0-ci.12` (12 = the number of the build run); releases from a tag carry the tag's version.
+Builds from `main` carry versions like `0.1.0-ci.12` (12 = the number of the build run). A **tagged version** `v1.2.0` gets its own release whose file names contain the version: `Zutritt-1.2.0-x64.msi`, `Zutritt-1.2.0-win-x64-framework.zip`, `Zutritt-1.2.0-sbom.cdx.json`, plus `Zutritt.exe` and `SHA256SUMS.txt`. Tags with a hyphen (`v1.2.0-rc1`) are marked as pre-releases.
+
+Every variant contains the licence texts: `LICENSE` and `THIRD-PARTY-NOTICES.txt` lie next to the program in the ZIP and in the installation folder; `Zutritt.exe` carries them inside and shows them on the *Info* page and with `Zutritt.exe --lizenzen`.
+
+## Verifying the download
+
+Each release has a `SHA256SUMS.txt` with one line per file: the checksum and the file name. Compare the checksum of your download with that line:
+
+```powershell
+(Get-FileHash .\Zutritt-x64.msi -Algorithm SHA256).Hash.ToLower()
+Select-String Zutritt-x64.msi .\SHA256SUMS.txt
+```
+
+Or check every file of the release that is in the current folder:
+
+```powershell
+Get-Content .\SHA256SUMS.txt | ForEach-Object {
+    $hash, $name = $_ -split '\s+', 2
+    if (Test-Path $name) {
+        $ok = (Get-FileHash $name -Algorithm SHA256).Hash -eq $hash
+        '{0}  {1}' -f $(if ($ok) { 'OK  ' } else { 'FAIL' }), $name
+    }
+}
+```
+
+On Linux or macOS: `sha256sum -c SHA256SUMS.txt --ignore-missing`.
+
+**Signatures.** Once code signing is active, `Get-AuthenticodeSignature .\Zutritt-x64.msi` shows `Valid` and the signer, and SmartScreen no longer warns. Until then it shows `NotSigned`, and SmartScreen may show *Windows protected your PC* when you start `Zutritt.exe` or the MSI: check the checksum, then *More info* › *Run anyway*. The release notes of `latest` say whether a build is signed.
 
 ## MSI installer
 
-The MSI installs per machine:
+The MSI installs per machine (administrator rights needed):
 
-- program files into `C:\Program Files\Zutritt`,
+- program files into `C:\Program Files\Zutritt`, together with `LICENSE` and `THIRD-PARTY-NOTICES.txt`,
 - one Start menu entry *Zutritt*,
+- the registry value `HKLM\SOFTWARE\ICT-Baden\Zutritt\StartMenuShortcut` that Windows Installer needs to track the Start menu entry,
 - **no** service, **no** autostart, no scheduled task, no changes to other settings.
 
 ```powershell
-# As administrator. The file name contains the version of the build.
-msiexec /i Zutritt-0.1.0-ci.12-x64.msi            # interactive
-msiexec /i Zutritt-0.1.0-ci.12-x64.msi /qn        # silent, e.g. for software distribution
-msiexec /x Zutritt-0.1.0-ci.12-x64.msi /qn        # uninstall
+# As administrator
+msiexec /i Zutritt-x64.msi                   # interactive
+msiexec /i Zutritt-x64.msi /qn               # silent, e.g. for software distribution
+msiexec /i Zutritt-x64.msi /qn /l*v msi.log  # silent with a log file
+msiexec /x Zutritt-x64.msi /qn               # uninstall
 ```
 
-The installer closes a running Zutritt before it replaces the files.
+The installer closes a running Zutritt before it replaces the files. *Apps & features* links to [SUPPORT.md](../SUPPORT.md) for help.
+
+## Deploying with Intune or Group Policy
+
+- **Intune:** add `Zutritt-x64.msi` as a *line-of-business app* (Intune reads product code and version from the MSI), or package it with the *Microsoft Win32 Content Prep Tool* as a *Windows app (Win32)* with the install command `msiexec /i Zutritt-x64.msi /qn` and an MSI detection rule. Assign it to devices – the MSI installs per machine.
+- **Group Policy:** put the MSI on a share that the computer accounts can read and assign it under *Computer Configuration › Policies › Software Settings › Software installation*. It is installed at the next start of the PC.
+- **Updates:** every build has its own product code and replaces the previous one (major upgrade, see [Updates](#updates-and-uninstalling)). Deploy the new MSI and let it supersede the old one; there is no need to uninstall first.
+
+Zutritt only needs to be installed on the PCs that scan – usually a few admin workstations, not the file servers.
 
 ## Single exe and ZIP
 
-**`Zutritt.exe`** is the whole program in one file – runtime and native libraries (SQLite, WPF) are embedded. Copy it anywhere and start it. Because it is not signed, SmartScreen may show *Windows protected your PC*; *More info* › *Run anyway* starts it.
+**`Zutritt.exe`** is the whole program in one file – runtime and native libraries (SQLite, WPF) are embedded. Copy it anywhere and start it. While it is not signed, SmartScreen may show *Windows protected your PC*; *More info* › *Run anyway* starts it.
 
-**The ZIP** contains a smaller, framework-dependent build and a copy of the project's `README.md` (its images and links point into the repository and only work on GitHub). Extract it and start `Zutritt.exe`; Windows asks for the .NET 10 Desktop Runtime if it is missing.
+**The ZIP** contains a smaller, framework-dependent build, `LICENSE`, `THIRD-PARTY-NOTICES.txt` and a copy of the project's `README.md` (its images and links point into the repository and only work on GitHub). Extract it and start `Zutritt.exe`; Windows asks for the .NET 10 Desktop Runtime if it is missing.
 
 All variants behave the same: same features, same command line, same database location (`%LocalAppData%\Zutritt\zutritt.db` of the user who runs it – see [Data & privacy](data-and-privacy.md)).
 
@@ -71,6 +112,8 @@ Zutritt only reads, but it can only report what the scanning account is allowed 
 | Account names | LSA lookups on the scanned server and on this PC | Usually any authenticated user | Accounts stay *Unbekannt* |
 | Domain users and groups | Active Directory of the PC's own domain | A normal domain account can usually read users and groups | Note “Active Directory … nicht erreichbar”; domain accounts stay *Unbekannt*, their groups are not expanded |
 
+A server, directory or account database that does not answer at all does not stop the run: after a time limit it is treated as unreachable ([Limitations › Scanning](limitations.md#scanning)).
+
 **Backup privilege.** Zutritt opens every object with backup intent (`FILE_OPEN_FOR_BACKUP_INTENT`). If the backup privilege (*SeBackupPrivilege*) is already **enabled** in the process token, Windows then lets Zutritt read the permissions regardless of the ACL. Zutritt does not enable the privilege itself; whether it is enabled depends on how the process was started.
 
 > [!TIP]
@@ -88,7 +131,13 @@ Zutritt only reads, but it can only report what the scanning account is allowed 
 - **MSI:** install the newer MSI over the old one. Builds from `main` replace each other (Windows Installer compares only the first three parts of the version, and the package allows same-version upgrades); a release with a higher version replaces them as well. Installing an *older* version over a newer one is refused (*Eine neuere Version von Zutritt ist bereits installiert.*).
 - **Exe and ZIP:** replace the files.
 - **Database:** a newer Zutritt upgrades the database schema automatically. An older Zutritt refuses to open a database written by a newer version instead of damaging it.
-- **Uninstalling** removes the program files and the Start menu entry. The run history in `%LocalAppData%\Zutritt` of each user stays; delete that folder to remove it.
+- **Uninstalling** removes the program files, the Start menu entry and the registry value. The run history and the logs in `%LocalAppData%\Zutritt` of each user stay; delete that folder to remove them.
+
+Zutritt does not check for updates by itself. Watch the [releases](https://github.com/ict-baden/zutritt/releases) on GitHub (*Watch › Custom › Releases*) to hear about new versions.
+
+## Supported versions
+
+Security fixes are provided for the **newest released version** only – install it to get them ([SECURITY.md](../SECURITY.md)). Builds of `main` on `latest` are always the newest state but are not a release with a version promise. Help is available for free on GitHub and with guaranteed response times under a support contract ([SUPPORT.md](../SUPPORT.md)).
 
 ---
 

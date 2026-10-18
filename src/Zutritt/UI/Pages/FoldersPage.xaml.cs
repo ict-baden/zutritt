@@ -288,8 +288,8 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
 
     private static string LastSegment(string path)
     {
-        var trimmed = path.TrimEnd('\\');
-        int cut = trimmed.LastIndexOf('\\');
+        var trimmed = path.TrimEnd(WindowsPath.Separator);
+        int cut = trimmed.LastIndexOf(WindowsPath.Separator);
         return cut >= 0 && cut < trimmed.Length - 1 ? trimmed[(cut + 1)..] : trimmed;
     }
 

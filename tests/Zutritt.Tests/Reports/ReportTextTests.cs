@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using Zutritt.Core.Model;
 using Zutritt.Core.Reports;
 
@@ -6,26 +5,26 @@ namespace Zutritt.Tests.Reports;
 
 public sealed class ReportTextTests
 {
-    private const InheritanceFlags CI = InheritanceFlags.ContainerInherit;
-    private const InheritanceFlags OI = InheritanceFlags.ObjectInherit;
-    private const PropagationFlags IO = PropagationFlags.InheritOnly;
-    private const PropagationFlags NP = PropagationFlags.NoPropagateInherit;
+    private const AceInheritance CI = AceInheritance.ContainerInherit;
+    private const AceInheritance OI = AceInheritance.ObjectInherit;
+    private const AcePropagation IO = AcePropagation.InheritOnly;
+    private const AcePropagation NP = AcePropagation.NoPropagateInherit;
 
     [Theory]
-    [InlineData(InheritanceFlags.None, PropagationFlags.None, "Nur diesen Ordner")]
-    [InlineData(CI | OI, PropagationFlags.None, "Diesen Ordner, Unterordner und Dateien")]
-    [InlineData(CI, PropagationFlags.None, "Diesen Ordner und Unterordner")]
-    [InlineData(OI, PropagationFlags.None, "Diesen Ordner und Dateien")]
+    [InlineData(AceInheritance.None, AcePropagation.None, "Nur diesen Ordner")]
+    [InlineData(CI | OI, AcePropagation.None, "Diesen Ordner, Unterordner und Dateien")]
+    [InlineData(CI, AcePropagation.None, "Diesen Ordner und Unterordner")]
+    [InlineData(OI, AcePropagation.None, "Diesen Ordner und Dateien")]
     [InlineData(CI | OI, IO, "Nur Unterordner und Dateien")]
     [InlineData(CI, IO, "Nur Unterordner")]
     [InlineData(OI, IO, "Nur Dateien")]
     [InlineData(CI | OI, NP, "Diesen Ordner, Unterordner und Dateien (nur eine Ebene)")]
-    [InlineData(InheritanceFlags.None, NP, "Nur diesen Ordner")]
-    public void GiltFuer_WieImWindowsDialog(InheritanceFlags inheritance, PropagationFlags propagation, string expected) =>
+    [InlineData(AceInheritance.None, NP, "Nur diesen Ordner")]
+    public void GiltFuer_WieImWindowsDialog(AceInheritance inheritance, AcePropagation propagation, string expected) =>
         Assert.Equal(expected, ReportText.AppliesTo(inheritance, propagation, isFile: false));
 
     [Fact]
-    public void GiltFuer_Datei() => Assert.Equal("Nur diese Datei", ReportText.AppliesTo(CI | OI, PropagationFlags.None, isFile: true));
+    public void GiltFuer_Datei() => Assert.Equal("Nur diese Datei", ReportText.AppliesTo(CI | OI, AcePropagation.None, isFile: true));
 
     [Fact]
     public void Clean_ErsetztSteuerzeichenUndHalbeSurrogate_BehaeltGueltiges()
@@ -75,7 +74,7 @@ public sealed class ReportTextTests
     [Fact]
     public void Eintrag_Kurzbeschreibung_MitMaske()
     {
-        var ace = new AceEntry { Sid = "S-1-1-0", Rights = FileSystemRights.ReadAndExecute | FileSystemRights.Synchronize, IsDeny = true, IsInherited = true };
+        var ace = new AceEntry { Sid = "S-1-1-0", Rights = FileRights.ReadAndExecute | FileRights.Synchronize, IsDeny = true, IsInherited = true };
         Assert.Equal("Lesen · Verweigern · geerbt · Nur diesen Ordner", ReportText.Ace(ace, isFile: false));
         Assert.Equal("Lesen · Verweigern · geerbt · Nur diese Datei (0x001200A9)", ReportText.Ace(ace, isFile: true, withMask: true));
     }

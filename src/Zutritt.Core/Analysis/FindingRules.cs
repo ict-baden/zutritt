@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using Zutritt.Core.Model;
 
 namespace Zutritt.Core.Analysis;
@@ -226,8 +225,8 @@ public static class FindingRules
         foreach (var ace in folder.Aces)
         {
             if (ace.IsInherited || !ace.IsDeny || !ace.Sid.Equals(sid, StringComparison.OrdinalIgnoreCase)) continue;
-            var mask = Rights.MapGeneric(ace.Rights) & ~FileSystemRights.Synchronize;
-            if (mask != FileSystemRights.ListDirectory || ace.Inheritance != InheritanceFlags.None || ace.InheritOnly) return false;
+            var mask = Rights.MapGeneric(ace.Rights) & ~FileRights.Synchronize;
+            if (mask != FileRights.ListDirectory || ace.Inheritance != AceInheritance.None || ace.InheritOnly) return false;
             any = true;
         }
         return any;
@@ -325,14 +324,14 @@ public static class FindingRules
 
         // Was dort ankommt (je SID, ohne Rechte – für eine verständliche Aufzählung): Dateien erben „Objekte erben“,
         // Ordner auch das (als „nur vererben“); „nicht weitergeben“ reicht nur eine Ebene.
-        var needed = folder.IsFile ? InheritanceFlags.ObjectInherit : InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
+        var needed = folder.IsFile ? AceInheritance.ObjectInherit : AceInheritance.ContainerInherit | AceInheritance.ObjectInherit;
         var passed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         // ERSTELLER-BESITZER wird beim Erben zum Besitzer – erkennbar am Platzhalter oben oder am eigenen „nur vererben“-Eintrag.
         bool creator = folder.Aces.Any(a => a.IsInherited && SidCatalog.IsCreatorPlaceholder(a.Sid));
         foreach (var ace in source.Aces)
         {
             if ((ace.Inheritance & needed) == 0) continue;
-            if (distance > 1 && (ace.Propagation & PropagationFlags.NoPropagateInherit) != 0) continue;
+            if (distance > 1 && (ace.Propagation & AcePropagation.NoPropagateInherit) != 0) continue;
             passed.Add(ace.Sid);
             creator |= SidCatalog.IsCreatorPlaceholder(ace.Sid);
         }
@@ -396,7 +395,7 @@ public static class FindingRules
     /// </summary>
     /// <param name="AllowMask">Alle eigenen expliziten Erlauben-Rechte der SID (für Texte).</param>
     /// <param name="DeniedMask">Alle eigenen expliziten Verweigern-Rechte der SID (für Texte).</param>
-    private readonly record struct ScopeLevels(AccessLevel Raw, AccessLevel Net, FileSystemRights AllowMask, FileSystemRights DeniedMask,
+    private readonly record struct ScopeLevels(AccessLevel Raw, AccessLevel Net, FileRights AllowMask, FileRights DeniedMask,
         bool HasAllow, bool HasDeny, bool OnlyForChildren)
     {
         public static ScopeLevels For(AccessContext ctx, FolderNode folder, string sid)
@@ -404,9 +403,9 @@ public static class FindingRules
             // Explizite Verweigerungen stehen kanonisch vor expliziten Erlaubnissen – sie treffen auch die Mitglieder,
             // geerbte Verweigerungen können explizite Erlaubnisse dagegen nicht aufheben.
             var token = ctx.TokenOf(sid, AccessContext.LogonFor(folder));
-            Span<FileSystemRights> allow = stackalloc FileSystemRights[3];
-            Span<FileSystemRights> deny = stackalloc FileSystemRights[3];
-            FileSystemRights ownAllow = 0, ownDeny = 0;
+            Span<FileRights> allow = stackalloc FileRights[3];
+            Span<FileRights> deny = stackalloc FileRights[3];
+            FileRights ownAllow = 0, ownDeny = 0;
             bool hasAllow = false, hasDeny = false;
 
             foreach (var ace in folder.Aces)
@@ -418,8 +417,8 @@ public static class FindingRules
                 var mask = Rights.MapGeneric(ace.Rights);
                 var target = ace.IsDeny ? deny : allow;
                 if (!ace.InheritOnly) target[0] |= mask;
-                if (!folder.IsFile && (ace.Inheritance & InheritanceFlags.ContainerInherit) != 0) target[1] |= mask;
-                if (!folder.IsFile && (ace.Inheritance & InheritanceFlags.ObjectInherit) != 0) target[2] |= mask;
+                if (!folder.IsFile && (ace.Inheritance & AceInheritance.ContainerInherit) != 0) target[1] |= mask;
+                if (!folder.IsFile && (ace.Inheritance & AceInheritance.ObjectInherit) != 0) target[2] |= mask;
 
                 if (own && ace.IsDeny) { hasDeny = true; ownDeny |= mask; }
                 if (own && !ace.IsDeny) { hasAllow = true; ownAllow |= mask; }
@@ -444,7 +443,7 @@ public static class FindingRules
     /// „Kein Zugriff verweigert“, „Berechtigungen ändern verweigert“ hieße „Vollzugriff verweigert“. Ganze Stufen
     /// heißen deshalb wie in der Windows-Oberfläche, sonst werden die enthaltenen Teile genannt.
     /// </summary>
-    internal static string Describe(FileSystemRights rights)
+    internal static string Describe(FileRights rights)
     {
         var quoted = Rights.Parts(rights).Select(p => $"„{p}“").ToList();
         return quoted.Count == 1 ? quoted[0] : string.Join(", ", quoted.Take(quoted.Count - 1)) + " und " + quoted[^1];

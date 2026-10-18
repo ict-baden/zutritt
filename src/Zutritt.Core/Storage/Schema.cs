@@ -91,7 +91,7 @@ internal static class Schema
             folder_id    INTEGER NOT NULL REFERENCES folder(id) ON DELETE CASCADE,
             ord          INTEGER NOT NULL,
             sid          TEXT    NOT NULL,
-            rights       INTEGER NOT NULL,                         -- FileSystemRights, vorzeichenlos
+            rights       INTEGER NOT NULL,                         -- FileRights (= Windows-Zugriffsmaske), vorzeichenlos
             is_deny      INTEGER NOT NULL,
             is_inherited INTEGER NOT NULL,
             inheritance  INTEGER NOT NULL,                         -- InheritanceFlags

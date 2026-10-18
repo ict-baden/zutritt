@@ -6,8 +6,10 @@
   <a href="https://github.com/ict-baden/zutritt/releases/tag/latest"><img alt="Download: latest" src="https://img.shields.io/badge/Download-latest-2ea44f?logo=github&logoColor=white"></a>
   <img alt="Windows 10 and 11, x64" src="https://img.shields.io/badge/Windows-10%20%7C%2011%20x64-0078D4">
   <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white">
+  <img alt="Data stays local" src="https://img.shields.io/badge/Data-stays%20local-2E7D32">
   <img alt="Read-only" src="https://img.shields.io/badge/Access-read--only-2E7D32">
   <img alt="User interface in German" src="https://img.shields.io/badge/UI-German-6B7280">
+  <img alt="Licence: MIT" src="https://img.shields.io/badge/Licence-MIT-blue">
   <img alt="Status: pre-release" src="https://img.shields.io/badge/Status-pre--release-E3A008">
   <a href="https://github.com/ict-baden/zutritt/actions/workflows/build.yml"><img alt="Build" src="https://github.com/ict-baden/zutritt/actions/workflows/build.yml/badge.svg"></a>
 </p>
@@ -34,6 +36,8 @@
 </p>
 
 > [!NOTE]
+> **Deutsch:** Zutritt zeigt, wer auf Dateifreigaben worauf zugreifen darf – und über welche Gruppe. Es liest Freigabe- und NTFS-Rechte, löst Gruppen bis zur einzelnen Person auf, meldet riskante Berechtigungen und schreibt einen Excel- oder PDF-Bericht zum Abzeichnen. Nur lesend, ohne Server und ohne Agent. Download: [Zutritt.exe](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt.exe) oder [Zutritt-x64.msi](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt-x64.msi). Oberfläche, Befehlszeile und Berichte sind deutsch, diese Dokumentation ist englisch.
+>
 > **The application, its command-line output and the reports are in German.** This documentation is in English and quotes the German labels where you need to find them, for example *Befunde* (findings) or *Wer darf hier rein* (who can get in here).
 
 ## What Zutritt does
@@ -69,7 +73,7 @@
     <td valign="top">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/people-dark.png">
-        <img alt="Personen page: Anna Becker with her group memberships and all 26 folders she can access, with right and group chain." src="docs/assets/screenshots/people-light.png" width="290">
+        <img alt="Personen page: the role account QC-Leitung with its group memberships and all 26 folders it can access, with right and group chain." src="docs/assets/screenshots/people-light.png" width="290">
       </picture>
       <br><b>Where can this person go?</b><br>
       Every folder a person can reach, the effective right and the groups behind it – including nested groups and disabled accounts.
@@ -120,13 +124,16 @@
   </tr>
 </table>
 
-**① Download** – from the pre-release [**latest**](https://github.com/ict-baden/zutritt/releases/tag/latest), rebuilt on every push to `main`:
+**① Download** – from the release [**latest**](https://github.com/ict-baden/zutritt/releases/tag/latest), the newest build of `main`. These links always point to it:
 
 | File | What it is |
 |---|---|
-| `Zutritt-…-x64.msi` | Installer for all users: `C:\Program Files\Zutritt`, Start menu entry, no service, no autostart. No .NET runtime needed. |
-| `Zutritt.exe` | A single file that runs without installation and without a .NET runtime. |
-| `Zutritt-…-framework.zip` | Small variant; needs the .NET 10 Desktop Runtime. |
+| **[Zutritt-x64.msi](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt-x64.msi)** | Installer for all users: `C:\Program Files\Zutritt`, Start menu entry, no service, no autostart. No .NET runtime needed. Silent: `msiexec /i Zutritt-x64.msi /qn` – for Intune or GPO. |
+| **[Zutritt.exe](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt.exe)** | A single file that runs without installation and without a .NET runtime. |
+| [Zutritt-win-x64-framework.zip](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt-win-x64-framework.zip) | Small variant; needs the .NET 10 Desktop Runtime. |
+| [SHA256SUMS.txt](https://github.com/ict-baden/zutritt/releases/download/latest/SHA256SUMS.txt) | Checksums of all files – the builds are not code-signed yet, so check them ([how](docs/installation.md#verifying-the-download)). |
+
+Want to look around without a file server? Start **`Zutritt.exe --demo`** – two built-in demo runs in a temporary database that is deleted when you close the window.
 
 **② Scan** – Run Zutritt with an account that can read the permissions you want to see. For the share permissions of a server, that account needs administrator rights on the server; without them the share is reported as unreadable (ZT13) and access is rated by NTFS alone. Details: **[Installation & rights →](docs/installation.md)**
 
@@ -134,7 +141,7 @@
 
 ### From the command line
 
-The same `Zutritt.exe` runs without a window when given a command – for example every Monday at 6:00 with a comparison and a PDF to sign:
+Command line: **`Zutritt.exe --hilfe`** lists every command and option, `Zutritt.exe --version` prints version and build. The same `Zutritt.exe` runs without a window when given a command – for example every Monday at 6:00 with a comparison and a PDF to sign:
 
 ```bat
 schtasks /create /tn "Zutritt Wochenbericht" /sc weekly /d MO /st 06:00 /tr ^
@@ -175,7 +182,7 @@ Folders whose permissions Windows itself manages (owner *TrustedInstaller*, entr
 
 ## Compared with the alternatives
 
-| | icacls / Get-Acl scripts + Excel | Commercial access-governance suites<br><sub>e.g. tenfold, 8MAN, Varonis</sub> | Zutritt |
+| | icacls / Get-Acl scripts + Excel | Commercial access-governance suites | Zutritt |
 |---|---|---|---|
 | Share **and** NTFS permissions | ◐ NTFS easy, share permissions need extra work | ✔︎ | ✔︎ |
 | Groups resolved down to people | ✘ manual | ✔︎ | ✔︎ local SAM and AD of the scanning PC's domain |
@@ -196,11 +203,11 @@ Zutritt answers one question well – *who can access what, and why* – for adm
 
 <table>
   <tr>
-    <td width="50%" valign="top"><a href="docs/installation.md"><b>Installation &amp; rights</b></a><br><sub>MSI, single exe, ZIP, requirements, which rights the scanning account needs locally and on servers, updates</sub></td>
+    <td width="50%" valign="top"><a href="docs/installation.md"><b>Installation &amp; rights</b></a><br><sub>MSI, single exe, ZIP, checksums and signatures, Intune and GPO, requirements, which rights the scanning account needs locally and on servers, updates</sub></td>
     <td width="50%" valign="top"><a href="docs/usage.md"><b>Using the app</b></a><br><sub>Every page with screenshots: overview and scan, findings, folders, people, comparison, report, info – German labels explained</sub></td>
   </tr>
   <tr>
-    <td valign="top"><a href="docs/command-line.md"><b>Command line</b></a><br><sub><code>scan</code>, <code>liste</code>, <code>bericht</code>, options, exit codes, scheduled tasks, logging and encoding</sub></td>
+    <td valign="top"><a href="docs/command-line.md"><b>Command line</b></a><br><sub><code>scan</code>, <code>liste</code>, <code>bericht</code>, <code>--version</code>, <code>--info</code>, options, exit codes, scheduled tasks, logging and encoding</sub></td>
     <td valign="top"><a href="docs/rules.md"><b>Rules reference</b></a><br><sub>All 14 rules: what they mean, why they matter, what to do, and the deliberate exceptions</sub></td>
   </tr>
   <tr>
@@ -208,11 +215,11 @@ Zutritt answers one question well – *who can access what, and why* – for adm
     <td valign="top"><a href="docs/excel-and-pdf.md"><b>Reports: Excel &amp; PDF</b></a><br><sub>Excel sheets, PDF sections, the sign-off block, size limits and truncation</sub></td>
   </tr>
   <tr>
-    <td valign="top"><a href="docs/data-and-privacy.md"><b>Data &amp; privacy</b></a><br><sub>What is read, what is stored where, the per-user database, handling reports confidentially</sub></td>
+    <td valign="top"><a href="docs/data-and-privacy.md"><b>Data &amp; privacy</b></a><br><sub>What is read, what is stored where, the per-user database, log and diagnostics package, no data to ICT-Baden, handling reports confidentially</sub></td>
     <td valign="top"><a href="docs/limitations.md"><b>Limitations</b></a><br><sub>What Zutritt cannot see or decide – and how it errs on the side of showing more access</sub></td>
   </tr>
   <tr>
-    <td colspan="2" valign="top"><a href="docs/development.md"><b>Development</b></a><br><sub>Building with .NET 10, tests (many need administrator rights), architecture, CI and releases, MSI, regenerating the screenshots</sub></td>
+    <td colspan="2" valign="top"><a href="docs/development.md"><b>Development</b></a><br><sub>Building with .NET 10, tests on Windows (many need administrator rights) and Linux, architecture and platform split, CI and releases, third-party licences, MSI, regenerating the screenshots</sub></td>
   </tr>
 </table>
 
@@ -225,13 +232,14 @@ Periodic reviews of access rights are expected in GMP environments (EU GMP Annex
 
 ## Limits, honestly
 
+- **Windows only, by design.** NTFS permissions, SMB share permissions (`NetShareEnum`, `NetShareGetInfo`), the local account databases of servers (SAM, LSA) and Active Directory are Windows concepts that only Windows APIs can read – so Zutritt is a Windows program. Its analysis core (rules, effective access, comparison, storage, reports) is platform-neutral and tested on Linux in CI; a front end on another platform over stored runs would be possible, scanning stays on Windows.
 - **Rights of the scanning account matter.** Folders it cannot read are reported (ZT09); where a folder cannot even be listed, nothing below it is assessed. Share permissions need administrator rights on the server (ZT13).
 - **Active Directory** is used only when the scanning PC is domain-joined, and only for its own domain. Groups from trusted domains are named but not expanded. AD lookups are tested against a simulated directory only, not yet against a real domain.
 - **When in doubt, Zutritt shows more access, not less:** conditional allow entries count, conditional deny entries are ignored, unreadable share permissions mean “NTFS only”.
 - **Files** are only examined with `--dateien` (*Dateien einbeziehen*), and then only files with their own permissions.
 - **Very large reports** are truncated with a visible notice – the PDF earlier than the Excel workbook.
-- **Pre-release, not code-signed.** SmartScreen may warn.
-- **No licence yet.** The licence has not been decided; the repository contains no licence file.
+- **Pre-release, not code-signed yet.** Until Artifact Signing is set up, SmartScreen may warn; verify the downloads with `SHA256SUMS.txt` ([Installation › Verifying the download](docs/installation.md#verifying-the-download)).
+- **A source that does not answer** – domain controller, account database, share listing – is given up after 60 seconds (accounts) or 2 minutes (shares) and reported, so the run still finishes.
 
 Everything else: **[Limitations →](docs/limitations.md)**
 
@@ -243,11 +251,25 @@ dotnet test Zutritt.sln     # many integration tests create shares and local acc
 dotnet publish src/Zutritt/Zutritt.csproj -c Release -r win-x64 -p:PublishSingleFile=true --self-contained false -o publish
 ```
 
-Needs the .NET 10 SDK (`global.json`: 10.0.100, roll forward to the latest feature band). MSI, CI, architecture and screenshots: **[Development →](docs/development.md)**
+On Linux or macOS the platform-neutral core and its tests build as well: `dotnet test tests/Zutritt.Tests -f net10.0`.
+
+Needs the .NET 10 SDK (`global.json`: 10.0.100, roll forward to the latest feature band). MSI, CI, architecture and screenshots: **[Development →](docs/development.md)** · Contributing: **[CONTRIBUTING.md](CONTRIBUTING.md)** · Changes: **[CHANGELOG.md](CHANGELOG.md)**
 
 <br>
 
 <p align="center">
   <img src="docs/assets/logo.svg" alt="" width="48"><br>
-  <sub><b>Zutritt</b> · Who can access what? · ICT-Baden</sub>
+  <sub><b>Zutritt</b> · Who can access what?</sub>
 </p>
+
+---
+
+<!-- ⚠ Impressum: Domain und Webseite sind noch offen (OFFEN.md). Bis dahin dieselbe Adresse wie in der App und in den übrigen Repos von ICT-Baden. -->
+<sub>
+Zutritt is free and open source software by <b>ICT-Baden</b>. &nbsp;·&nbsp;
+Licence: <a href="LICENSE">MIT</a> &nbsp;·&nbsp;
+Third-party licences: <a href="THIRD-PARTY-NOTICES.txt">THIRD-PARTY-NOTICES.txt</a> &nbsp;·&nbsp;
+Support: free via GitHub, guaranteed with a <a href="SUPPORT.md">support contract</a> &nbsp;·&nbsp;
+<a href="SECURITY.md">Security</a> &nbsp;·&nbsp;
+<a href="https://ict-baden.de/impressum">Impressum</a>
+</sub>

@@ -213,15 +213,10 @@ public static class ThemeManager
 
     private static T Freeze<T>(T f) where T : Freezable { f.Freeze(); return f; }
 
-    private static bool SystemUsesLightTheme()
-    {
-        try
-        {
-            using var k = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
-            return k?.GetValue("AppsUseLightTheme") is int i && i == 1;
-        }
-        catch { return false; }
-    }
+    /// <summary>Woher Hell/Dunkel kommt (Windows-Einstellung; austauschbar für Tests).</summary>
+    public static ISystemTheme SystemTheme { get; set; } = new WindowsSystemTheme();
+
+    private static bool SystemUsesLightTheme() => SystemTheme.AppsUseLightTheme;
 
     public static bool IsWindows11 => Environment.OSVersion.Version.Build >= 22000;
 

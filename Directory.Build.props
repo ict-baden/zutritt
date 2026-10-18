@@ -1,0 +1,19 @@
+<Project>
+  <!-- Gemeinsame Einstellungen für alle Projekte im Repo (Vorlage aus ict-baden/richtlinien) -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+
+    <Company>ICT-Baden</Company>
+    <Product>Zutritt</Product>
+    <Copyright>© 2026 ICT-Baden</Copyright>
+    <!-- Richtlinie 13: bei der Umstellung auf .resx (bis 1.0) wie in der Vorlage NeutralLanguage en und
+         SatelliteResourceLanguages en;de;es;fr;zh-Hans. Bis dahin sind die Texte deutsch. -->
+    <NeutralLanguage>de-DE</NeutralLanguage>
+    <!-- Nur deutsche und englische Sprachressourcen fremder Pakete mitliefern -->
+    <SatelliteResourceLanguages>de;en</SatelliteResourceLanguages>
+  </PropertyGroup>
+</Project>

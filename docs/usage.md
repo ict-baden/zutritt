@@ -7,7 +7,7 @@ A walk through every page of the Zutritt window. The interface is German; each s
 **Contents:** [Start and navigate](#start-and-navigate) · [Übersicht – scan and runs](#übersicht--scan-and-runs) · [Befunde – findings](#befunde--findings) · [Ordner – folders](#ordner--folders) · [Personen – people](#personen--people) · [Vergleich – comparison](#vergleich--comparison) · [Bericht – report](#bericht--report) · [Info](#info) · [Glossary](#glossary)
 
 > [!NOTE]
-> All screenshots show the built-in demo data (domain *MUSTER*, file server *FS01*). Start `Zutritt.exe --demo` to try every page without scanning anything; the demo uses a temporary database that is deleted when you close the window. The screenshots follow GitHub's light or dark theme; Zutritt itself follows the Windows setting.
+> All screenshots show the built-in demo data (domain *MUSTER*, file server *FS01*, role accounts such as *QC-Leitung* or *Labor Mitarbeitende 01* instead of names of people). Start `Zutritt.exe --demo` to try every page without scanning anything; the demo uses a temporary database that is deleted when you close the window. The screenshots follow GitHub's light or dark theme; Zutritt itself follows the Windows setting.
 
 ## Start and navigate
 
@@ -21,7 +21,7 @@ Start Zutritt from the Start menu or by running `Zutritt.exe` without arguments.
 | *Personen* | People | <kbd>Ctrl</kbd>+<kbd>4</kbd> | *Wo darf jemand überall hin?* – where can someone go? |
 | *Vergleich* | Comparison | <kbd>Ctrl</kbd>+<kbd>5</kbd> | What changed since an earlier run? |
 | *Bericht* | Report | <kbd>Ctrl</kbd>+<kbd>6</kbd> | Save the Excel or PDF report |
-| *Info* | About | <kbd>Ctrl</kbd>+<kbd>7</kbd> | Version, database location, command line |
+| *Info* | About | <kbd>Ctrl</kbd>+<kbd>7</kbd> | Version and build, licences, help and links, diagnostics package, database location, command line |
 
 <kbd>Ctrl</kbd>+<kbd>F</kbd> jumps to the search box of the current page. Above the navigation, a card shows the run that is loaded (*Kein Lauf geladen* = no run loaded); next to *Befunde* a badge shows the number of findings.
 
@@ -97,7 +97,7 @@ What each rule means: [Rules reference](rules.md).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/folders-dark.png">
-  <img alt="Ordner: folder tree of \\FS01\Labor and \\FS01\Produktion with markers; on the right the folder QC with chips for share, owner, broken inheritance and level, and the tab “Wer darf hier rein (3)” listing three people with the effective right over the share, the NTFS right and groups." src="assets/screenshots/folders-light.png" width="900">
+  <img alt="Ordner: folder tree of \\FS01\Labor and \\FS01\Produktion with markers; on the right the folder QC with chips for share, owner, broken inheritance and level, and the tab “Wer darf hier rein (3)” listing the three accounts IT-Administration, QC-Leitung and QC Mitarbeitende 01 with the effective right over the share, the NTFS right and groups." src="assets/screenshots/folders-light.png" width="900">
 </picture>
 
 **The tree** contains the targets and every folder Zutritt stored – the folders with their own permissions. Levels in between appear grey (*grau: ohne eigene Rechte* – grey: no permissions of their own); they inherit unchanged from the nearest stored folder above. *Ordner suchen* filters the tree. The markers:
@@ -128,7 +128,7 @@ What each rule means: [Rules reference](rules.md).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/people-dark.png">
-  <img alt="Personen: list of people with folder counts and a “deaktiviert” tag; on the right Anna Becker with account type, SID, seven group memberships and the table of 26 folders with right and group chain." src="assets/screenshots/people-light.png" width="900">
+  <img alt="Personen: list of role accounts such as “Labor Mitarbeitende 01” and “Produktionsleitung” with folder counts and a “deaktiviert” tag; on the right the account QC-Leitung (MUSTER\qc.leitung) with account type, SID, seven group memberships and the table of 26 folders with right and group chain." src="assets/screenshots/people-light.png" width="900">
 </picture>
 
 - **The list** contains every user account that appears in the run – in an ACL or as a member of a resolved group – with the number of folders it can access and a *deaktiviert* (disabled) tag. Search with *Name oder Konto suchen*. The caption counts people and disabled accounts.
@@ -172,10 +172,25 @@ The file name is suggested as `Zutritt-Bericht-<target>-<date>`. After saving, *
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/about-dark.png">
-  <img alt="Info: version and .NET version, database path with “Ordner öffnen”, publisher ICT-Baden, licence not yet determined, source code link, the read-only note, and the command line with exit codes." src="assets/screenshots/about-light.png" width="900">
+  <img alt="Info: Zutritt with version, build and .NET version, © 2026 ICT-Baden · MIT-Lizenz; the database path with “Ordner öffnen”; the card “Nur lesend, Daten bleiben hier” with the sentence that the software sends no data to ICT-Baden; under Lizenz the cards “MIT-Lizenz” with “Lizenztext anzeigen” and “Drittanbieter-Lizenzen”; under Hilfe und Links “Hilfe &amp; Support” and “Diagnosepaket erstellen” with the switch “Ohne Namen und Adressen”." src="assets/screenshots/about-light.png" width="900">
 </picture>
 
-Version, the path of the database (*Datenbank*, with *Ordner öffnen*), publisher, source code link, *Nur lesend* (read-only), and a short introduction to the command line with the exit codes. *Lizenz: Die Lizenz ist noch nicht festgelegt.* – the licence has not been decided yet.
+From top to bottom:
+
+| Card | Shows or does |
+|---|---|
+| *Zutritt* | Version, build (commit) and .NET version, e.g. *Version 0.1.0 · Build abc1234*; *© 2026 ICT-Baden · MIT-Lizenz*. |
+| *Datenbank* | Where the run history is (`%LocalAppData%\Zutritt\zutritt.db`, in the demo a temporary file); *Ordner öffnen* opens the folder. |
+| *Nur lesend, Daten bleiben hier* | Zutritt changes nothing – and *Diese Software sendet keine Daten an ICT-Baden* (sends no data to ICT-Baden). |
+| *MIT-Lizenz* › *Lizenztext anzeigen* | The licence text of Zutritt in a window. |
+| *Drittanbieter-Lizenzen* › *Anzeigen* | `THIRD-PARTY-NOTICES.txt`: every library Zutritt contains, with version, source, copyright and licence text. Built into the program, so it works for the single `Zutritt.exe` as well. |
+| *Hilfe & Support* | Opens [SUPPORT.md](../SUPPORT.md): free help on GitHub, guaranteed help with a support contract. |
+| *Diagnosepaket erstellen* | Saves a ZIP with version, system details and the log of the last 7 days for a support request. *Ohne Namen und Adressen* (without names and addresses, on by default) replaces computer, account and server names, paths, SIDs and addresses. No runs, no reports. Details: [Data & privacy › Diagnostics package](data-and-privacy.md#diagnostics-package-and-support). |
+| *Quellcode (GitHub)*, *Datenschutz*, *Impressum*, *Webseite* | Links to the repository, to [Data & privacy](data-and-privacy.md), to the Impressum of ICT-Baden and to its website. |
+| *Befehlszeile und geplante Aufgaben* | An example for a weekly scheduled task and the exit codes; `Zutritt.exe --info` prints the same details as text. |
+| *Tastatur* | The keyboard shortcuts. |
+
+Links open in your browser only when you click them, and only `http`/`https` addresses are opened.
 
 ## Glossary
 
