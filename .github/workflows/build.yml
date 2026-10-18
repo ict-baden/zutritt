@@ -1,3 +1,7 @@
+# Nach der Vorlage aus ict-baden/richtlinien (vorlagen/.github/workflows/build.yml), Windows-Desktop-App mit MSI.
+# Dazu: Job „linux“ testet den plattformneutralen Teil (richtlinien/02), veröffentlicht wird erst, wenn Windows und
+# Linux grün sind. Jedes Release enthält zusätzlich eine Stückliste (SBOM, richtlinien/06), öffentliche Repos einen
+# Herkunftsnachweis (richtlinien/05).
 name: Build
 
 on:
@@ -8,19 +12,30 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write # für die Releases
+  contents: read
 
 # Läufe auf demselben Branch nacheinander, damit sich die 'latest'-Releases nicht überholen
 concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  APP: "Zutritt"
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  # Signieren nur, wenn die Organisation Artifact Signing eingerichtet hat (siehe richtlinien/05-signieren.md)
+  # und nicht bei Pull Requests (dort gibt es kein OIDC-Token mit den nötigen Rechten).
+  SIGN: ${{ vars.SIGNING_ACCOUNT != '' && github.event_name != 'pull_request' }}
+
 jobs:
-  build:
+  windows:
     runs-on: windows-latest
-    env:
-      DOTNET_NOLOGO: true
-      DOTNET_CLI_TELEMETRY_OPTOUT: true
+    permissions:
+      contents: read
+      id-token: write # Anmeldung bei Azure Artifact Signing (OIDC) und Herkunftsnachweis
+      attestations: write # Herkunftsnachweis
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -36,33 +51,37 @@ jobs:
           if ($env:GITHUB_REF_TYPE -eq 'tag') {
             $v = $env:GITHUB_REF_NAME -replace '^v', ''
           } else {
-            $base = ([xml](Get-Content src/Zutritt/Zutritt.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+            $base = ([xml](Get-Content "src/$env:APP/$env:APP.csproj")).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
             $v = "$base-ci.$env:GITHUB_RUN_NUMBER"
           }
-          # MSI kennt nur Zahlen. CI-Builds: Version aus der csproj + Lauf-Nummer als 4. Stelle (z. B. 0.1.0.12).
+          # MSI kennt nur Zahlen. CI-Builds: Version + Lauf-Nummer als 4. Stelle (z. B. 0.1.0.12).
           # Windows Installer vergleicht nur drei Stellen, deshalb ersetzen sich CI-Builds gegenseitig
           # (AllowSameVersionUpgrades), und ein Release v0.1.1 ist immer neuer als jeder 0.1.0-CI-Build.
           $core = $v -replace '[-+].*$', ''
           $msi = if ($env:GITHUB_REF_TYPE -eq 'tag') { $core } else { "$core.$env:GITHUB_RUN_NUMBER" }
+          # Dateinamen: Releases aus einem Tag mit Version, sonst fest, damit die Links auf 'latest' dauerhaft gelten
+          $suffix = if ($env:GITHUB_REF_TYPE -eq 'tag') { "-$v" } else { '' }
           "version=$v" >> $env:GITHUB_OUTPUT
           "msi=$msi" >> $env:GITHUB_OUTPUT
-          Write-Host "Version: $v  MSI: $msi"
+          "suffix=$suffix" >> $env:GITHUB_OUTPUT
+          Write-Host "Version: $v  MSI: $msi  Signieren: $env:SIGN"
 
       - name: Restore
-        run: dotnet restore Zutritt.sln
+        run: dotnet restore "${{ env.APP }}.sln"
 
       - name: Build
-        run: dotnet build Zutritt.sln -c Release --no-restore
+        run: dotnet build "${{ env.APP }}.sln" -c Release --no-restore
 
       - name: Tests
-        # Die Integrationstests legen echte Testordner, Freigaben und lokale Konten an (Runner läuft als Admin) und räumen auf.
-        run: dotnet test Zutritt.sln -c Release --no-build --logger "trx;LogFileName=tests.trx" --results-directory TestResults
+        # Die Integrationstests legen echte Testordner, Freigaben und lokale Konten an (der Runner läuft als Admin) und
+        # räumen auf. Die Test-Ziele nacheinander, sonst kommen sich die echten Freigaben und Konten in die Quere.
+        run: dotnet test "${{ env.APP }}.sln" -c Release --no-build -p:TestTfmsInParallel=false --logger "trx;LogFilePrefix=tests" --results-directory TestResults
 
       - name: Testergebnisse
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Testergebnisse
+          name: Testergebnisse-windows
           path: TestResults/*.trx
           if-no-files-found: ignore
 
@@ -70,54 +89,211 @@ jobs:
         shell: pwsh
         run: |
           $v = '${{ steps.version.outputs.version }}'
-          $common = @('src/Zutritt/Zutritt.csproj', '-c', 'Release', '-r', 'win-x64', '-p:PublishSingleFile=true', "-p:Version=$v", '-p:DebugType=none')
+          $common = @("src/$env:APP/$env:APP.csproj", '-c', 'Release', '-r', 'win-x64', '-p:PublishSingleFile=true', "-p:Version=$v", '-p:DebugType=none')
           # Benötigt .NET 10 Desktop Runtime auf dem Zielgerät
           dotnet publish @common --self-contained false -o out/framework
+          if ($LASTEXITCODE -ne 0) { throw "Publish (framework) fehlgeschlagen ($LASTEXITCODE)" }
           # Ohne Runtime-Abhängigkeit, Grundlage für die MSI
           dotnet publish @common --self-contained true -o out/self-contained
+          if ($LASTEXITCODE -ne 0) { throw "Publish (self-contained) fehlgeschlagen ($LASTEXITCODE)" }
           # Eine einzige Exe zum Direkt-Download: Runtime und native DLLs (SQLite, WPF) eingebettet
           dotnet publish @common --self-contained true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o out/standalone
+          if ($LASTEXITCODE -ne 0) { throw "Publish (Einzeldatei) fehlgeschlagen ($LASTEXITCODE)" }
+
+      # ---- Signieren der Programmdateien (vor dem Packen, damit ZIP und MSI signierte Dateien enthalten) ----
+      - name: Bei Azure anmelden
+        if: env.SIGN == 'true'
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Exe signieren (framework)
+        if: env.SIGN == 'true'
+        uses: azure/artifact-signing-action@v2
+        with:
+          endpoint: ${{ vars.SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ vars.SIGNING_PROFILE }}
+          files-folder: ${{ github.workspace }}\out\framework
+          files-folder-filter: exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Exe signieren (self-contained, für die MSI)
+        if: env.SIGN == 'true'
+        uses: azure/artifact-signing-action@v2
+        with:
+          endpoint: ${{ vars.SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ vars.SIGNING_PROFILE }}
+          files-folder: ${{ github.workspace }}\out\self-contained
+          files-folder-filter: exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Exe signieren (Einzeldatei)
+        if: env.SIGN == 'true'
+        uses: azure/artifact-signing-action@v2
+        with:
+          endpoint: ${{ vars.SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ vars.SIGNING_PROFILE }}
+          files-folder: ${{ github.workspace }}\out\standalone
+          files-folder-filter: exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
 
       - name: Pakete schnüren
         shell: pwsh
         run: |
-          $v = '${{ steps.version.outputs.version }}'
+          # Lizenztexte gehören neben die Exe, ins ZIP und in die MSI (richtlinien/06) – die csproj kopiert sie beim Publish
+          foreach ($dir in 'out/framework', 'out/self-contained') {
+            foreach ($file in 'LICENSE', 'THIRD-PARTY-NOTICES.txt') {
+              if (-not (Test-Path "$dir/$file")) { throw "$dir/$file fehlt: src/$env:APP/$env:APP.csproj muss $file in den Publish-Ordner kopieren." }
+            }
+          }
           New-Item -ItemType Directory -Force dist | Out-Null
           Copy-Item README.md out/framework/
-          Compress-Archive -Path out/framework/* -DestinationPath "dist/Zutritt-$v-win-x64-framework.zip"
-          Copy-Item out/standalone/Zutritt.exe dist/Zutritt.exe
+          Compress-Archive -Path out/framework/* -DestinationPath "dist/$env:APP${{ steps.version.outputs.suffix }}-win-x64-framework.zip"
+          Copy-Item "out/standalone/$env:APP.exe" "dist/$env:APP.exe"
 
       - name: MSI bauen
         shell: pwsh
         run: |
           # Self-contained: läuft ohne installierte .NET-Runtime
-          dotnet build installer/Zutritt.Installer.wixproj -c Release "-p:PublishDir=$PWD/out/self-contained/" -p:ProductVersion=${{ steps.version.outputs.msi }}
-          Copy-Item installer/bin/Release/Zutritt.msi "dist/Zutritt-${{ steps.version.outputs.version }}-x64.msi"
-          Get-ChildItem dist | Format-Table Name, Length
+          dotnet build "installer/$env:APP.Installer.wixproj" -c Release "-p:PublishDir=$PWD/out/self-contained/" -p:ProductVersion=${{ steps.version.outputs.msi }}
+          if ($LASTEXITCODE -ne 0) { throw "MSI-Build fehlgeschlagen ($LASTEXITCODE)" }
+          Copy-Item "installer/bin/Release/$env:APP.msi" "dist/$env:APP${{ steps.version.outputs.suffix }}-x64.msi"
+
+      - name: MSI signieren
+        if: env.SIGN == 'true'
+        uses: azure/artifact-signing-action@v2
+        with:
+          endpoint: ${{ vars.SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ vars.SIGNING_PROFILE }}
+          files-folder: ${{ github.workspace }}\dist
+          files-folder-filter: msi
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      - name: Stückliste (SBOM)
+        shell: pwsh
+        run: |
+          # CycloneDX-Stückliste aller NuGet-Pakete der App (richtlinien/06). Die .NET-Runtime der self-contained
+          # Varianten und die WiX-Custom-Action der MSI stehen in THIRD-PARTY-NOTICES.txt.
+          dotnet tool restore
+          if ($LASTEXITCODE -ne 0) { throw "dotnet tool restore fehlgeschlagen ($LASTEXITCODE)" }
+          $sbom = @("src/$env:APP/$env:APP.csproj", '--recursive', '--exclude-dev', '--output', 'dist',
+                    '--filename', "$env:APP${{ steps.version.outputs.suffix }}-sbom.cdx.json", '--output-format', 'Json',
+                    '--set-name', $env:APP, '--set-version', '${{ steps.version.outputs.version }}')
+          dotnet dotnet-CycloneDX @sbom
+          if ($LASTEXITCODE -ne 0) { throw "SBOM fehlgeschlagen ($LASTEXITCODE)" }
+
+      - name: Prüfsummen
+        shell: pwsh
+        run: |
+          # Nach dem Signieren, sonst stimmen die Summen nicht. Zeilenenden LF: mit CRLF scheitert `sha256sum -c` unter Linux.
+          $sums = Get-ChildItem dist -File | Where-Object Name -ne 'SHA256SUMS.txt' | Sort-Object Name | ForEach-Object {
+            "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower())  $($_.Name)"
+          }
+          [IO.File]::WriteAllText("$PWD/dist/SHA256SUMS.txt", ($sums -join "`n") + "`n", [Text.Encoding]::ASCII)
+          Get-Content dist/SHA256SUMS.txt
+
+      - name: Herkunftsnachweis
+        # Nur für öffentliche Repos; für private bräuchte es GitHub Enterprise (richtlinien/05)
+        if: github.event_name != 'pull_request' && !github.event.repository.private
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: 'dist/*'
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Zutritt-${{ steps.version.outputs.version }}
+          name: ${{ env.APP }}-${{ steps.version.outputs.version }}
           path: dist/*
           if-no-files-found: error
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Schriften für die PDF-Tests
+        # Segoe UI und Arial gibt es unter Linux nicht; freie Schriften für den PDF-Bericht (Liberation ist metrisch gleich Arial)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends fonts-dejavu-core fonts-liberation
+
+      - name: Build
+        run: dotnet build tests/Zutritt.Tests -c Release -f net10.0
+
+      - name: Tests
+        # Nur der plattformneutrale Teil (Auswertung, Regeln, Vergleich, Speicher, Berichte). NTFS, Freigaben und Konten
+        # testet der Job „windows“.
+        run: dotnet test tests/Zutritt.Tests -c Release -f net10.0 --no-build --logger "trx;LogFileName=tests-linux.trx" --results-directory TestResults
+
+      - name: Testergebnisse
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Testergebnisse-linux
+          path: TestResults/*.trx
+          if-no-files-found: ignore
+
+  release:
+    # Erst veröffentlichen, wenn Windows und Linux grün sind
+    needs: [windows, linux]
+    if: github.event_name != 'pull_request' && (github.ref_type == 'tag' || github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # für die Releases
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.APP }}-${{ needs.windows.outputs.version }}
+          path: dist
+
+      - name: Dateien
+        run: ls -l dist
 
       - name: Release erstellen (nur bei Tag v*)
         if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
-        run: gh release create $env:GITHUB_REF_NAME (Get-ChildItem dist/*).FullName --title "Zutritt $env:GITHUB_REF_NAME" --generate-notes
+        run: |
+          # v1.0.0-rc1 und ähnliche: Vorabversion, nicht „Latest“
+          $pre = if ($env:GITHUB_REF_NAME -match '-') { @('--prerelease') } else { @() }
+          gh release create $env:GITHUB_REF_NAME (Get-ChildItem dist/*).FullName --title "$env:APP $env:GITHUB_REF_NAME" --generate-notes @pre
+          if ($LASTEXITCODE -ne 0) { throw "Release ließ sich nicht anlegen ($LASTEXITCODE)" }
 
-      - name: "Release 'latest' aktualisieren (Push auf main)"
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - name: "Release 'latest' aktualisieren (main)"
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
-          # Rollierende Vorabversion: immer der neueste main-Stand als direkter Download
-          gh release delete latest --cleanup-tag --yes 2>$null
-          $notes = "Automatischer Build von main ($($env:GITHUB_SHA.Substring(0,7))), Version ${{ steps.version.outputs.version }}.`n`n" +
-                   "- **Zutritt-…-x64.msi**: Installer für alle Benutzer (Intune/GPO)`n" +
-                   "- **Zutritt.exe**: eine Datei, läuft ohne Installation und ohne .NET-Runtime`n" +
-                   "- **Zutritt-…-framework.zip**: kleine Variante, braucht die .NET 10 Desktop Runtime"
-          gh release create latest (Get-ChildItem dist/*).FullName --prerelease --target $env:GITHUB_SHA --title "Latest Build (main)" --notes $notes
+          # Rollierendes Release: immer der neueste main-Stand, unter festen Links (Einzelheiten im Skript)
+          $base = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/latest"
+          $built = (Get-Date).ToUniversalTime().ToString('yyyy-MM-dd HH:mm')
+          $signed = if ($env:SIGN -eq 'true') { 'signiert' } else { 'noch nicht signiert' }
+          $notes = "Automatischer Build von main ($($env:GITHUB_SHA.Substring(0,7))), Version ${{ needs.windows.outputs.version }}, gebaut $built UTC, $signed.`n`n" +
+                   "Die Links bleiben gleich und zeigen immer auf den neuesten Build:`n`n" +
+                   "- **[$env:APP-x64.msi]($base/$env:APP-x64.msi)**: Installer für alle Benutzer (Intune/GPO)`n" +
+                   "- **[$env:APP.exe]($base/$env:APP.exe)**: eine Datei, läuft ohne Installation und ohne .NET-Runtime`n" +
+                   "- **[$env:APP-win-x64-framework.zip]($base/$env:APP-win-x64-framework.zip)**: kleine Variante, braucht die .NET 10 Desktop Runtime`n" +
+                   "- [SHA256SUMS.txt]($base/SHA256SUMS.txt): Prüfsummen`n" +
+                   "- [$env:APP-sbom.cdx.json]($base/$env:APP-sbom.cdx.json): Stückliste der Bestandteile (CycloneDX)"
+          ./.github/scripts/release-latest.ps1 -Notes $notes -Title "Latest Build (main) – ${{ needs.windows.outputs.version }}"
