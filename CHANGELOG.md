@@ -17,7 +17,7 @@ Alle wichtigen Änderungen an Zutritt. Format nach [Keep a Changelog](https://ke
 - Befehlszeile `scan`, `liste` und `bericht` mit den Exitcodes 0–3 für geplante Aufgaben und Monitoring.
 - Demo-Modus `--demo` mit eingebauten Beispieldaten.
 - MSI für die Verteilung per Intune oder GPO, Einzeldatei `Zutritt.exe` ohne Installation und ZIP für die installierte .NET 10 Desktop Runtime.
-- Release `latest` mit festen Dateinamen (`Zutritt-x64.msi`, `Zutritt.exe`, `Zutritt-win-x64-framework.zip`), in jedem Release `SHA256SUMS.txt` und eine Stückliste der Bestandteile (SBOM, CycloneDX). Die Dateien werden signiert, sobald Artifact Signing eingerichtet ist.
+- Release `latest` mit festen Dateinamen (`Zutritt-x64.msi`, `Zutritt.exe`, `Zutritt-win-x64-framework.zip`), in jedem Release `SHA256SUMS.txt` und eine Stückliste der ausgelieferten Bestandteile samt .NET-, Windows-Desktop- und Windows-SDK-Runtime-Paketen mit ihren Versionen (SBOM, CycloneDX). Die Dateien werden signiert, sobald Artifact Signing eingerichtet ist.
 - MIT-Lizenz, Lizenzen der Fremdbestandteile in `THIRD-PARTY-NOTICES.txt`, Wege für Hilfe und Sicherheitsmeldungen in `SUPPORT.md` und `SECURITY.md`.
 - Seite *Info* nach den Richtlinien: Version mit Build (Commit), © und MIT-Lizenz mit Lizenztext, Drittanbieter-Lizenzen, Links zu Hilfe & Support, Quellcode, Datenschutz, Impressum und Webseite, der Satz „Diese Software sendet keine Daten an ICT-Baden.“ Links öffnen nur http/https.
 - Befehlszeile `--version` (`-v`), `--info` und `--lizenzen`.

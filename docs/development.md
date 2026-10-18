@@ -150,7 +150,7 @@ dotnet build installer/Zutritt.Installer.wixproj -c Release -p:ProductVersion=0.
    3. **Publish** the three variants.
    4. **Sign** the three `Zutritt.exe` – only when the organisation variable `SIGNING_ACCOUNT` is set, and never for pull requests. Signing uses Azure Artifact Signing with OIDC: secrets `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, variables `SIGNING_ENDPOINT`, `SIGNING_ACCOUNT`, `SIGNING_PROFILE`. Without them the steps are skipped and the build stays green, unsigned.
    5. **Package** the ZIP (with `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.txt` – the step fails if the licence files are missing) and the single exe; **build the MSI** from the self-contained output and sign it (same condition).
-   6. **SBOM** with CycloneDX (`dotnet tool restore`, version pinned in `.config/dotnet-tools.json`), then **`SHA256SUMS.txt`** over all files (LF line endings, so `sha256sum -c` works on Linux too).
+   6. **SBOM** with CycloneDX (`dotnet tool restore`, version pinned in `.config/dotnet-tools.json`), trimmed by [`.github/scripts/sbom-shipped.ps1`](../.github/scripts/sbom-shipped.ps1) to what the packages really contain: packages that NuGet prunes because the .NET or Windows Desktop runtime provides them are removed, the runtime packs are added with their real versions, and a shipped package missing from the SBOM fails the build. Then **`SHA256SUMS.txt`** over all files (LF line endings, so `sha256sum -c` works on Linux too).
    7. **Build provenance** (`actions/attest-build-provenance`) – only while the repository is public.
    8. **Artifact** with all files, kept 7 days (the maximum the repository allows), for trying out a pull request. Uploads may fail (the artifact storage is shared by all repositories of the organisation) without failing the build; the releases take the files directly from `dist/`.
    9. **Release:** a tag `v*` creates the release *Zutritt v…* with generated notes and versioned file names; a tag with a hyphen (`v1.2.0-rc1`) becomes a pre-release. A push to `main` updates the release **`latest`** in place with [`.github/scripts/release-latest.ps1`](../.github/scripts/release-latest.ps1): new files are uploaded under temporary names first, then replace the old ones under the fixed names `Zutritt-x64.msi`, `Zutritt.exe`, `Zutritt-win-x64-framework.zip`, `Zutritt-sbom.cdx.json` and `SHA256SUMS.txt`, so the download links never break. `latest` is marked *Latest* as long as there is no tagged release; after the first tag it becomes a pre-release.
@@ -173,7 +173,7 @@ Zutritt is MIT-licensed ([`LICENSE`](../LICENSE)). Everything it ships from othe
 
 - **Every new or updated package goes into `THIRD-PARTY-NOTICES.txt`** in the same change. The test `ThirdPartyNoticesTests` compares the notices with `Zutritt.deps.json` and fails for a package that is missing.
 - **Versions that stay where they are**, because newer ones change the licence: PDFsharp/MigraDoc **6.2.x** (MIT; 6.5.0 and later are AGPL-3.0), SixLabors.Fonts **1.x** via ClosedXML (Apache-2.0; 2.0 and later Six Labors Split License), WiX **5.x** (MS-RL; 6.0 and later the OSMF EULA). Dependabot ignores these jumps.
-- The release contains a CycloneDX SBOM generated from the app project.
+- The release contains a CycloneDX SBOM of the shipped packages and runtime packs (from the `deps.json` of the publish, like the THIRD-PARTY-NOTICES test).
 
 ## Screenshots and images
 

@@ -223,15 +223,20 @@ jobs:
       - name: Stückliste (SBOM)
         shell: pwsh
         run: |
-          # CycloneDX-Stückliste aller NuGet-Pakete der App (richtlinien/06). Die .NET-Runtime der self-contained
-          # Varianten und die WiX-Custom-Action der MSI stehen in THIRD-PARTY-NOTICES.txt.
+          # CycloneDX-Stückliste der ausgelieferten Pakete und Runtime-Pakete (richtlinien/06). Die WiX-Custom-Action
+          # der MSI steht in THIRD-PARTY-NOTICES.txt.
           dotnet tool restore
           if ($LASTEXITCODE -ne 0) { throw "dotnet tool restore fehlgeschlagen ($LASTEXITCODE)" }
+          $file = "dist/$env:APP${{ steps.version.outputs.suffix }}-sbom.cdx.json"
           $sbom = @("src/$env:APP/$env:APP.csproj", '--recursive', '--exclude-dev', '--output', 'dist',
-                    '--filename', "$env:APP${{ steps.version.outputs.suffix }}-sbom.cdx.json", '--output-format', 'Json',
+                    '--filename', (Split-Path $file -Leaf), '--output-format', 'Json',
                     '--set-name', $env:APP, '--set-version', '${{ steps.version.outputs.version }}')
           dotnet dotnet-CycloneDX @sbom
           if ($LASTEXITCODE -ne 0) { throw "SBOM fehlgeschlagen ($LASTEXITCODE)" }
+          # Nur was die Pakete wirklich enthalten: deps.json des letzten Publish (Einzeldatei, self-contained)
+          $deps = @(Get-ChildItem "src/$env:APP/obj/Release/*/win-x64/$env:APP.deps.json")
+          if ($deps.Count -ne 1) { throw "deps.json des Publish nicht eindeutig gefunden ($($deps.Count))" }
+          ./.github/scripts/sbom-shipped.ps1 -Sbom $file -DepsJson $deps[0].FullName
 
       - name: Prüfsummen
         shell: pwsh
