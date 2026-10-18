@@ -1,7 +1,8 @@
 # Nach der Vorlage aus ict-baden/richtlinien (vorlagen/.github/workflows/build.yml), Windows-Desktop-App mit MSI.
-# Dazu: Job „linux“ testet den plattformneutralen Teil (richtlinien/02), veröffentlicht wird erst, wenn Windows und
-# Linux grün sind. Jedes Release enthält zusätzlich eine Stückliste (SBOM, richtlinien/06), öffentliche Repos einen
-# Herkunftsnachweis (richtlinien/05).
+# Dazu: Job „linux“ testet den plattformneutralen Teil (richtlinien/02); der Job „windows“ startet erst, wenn er grün
+# ist, und veröffentlicht selbst – wie in der Vorlage, ohne Umweg über Artefakte (deren Speicher teilen sich alle Repos
+# der Organisation, ist er voll, darf das kein Release verhindern). Jedes Release enthält zusätzlich eine Stückliste
+# (SBOM, richtlinien/06), öffentliche Repos einen Herkunftsnachweis (richtlinien/05).
 name: Build
 
 on:
@@ -28,14 +29,47 @@ env:
   SIGN: ${{ vars.SIGNING_ACCOUNT != '' && github.event_name != 'pull_request' }}
 
 jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Schriften für die PDF-Tests
+        # Segoe UI und Arial gibt es unter Linux nicht; freie Schriften für den PDF-Bericht (Liberation ist metrisch gleich Arial)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends fonts-dejavu-core fonts-liberation
+
+      - name: Build
+        run: dotnet build tests/Zutritt.Tests -c Release -f net10.0
+
+      - name: Tests
+        # Nur der plattformneutrale Teil (Auswertung, Regeln, Vergleich, Speicher, Berichte). NTFS, Freigaben und Konten
+        # testet der Job „windows“.
+        run: dotnet test tests/Zutritt.Tests -c Release -f net10.0 --no-build --logger "trx;LogFileName=tests-linux.trx" --results-directory TestResults
+
+      - name: Testergebnisse
+        if: always()
+        continue-on-error: true # wie unter Windows: nur zur Fehlersuche
+        uses: actions/upload-artifact@v4
+        with:
+          name: Testergebnisse-linux
+          path: TestResults/*.trx
+          if-no-files-found: ignore
+          retention-days: 7
+
   windows:
+    # Erst bauen und veröffentlichen, wenn der plattformneutrale Teil auch unter Linux grün ist
+    needs: linux
     runs-on: windows-latest
     permissions:
-      contents: read
+      contents: write # für die Releases
       id-token: write # Anmeldung bei Azure Artifact Signing (OIDC) und Herkunftsnachweis
       attestations: write # Herkunftsnachweis
-    outputs:
-      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -79,11 +113,14 @@ jobs:
 
       - name: Testergebnisse
         if: always()
+        # Nur zur Fehlersuche: Ist der Artefaktspeicher der Organisation voll, bleibt der Lauf trotzdem grün
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: Testergebnisse-windows
           path: TestResults/*.trx
           if-no-files-found: ignore
+          retention-days: 7
 
       - name: Publish
         shell: pwsh
@@ -213,63 +250,19 @@ jobs:
         with:
           subject-path: 'dist/*'
 
-      - uses: actions/upload-artifact@v4
+      - name: Dateien als Artefakt
+        # Zum Ausprobieren eines Pull Requests. Die Releases unten nehmen dist/ direkt, deshalb darf das Hochladen
+        # scheitern (voller Artefaktspeicher), ohne dass ein Release ausfällt.
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.APP }}-${{ steps.version.outputs.version }}
           path: dist/*
           if-no-files-found: error
-
-  linux:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-dotnet@v4
-        with:
-          global-json-file: global.json
-
-      - name: Schriften für die PDF-Tests
-        # Segoe UI und Arial gibt es unter Linux nicht; freie Schriften für den PDF-Bericht (Liberation ist metrisch gleich Arial)
-        run: |
-          sudo apt-get update -q
-          sudo apt-get install -y -q --no-install-recommends fonts-dejavu-core fonts-liberation
-
-      - name: Build
-        run: dotnet build tests/Zutritt.Tests -c Release -f net10.0
-
-      - name: Tests
-        # Nur der plattformneutrale Teil (Auswertung, Regeln, Vergleich, Speicher, Berichte). NTFS, Freigaben und Konten
-        # testet der Job „windows“.
-        run: dotnet test tests/Zutritt.Tests -c Release -f net10.0 --no-build --logger "trx;LogFileName=tests-linux.trx" --results-directory TestResults
-
-      - name: Testergebnisse
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: Testergebnisse-linux
-          path: TestResults/*.trx
-          if-no-files-found: ignore
-
-  release:
-    # Erst veröffentlichen, wenn Windows und Linux grün sind
-    needs: [windows, linux]
-    if: github.event_name != 'pull_request' && (github.ref_type == 'tag' || github.ref == 'refs/heads/main')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write # für die Releases
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: ${{ env.APP }}-${{ needs.windows.outputs.version }}
-          path: dist
-
-      - name: Dateien
-        run: ls -l dist
+          retention-days: 14
 
       - name: Release erstellen (nur bei Tag v*)
-        if: github.ref_type == 'tag'
+        if: github.ref_type == 'tag' && github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
@@ -289,11 +282,11 @@ jobs:
           $base = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/latest"
           $built = (Get-Date).ToUniversalTime().ToString('yyyy-MM-dd HH:mm')
           $signed = if ($env:SIGN -eq 'true') { 'signiert' } else { 'noch nicht signiert' }
-          $notes = "Automatischer Build von main ($($env:GITHUB_SHA.Substring(0,7))), Version ${{ needs.windows.outputs.version }}, gebaut $built UTC, $signed.`n`n" +
+          $notes = "Automatischer Build von main ($($env:GITHUB_SHA.Substring(0,7))), Version ${{ steps.version.outputs.version }}, gebaut $built UTC, $signed.`n`n" +
                    "Die Links bleiben gleich und zeigen immer auf den neuesten Build:`n`n" +
                    "- **[$env:APP-x64.msi]($base/$env:APP-x64.msi)**: Installer für alle Benutzer (Intune/GPO)`n" +
                    "- **[$env:APP.exe]($base/$env:APP.exe)**: eine Datei, läuft ohne Installation und ohne .NET-Runtime`n" +
                    "- **[$env:APP-win-x64-framework.zip]($base/$env:APP-win-x64-framework.zip)**: kleine Variante, braucht die .NET 10 Desktop Runtime`n" +
                    "- [SHA256SUMS.txt]($base/SHA256SUMS.txt): Prüfsummen`n" +
                    "- [$env:APP-sbom.cdx.json]($base/$env:APP-sbom.cdx.json): Stückliste der Bestandteile (CycloneDX)"
-          ./.github/scripts/release-latest.ps1 -Notes $notes -Title "Latest Build (main) – ${{ needs.windows.outputs.version }}"
+          ./.github/scripts/release-latest.ps1 -Notes $notes -Title "Latest Build (main) – ${{ steps.version.outputs.version }}"
