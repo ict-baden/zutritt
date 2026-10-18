@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using Zutritt.Core.Model;
 
 namespace Zutritt.UI;
 
@@ -68,11 +69,11 @@ internal static class Ui
         return null;
     }
 
-    /// <summary>Anfangsbuchstaben für den Kreis vor Namen („Anna Becker“ → „AB“).</summary>
+    /// <summary>Anfangsbuchstaben für den Kreis vor Namen („QC Mitarbeitende 01“ → „QM“).</summary>
     public static string Initials(string displayName, string fallback)
     {
         var text = string.IsNullOrWhiteSpace(displayName) ? fallback : displayName;
-        text = text.Split('\\').Last();
+        text = AccountName.LastPart(text);
         var parts = text.Split([' ', '.', '-', '_'], StringSplitOptions.RemoveEmptyEntries).Where(p => char.IsLetter(p[0])).ToList();
         return parts.Count switch
         {
