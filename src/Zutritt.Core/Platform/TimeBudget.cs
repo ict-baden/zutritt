@@ -31,7 +31,16 @@ internal static class TimeBudget
             result = work();
             return true;
         }
-        var task = Task.Run(work);
+        // Die Frist läuft erst, wenn die Arbeit wirklich begonnen hat. Ist der Threadpool ausgelastet (etwa von
+        // hängenden Aufrufen, die noch im Hintergrund warten), zählte sonst die Zeit in der Warteschlange mit, und eine
+        // Quelle, die nie gefragt wurde, gälte als stumm. Ohne Dispose: kein Kernel-Handle, Set kann noch nachlaufen.
+        var started = new ManualResetEventSlim(false);
+        var task = Task.Run(() =>
+        {
+            started.Set();
+            return work();
+        });
+        started.Wait();
         try
         {
             if (!task.Wait(limit))
