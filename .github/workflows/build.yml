@@ -251,7 +251,7 @@ jobs:
       - name: Herkunftsnachweis
         # Nur für öffentliche Repos; für private bräuchte es GitHub Enterprise (richtlinien/05)
         if: github.event_name != 'pull_request' && !github.event.repository.private
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: 'dist/*'
 
