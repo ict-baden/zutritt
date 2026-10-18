@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using Zutritt.Core.Model;
 
 namespace Zutritt.Core.Scanning;
@@ -42,9 +41,9 @@ internal sealed class InheritanceExpectation
         var e = new InheritanceExpectation(forFile: false);
         foreach (var ace in parent.Aces)
         {
-            bool container = (ace.Inheritance & InheritanceFlags.ContainerInherit) != 0;
-            bool objects = (ace.Inheritance & InheritanceFlags.ObjectInherit) != 0;
-            bool noPropagate = (ace.Propagation & PropagationFlags.NoPropagateInherit) != 0;
+            bool container = (ace.Inheritance & AceInheritance.ContainerInherit) != 0;
+            bool objects = (ace.Inheritance & AceInheritance.ObjectInherit) != 0;
+            bool noPropagate = (ace.Propagation & AcePropagation.NoPropagateInherit) != 0;
             var mask = Mask(ace);
             if (container)
             {
@@ -67,7 +66,7 @@ internal sealed class InheritanceExpectation
     {
         var e = new InheritanceExpectation(forFile: true);
         foreach (var ace in folder.Aces)
-            if ((ace.Inheritance & InheritanceFlags.ObjectInherit) != 0)
+            if ((ace.Inheritance & AceInheritance.ObjectInherit) != 0)
                 e.AddEffective(ace.Sid, ace.IsDeny, Mask(ace));
         return e;
     }
@@ -90,10 +89,10 @@ internal sealed class InheritanceExpectation
             var mask = Mask(ace);
             if (!ace.InheritOnly) Merge(effective, Key(ace), mask);
             if (toFolders is null || toFiles is null) continue;
-            bool noPropagate = (ace.Propagation & PropagationFlags.NoPropagateInherit) != 0;
+            bool noPropagate = (ace.Propagation & AcePropagation.NoPropagateInherit) != 0;
             if (noPropagate) continue;
-            if ((ace.Inheritance & InheritanceFlags.ContainerInherit) != 0) Merge(toFolders, Key(ace), mask);
-            if ((ace.Inheritance & InheritanceFlags.ObjectInherit) != 0) Merge(toFiles, Key(ace), mask);
+            if ((ace.Inheritance & AceInheritance.ContainerInherit) != 0) Merge(toFolders, Key(ace), mask);
+            if ((ace.Inheritance & AceInheritance.ObjectInherit) != 0) Merge(toFiles, Key(ace), mask);
         }
 
         if (toFolders is not null && toFiles is not null && (!SameEntries(toFolders, _toFolders) || !SameEntries(toFiles, _toFiles))) return false;

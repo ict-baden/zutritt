@@ -3,8 +3,8 @@ using Zutritt.Cli;
 namespace Zutritt;
 
 /// <summary>
-/// Einstieg. Mit Befehl (scan, liste, bericht, --hilfe) läuft Zutritt als Befehlszeilenprogramm ganz ohne WPF,
-/// sonst startet die Oberfläche – normal, mit Demo-Daten oder zum Erzeugen der Screenshots.
+/// Einstieg. Mit Befehl (scan, liste, bericht, --hilfe, --version, --info, --lizenzen) läuft Zutritt als
+/// Befehlszeilenprogramm ganz ohne WPF, sonst startet die Oberfläche – normal, mit Demo-Daten oder zum Erzeugen der Screenshots.
 /// </summary>
 internal static class Program
 {

@@ -7,7 +7,8 @@ namespace Zutritt.Core.Identity;
 /// Person auf. Fragt die Verzeichnisse der Reihe nach und merkt sich Ergebnisse.
 /// </summary>
 /// <remarks>
-/// Reihenfolge je SID: bekannte SIDs (feste deutsche Namen) → Verzeichnisse der Reihe nach → LSA von Windows.
+/// Reihenfolge je SID: bekannte SIDs (feste deutsche Namen) → Verzeichnisse der Reihe nach → Kontenauflösung des
+/// Systems (unter Windows die LSA, siehe <c>Zutritt.Platform.Windows.WindowsPlatform</c>).
 /// „Verwaist“ heißt: die zuständige Stelle war erreichbar und kennt das Konto nicht (ERROR_NONE_MAPPED).
 /// Ist eine Domäne oder ein Server nicht erreichbar, bleibt das Konto „Unbekannt“ – ein falsches „verwaist“
 /// würde im Audit dazu verleiten, gültige Berechtigungen zu löschen.
@@ -21,7 +22,7 @@ public sealed class IdentityResolver : IDisposable
     private static readonly TimeSpan AdHocCacheLifetime = TimeSpan.FromMinutes(5);
 
     private readonly List<IDirectory> _directories;
-    private readonly Func<string?, IAccountLookup> _lookupFactory;
+    private readonly Func<string?, IAccountLookup>? _lookupFactory;
     private readonly Func<string?, IDirectory>? _machineDirectoryFactory;
     private readonly bool _askScannedServers;
     private readonly List<IDisposable> _owned;
@@ -31,15 +32,14 @@ public sealed class IdentityResolver : IDisposable
     private DateTime _adHocCreatedUtc;
 
     /// <summary>
-    /// Resolver mit genau diesen Verzeichnissen; Rückfall ist die LSA dieses Rechners. Für Läufe über entfernte
-    /// Server <see cref="CreateDefault"/> verwenden – das fragt zusätzlich die Kontendatenbank und LSA jedes gescannten Servers.
-    /// Ohne das bleiben SIDs, die kein Verzeichnis und nicht die LSA dieses Rechners kennt, bei entfernten Servern
-    /// „Unbekannt“ statt „Verwaist“: Lokale Konten eines Servers kennt nur der Server selbst.
+    /// Resolver mit genau diesen Verzeichnissen, ohne Kontenauflösung des Systems: SIDs, die kein Verzeichnis kennt,
+    /// bleiben „Unbekannt“ (nie „Verwaist“). Für Läufe die Plattform fragen (<see cref="Platform.IScanPlatform.CreateIdentityResolver"/>) –
+    /// unter Windows kommen dann die LSA dieses Rechners sowie Kontendatenbank und LSA jedes gescannten Servers dazu.
     /// </summary>
     public IdentityResolver(IEnumerable<IDirectory> directories)
         : this(directories, lookupFactory: null, machineDirectoryFactory: null, askScannedServers: false, owned: []) { }
 
-    /// <param name="lookupFactory">LSA eines Servers (null = dieser Rechner); Standard: Windows.</param>
+    /// <param name="lookupFactory">Kontenauflösung eines Servers (null = dieser Rechner); ohne: keine.</param>
     /// <param name="machineDirectoryFactory">Kontendatenbank für gescannte Rechner, die kein Verzeichnis in der Liste haben.</param>
     /// <param name="askScannedServers">Auch die LSA der gescannten Server fragen (nicht nur dieses Rechners).</param>
     /// <param name="owned">Vom Resolver selbst angelegte Verzeichnisse, die er beim Dispose schließt.</param>
@@ -49,11 +49,14 @@ public sealed class IdentityResolver : IDisposable
         ArgumentNullException.ThrowIfNull(directories);
         _directories = [.. directories];
         if (_directories.Any(d => d is null)) throw new ArgumentException("Die Liste der Verzeichnisse enthält einen leeren Eintrag.", nameof(directories));
-        _lookupFactory = lookupFactory ?? (server => new WindowsAccountLookup(server));
+        _lookupFactory = lookupFactory;
         _machineDirectoryFactory = machineDirectoryFactory;
         _askScannedServers = askScannedServers;
         _owned = [.. owned];
     }
+
+    /// <summary>Zeitlimit je Anfrage an ein Verzeichnis oder eine Kontenauflösung (siehe <see cref="ResolveSession.CallTimeout"/>).</summary>
+    internal TimeSpan CallTimeout { get; init; } = Platform.TimeBudget.Directory;
 
     /// <summary>
     /// Maximale Verschachtelungstiefe beim Auflösen von Gruppen (Gruppen in der ACL = Tiefe 0). Tiefer liegende
@@ -63,26 +66,6 @@ public sealed class IdentityResolver : IDisposable
     {
         get => _maxGroupDepth;
         init => _maxGroupDepth = value >= 0 ? value : throw new ArgumentOutOfRangeException(nameof(value), "Die Tiefe darf nicht negativ sein.");
-    }
-
-    /// <summary>Standard: lokales Verzeichnis dieses Rechners plus AD, falls der Rechner in einer Domäne ist.</summary>
-    /// <remarks>
-    /// Bei Läufen über entfernte Server werden zusätzlich deren Kontendatenbank (VORDEFINIERT-Gruppen, lokale
-    /// Konten) und LSA gefragt – die SIDs einer ACL gelten so, wie der Server sie sieht.
-    /// </remarks>
-    public static IdentityResolver CreateDefault()
-    {
-        var directories = new List<IDirectory> { new LocalDirectory() };
-        var owned = new List<IDisposable>();
-        var domain = ComputerDomain.Query();
-        if (domain is not null)
-        {
-            var ad = new ActiveDirectoryDirectory(domain);
-            directories.Add(ad);
-            owned.Add(ad);
-        }
-        return new IdentityResolver(directories, lookupFactory: null, machineDirectoryFactory: server => new LocalDirectory(server),
-            askScannedServers: true, owned);
     }
 
     /// <summary>
@@ -98,7 +81,7 @@ public sealed class IdentityResolver : IDisposable
             {
                 var machine = _directories.Where(d => d is IMachineDirectory).ToList();
                 var others = _directories.Where(d => d is not IMachineDirectory).ToList();
-                _adHoc = new ResolveSession(machine, others, [_lookupFactory(null)]);
+                _adHoc = new ResolveSession(machine, others, _lookupFactory is null ? [] : [_lookupFactory(null)]) { CallTimeout = CallTimeout };
                 _adHocCreatedUtc = DateTime.UtcNow;
             }
             return _adHoc.Resolve(sid);
@@ -218,13 +201,13 @@ public sealed class IdentityResolver : IDisposable
         foreach (var machine in machines)
         {
             if (machine is null) continue;
-            if (_askScannedServers) lookups.Add(_lookupFactory(machine));
+            if (_askScannedServers && _lookupFactory is not null) lookups.Add(_lookupFactory(machine));
             else unasked.Add(machine);
         }
         // Die LSA dieses Rechners zuletzt: Sie kennt die eigene Domäne auch dann, wenn ein Server nicht antwortet.
-        lookups.Add(_lookupFactory(null));
+        if (_lookupFactory is not null) lookups.Add(_lookupFactory(null));
 
-        return new ResolveSession(machineDirectories, others, lookups, unasked);
+        return new ResolveSession(machineDirectories, others, lookups, unasked) { CallTimeout = CallTimeout };
     }
 
     private static IEnumerable<string> CollectSids(ScanResult result)

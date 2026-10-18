@@ -8,7 +8,9 @@ public sealed class DatabaseLocationTests
     [Fact]
     public void Standardpfad_liegt_im_Benutzerprofil()
     {
-        var expected = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Zutritt", "zutritt.db");
+        // Windows: %LocalAppData%\Zutritt, macOS: ~/Library/Application Support/Zutritt, Linux: ~/.local/share/zutritt
+        var folder = OperatingSystem.IsLinux() ? "zutritt" : "Zutritt";
+        var expected = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), folder, "zutritt.db");
 
         Assert.Equal(expected, ScanStore.DefaultPath);
         Assert.Equal(expected, DatabaseLocation.Default);

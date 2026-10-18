@@ -1,3 +1,5 @@
+using Zutritt.Core.Model;
+
 namespace Zutritt.Core.Storage;
 
 /// <summary>
@@ -21,10 +23,10 @@ internal static class TargetSet
 
     public static string Normalize(string? target)
     {
-        var t = (target ?? "").Trim().Replace('/', '\\');
-        var trimmed = t.TrimEnd('\\');
+        var t = WindowsPath.WithBackslashes((target ?? "").Trim());
+        var trimmed = t.TrimEnd(WindowsPath.Separator);
         if (trimmed.Length == 0) trimmed = t;                                     // „\“ allein: nichts zu kürzen
-        else if (trimmed.Length == 2 && trimmed[1] == ':' && t.Length > 2) trimmed += "\\";  // „C:\“ bleibt Laufwerkswurzel
+        else if (trimmed.Length == 2 && trimmed[1] == ':' && t.Length > 2) trimmed += WindowsPath.Separator;  // „C:\“ bleibt Laufwerkswurzel
         return trimmed.ToUpperInvariant();
     }
 
@@ -41,13 +43,13 @@ internal static class TargetSet
         if (t.Length == 0) return false;
         if (t.StartsWith(@"\\?\UNC\", StringComparison.Ordinal)) return IsLocalServer(ServerOf(t[8..]));
         if (t.StartsWith(@"\\?\", StringComparison.Ordinal) || t.StartsWith(@"\\.\", StringComparison.Ordinal)) return true;
-        if (t.StartsWith(@"\\", StringComparison.Ordinal)) return IsLocalServer(ServerOf(t[2..]));
+        if (WindowsPath.IsUnc(t)) return IsLocalServer(ServerOf(t[2..]));
         return true;  // „.“, Laufwerkspfad oder relativer Pfad
     }
 
     private static string ServerOf(string rest)
     {
-        var end = rest.IndexOf('\\');
+        var end = rest.IndexOf(WindowsPath.Separator);
         return end < 0 ? rest : rest[..end];
     }
 

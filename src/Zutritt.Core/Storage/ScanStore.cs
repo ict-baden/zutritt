@@ -69,6 +69,9 @@ public sealed class ScanStore : IDisposable
     /// </summary>
     public static string DefaultPath => DatabaseLocation.Default;
 
+    /// <summary>Version des Datenbankschemas, die diese Ausgabe schreibt (für das Diagnosepaket).</summary>
+    public static int CurrentSchemaVersion => Schema.CurrentVersion;
+
     /// <summary>Voller Pfad der geöffneten Datenbank bzw. „:memory:“.</summary>
     public string DatabasePath { get; }
 

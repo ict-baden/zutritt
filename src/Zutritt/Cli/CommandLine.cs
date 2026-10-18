@@ -1,15 +1,17 @@
 using Zutritt.Core.Analysis;
+using Zutritt.Core.Diagnostics;
 using Zutritt.Core.Identity;
 using Zutritt.Core.Model;
 using Zutritt.Core.Reports;
 using Zutritt.Core.Scanning;
 using Zutritt.Core.Storage;
+using Zutritt.Platform.Windows;
 
 namespace Zutritt.Cli;
 
 /// <summary>
-/// Befehlszeile derselben Exe: scan, liste, bericht, --hilfe. Für geplante Aufgaben zählt der Exitcode
-/// (0 = nichts ab „Mittel“, 1 = „Mittel“, 2 = „Hoch“, 3 = Fehler oder Abbruch).
+/// Befehlszeile derselben Exe: scan, liste, bericht, --hilfe, --version, --info, --lizenzen. Für geplante Aufgaben
+/// zählt der Exitcode (0 = nichts ab „Mittel“, 1 = „Mittel“, 2 = „Hoch“, 3 = Fehler oder Abbruch).
 /// </summary>
 internal static class CommandLine
 {
@@ -19,6 +21,9 @@ internal static class CommandLine
     public const int ExitError = 3;
 
     private static readonly string[] HelpWords = ["--hilfe", "-hilfe", "hilfe", "--help", "-h", "-?", "/?", "/h"];
+    private static readonly string[] VersionWords = ["--version", "-v", "/v"];
+    private static readonly string[] InfoWords = ["--info", "/info"];
+    private static readonly string[] LicenseWords = ["--lizenzen", "--licenses"];
 
     public static int Run(string[] args)
     {
@@ -32,6 +37,12 @@ internal static class CommandLine
                 PrintHelp();
                 return ExitClean;
             }
+            if (VersionWords.Contains(command, StringComparer.OrdinalIgnoreCase)) return Single(rest, command, PrintVersion);
+            if (InfoWords.Contains(command, StringComparer.OrdinalIgnoreCase)) return Single(rest, command, PrintInfo);
+            if (LicenseWords.Contains(command, StringComparer.OrdinalIgnoreCase)) return Single(rest, command, PrintLicenses);
+
+            if (command.ToLowerInvariant() is "scan" or "liste" or "bericht" or "--demo-bericht")
+                AppDiagnostics.Start("Befehlszeile: " + command.ToLowerInvariant());
             return command.ToLowerInvariant() switch
             {
                 "scan" => Scan(Arguments.Parse(rest,
@@ -60,10 +71,60 @@ internal static class CommandLine
         }
         catch (Exception ex)
         {
+            Log.Error("Befehlszeile abgebrochen", ex, withStack: ex is not (InvalidOperationException or IOException or UnauthorizedAccessException));
             Console.Error.WriteLine();
             Console.Error.WriteLine($"Fehler: {ex.Message}");
             return ExitError;
         }
+    }
+
+    /// <summary>Befehl ohne weitere Angaben (--version, --info, --lizenzen).</summary>
+    private static int Single(string[] rest, string command, Action print)
+    {
+        if (rest.Any(r => r.Trim().Length > 0)) throw new UsageException($"„{command}“ erwartet keine weiteren Angaben.");
+        print();
+        return ExitClean;
+    }
+
+    // ================= --version, --info, --lizenzen =================
+
+    private static void PrintVersion() => Console.WriteLine($"{AppInfo.Name} {AppInfo.VersionWithBuild}");
+
+    /// <summary>Dieselben Angaben wie die Info-Seite (Richtlinie 07), als Text.</summary>
+    internal static void PrintInfo()
+    {
+        Console.WriteLine($"{AppInfo.Name} {AppInfo.VersionWithBuild} – .NET {Environment.Version.ToString(3)}");
+        Console.WriteLine("Zeigt, wer auf Dateifreigaben worauf zugreifen darf – mit Befunden, Vergleich und Bericht.");
+        Console.WriteLine();
+        Console.WriteLine($"{AppInfo.Copyright} · {AppInfo.LicenseName}");
+        Console.WriteLine($"Lizenztext:             {LicenseTexts.LicenseFile} (Zutritt.exe --lizenzen, {AppInfo.LicenseUrl})");
+        Console.WriteLine($"Drittanbieter-Lizenzen: {LicenseTexts.NoticesFile} (Zutritt.exe --lizenzen, auch unter Info in der App)");
+        Console.WriteLine();
+        Console.WriteLine($"Quellcode (GitHub):     {AppInfo.RepositoryUrl}");
+        Console.WriteLine($"Hilfe & Support:        {AppInfo.SupportUrl}");
+        Console.WriteLine($"Datenschutz:            {AppInfo.PrivacyUrl}");
+        Console.WriteLine($"Impressum:              {AppInfo.ImpressumUrl}");
+        Console.WriteLine($"Webseite:               {AppInfo.WebsiteUrl}");
+        Console.WriteLine();
+        Console.WriteLine($"Datenbank:              {Labels.WithVariables(ScanStore.DefaultPath)}");
+        Console.WriteLine($"Protokoll:              {Labels.WithVariables(Log.DefaultFolder)}");
+        Console.WriteLine();
+        Console.WriteLine(AppInfo.NoDataSentence);
+    }
+
+    /// <summary>Lizenztext von Zutritt und die der mitgelieferten Bibliotheken (eingebettet, auch in der einzelnen Exe).</summary>
+    private static void PrintLicenses()
+    {
+        var license = LicenseTexts.License();
+        var notices = LicenseTexts.ThirdPartyNotices();
+        if (license is null && notices is null)
+            throw new InvalidOperationException($"Die Lizenztexte fehlen in dieser Ausgabe – sie stehen unter {AppInfo.RepositoryUrl}.");
+        if (license is not null)
+        {
+            Console.WriteLine(license.TrimEnd());
+            Console.WriteLine();
+        }
+        if (notices is not null) Console.WriteLine(notices.TrimEnd());
     }
 
     // ================= scan =================
@@ -96,7 +157,7 @@ internal static class CommandLine
         {
             Console.WriteLine($"Zutritt {AppInfo.Version} – Scan von {string.Join(", ", request.Targets.Select(Labels.TargetName))}");
             var progress = new ConsoleProgress();
-            var scanner = new Scanner(IdentityResolver.CreateDefault());
+            var scanner = WindowsPlatform.CreateScanner();
             var scan = scanner.RunAsync(request, progress, cts.Token).GetAwaiter().GetResult();
             progress.Finish();
 
@@ -289,6 +350,9 @@ internal static class CommandLine
               Zutritt.exe --demo                  Oberfläche mit eingebauten Demo-Daten
               Zutritt.exe --screenshots <ordner> [--theme hell|dunkel|beide]
               Zutritt.exe --hilfe
+              Zutritt.exe --version               Version und Build
+              Zutritt.exe --info                  Version, Lizenz, Links zu Hilfe, Datenschutz, Impressum
+              Zutritt.exe --lizenzen              Lizenztext und Drittanbieter-Lizenzen
 
             Ziele:
               \\server\freigabe[\ordner]    eine Freigabe oder ein Ordner darin
@@ -329,6 +393,7 @@ internal static class CommandLine
             Ende, und die Datei wird UTF-8 (mit BOM):
               "C:\Program Files\Zutritt\Zutritt.exe" scan \\FS01 --vergleich > D:\Berichte\zutritt.log 2>&1
             Es wird nur gelesen – an Rechten und Dateien ändert Zutritt nichts.
+            {{AppInfo.NoDataSentence}}
             """);
     }
 

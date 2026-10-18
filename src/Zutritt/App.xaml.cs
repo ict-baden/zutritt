@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Threading;
 using Zutritt.Cli;
+using Zutritt.Core.Diagnostics;
 using Zutritt.UI;
 using Zutritt.UI.Theme;
 
@@ -17,6 +18,13 @@ public partial class App : Application
     {
         base.OnStartup(e);
         DispatcherUnhandledException += OnUnhandled;
+        AppDiagnostics.Start(_options.Mode switch
+        {
+            AppMode.Demo => "Oberfläche mit Demo-Daten",
+            AppMode.Screenshots => "Screenshots",
+            AppMode.Benchmark => "Messung",
+            _ => "Oberfläche",
+        });
 
         if (_options.Mode is AppMode.Screenshots or AppMode.Benchmark)
         {
@@ -54,8 +62,9 @@ public partial class App : Application
 
     private void OnUnhandled(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
-        // Niemals wegen eines Fehlers abstürzen – stattdessen freundlich melden.
+        // Niemals wegen eines Fehlers abstürzen – stattdessen freundlich melden (und für den Support vermerken).
         e.Handled = true;
+        Log.Error("Unerwarteter Fehler in der Oberfläche", e.Exception, withStack: true);
         if (_options.Mode is AppMode.Screenshots or AppMode.Benchmark)
         {
             Console.Error.WriteLine($"{(_options.Mode == AppMode.Benchmark ? "Messung" : "Screenshots")} fehlgeschlagen: {e.Exception}");
@@ -67,6 +76,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        Log.Info($"Ende (Exitcode {e.ApplicationExitCode})");
         _state?.Dispose();
         base.OnExit(e);
     }

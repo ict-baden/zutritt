@@ -293,7 +293,7 @@ public sealed class ExcelReportTests(ITestOutputHelper output) : IDisposable
         Assert.Single(Directory.GetFiles(Path.GetDirectoryName(path)!));
     }
 
-    [Fact]
+    [WindowsFact("Dateisperren gelten nur unter Windows verbindlich")]
     public void GeoeffneteDatei_DeutscheFehlermeldung_AlteDateiBleibt_KeineReste()
     {
         var path = Path.Combine(_temp.Path, "offen.xlsx");
@@ -314,14 +314,15 @@ public sealed class ExcelReportTests(ITestOutputHelper output) : IDisposable
     [Fact]
     public void UngueltigerPfad_ReportWriteException()
     {
-        Assert.Throws<ReportWriteException>(() => ExcelReport.Write(Data(), Path.Combine(_temp.Path, "a|b.xlsx")));
+        // „|“ ist nur in Windows-Dateinamen verboten
+        if (OperatingSystem.IsWindows()) Assert.Throws<ReportWriteException>(() => ExcelReport.Write(Data(), Path.Combine(_temp.Path, "a|b.xlsx")));
         Assert.Throws<ReportWriteException>(() => ExcelReport.Write(Data(), _temp.Path)); // Ordner statt Datei
         Assert.Throws<ArgumentException>(() => ExcelReport.Write(Data(), " "));
         Assert.Throws<ArgumentNullException>(() => ExcelReport.Write(null!, null, Path.Combine(_temp.Path, "x.xlsx")));
         Assert.Empty(Directory.GetFiles(_temp.Path));
     }
 
-    [Fact]
+    [PdfFact]
     public void PfadOhneDateiname_ReportWriteException_LegtKeinenOrdnerAn()
     {
         var dir = Path.Combine(_temp.Path, "neu") + Path.DirectorySeparatorChar;

@@ -44,7 +44,7 @@ public sealed class FolderTree
         {
             if (folder.IsRoot) continue;
             var key = Key(folder.Path);
-            var root = longestFirst.FirstOrDefault(r => key.StartsWith(r.EndsWith('\\') ? r : r + "\\", StringComparison.OrdinalIgnoreCase));
+            var root = longestFirst.FirstOrDefault(r => key.StartsWith(r.EndsWith(WindowsPath.Separator) ? r : r + WindowsPath.Separator, StringComparison.OrdinalIgnoreCase));
             if (root is null)
             {
                 // Ohne passende Wurzel (sollte nicht vorkommen): als eigener Eintrag oben zeigen
@@ -55,7 +55,7 @@ public sealed class FolderTree
             var current = key;
             while (!Paths.Equals(current, root) && !tree._parent.ContainsKey(current))
             {
-                int cut = current.LastIndexOf('\\');
+                int cut = current.LastIndexOf(WindowsPath.Separator);
                 var parent = cut > root.Length ? current[..cut] : root;
                 tree._parent[current] = parent;
                 if (!tree._children.TryGetValue(parent, out var list)) tree._children[parent] = list = [];
@@ -69,13 +69,13 @@ public sealed class FolderTree
         return tree;
     }
 
-    internal static string Key(string path) => path.Length > 3 ? path.TrimEnd('\\') : path;
+    internal static string Key(string path) => path.Length > 3 ? path.TrimEnd(WindowsPath.Separator) : path;
 
     internal List<FolderTreeNode> CreateChildren(FolderTreeNode parent)
     {
         if (!_children.TryGetValue(parent.Key, out var keys)) return [];
         return keys
-            .Select(k => CreateNode(k, parent, displayName: k[(k.LastIndexOf('\\') + 1)..]))
+            .Select(k => CreateNode(k, parent, displayName: k[(k.LastIndexOf(WindowsPath.Separator) + 1)..]))
             .OrderBy(n => n.Name, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
     }
@@ -118,7 +118,7 @@ public sealed class FolderTree
         if (_stored.Values.FirstOrDefault(f => f.IsRoot && f.ShareUnc is { } unc && Paths.Equals(Key(unc), Key(path))) is { } shareRoot)
             return Find(shareRoot.Path);
         var current = Key(path);
-        for (int cut = current.LastIndexOf('\\'); cut > 2; cut = current.LastIndexOf('\\'))
+        for (int cut = current.LastIndexOf(WindowsPath.Separator); cut > 2; cut = current.LastIndexOf(WindowsPath.Separator))
         {
             current = current[..cut];
             if (Find(current) is { } ancestor) return ancestor;

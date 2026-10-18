@@ -1,3 +1,5 @@
+using Zutritt.Core.Model;
+
 namespace Zutritt.Core.Analysis;
 
 /// <summary>
@@ -18,7 +20,7 @@ public sealed class PathOrder : IComparer<string>
         var b = y.AsSpan();
         while (true)
         {
-            int ia = a.IndexOf('\\'), ib = b.IndexOf('\\');
+            int ia = a.IndexOf(WindowsPath.Separator), ib = b.IndexOf(WindowsPath.Separator);
             var segA = ia < 0 ? a : a[..ia];
             var segB = ib < 0 ? b : b[..ib];
             int c = segA.CompareTo(segB, StringComparison.OrdinalIgnoreCase);
@@ -35,29 +37,10 @@ public sealed class PathOrder : IComparer<string>
     }
 
     /// <summary>Pfad ohne abschließenden Trenner (außer bei Laufwerkswurzeln wie „C:\“).</summary>
-    internal static string Normalize(string path)
-    {
-        if (path.Length > 3 && path.EndsWith('\\')) return path.TrimEnd('\\');
-        return path;
-    }
+    internal static string Normalize(string path) => WindowsPath.TrimEndKeepShort(path);
 
     /// <summary>Elternpfad oder null, wenn es keinen sinnvollen gibt (Laufwerk, \\server\freigabe).</summary>
-    internal static string? Parent(string path)
-    {
-        path = Normalize(path);
-        if (path.Length <= 3 && path.Length >= 2 && path[1] == ':') return null; // Laufwerkswurzel
-        int i = path.LastIndexOf('\\');
-        if (i <= 0) return null;
-        if (path.StartsWith(@"\\", StringComparison.Ordinal))
-        {
-            // \\server\freigabe ist die kleinste sinnvolle Einheit
-            int serverEnd = path.IndexOf('\\', 2);
-            if (serverEnd < 0 || i <= serverEnd) return null;
-        }
-        var parent = path[..i];
-        // „C:“ → „C:\“
-        return parent.Length == 2 && parent[1] == ':' ? parent + "\\" : parent;
-    }
+    internal static string? Parent(string path) => WindowsPath.Parent(path);
 
     /// <summary>Anzahl Ebenen von <paramref name="ancestor"/> bis <paramref name="path"/>, 0 = gleich, null = nicht darunter.</summary>
     internal static int? Distance(string ancestor, string path)
@@ -65,10 +48,10 @@ public sealed class PathOrder : IComparer<string>
         ancestor = Normalize(ancestor);
         path = Normalize(path);
         if (path.Equals(ancestor, StringComparison.OrdinalIgnoreCase)) return 0;
-        var prefix = ancestor.EndsWith('\\') ? ancestor : ancestor + "\\";
+        var prefix = ancestor.EndsWith(WindowsPath.Separator) ? ancestor : ancestor + WindowsPath.Separator;
         if (!path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return null;
         var rest = path.AsSpan(prefix.Length);
         if (rest.IsEmpty) return null;
-        return rest.Count('\\') + 1;
+        return rest.Count(WindowsPath.Separator) + 1;
     }
 }

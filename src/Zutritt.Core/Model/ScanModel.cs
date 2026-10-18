@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 
 namespace Zutritt.Core.Model;
 
@@ -63,7 +62,7 @@ public sealed record ShareInfo
     /// <summary>Lokaler Pfad auf dem Server (z. B. D:\Daten), soweit bekannt.</summary>
     public string LocalPath { get; init; } = "";
     /// <summary>UNC-Pfad \\server\name.</summary>
-    public string UncPath => $@"\\{Server}\{Name}";
+    public string UncPath => WindowsPath.Unc(Server, Name);
     public string Remark { get; init; } = "";
     public bool IsAdminShare { get; init; }
     /// <summary>Freigabe-Berechtigungen. Leer und <see cref="PermissionsReadable"/> = false, wenn nicht lesbar.</summary>
@@ -121,14 +120,14 @@ public sealed class FolderNode
 public sealed record AceEntry
 {
     public required string Sid { get; init; }
-    public required FileSystemRights Rights { get; init; }
+    public required FileRights Rights { get; init; }
     public bool IsDeny { get; init; }
     public bool IsInherited { get; init; }
-    public InheritanceFlags Inheritance { get; init; }
-    public PropagationFlags Propagation { get; init; }
+    public AceInheritance Inheritance { get; init; }
+    public AcePropagation Propagation { get; init; }
     public AccessLevel Level => Model.Rights.ToLevel(Rights);
     /// <summary>Gilt nur für Unterordner/Dateien, nicht für diesen Ordner selbst.</summary>
-    public bool InheritOnly => (Propagation & PropagationFlags.InheritOnly) != 0;
+    public bool InheritOnly => (Propagation & AcePropagation.InheritOnly) != 0;
 }
 
 public enum PrincipalKind

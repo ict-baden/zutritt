@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using Zutritt.Core.Model;
 
 namespace Zutritt.Core.Analysis;
@@ -64,7 +63,7 @@ public static class ScanComparer
             if (!older.ContainsKey(path) && node.Error is null) result.FoldersAdded.Add(node.Path);
     }
 
-    private readonly record struct AceKey(string Sid, bool IsDeny, bool IsInherited, InheritanceFlags Inheritance, PropagationFlags Propagation);
+    private readonly record struct AceKey(string Sid, bool IsDeny, bool IsInherited, AceInheritance Inheritance, AcePropagation Propagation);
 
     private sealed class AceKeyComparer : IEqualityComparer<AceKey>
     {

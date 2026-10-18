@@ -113,7 +113,7 @@ internal static class Benchmark
                 var wideFolder = scan.Folders.FirstOrDefault(x => x.Path.EndsWith(@"\Vertrieb\Kundenakten", StringComparison.Ordinal));
                 if (wideFolder is not null)
                 {
-                    int children = scan.Folders.Count(x => x.Path.StartsWith(wideFolder.Path + @"\", StringComparison.Ordinal));
+                    int children = scan.Folders.Count(x => x.Path.StartsWith(wideFolder.Path + WindowsPath.Separator, StringComparison.Ordinal));
                     await Step(beat, "Ordner: großen Ordner zeigen (zugeklappt)", () => o.SelectPathAsync(wideFolder.Path));
                     // Wie ein Klick auf den Pfeil: aufklappen, die sichtbaren Unterordner entstehen
                     await Step(beat, $"Ordner: … aufklappen ({Labels.Number(children)} Unterordner)", () =>
@@ -121,7 +121,7 @@ internal static class Benchmark
                         if (o.Tree.SelectedItem is FolderTreeNode node) node.IsExpanded = true;
                         return Task.CompletedTask;
                     });
-                    var last = scan.Folders.Last(x => x.Path.StartsWith(wideFolder.Path + @"\", StringComparison.Ordinal)).Path;
+                    var last = scan.Folders.Last(x => x.Path.StartsWith(wideFolder.Path + WindowsPath.Separator, StringComparison.Ordinal)).Path;
                     await Step(beat, "Ordner: letzten Unterordner darin zeigen", () => o.SelectPathAsync(last));
                     await Step(beat, "Ordner: … und „Wer darf hier rein“", () => o.PeopleTask);
                     if (folder.Length > 0) await SaveAsync(window, folder, "gross-ordner-breit");

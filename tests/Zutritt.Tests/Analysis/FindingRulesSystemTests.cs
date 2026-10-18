@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using Zutritt.Core.Analysis;
 using Zutritt.Core.Model;
 using static Zutritt.Tests.Analysis.ScanBuilder;
@@ -12,9 +11,9 @@ namespace Zutritt.Tests.Analysis;
 /// </summary>
 public sealed class FindingRulesSystemTests
 {
-    private const FileSystemRights Read = S.Read;
-    private const FileSystemRights Modify = S.Modify;
-    private const FileSystemRights Full = S.Full;
+    private const FileRights Read = S.Read;
+    private const FileRights Modify = S.Modify;
+    private const FileRights Full = S.Full;
     private const string WindowManager = "S-1-5-90-0-2";
     private const string CapabilityGroup = "S-1-5-32-989523358-1667815365-316973287-129935811-3358257576-2796868252-2781088163-715581871";
     private const string AppCapability = "S-1-15-3-1024-3635283841-2530182609-996808640-1887759898-3848208603-3313616867-983405619-2501854204";
@@ -56,19 +55,19 @@ public sealed class FindingRulesSystemTests
         var u = Sid(2001);
         var b = new ScanBuilder().User(u, @"T\max").Group(Sid(1001), @"T\Einkauf");
         b.Folder("", 0, Allow(S.Administrators, Full),
-            Allow(Sid(1001), Read, inheritance: InheritanceFlags.ObjectInherit, propagation: PropagationFlags.InheritOnly));
+            Allow(Sid(1001), Read, inheritance: AceInheritance.ObjectInherit, propagation: AcePropagation.InheritOnly));
         var file = new FolderNode
         {
             Path = ScanBuilder.Share + @"\P\Q\bericht.xlsx", Depth = 3, IsFile = true, ShareUnc = ScanBuilder.Share,
             OwnerSid = S.Administrators, InheritanceDiffers = true,
         };
-        file.Aces.AddRange([Allow(S.Administrators, Full, inherited: true, inheritance: InheritanceFlags.None),
-            Allow(Sid(1001), Read, inherited: true, inheritance: InheritanceFlags.None),
-            Allow(u, Modify, inherited: true, inheritance: InheritanceFlags.None)]);
+        file.Aces.AddRange([Allow(S.Administrators, Full, inherited: true, inheritance: AceInheritance.None),
+            Allow(Sid(1001), Read, inherited: true, inheritance: AceInheritance.None),
+            Allow(u, Modify, inherited: true, inheritance: AceInheritance.None)]);
         b.Scan.Folders.Add(file);
         // Ein Ordner darunter erbt den Eintrag „nur Dateien“ als „nur vererben“ – auch das ist nicht fremd
         var folder = b.Folder(@"\P\R", 2, Allow(S.Administrators, Full, inherited: true),
-            Allow(Sid(1001), Read, inherited: true, inheritance: InheritanceFlags.ObjectInherit, propagation: PropagationFlags.InheritOnly),
+            Allow(Sid(1001), Read, inherited: true, inheritance: AceInheritance.ObjectInherit, propagation: AcePropagation.InheritOnly),
             Allow(u, Modify, inherited: true));
         folder.InheritanceDiffers = true;
 
@@ -127,7 +126,7 @@ public sealed class FindingRulesSystemTests
     public void Leere_VORDEFINIERT_Gruppe_ist_kein_Befund_eine_eigene_leere_Gruppe_schon()
     {
         var b = new ScanBuilder().Group(SidCatalog.BackupOperators, @"VORDEFINIERT\Sicherungs-Operatoren").Group(Sid(1003), @"T\Alt-Projekt");
-        b.Folder("", 0, Allow(SidCatalog.BackupOperators, FileSystemRights.Write), Allow(Sid(1003), Read));
+        b.Folder("", 0, Allow(SidCatalog.BackupOperators, FileRights.Write), Allow(Sid(1003), Read));
 
         Assert.Equal([("ZT11", Sid(1003))], Keys(b).Where(k => k.Rule == "ZT11"));
     }
@@ -139,9 +138,9 @@ public sealed class FindingRulesSystemTests
     {
         // „Jeder: Ordner durchsuchen“ (häufig über Freigabewurzeln) und „Attribute lesen“ zeigen keinen Inhalt
         var b = new ScanBuilder();
-        b.Folder("", 0, Allow(S.Everyone, FileSystemRights.Traverse | FileSystemRights.ReadAttributes | FileSystemRights.Synchronize),
-            Allow(S.AuthenticatedUsers, FileSystemRights.ReadPermissions, inheritance: InheritanceFlags.None));
-        b.Folder(@"\X", 1, Allow(S.Everyone, FileSystemRights.ListDirectory, inheritance: InheritanceFlags.None));
+        b.Folder("", 0, Allow(S.Everyone, FileRights.Traverse | FileRights.ReadAttributes | FileRights.Synchronize),
+            Allow(S.AuthenticatedUsers, FileRights.ReadPermissions, inheritance: AceInheritance.None));
+        b.Folder(@"\X", 1, Allow(S.Everyone, FileRights.ListDirectory, inheritance: AceInheritance.None));
 
         Assert.Equal([("ZT02", S.Everyone)], Keys(b));
         Assert.Equal(@"\\SRV\Daten\X", FindingRules.Evaluate(b.Scan).Single().Path);
@@ -152,16 +151,16 @@ public sealed class FindingRulesSystemTests
     {
         // C:\Users\Default\Anwendungsdaten u. a.: „Jeder“ Lesen, aber „Ordner auflisten“ verweigert, nur dieser Ordner
         var b = new ScanBuilder();
-        b.Folder("", 0, Deny(S.Everyone, FileSystemRights.ListDirectory, inheritance: InheritanceFlags.None),
-            Allow(S.Everyone, Read, inheritance: InheritanceFlags.None), Allow(S.Administrators, Full, inheritance: InheritanceFlags.None));
+        b.Folder("", 0, Deny(S.Everyone, FileRights.ListDirectory, inheritance: AceInheritance.None),
+            Allow(S.Everyone, Read, inheritance: AceInheritance.None), Allow(S.Administrators, Full, inheritance: AceInheritance.None));
 
         Assert.Empty(Keys(b));
     }
 
     [Theory]
-    [InlineData(FileSystemRights.ListDirectory, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit)] // vererbt
-    [InlineData(FileSystemRights.ReadData | FileSystemRights.Delete, InheritanceFlags.None)]                          // mehr als Auflisten
-    public void Andere_Verweigerungen_fuer_Jeder_bleiben_ZT07(FileSystemRights denied, InheritanceFlags inheritance)
+    [InlineData(FileRights.ListDirectory, AceInheritance.ContainerInherit | AceInheritance.ObjectInherit)] // vererbt
+    [InlineData(FileRights.ReadData | FileRights.Delete, AceInheritance.None)]                          // mehr als Auflisten
+    public void Andere_Verweigerungen_fuer_Jeder_bleiben_ZT07(FileRights denied, AceInheritance inheritance)
     {
         var b = new ScanBuilder();
         b.Folder("", 0, Deny(S.Everyone, denied, inheritance: inheritance), Allow(S.Administrators, Full));
@@ -177,7 +176,7 @@ public sealed class FindingRulesSystemTests
         var b = new ScanBuilder().User(u, @"T\max");
         var f = b.Folder(@"\Programme\Komponente\de-DE", 3,
             Allow(SidCatalog.TrustedInstaller, Full), Allow(S.Administrators, Modify), Allow(S.BuiltinUsers, Read),
-            Allow(S.AuthenticatedUsers, FileSystemRights.Write), Allow(u, Full));
+            Allow(S.AuthenticatedUsers, FileRights.Write), Allow(u, Full));
         f.OwnerSid = SidCatalog.TrustedInstaller;
         var broken = new FolderNode { Path = f.Path + @"\Unterordner", Depth = 4, InheritanceBroken = true, OwnerSid = SidCatalog.TrustedInstaller, ShareUnc = f.ShareUnc };
         broken.Aces.Add(Allow(SidCatalog.TrustedInstaller, Full));
@@ -200,7 +199,7 @@ public sealed class FindingRulesSystemTests
         var u = Sid(2001); var other = Sid(2002);
         var b = new ScanBuilder().User(u, @"T\max").User(other, @"T\erika");
         var f = b.Folder(@"\WER\ReportArchive\AppCrash_x", 5,
-            Allow(S.Administrators, Full), Allow(u, Full), Allow(SidCatalog.WriteRestricted, (FileSystemRights)0x120116));
+            Allow(S.Administrators, Full), Allow(u, Full), Allow(SidCatalog.WriteRestricted, (FileRights)0x120116));
         f.OwnerSid = u;
         f.Aces.Add(Allow(other, Full));
 
@@ -239,9 +238,9 @@ public sealed class FindingRulesSystemTests
         var b = new ScanBuilder();
         b.Folder("", 0, Allow(S.Administrators, Full), Allow(Sid(1001), Read));
         var adminOnly = Broken(@"\A\B\C", Allow(S.System, Full), Allow(S.Administrators, Full), Allow(SidCatalog.NetworkService, Read),
-            Allow(S.CreatorOwner, Full, propagation: PropagationFlags.InheritOnly), Deny(S.Everyone, FileSystemRights.Delete));
+            Allow(S.CreatorOwner, Full, propagation: AcePropagation.InheritOnly), Deny(S.Everyone, FileRights.Delete));
         var withGroup = Broken(@"\A\B\D", Allow(S.Administrators, Full), Allow(Sid(1001), Read));
-        var withEveryone = Broken(@"\A\B\E", Allow(S.Administrators, Full), Allow(S.Everyone, FileSystemRights.Traverse));
+        var withEveryone = Broken(@"\A\B\E", Allow(S.Administrators, Full), Allow(S.Everyone, FileRights.Traverse));
 
         FolderNode Broken(string relative, params AceEntry[] aces)
         {

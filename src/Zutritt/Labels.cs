@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Security.AccessControl;
 using Zutritt.Core.Model;
 
 namespace Zutritt;
@@ -45,8 +44,8 @@ public static class Labels
     public static string AppliesTo(AceEntry ace, bool isFile)
     {
         if (isFile) return "Nur diese Datei";
-        bool ci = (ace.Inheritance & InheritanceFlags.ContainerInherit) != 0;
-        bool oi = (ace.Inheritance & InheritanceFlags.ObjectInherit) != 0;
+        bool ci = (ace.Inheritance & AceInheritance.ContainerInherit) != 0;
+        bool oi = (ace.Inheritance & AceInheritance.ObjectInherit) != 0;
         string text = (ace.InheritOnly, ci, oi) switch
         {
             (false, true, true) => "Diesen Ordner, Unterordner und Dateien",
@@ -58,7 +57,7 @@ public static class Labels
             (true, false, true) => "Nur Dateien",
             _ => "Nur Unterordner und Dateien",
         };
-        return (ace.Propagation & PropagationFlags.NoPropagateInherit) != 0 && (ci || oi) ? text + " (eine Ebene)" : text;
+        return (ace.Propagation & AcePropagation.NoPropagateInherit) != 0 && (ci || oi) ? text + " (eine Ebene)" : text;
     }
 
     public static string Number(long n) => n.ToString("N0", German);
@@ -85,15 +84,38 @@ public static class Labels
     public static string TargetName(string target) => target.Trim() == "." ? "Freigaben dieses Rechners" : target.Trim();
 
     /// <summary>„MUSTER\QC-Team“ → „QC-Team“ (für enge Spalten; der volle Name steht dann im Tooltip).</summary>
-    public static string WithoutDomain(string name)
-    {
-        int cut = name.LastIndexOf('\\');
-        return cut >= 0 && cut < name.Length - 1 ? name[(cut + 1)..] : name;
-    }
+    public static string WithoutDomain(string name) => AccountName.ShortName(name);
 
     /// <summary>Gruppenkette „über welche Gruppen“ kurz: „QC-Team › Labor-Alle“ statt mit Domäne vor jedem Namen.</summary>
     public static string ViaChain(IReadOnlyList<string> via) =>
         via.Count == 0 ? "direkt berechtigt" : string.Join(" › ", via.Select(WithoutDomain));
+
+    /// <summary>
+    /// Pfad im eigenen Profil mit Umgebungsvariable statt ausgeschriebenem Benutzerordner, z. B.
+    /// „%LocalAppData%\Zutritt\zutritt.db“ – so steht auf der Info-Seite und auf Screenshots kein Benutzername.
+    /// Andere Pfade bleiben, wie sie sind.
+    /// </summary>
+    public static string WithVariables(string path)
+    {
+        if (string.IsNullOrEmpty(path)) return path;
+        var folders = new List<(string Folder, string Variable)>
+        {
+            (Path.GetTempPath(), "%TEMP%"),
+            (Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "%LocalAppData%"),
+            (Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "%AppData%"),
+            (Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "%USERPROFILE%"),
+        };
+        char[] separators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
+        // Der längste passende Ordner gewinnt (%TEMP% liegt meist unter %LocalAppData%)
+        foreach (var (folder, variable) in folders.Where(f => f.Folder.Length > 0).OrderByDescending(f => f.Folder.TrimEnd(separators).Length))
+        {
+            var root = folder.TrimEnd(separators);
+            if (path.Length >= root.Length && path.StartsWith(root, StringComparison.OrdinalIgnoreCase)
+                && (path.Length == root.Length || separators.Contains(path[root.Length])))
+                return variable + path[root.Length..];
+        }
+        return path;
+    }
 
     /// <summary>Kürzt lange Pfade in der Mitte, damit Anfang (Freigabe) und Ende (Ordner) sichtbar bleiben.</summary>
     public static string ShortenPath(string path, int max = 90)
@@ -116,17 +138,4 @@ public static class Labels
         if (targets.Count > 1) cleaned += $"-und-{targets.Count - 1}-weitere";
         return $"Zutritt-Bericht-{cleaned}-{scan.StartedAt.ToLocalTime():yyyy-MM-dd}";
     }
-}
-
-/// <summary>Angaben über das Programm selbst.</summary>
-public static class AppInfo
-{
-    public const string RepositoryUrl = "https://github.com/ict-baden/zutritt";
-    public const string Publisher = "ICT-Baden";
-
-    /// <summary>Version ohne Build-Anhang, z. B. „1.0.0“.</summary>
-    public static string Version { get; } =
-        (typeof(AppInfo).Assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
-            .OfType<System.Reflection.AssemblyInformationalVersionAttribute>().FirstOrDefault()?.InformationalVersion
-         ?? typeof(AppInfo).Assembly.GetName().Version?.ToString(3) ?? "1.0.0").Split('+')[0];
 }

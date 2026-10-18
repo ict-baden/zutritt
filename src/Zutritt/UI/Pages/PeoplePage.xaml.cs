@@ -18,7 +18,7 @@ public partial class PeoplePage : UserControl, IPage, ISearchPage
 
         public Principal Principal { get; } = principal;
         public string Sid => Principal.Sid;
-        public string DisplayName { get; } = principal.DisplayName.Length > 0 ? principal.DisplayName : principal.Label.Split('\\').Last();
+        public string DisplayName { get; } = principal.DisplayName.Length > 0 ? principal.DisplayName : AccountName.LastPart(principal.Label);
         public string Account => Principal.Label;
         public string Initials { get; } = Ui.Initials(principal.DisplayName, principal.Label);
         public bool IsDisabled => Principal.IsDisabled;
@@ -51,7 +51,7 @@ public partial class PeoplePage : UserControl, IPage, ISearchPage
     }
 
     /// <summary>Für den Screenshot gezeigte Person des Demo-Laufs.</summary>
-    internal const string ScreenshotPerson = "Anna Becker";
+    internal const string ScreenshotPerson = "QC-Leitung";
 
     private readonly AppState _state;
     private readonly Debouncer _search = new(TimeSpan.FromMilliseconds(250));

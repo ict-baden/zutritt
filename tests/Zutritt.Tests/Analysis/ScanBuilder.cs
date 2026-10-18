@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using Zutritt.Core.Model;
 
 namespace Zutritt.Tests.Analysis;
@@ -8,7 +7,7 @@ internal sealed class ScanBuilder
 {
     public const string Domain = "S-1-5-21-100-200-300";
     public const string Share = @"\\SRV\Daten";
-    public const InheritanceFlags CIOI = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
+    public const AceInheritance CIOI = AceInheritance.ContainerInherit | AceInheritance.ObjectInherit;
 
     public ScanResult Scan { get; } = new()
     {
@@ -65,11 +64,11 @@ internal sealed class ScanBuilder
         return f;
     }
 
-    public static AceEntry Allow(string sid, FileSystemRights rights, bool inherited = false,
-        InheritanceFlags inheritance = CIOI, PropagationFlags propagation = PropagationFlags.None) =>
+    public static AceEntry Allow(string sid, FileRights rights, bool inherited = false,
+        AceInheritance inheritance = CIOI, AcePropagation propagation = AcePropagation.None) =>
         new() { Sid = sid, Rights = rights, IsInherited = inherited, Inheritance = inheritance, Propagation = propagation };
 
-    public static AceEntry Deny(string sid, FileSystemRights rights, bool inherited = false,
-        InheritanceFlags inheritance = CIOI, PropagationFlags propagation = PropagationFlags.None) =>
+    public static AceEntry Deny(string sid, FileRights rights, bool inherited = false,
+        AceInheritance inheritance = CIOI, AcePropagation propagation = AcePropagation.None) =>
         new() { Sid = sid, Rights = rights, IsDeny = true, IsInherited = inherited, Inheritance = inheritance, Propagation = propagation };
 }

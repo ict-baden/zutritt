@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 
 namespace Zutritt.Core.Model;
 
@@ -31,38 +30,38 @@ public enum ShareAccess
 
 public static class Rights
 {
-    private const FileSystemRights ReadMask =
-        FileSystemRights.ReadData | FileSystemRights.ReadExtendedAttributes | FileSystemRights.ReadAttributes | FileSystemRights.ReadPermissions;
-    private const FileSystemRights WriteMask =
-        FileSystemRights.WriteData | FileSystemRights.AppendData | FileSystemRights.WriteExtendedAttributes | FileSystemRights.WriteAttributes;
+    private const FileRights ReadMask =
+        FileRights.ReadData | FileRights.ReadExtendedAttributes | FileRights.ReadAttributes | FileRights.ReadPermissions;
+    private const FileRights WriteMask =
+        FileRights.WriteData | FileRights.AppendData | FileRights.WriteExtendedAttributes | FileRights.WriteAttributes;
 
     /// <summary>
     /// Ordnet eine NTFS-Rechtemaske einer <see cref="AccessLevel"/> zu. Generische Rechte
     /// (GENERIC_ALL usw., z. B. bei CREATOR OWNER) werden vorher in Dateirechte übersetzt.
     /// </summary>
-    public static AccessLevel ToLevel(FileSystemRights rights)
+    public static AccessLevel ToLevel(FileRights rights)
     {
         rights = MapGeneric(rights);
-        if ((rights & (FileSystemRights.ChangePermissions | FileSystemRights.TakeOwnership)) != 0) return AccessLevel.Vollzugriff;
-        bool write = (rights & (FileSystemRights.WriteData | FileSystemRights.AppendData)) != 0;
-        bool delete = (rights & (FileSystemRights.Delete | FileSystemRights.DeleteSubdirectoriesAndFiles)) != 0;
+        if ((rights & (FileRights.ChangePermissions | FileRights.TakeOwnership)) != 0) return AccessLevel.Vollzugriff;
+        bool write = (rights & (FileRights.WriteData | FileRights.AppendData)) != 0;
+        bool delete = (rights & (FileRights.Delete | FileRights.DeleteSubdirectoriesAndFiles)) != 0;
         if (write && delete) return AccessLevel.Aendern;
         if (write) return AccessLevel.Schreiben;
-        if ((rights & FileSystemRights.ReadData) != 0) return AccessLevel.Lesen;
-        if ((rights & ReadMask) != 0 || (rights & FileSystemRights.Traverse) != 0) return AccessLevel.Auflisten;
+        if ((rights & FileRights.ReadData) != 0) return AccessLevel.Lesen;
+        if ((rights & ReadMask) != 0 || (rights & FileRights.Traverse) != 0) return AccessLevel.Auflisten;
         return AccessLevel.Keine;
     }
 
     /// <summary>GENERIC_*-Bits (oberes Byte) in konkrete Dateirechte übersetzen.</summary>
-    public static FileSystemRights MapGeneric(FileSystemRights rights)
+    public static FileRights MapGeneric(FileRights rights)
     {
         var raw = (uint)rights;
         const uint GenericRead = 0x80000000, GenericWrite = 0x40000000, GenericExecute = 0x20000000, GenericAll = 0x10000000;
-        var mapped = rights & (FileSystemRights)0x0FFFFFFF;
-        if ((raw & GenericAll) != 0) mapped |= FileSystemRights.FullControl;
-        if ((raw & GenericRead) != 0) mapped |= FileSystemRights.Read;
-        if ((raw & GenericWrite) != 0) mapped |= FileSystemRights.Write;
-        if ((raw & GenericExecute) != 0) mapped |= FileSystemRights.ExecuteFile | FileSystemRights.ReadAttributes | FileSystemRights.Synchronize;
+        var mapped = rights & (FileRights)0x0FFFFFFF;
+        if ((raw & GenericAll) != 0) mapped |= FileRights.FullControl;
+        if ((raw & GenericRead) != 0) mapped |= FileRights.Read;
+        if ((raw & GenericWrite) != 0) mapped |= FileRights.Write;
+        if ((raw & GenericExecute) != 0) mapped |= FileRights.ExecuteFile | FileRights.ReadAttributes | FileRights.Synchronize;
         return mapped;
     }
 
@@ -89,7 +88,7 @@ public static class Rights
     /// gesperrt ist (<see cref="Parts"/>) – die Stufe taugt dafür nicht, „nur Löschen verweigert“ hieße sonst „Kein Zugriff“,
     /// „Berechtigungen ändern verweigert“ hieße „Vollzugriff“. Erlauben-Einträge ohne ganze Stufe nennen ihre Einzelrechte.
     /// </summary>
-    public static string EntryLabel(FileSystemRights rights, bool isDeny)
+    public static string EntryLabel(FileRights rights, bool isDeny)
     {
         var level = ToLevel(rights);
         return !isDeny && level != AccessLevel.Keine ? Label(level) : string.Join(", ", Parts(rights));
@@ -99,32 +98,32 @@ public static class Rights
     /// Die Rechte einer Maske in Worten: ganze Stufen wie in der Windows-Oberfläche („Vollzugriff“, „Ändern“), sonst die
     /// enthaltenen Teile („Lesen“, „Schreiben“, „Löschen“, „Berechtigungen ändern“ …), bei reinen Kleinigkeiten genau diese.
     /// </summary>
-    public static IReadOnlyList<string> Parts(FileSystemRights rights)
+    public static IReadOnlyList<string> Parts(FileRights rights)
     {
-        const FileSystemRights Full = FileSystemRights.FullControl & ~FileSystemRights.Synchronize;
-        const FileSystemRights Modify = FileSystemRights.Modify & ~FileSystemRights.Synchronize;
-        var mask = MapGeneric(rights) & ~FileSystemRights.Synchronize;
-        bool Has(FileSystemRights r) => (mask & r) != 0;
+        const FileRights Full = FileRights.FullControl & ~FileRights.Synchronize;
+        const FileRights Modify = FileRights.Modify & ~FileRights.Synchronize;
+        var mask = MapGeneric(rights) & ~FileRights.Synchronize;
+        bool Has(FileRights r) => (mask & r) != 0;
 
         if ((mask & Full) == Full) return ["Vollzugriff"];
         var parts = new List<string>();
         if ((mask & Modify) == Modify) parts.Add("Ändern");
         else
         {
-            if (Has(FileSystemRights.ReadData)) parts.Add("Lesen");
-            if (Has(FileSystemRights.WriteData | FileSystemRights.AppendData)) parts.Add("Schreiben");
-            if (Has(FileSystemRights.Delete)) parts.Add("Löschen");
+            if (Has(FileRights.ReadData)) parts.Add("Lesen");
+            if (Has(FileRights.WriteData | FileRights.AppendData)) parts.Add("Schreiben");
+            if (Has(FileRights.Delete)) parts.Add("Löschen");
         }
-        if (Has(FileSystemRights.DeleteSubdirectoriesAndFiles)) parts.Add("Unterordner und Dateien löschen");
-        if (Has(FileSystemRights.ChangePermissions)) parts.Add("Berechtigungen ändern");
-        if (Has(FileSystemRights.TakeOwnership)) parts.Add("Besitz übernehmen");
+        if (Has(FileRights.DeleteSubdirectoriesAndFiles)) parts.Add("Unterordner und Dateien löschen");
+        if (Has(FileRights.ChangePermissions)) parts.Add("Berechtigungen ändern");
+        if (Has(FileRights.TakeOwnership)) parts.Add("Besitz übernehmen");
         if (parts.Count == 0)
         {
             // Nur Kleinigkeiten – dann genau diese nennen
-            if (Has(FileSystemRights.ExecuteFile)) parts.Add("Ordner durchsuchen bzw. Datei ausführen");
-            if (Has(FileSystemRights.ReadAttributes | FileSystemRights.ReadExtendedAttributes)) parts.Add("Attribute lesen");
-            if (Has(FileSystemRights.WriteAttributes | FileSystemRights.WriteExtendedAttributes)) parts.Add("Attribute schreiben");
-            if (Has(FileSystemRights.ReadPermissions)) parts.Add("Berechtigungen lesen");
+            if (Has(FileRights.ExecuteFile)) parts.Add("Ordner durchsuchen bzw. Datei ausführen");
+            if (Has(FileRights.ReadAttributes | FileRights.ReadExtendedAttributes)) parts.Add("Attribute lesen");
+            if (Has(FileRights.WriteAttributes | FileRights.WriteExtendedAttributes)) parts.Add("Attribute schreiben");
+            if (Has(FileRights.ReadPermissions)) parts.Add("Berechtigungen lesen");
         }
         if (parts.Count == 0) parts.Add("Synchronisieren");
         return parts;

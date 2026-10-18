@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Security.AccessControl;
 using Zutritt.Core.Model;
 using Zutritt.Core.Reports;
 using Zutritt.Tests.TestSupport;
@@ -121,7 +120,7 @@ internal static class ReportSamples
         c.AceChanges.Add(new AceChange(Austausch, ChangeKind.Hinzugefuegt, Everyone, null, everyoneModify));
         c.AceChanges.Add(new AceChange(Qc, ChangeKind.Geaendert, Max, Ace(Max, Modify), Ace(Max, Full)));
         c.AceChanges.Add(new AceChange(Archiv, ChangeKind.Geaendert, AuthenticatedUsers,
-            Ace(AuthenticatedUsers, FileSystemRights.ReadAndExecute), Ace(AuthenticatedUsers, Read)));
+            Ace(AuthenticatedUsers, FileRights.ReadAndExecute), Ace(AuthenticatedUsers, Read)));
         c.FoldersAdded.Add(Austausch);
         c.FoldersRemoved.Add(Root + @"\Alt");
         c.NewFindings.Add(newer.Findings.First(f => f.RuleId == "ZT01"));
@@ -133,10 +132,10 @@ internal static class ReportSamples
         return c;
     }
 
-    public static AceEntry Ace(string sid, FileSystemRights rights, bool inherited = false, bool deny = false) => new()
+    public static AceEntry Ace(string sid, FileRights rights, bool inherited = false, bool deny = false) => new()
     {
         Sid = sid, Rights = rights, IsInherited = inherited, IsDeny = deny,
-        Inheritance = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit,
+        Inheritance = AceInheritance.ContainerInherit | AceInheritance.ObjectInherit,
     };
 
     private static readonly string[] FirstNames = ["anna", "ben", "carla", "david", "elena", "felix", "greta", "hannes", "ida", "jonas",
@@ -201,16 +200,16 @@ internal static class ReportSamples
         const string Orphan = Domain + "-9999";
         scan.Principals[Orphan] = new Principal { Sid = Orphan, Name = Orphan, Kind = PrincipalKind.Verwaist };
 
-        const InheritanceFlags CIOI = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
-        AceEntry A(string sid, FileSystemRights rights, bool inherited = false, bool deny = false, InheritanceFlags inheritance = CIOI,
-            PropagationFlags propagation = PropagationFlags.None) =>
+        const AceInheritance CIOI = AceInheritance.ContainerInherit | AceInheritance.ObjectInherit;
+        AceEntry A(string sid, FileRights rights, bool inherited = false, bool deny = false, AceInheritance inheritance = CIOI,
+            AcePropagation propagation = AcePropagation.None) =>
             new() { Sid = sid, Rights = rights, IsInherited = inherited, IsDeny = deny, Inheritance = inheritance, Propagation = propagation };
 
         foreach (var root in new[] { Root, Archive })
         {
             var node = new FolderNode { Path = root, ShareUnc = root, OwnerSid = Administrators, InheritanceBroken = true };
             node.Aces.AddRange([A(SampleScan.System, Full), A(Administrators, Full), A(groups[^1], Read),
-                A(CreatorOwner, Full, propagation: PropagationFlags.InheritOnly)]);
+                A(CreatorOwner, Full, propagation: AcePropagation.InheritOnly)]);
             scan.Folders.Add(node);
         }
 
@@ -248,9 +247,9 @@ internal static class ReportSamples
                     5 => Orphan,
                     _ => groups[rnd.Next(groups.Count - 1)],
                 };
-                var rights = rnd.Next(4) switch { 0 => Read, 1 => Modify, 2 => Full, _ => Read | FileSystemRights.Write };
+                var rights = rnd.Next(4) switch { 0 => Read, 1 => Modify, 2 => Full, _ => Read | FileRights.Write };
                 if (changed && i % 11 == 0) rights = Modify;
-                node.Aces.Add(A(sid, rights, deny: rnd.Next(25) == 0, inheritance: rnd.Next(6) == 0 ? InheritanceFlags.None : CIOI));
+                node.Aces.Add(A(sid, rights, deny: rnd.Next(25) == 0, inheritance: rnd.Next(6) == 0 ? AceInheritance.None : CIOI));
             }
             if (changed && i % 13 == 0) node.Aces.Add(A(groups[2], Modify));
             if (!node.InheritanceBroken)

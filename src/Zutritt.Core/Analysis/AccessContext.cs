@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using Zutritt.Core.Model;
 
 namespace Zutritt.Core.Analysis;
@@ -16,7 +15,7 @@ internal enum LogonKind
 /// <param name="Granted">Gewährte Dateirechte nach Verweigerungen.</param>
 /// <param name="Allowed">Alle passenden Erlauben-Rechte vor Verweigerungen.</param>
 /// <param name="BestAceSid">SID des Eintrags, der das höchste Recht beiträgt (für „über welche Gruppen“).</param>
-internal readonly record struct AccessResult(FileSystemRights Granted, FileSystemRights Allowed, string? BestAceSid)
+internal readonly record struct AccessResult(FileRights Granted, FileRights Allowed, string? BestAceSid)
 {
     public AccessLevel Level => Rights.ToLevel(Granted);
     public bool ReducedByDeny => (Allowed & ~Granted) != 0;
@@ -221,7 +220,7 @@ internal sealed class AccessContext
     private AccessResult Walk(FolderNode node, Membership token, string? onlyAllowSid, bool explain)
     {
         bool owner = OwnerInToken(node, token);
-        FileSystemRights granted = 0, denied = 0, allowed = 0;
+        FileRights granted = 0, denied = 0, allowed = 0;
         string? best = null;
         var bestLevel = AccessLevel.Keine;
         int bestChain = int.MaxValue;
@@ -293,7 +292,7 @@ internal sealed class AccessContext
     }
 
     /// <summary>Eintrag in Auswertungsreihenfolge; generische Rechte schon abgebildet.</summary>
-    private readonly record struct PreparedAce(string Sid, FileSystemRights Mask, bool IsDeny);
+    private readonly record struct PreparedAce(string Sid, FileRights Mask, bool IsDeny);
 
     /// <summary>Wirksame Einträge des Knotens selbst (ohne INHERIT_ONLY und ERSTELLER-BESITZER) in kanonischer Reihenfolge.</summary>
     private PreparedAce[] Prepared(FolderNode node)
@@ -428,16 +427,16 @@ internal sealed class AccessContext
         {
             // ERSTELLER-BESITZER wird beim Erben durch den (unbekannten) Ersteller ersetzt
             if (SidCatalog.IsCreatorPlaceholder(ace.Sid)) continue;
-            bool noPropagate = (ace.Propagation & PropagationFlags.NoPropagateInherit) != 0;
+            bool noPropagate = (ace.Propagation & AcePropagation.NoPropagateInherit) != 0;
             // Dateien erben über ObjectInherit (auch über Zwischenordner hinweg), Ordner über ContainerInherit
-            var needed = isFile ? InheritanceFlags.ObjectInherit : InheritanceFlags.ContainerInherit;
+            var needed = isFile ? AceInheritance.ObjectInherit : AceInheritance.ContainerInherit;
             if ((ace.Inheritance & needed) == 0 || (noPropagate && distance > 1)) continue;
             node.Aces.Add(ace with
             {
                 Rights = Rights.MapGeneric(ace.Rights),
                 IsInherited = true,
-                Inheritance = noPropagate || isFile ? InheritanceFlags.None : ace.Inheritance,
-                Propagation = PropagationFlags.None,
+                Inheritance = noPropagate || isFile ? AceInheritance.None : ace.Inheritance,
+                Propagation = AcePropagation.None,
             });
         }
         return node;

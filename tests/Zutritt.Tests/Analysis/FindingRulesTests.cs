@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using Zutritt.Core.Analysis;
 using Zutritt.Core.Model;
 using Zutritt.Tests.TestSupport;
@@ -9,9 +8,9 @@ namespace Zutritt.Tests.Analysis;
 
 public sealed class FindingRulesTests
 {
-    private const FileSystemRights Read = S.Read;
-    private const FileSystemRights Modify = S.Modify;
-    private const FileSystemRights Full = S.Full;
+    private const FileRights Read = S.Read;
+    private const FileRights Modify = S.Modify;
+    private const FileRights Full = S.Full;
     private const string Root = @"\\FS01\Labor";
 
     private static string Key(string rule, string relative, string? sid) => $"{rule}|{Root}{relative}|{sid}".ToUpperInvariant();
@@ -96,7 +95,7 @@ public sealed class FindingRulesTests
         b.Folder(@"\Unten", 1,
             Allow(S.Everyone, Modify, inherited: true),
             Allow(u, Full, inherited: true),
-            Deny(u, FileSystemRights.Delete, inherited: true));
+            Deny(u, FileRights.Delete, inherited: true));
         Assert.Empty(FindingRules.Evaluate(b.Scan));
     }
 
@@ -106,8 +105,8 @@ public sealed class FindingRulesTests
         var b = new ScanBuilder();
         b.Folder("", 0,
             Allow(S.Everyone, Modify),
-            Allow(S.Everyone, FileSystemRights.Write, inheritance: InheritanceFlags.None),
-            Allow(S.Everyone, Read, inheritance: InheritanceFlags.ObjectInherit));
+            Allow(S.Everyone, FileRights.Write, inheritance: AceInheritance.None),
+            Allow(S.Everyone, Read, inheritance: AceInheritance.ObjectInherit));
         var finding = Assert.Single(FindingRules.Evaluate(b.Scan));
         Assert.Equal("ZT01", finding.RuleId);
     }
@@ -117,8 +116,8 @@ public sealed class FindingRulesTests
     {
         var b = new ScanBuilder();
         b.Folder("", 0,
-            Allow(S.AuthenticatedUsers, Read, inheritance: InheritanceFlags.None),
-            Allow(S.AuthenticatedUsers, Modify, inheritance: InheritanceFlags.ObjectInherit, propagation: PropagationFlags.InheritOnly));
+            Allow(S.AuthenticatedUsers, Read, inheritance: AceInheritance.None),
+            Allow(S.AuthenticatedUsers, Modify, inheritance: AceInheritance.ObjectInherit, propagation: AcePropagation.InheritOnly));
         var finding = Assert.Single(FindingRules.Evaluate(b.Scan));
         Assert.Equal("ZT01", finding.RuleId);
         Assert.Contains("(gilt für Unterordner bzw. Dateien)", finding.Message);
@@ -131,8 +130,8 @@ public sealed class FindingRulesTests
         var g = Sid(1001);
         var b = new ScanBuilder().Group(g, @"T\Team", Sid(2001));
         b.Folder("", 0,
-            Allow(S.Everyone, FileSystemRights.ReadData | FileSystemRights.WriteData, inheritance: InheritanceFlags.None),
-            Allow(S.Everyone, FileSystemRights.Delete, inheritance: InheritanceFlags.ObjectInherit, propagation: PropagationFlags.InheritOnly));
+            Allow(S.Everyone, FileRights.ReadData | FileRights.WriteData, inheritance: AceInheritance.None),
+            Allow(S.Everyone, FileRights.Delete, inheritance: AceInheritance.ObjectInherit, propagation: AcePropagation.InheritOnly));
         var finding = Assert.Single(FindingRules.Evaluate(b.Scan));
         Assert.Contains("„Schreiben“", finding.Message);
     }
@@ -141,7 +140,7 @@ public sealed class FindingRulesTests
     public void Explizite_Verweigerung_mindert_breite_Gruppe_auf_Lesen()
     {
         var b = new ScanBuilder();
-        b.Folder("", 0, Deny(S.Everyone, FileSystemRights.Write), Allow(S.AuthenticatedUsers, Modify));
+        b.Folder("", 0, Deny(S.Everyone, FileRights.Write), Allow(S.AuthenticatedUsers, Modify));
         var findings = FindingRules.Evaluate(b.Scan);
         Assert.Equal(["ZT02", "ZT07"], findings.Select(f => f.RuleId).Order());
         Assert.Equal(S.AuthenticatedUsers, findings.Single(f => f.RuleId == "ZT02").Sid);
@@ -153,8 +152,8 @@ public sealed class FindingRulesTests
     {
         var b = new ScanBuilder().Group(Sid(513), @"T\Domänen-Benutzer").Group(Sid(514), @"T\Domänen-Gäste")
             .Group(S.BuiltinUsers, @"VORDEFINIERT\Benutzer", S.AuthenticatedUsers);
-        b.Folder("", 0, Allow(Sid(513), Modify), Allow(Sid(514), Read), Allow(S.BuiltinUsers, FileSystemRights.ListDirectory));
-        b.Folder(@"\X", 1, Allow(SidCatalog.Interactive, FileSystemRights.AppendData), Allow(SidCatalog.Network, Read));
+        b.Folder("", 0, Allow(Sid(513), Modify), Allow(Sid(514), Read), Allow(S.BuiltinUsers, FileRights.ListDirectory));
+        b.Folder(@"\X", 1, Allow(SidCatalog.Interactive, FileRights.AppendData), Allow(SidCatalog.Network, Read));
         var keys = FindingRules.Evaluate(b.Scan).Select(f => (f.RuleId, f.Sid)).ToList();
         Assert.Contains(("ZT01", Sid(513)), keys);
         Assert.Contains(("ZT02", Sid(514)), keys);
@@ -199,7 +198,7 @@ public sealed class FindingRulesTests
             .Known(SidCatalog.LocalService, @"NT-AUTORITÄT\LOKALER DIENST");
         b.Folder("", 0,
             Allow(Sid(512), Full), Allow(Sid(519), Full), Allow(S.Administrators, Full), Allow(SidCatalog.BackupOperators, Full),
-            Allow(SidCatalog.TrustedInstaller, Full), Allow(S.System, Full), Allow(S.CreatorOwner, Full, propagation: PropagationFlags.InheritOnly),
+            Allow(SidCatalog.TrustedInstaller, Full), Allow(S.System, Full), Allow(S.CreatorOwner, Full, propagation: AcePropagation.InheritOnly),
             Allow(SidCatalog.LocalService, Full), Allow(team, Full));
         var finding = Assert.Single(FindingRules.Evaluate(b.Scan));
         Assert.Equal(("ZT05", team), (finding.RuleId, finding.Sid));
@@ -212,7 +211,7 @@ public sealed class FindingRulesTests
         var fremd = "S-1-5-21-7-7-7-1234"; // nicht aufgelöst (fremde Domäne)
         var b = new ScanBuilder();
         b.Scan.Principals[fremd] = new Principal { Sid = fremd, Name = fremd, Kind = PrincipalKind.Unbekannt };
-        b.Folder("", 0, Allow(fremd, FileSystemRights.ReadAndExecute | FileSystemRights.ChangePermissions));
+        b.Folder("", 0, Allow(fremd, FileRights.ReadAndExecute | FileRights.ChangePermissions));
         Assert.Equal(("ZT05", fremd), FindingRules.Evaluate(b.Scan).Select(f => (f.RuleId, f.Sid)).Single());
     }
 
@@ -239,7 +238,7 @@ public sealed class FindingRulesTests
     {
         var u = Sid(2001);
         var b = new ScanBuilder().User(u, @"T\u");
-        b.Folder("", 0, Deny(u, FileSystemRights.Delete, propagation: PropagationFlags.InheritOnly));
+        b.Folder("", 0, Deny(u, FileRights.Delete, propagation: AcePropagation.InheritOnly));
         var finding = Assert.Single(FindingRules.Evaluate(b.Scan));
         Assert.Equal(("ZT07", u), (finding.RuleId, finding.Sid));
     }
@@ -250,9 +249,9 @@ public sealed class FindingRulesTests
         // ToLevel hieße hier „Kein Zugriff verweigert“ bzw. „Vollzugriff verweigert“ – beides falsch
         var u = Sid(2001); var weg = Sid(2999);
         var b = new ScanBuilder().User(u, @"T\u").Orphan(weg);
-        b.Folder("", 0, Deny(S.Everyone, FileSystemRights.Delete | FileSystemRights.DeleteSubdirectoriesAndFiles), Allow(S.Administrators, Full));
-        b.Folder(@"\A", 1, Deny(u, FileSystemRights.ChangePermissions | FileSystemRights.TakeOwnership), Allow(weg, FileSystemRights.Delete));
-        b.Folder(@"\B", 1, Deny(u, Full), Deny(S.AuthenticatedUsers, FileSystemRights.Write));
+        b.Folder("", 0, Deny(S.Everyone, FileRights.Delete | FileRights.DeleteSubdirectoriesAndFiles), Allow(S.Administrators, Full));
+        b.Folder(@"\A", 1, Deny(u, FileRights.ChangePermissions | FileRights.TakeOwnership), Allow(weg, FileRights.Delete));
+        b.Folder(@"\B", 1, Deny(u, Full), Deny(S.AuthenticatedUsers, FileRights.Write));
         var findings = FindingRules.Evaluate(b.Scan);
         string Msg(string rule, string path, string sid) => findings.Single(f => f.RuleId == rule && f.Path == Share + path && f.Sid == sid).Message;
 
@@ -264,14 +263,14 @@ public sealed class FindingRulesTests
     }
 
     [Theory]
-    [InlineData(FileSystemRights.Modify | FileSystemRights.Synchronize, "„Ändern“")]
-    [InlineData(FileSystemRights.ReadAndExecute | FileSystemRights.Synchronize, "„Lesen“")]
-    [InlineData(FileSystemRights.Write | FileSystemRights.Delete, "„Schreiben“ und „Löschen“")]
-    [InlineData(FileSystemRights.ReadData | FileSystemRights.WriteData | FileSystemRights.ChangePermissions, "„Lesen“, „Schreiben“ und „Berechtigungen ändern“")]
-    [InlineData(FileSystemRights.Traverse, "„Ordner durchsuchen bzw. Datei ausführen“")]
-    [InlineData(FileSystemRights.Synchronize, "„Synchronisieren“")]
-    [InlineData((FileSystemRights)0x10000000, "„Vollzugriff“")]
-    public void Rechte_als_Text(FileSystemRights rights, string text) => Assert.Equal(text, FindingRules.Describe(rights));
+    [InlineData(FileRights.Modify | FileRights.Synchronize, "„Ändern“")]
+    [InlineData(FileRights.ReadAndExecute | FileRights.Synchronize, "„Lesen“")]
+    [InlineData(FileRights.Write | FileRights.Delete, "„Schreiben“ und „Löschen“")]
+    [InlineData(FileRights.ReadData | FileRights.WriteData | FileRights.ChangePermissions, "„Lesen“, „Schreiben“ und „Berechtigungen ändern“")]
+    [InlineData(FileRights.Traverse, "„Ordner durchsuchen bzw. Datei ausführen“")]
+    [InlineData(FileRights.Synchronize, "„Synchronisieren“")]
+    [InlineData((FileRights)0x10000000, "„Vollzugriff“")]
+    public void Rechte_als_Text(FileRights rights, string text) => Assert.Equal(text, FindingRules.Describe(rights));
 
     [Fact]
     public void Leere_Gruppe_nur_wenn_Mitglieder_wirklich_bekannt()
@@ -280,8 +279,8 @@ public sealed class FindingRulesTests
         var b = new ScanBuilder().Group(leer, @"T\Leer").Group(unbekannt, @"T\Fremd")
             .Known(S.AuthenticatedUsers, @"NT-AUTORITÄT\Authentifizierte Benutzer");
         b.Scan.Principals[unbekannt].MembersUnknown = true;
-        b.Folder("", 0, Allow(leer, Read), Allow(unbekannt, Read), Deny(leer, FileSystemRights.Delete, inheritance: InheritanceFlags.None),
-            Allow(S.AuthenticatedUsers, FileSystemRights.Traverse, inheritance: InheritanceFlags.None));
+        b.Folder("", 0, Allow(leer, Read), Allow(unbekannt, Read), Deny(leer, FileRights.Delete, inheritance: AceInheritance.None),
+            Allow(S.AuthenticatedUsers, FileRights.Traverse, inheritance: AceInheritance.None));
 
         var zt11 = FindingRules.Evaluate(b.Scan).Where(f => f.RuleId == "ZT11").ToList();
         Assert.Equal(leer, Assert.Single(zt11).Sid);
@@ -369,7 +368,7 @@ public sealed class FindingRulesTests
         var u = Sid(2001);
         var b = new ScanBuilder().User(u, @"T\u");
         var file = new FolderNode { Path = Share + @"\x.txt", Depth = 1, IsFile = true, ShareUnc = Share, OwnerSid = u };
-        file.Aces.Add(Allow(u, Modify, inheritance: InheritanceFlags.None));
+        file.Aces.Add(Allow(u, Modify, inheritance: AceInheritance.None));
         b.Scan.Folders.Add(file);
         Assert.Equal(["ZT03", "ZT10"], FindingRules.Evaluate(b.Scan).Select(f => f.RuleId).Order());
     }

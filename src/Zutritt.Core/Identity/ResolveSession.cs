@@ -1,5 +1,5 @@
-using System.Security.Principal;
 using Zutritt.Core.Model;
+using Zutritt.Core.Platform;
 
 namespace Zutritt.Core.Identity;
 
@@ -13,19 +13,13 @@ internal readonly record struct MembersAnswer(IReadOnlyList<string>? Members, bo
 /// </summary>
 internal sealed class ResolveSession
 {
-    // Fehler, die den ganzen Server betreffen: weitere Anfragen dort würden nur jeweils in die Zeitüberschreitung laufen.
-    private static readonly HashSet<int> ServerDownErrors =
-    [
-        Native.ERROR_ACCESS_DENIED, Native.ERROR_BAD_NETPATH, 67 /* ERROR_BAD_NET_NAME */, 1203 /* ERROR_NO_NET_OR_BAD_PATH */,
-        1231 /* ERROR_NETWORK_UNREACHABLE */, 1232 /* ERROR_HOST_UNREACHABLE */, Native.RPC_S_SERVER_UNAVAILABLE,
-        Native.RPC_S_CALL_FAILED_DNE, 1753 /* EPT_S_NOT_REGISTERED */,
-    ];
-
     private readonly IReadOnlyList<IDirectory> _chain;
     private readonly IReadOnlyList<IDirectory> _machineDirectories;
     private readonly IReadOnlyList<IAccountLookup> _lookups;
     private readonly IReadOnlyList<string> _unaskedServers;
     private readonly HashSet<IAccountLookup> _deadLookups = [];
+    // Verzeichnisse, die nicht rechtzeitig geantwortet haben – in dieser Runde nicht mehr gefragt
+    private readonly HashSet<IDirectory> _deadDirectories = [];
     private readonly Dictionary<string, Principal> _principals = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, MembersAnswer> _members = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<ScanError> _problems = [];
@@ -47,15 +41,20 @@ internal sealed class ResolveSession
         _unaskedServers = unaskedServers ?? [];
     }
 
+    /// <summary>
+    /// Zeitlimit je Anfrage an ein Verzeichnis oder eine Kontenauflösung. Antwortet eine Quelle nicht rechtzeitig, gilt
+    /// sie für den Rest der Runde als nicht erreichbar (Konten daraus bleiben „Unbekannt“) – ein hängender
+    /// Domänencontroller hält den Lauf so höchstens einmal auf.
+    /// </summary>
+    public TimeSpan CallTimeout { get; init; } = TimeBudget.Directory;
+
     /// <summary>Probleme mit Quellen (Server, Domäne) und Hinweise, als Fehler für den Lauf.</summary>
     public IReadOnlyList<ScanError> Problems => _problems;
 
     /// <summary>SID in die übliche Schreibweise bringen (S-1-…, Großbuchstaben); ungültige bleiben, wie sie sind.</summary>
     public static string Normalize(string sid)
     {
-        var s = sid.Trim();
-        try { return new SecurityIdentifier(s).Value; }
-        catch (ArgumentException) { return s; }
+        return SidText.Normalize(sid);
     }
 
     public void Note(string path, string message)
@@ -137,7 +136,7 @@ internal sealed class ResolveSession
         {
             // Lokale Konten und Dienste eines Servers kennt nur dessen eigene LSA, nicht die dieses Rechners.
             foreach (var unasked in _unaskedServers)
-                Note(@"\\" + unasked, "Konten wurden nicht beim Server selbst nachgeschlagen. Nicht auflösbare Konten bleiben "
+                Note(WindowsPath.Server(unasked), "Konten wurden nicht beim Server selbst nachgeschlagen. Nicht auflösbare Konten bleiben "
                     + "deshalb „Unbekannt“ statt „Verwaist“ – lokale Konten des Servers kennt nur der Server.");
             return Make(sid, sid, PrincipalKind.Unbekannt);
         }
@@ -146,16 +145,17 @@ internal sealed class ResolveSession
 
     private LookupOutcome Ask(IDirectory directory, string sid)
     {
+        if (_deadDirectories.Contains(directory)) return LookupOutcome.Unreachable(NoAnswer(directory));
         try
         {
             if (directory is IAuthoritativeDirectory authoritative)
             {
-                var outcome = authoritative.Find(sid);
+                if (!TimeBudget.TryRun(() => authoritative.Find(sid), CallTimeout, out var outcome)) return GaveUp(directory, LookupOutcome.Unreachable);
                 if (outcome.State == LookupState.NichtErreichbar) Note(authoritative.SourceName, outcome.Error ?? "Verzeichnis nicht erreichbar.");
                 if (outcome.State == LookupState.Gefunden && outcome.Principal is null) return LookupOutcome.NotResponsible;
                 return outcome;
             }
-            var p = directory.Lookup(sid);
+            if (!TimeBudget.TryRun(() => directory.Lookup(sid), CallTimeout, out var p)) return GaveUp(directory, LookupOutcome.Unreachable);
             return p is null ? LookupOutcome.NotResponsible : LookupOutcome.Found(p);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -168,16 +168,17 @@ internal sealed class ResolveSession
 
     private MembersOutcome AskMembers(IDirectory directory, string groupSid)
     {
+        if (_deadDirectories.Contains(directory)) return MembersOutcome.Unreachable(NoAnswer(directory));
         try
         {
             if (directory is IAuthoritativeDirectory authoritative)
             {
-                var outcome = authoritative.FindMembers(groupSid);
+                if (!TimeBudget.TryRun(() => authoritative.FindMembers(groupSid), CallTimeout, out var outcome)) return GaveUp(directory, MembersOutcome.Unreachable);
                 if (outcome.State == LookupState.NichtErreichbar) Note(authoritative.SourceName, outcome.Error ?? "Verzeichnis nicht erreichbar.");
                 if (outcome.State == LookupState.Gefunden && outcome.Members is null) return MembersOutcome.NotResponsible;
                 return outcome;
             }
-            var members = directory.GetMembers(groupSid);
+            if (!TimeBudget.TryRun(() => directory.GetMembers(groupSid), CallTimeout, out var members)) return GaveUp(directory, MembersOutcome.Unreachable);
             return members is null ? MembersOutcome.NotResponsible : MembersOutcome.Found(members);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -235,7 +236,6 @@ internal sealed class ResolveSession
     {
         // Ohne irgendeine LSA lässt sich nichts prüfen – dann nie „verwaist“.
         var error = _lookups.Count == 0;
-        var lastError = 0;
         foreach (var lookup in _lookups)
         {
             if (_deadLookups.Contains(lookup))
@@ -246,7 +246,14 @@ internal sealed class ResolveSession
             AccountLookupResult r;
             try
             {
-                r = lookup.Lookup(sid);
+                if (!TimeBudget.TryRun(() => lookup.Lookup(sid), CallTimeout, out r))
+                {
+                    Note(LsaSource(lookup.Server), $"Kontenauflösung antwortet nicht innerhalb von {TimeBudget.Describe(CallTimeout)}. "
+                        + "Betroffene Konten bleiben „Unbekannt“.");
+                    _deadLookups.Add(lookup);
+                    error = true;
+                    continue;
+                }
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -259,13 +266,12 @@ internal sealed class ResolveSession
             if (r.Status == LookupStatus.Fehler)
             {
                 error = true;
-                lastError = r.Error;
-                Note(LsaSource(lookup.Server), $"Kontennamen nicht auflösbar: {Native.Describe(r.Error)}. Betroffene Konten bleiben „Unbekannt“.");
-                if (ServerDownErrors.Contains(r.Error)) _deadLookups.Add(lookup);
+                Note(LsaSource(lookup.Server), $"Kontennamen nicht auflösbar: {r.Error ?? "unbekannter Fehler"}. Betroffene Konten bleiben „Unbekannt“.");
+                // Fehler, die den ganzen Server betreffen: weitere Anfragen dort liefen nur jeweils in die Zeitüberschreitung.
+                if (r.SourceDown) _deadLookups.Add(lookup);
             }
         }
-        var status = error ? LookupStatus.Fehler : LookupStatus.NichtZugeordnet;
-        return (new AccountLookupResult(status, "", "", Native.SidNameUse.Unknown, lastError), null);
+        return (error ? AccountLookupResult.Failed("") : AccountLookupResult.NotMapped, null);
     }
 
     private static Principal FromLsa(string sid, AccountLookupResult r, string? server)
@@ -305,7 +311,7 @@ internal sealed class ResolveSession
         Sid = sid,
         Name = name,
         // Bei Verwaisten und Unbekannten steht die SID im Namen; einen Anzeigenamen gibt es dann nicht.
-        DisplayName = kind is PrincipalKind.Verwaist or PrincipalKind.Unbekannt ? "" : name.Split('\\')[^1],
+        DisplayName = kind is PrincipalKind.Verwaist or PrincipalKind.Unbekannt ? "" : AccountName.LastPart(name),
         Kind = kind,
         IsLocal = isLocal,
     };
@@ -320,25 +326,26 @@ internal sealed class ResolveSession
         return list;
     }
 
-    private static bool IsValidSid(string sid)
+    private static bool IsValidSid(string sid) => SidText.IsValid(sid);
+
+    /// <summary>Verzeichnis hat nicht rechtzeitig geantwortet: einmal vermerken, in dieser Runde nicht mehr fragen.</summary>
+    private T GaveUp<T>(IDirectory directory, Func<string, T> unreachable)
     {
-        try
-        {
-            _ = new SecurityIdentifier(sid);
-            return true;
-        }
-        catch (ArgumentException)
-        {
-            return false;
-        }
+        _deadDirectories.Add(directory);
+        var message = NoAnswer(directory);
+        Note(SourceOf(directory), message);
+        return unreachable(message);
     }
 
-    private static string LsaSource(string? server) => @"\\" + (server ?? Environment.MachineName);
+    private string NoAnswer(IDirectory directory) =>
+        $"Verzeichnis antwortet nicht innerhalb von {TimeBudget.Describe(CallTimeout)} – Konten und Gruppen aus dieser Quelle bleiben „Unbekannt“.";
+
+    private static string LsaSource(string? server) => WindowsPath.Server(server ?? Environment.MachineName);
 
     private static string SourceOf(IDirectory directory) => directory switch
     {
         IAuthoritativeDirectory a => a.SourceName,
-        IMachineDirectory m => @"\\" + (m.Server ?? Environment.MachineName),
+        IMachineDirectory m => WindowsPath.Server(m.Server ?? Environment.MachineName),
         _ => directory.GetType().Name,
     };
 }

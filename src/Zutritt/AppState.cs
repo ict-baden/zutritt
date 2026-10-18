@@ -226,7 +226,7 @@ public sealed class AppState : IDisposable
     }
 
     /// <summary>
-    /// Kurzer Name für enge Spalten: Anzeigename („Anna Becker“, „QC-Team“), sonst der Kontoname ohne Domäne.
+    /// Kurzer Name für enge Spalten: Anzeigename („QC-Leitung“, „QC-Team“), sonst der Kontoname ohne Domäne.
     /// Verwaiste und unbekannte SIDs bleiben SIDs – dort gibt es nichts Kürzeres, das stimmt.
     /// </summary>
     public string ShortNameOf(string? sid) => ShortNameIn(Scan, sid);

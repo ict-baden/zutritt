@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Reflection;
-using System.Security.AccessControl;
 using System.Text;
 using Zutritt.Core.Model;
 
@@ -54,13 +53,13 @@ internal static class ReportText
     /// „Anwenden auf“ wie im Windows-Dialog „Erweiterte Sicherheitseinstellungen“, damit Prüfer die
     /// Angaben ohne Übersetzung wiederfinden.
     /// </summary>
-    public static string AppliesTo(InheritanceFlags inheritance, PropagationFlags propagation, bool isFile)
+    public static string AppliesTo(AceInheritance inheritance, AcePropagation propagation, bool isFile)
     {
         if (isFile) return "Nur diese Datei";
-        bool containers = (inheritance & InheritanceFlags.ContainerInherit) != 0;
-        bool objects = (inheritance & InheritanceFlags.ObjectInherit) != 0;
-        bool inheritOnly = (propagation & PropagationFlags.InheritOnly) != 0;
-        bool oneLevel = (propagation & PropagationFlags.NoPropagateInherit) != 0;
+        bool containers = (inheritance & AceInheritance.ContainerInherit) != 0;
+        bool objects = (inheritance & AceInheritance.ObjectInherit) != 0;
+        bool inheritOnly = (propagation & AcePropagation.InheritOnly) != 0;
+        bool oneLevel = (propagation & AcePropagation.NoPropagateInherit) != 0;
 
         string text = (containers, objects, inheritOnly) switch
         {
@@ -83,7 +82,7 @@ internal static class ReportText
         return withMask ? $"{text} ({Mask(ace.Rights)})" : text;
     }
 
-    public static string Mask(FileSystemRights rights) => "0x" + ((uint)rights).ToString("X8", CultureInfo.InvariantCulture);
+    public static string Mask(FileRights rights) => "0x" + ((uint)rights).ToString("X8", CultureInfo.InvariantCulture);
 
     public static string Number(long value) => value.ToString("N0", German);
 

@@ -23,7 +23,7 @@ internal static class MachineNames
     public static string? Strip(string? server)
     {
         if (string.IsNullOrWhiteSpace(server)) return null;
-        var s = server.Trim().TrimStart('\\', '/').TrimEnd('\\', '/');
+        var s = server.Trim().TrimStart(WindowsPath.Separator, '/').TrimEnd(WindowsPath.Separator, '/');
         return s.Length == 0 ? null : s;
     }
 
@@ -31,13 +31,13 @@ internal static class MachineNames
     public static string? ServerOfPath(string? path)
     {
         if (string.IsNullOrWhiteSpace(path)) return null;
-        var p = path.Trim().Replace('/', '\\');
+        var p = WindowsPath.WithBackslashes(path.Trim());
         if (p == ".") return null;
-        if (p.StartsWith(@"\\?\UNC\", StringComparison.OrdinalIgnoreCase)) p = @"\\" + p[8..];
+        if (p.StartsWith(@"\\?\UNC\", StringComparison.OrdinalIgnoreCase)) p = WindowsPath.UncPrefix + p[8..];
         else if (p.StartsWith(@"\\?\", StringComparison.Ordinal) || p.StartsWith(@"\\.\", StringComparison.Ordinal)) return null;
-        if (!p.StartsWith(@"\\", StringComparison.Ordinal)) return null;
+        if (!WindowsPath.IsUnc(p)) return null;
         var rest = p[2..];
-        var end = rest.IndexOf('\\');
+        var end = rest.IndexOf(WindowsPath.Separator);
         return Normalize(end < 0 ? rest : rest[..end]);
     }
 

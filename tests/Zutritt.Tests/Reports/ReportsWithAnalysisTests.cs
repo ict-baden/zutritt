@@ -10,7 +10,6 @@ namespace Zutritt.Tests.Reports;
 
 /// <summary>
 /// Ende-zu-Ende über die öffentliche API mit der echten Auswertung: SampleScan → FindingRules → Bericht.
-/// Läuft erst nach dem Zusammenführen mit dem Baustein „analysis“ (siehe <see cref="AnalysisFactAttribute"/>).
 /// </summary>
 public sealed class ReportsWithAnalysisTests : IDisposable
 {
@@ -25,7 +24,7 @@ public sealed class ReportsWithAnalysisTests : IDisposable
         return scan;
     }
 
-    [AnalysisFact]
+    [Fact]
     public void Builder_NutztRegeltexteUndEffektiveRechte()
     {
         var scan = EvaluatedScan();
@@ -47,7 +46,7 @@ public sealed class ReportsWithAnalysisTests : IDisposable
         Assert.DoesNotContain(data.People.SelectMany(p => p.Grants), g => g.Path.EndsWith(@"\Personal"));
     }
 
-    [AnalysisFact]
+    [Fact]
     public void Builder_Personen_gleich_der_Rechnung_je_Person()
     {
         // Der Builder rechnet alle Personen auf einmal (PeopleAccess); Ergebnis wie EffectiveAccess.ForPerson je Person –
@@ -72,7 +71,7 @@ public sealed class ReportsWithAnalysisTests : IDisposable
             + string.Join(";", p.Grants.Select(g => $"{g.Path}>{g.Effective}>{g.Ntfs}>{g.ViaShare}>{g.Via}>{g.ReducedByDeny}"));
     }
 
-    [AnalysisFact]
+    [PdfFact]
     public void Excel_UndPdf_UeberDieOeffentlicheApi()
     {
         var older = EvaluatedScan(new DateTimeOffset(2026, 10, 7, 9, 0, 0, TimeSpan.FromHours(2)));
@@ -100,7 +99,7 @@ public sealed class ReportsWithAnalysisTests : IDisposable
         Assert.True(doc.PageCount > 1);
     }
 
-    [AnalysisFact]
+    [PdfFact]
     public void Pdf_WirklichkeitsnaherLaufMitVergleich_SauberUmbrochen()
     {
         // 300 Ordner, 80 Personen, rund 470 Befunde, ~1.000 Änderungen: hier standen Überschriften wie „Ordner mit

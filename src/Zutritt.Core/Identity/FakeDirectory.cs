@@ -16,7 +16,7 @@ public sealed class FakeDirectory : IDirectory
     /// <summary>Konto oder Gruppe hinterlegen (ersetzt einen vorhandenen Eintrag mit derselben SID).</summary>
     public FakeDirectory Add(string sid, string name, PrincipalKind kind, params string[] members)
     {
-        var p = new Principal { Sid = sid, Name = name, DisplayName = name.Split('\\')[^1], Kind = kind };
+        var p = new Principal { Sid = sid, Name = name, DisplayName = AccountName.LastPart(name), Kind = kind };
         p.Members.AddRange(members);
         return Add(p);
     }
