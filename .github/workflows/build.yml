@@ -55,7 +55,7 @@ jobs:
       - name: Testergebnisse
         if: always()
         continue-on-error: true # wie unter Windows: nur zur Fehlersuche
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Testergebnisse-linux
           path: TestResults/*.trx
@@ -115,7 +115,7 @@ jobs:
         if: always()
         # Nur zur Fehlersuche: Ist der Artefaktspeicher der Organisation voll, bleibt der Lauf trotzdem grün
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Testergebnisse-windows
           path: TestResults/*.trx
@@ -259,7 +259,7 @@ jobs:
         # Zum Ausprobieren eines Pull Requests. Die Releases unten nehmen dist/ direkt, deshalb darf das Hochladen
         # scheitern (voller Artefaktspeicher), ohne dass ein Release ausfällt.
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.APP }}-${{ steps.version.outputs.version }}
           path: dist/*
