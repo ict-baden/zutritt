@@ -5,15 +5,11 @@
     <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <UseWPF>true</UseWPF>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Zutritt</RootNamespace>
     <AssemblyName>Zutritt</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\zutritt.ico</ApplicationIcon>
     <Version>0.1.0</Version>
-    <Company>ICT-Baden</Company>
-    <Product>Zutritt</Product>
     <Description>Zeigt, wer auf Dateifreigaben worauf zugreifen darf – mit Befunden, Vergleich und Bericht</Description>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- Eigener Einstiegspunkt (Program.Main): Befehlszeile ganz ohne WPF, sonst Oberfläche.
@@ -27,10 +23,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Zutritt.Core\Zutritt.Core.csproj" />
+    <!-- Zutritt ist an Windows gebunden (NTFS-Rechte, SMB-Freigaben, AD); das Windows-Eigene steckt hier -->
+    <ProjectReference Include="..\Zutritt.Platform.Windows\Zutritt.Platform.Windows.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Resource Include="Assets\zutritt.ico" />
     <Resource Include="Assets\zutritt.png" />
   </ItemGroup>
+
 </Project>

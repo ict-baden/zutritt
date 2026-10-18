@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using Zutritt.Core.Analysis;
 using Zutritt.Core.Model;
 using Zutritt.Tests.Analysis;
@@ -35,21 +34,21 @@ public sealed class RightsTests
     {
         var b = new ScanBuilder().User(Sid(2001), @"T\anna");
         b.WithShare(new ShareAce(SidCatalog.Everyone, ShareAccess.Vollzugriff, false), new ShareAce(SidCatalog.Everyone, deniedFrom, true));
-        var root = b.Folder("", 0, Allow(SidCatalog.Everyone, FileSystemRights.FullControl));
+        var root = b.Folder("", 0, Allow(SidCatalog.Everyone, FileRights.FullControl));
         var grant = EffectiveAccess.ForFolder(b.Scan, root).Single();
         Assert.Equal(Rights.CapByShare(AccessLevel.Vollzugriff, remaining), grant.ViaShare);
         Assert.StartsWith("Verweigert: ", Rights.DenyLabel(deniedFrom));
     }
 
     [Theory]
-    [InlineData(FileSystemRights.Modify | FileSystemRights.Synchronize, false, "Ändern")]
-    [InlineData(FileSystemRights.ReadAndExecute | FileSystemRights.Synchronize, false, "Lesen")]
-    [InlineData(FileSystemRights.Synchronize, false, "Synchronisieren")]
-    [InlineData(FileSystemRights.FullControl, true, "Vollzugriff")]
-    [InlineData(FileSystemRights.Modify | FileSystemRights.Synchronize, true, "Ändern")]
-    [InlineData(FileSystemRights.Delete | FileSystemRights.DeleteSubdirectoriesAndFiles, true, "Löschen, Unterordner und Dateien löschen")]
+    [InlineData(FileRights.Modify | FileRights.Synchronize, false, "Ändern")]
+    [InlineData(FileRights.ReadAndExecute | FileRights.Synchronize, false, "Lesen")]
+    [InlineData(FileRights.Synchronize, false, "Synchronisieren")]
+    [InlineData(FileRights.FullControl, true, "Vollzugriff")]
+    [InlineData(FileRights.Modify | FileRights.Synchronize, true, "Ändern")]
+    [InlineData(FileRights.Delete | FileRights.DeleteSubdirectoriesAndFiles, true, "Löschen, Unterordner und Dateien löschen")]
     // Als Stufe wäre das „Vollzugriff“ – gesperrt ist aber nur das Ändern der Rechte und die Besitzübernahme
-    [InlineData(FileSystemRights.ChangePermissions | FileSystemRights.TakeOwnership, true, "Berechtigungen ändern, Besitz übernehmen")]
-    public void NTFS_Eintrag_Erlauben_als_Stufe_Verweigern_als_gesperrte_Rechte(FileSystemRights rights, bool deny, string expected) =>
+    [InlineData(FileRights.ChangePermissions | FileRights.TakeOwnership, true, "Berechtigungen ändern, Besitz übernehmen")]
+    public void NTFS_Eintrag_Erlauben_als_Stufe_Verweigern_als_gesperrte_Rechte(FileRights rights, bool deny, string expected) =>
         Assert.Equal(expected, Rights.EntryLabel(rights, deny));
 }

@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using Zutritt.Core.Analysis;
 using Zutritt.Core.Model;
 
@@ -24,11 +23,11 @@ internal static class LargeDemo
     private const string DomainAdmins = Domain + "-512";
     private const string DomainUsers = Domain + "-513";
 
-    private const FileSystemRights Read = FileSystemRights.ReadAndExecute | FileSystemRights.Synchronize;
-    private const FileSystemRights Modify = FileSystemRights.Modify | FileSystemRights.Synchronize;
-    private const FileSystemRights Full = FileSystemRights.FullControl;
-    private const FileSystemRights DeleteOnly = FileSystemRights.Delete | FileSystemRights.DeleteSubdirectoriesAndFiles;
-    private const InheritanceFlags CIOI = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
+    private const FileRights Read = FileRights.ReadAndExecute | FileRights.Synchronize;
+    private const FileRights Modify = FileRights.Modify | FileRights.Synchronize;
+    private const FileRights Full = FileRights.FullControl;
+    private const FileRights DeleteOnly = FileRights.Delete | FileRights.DeleteSubdirectoriesAndFiles;
+    private const AceInheritance CIOI = AceInheritance.ContainerInherit | AceInheritance.ObjectInherit;
 
     private static readonly string[] Departments =
         ["Vertrieb", "Einkauf", "Entwicklung", "Produktion", "Qualität", "Labor", "Personal", "Finanzen", "IT", "Logistik", "Marketing", "Geschäftsleitung"];
@@ -230,8 +229,8 @@ internal static class LargeDemo
             node.Aces.AddRange(explicitAces);
             if (parent is not null && !broken)
                 foreach (var ace in parent.Aces)
-                    if ((ace.Inheritance & InheritanceFlags.ContainerInherit) != 0)
-                        node.Aces.Add(ace.IsInherited ? ace : ace with { IsInherited = true, Propagation = PropagationFlags.None });
+                    if ((ace.Inheritance & AceInheritance.ContainerInherit) != 0)
+                        node.Aces.Add(ace.IsInherited ? ace : ace with { IsInherited = true, Propagation = AcePropagation.None });
             _scan.Folders.Add(node);
             return node;
         }
@@ -248,7 +247,7 @@ internal static class LargeDemo
 
         private void Home(int count)
         {
-            var root = Root("Home", A(DomainUsers, FileSystemRights.ReadData | FileSystemRights.Synchronize, inheritance: InheritanceFlags.None));
+            var root = Root("Home", A(DomainUsers, FileRights.ReadData | FileRights.Synchronize, inheritance: AceInheritance.None));
             foreach (var user in _users.Take(count))
             {
                 var account = _scan.Principals[user].Name.Split('\\')[1];
@@ -275,7 +274,7 @@ internal static class LargeDemo
 
         private void Projects(int count)
         {
-            var root = Root("Projekte", A(DomainUsers, Read, inheritance: InheritanceFlags.None));
+            var root = Root("Projekte", A(DomainUsers, Read, inheritance: AceInheritance.None));
             int perProject = 1 + ProjectParts.Length;
             int projects = Math.Max(1, count / perProject);
             const int FirstYear = 2014, Years = 13;
@@ -388,11 +387,11 @@ internal static class LargeDemo
             }
         }
 
-        private static AceEntry A(string sid, FileSystemRights rights, bool deny = false, bool inheritOnly = false,
-            InheritanceFlags inheritance = CIOI) => new()
+        private static AceEntry A(string sid, FileRights rights, bool deny = false, bool inheritOnly = false,
+            AceInheritance inheritance = CIOI) => new()
         {
             Sid = sid, Rights = rights, IsDeny = deny, Inheritance = inheritance,
-            Propagation = inheritOnly ? PropagationFlags.InheritOnly : PropagationFlags.None,
+            Propagation = inheritOnly ? AcePropagation.InheritOnly : AcePropagation.None,
         };
     }
 }

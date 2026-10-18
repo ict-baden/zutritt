@@ -1,5 +1,4 @@
 using System.Reflection;
-using System.Security.AccessControl;
 using Zutritt.Core.Model;
 using Zutritt.Core.Storage;
 using Zutritt.Tests.TestSupport;
@@ -49,8 +48,8 @@ public sealed class ScanStoreRoundtripTests
         Assert.Equal("", loaded.Folders[1].ShareUnc);
         Assert.Null(loaded.Folders[0].Error);
         Assert.Equal(StorageScans.GenericAll, loaded.Folders[1].Aces[0].Rights);
-        Assert.Equal(unchecked((FileSystemRights)(-1)), loaded.Folders[2].Aces[3].Rights);
-        Assert.Equal(PropagationFlags.InheritOnly | PropagationFlags.NoPropagateInherit, loaded.Folders[2].Aces[0].Propagation);
+        Assert.Equal(unchecked((FileRights)(-1)), loaded.Folders[2].Aces[3].Rights);
+        Assert.Equal(AcePropagation.InheritOnly | AcePropagation.NoPropagateInherit, loaded.Folders[2].Aces[0].Propagation);
         Assert.False(loaded.Shares[0].PermissionsReadable);
         Assert.Empty(loaded.Shares[0].Permissions);
         Assert.Equal(7, loaded.Request.MaxDepth);

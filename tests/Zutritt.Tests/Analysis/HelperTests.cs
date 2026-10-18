@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using Zutritt.Core.Analysis;
 using Zutritt.Core.Model;
 using static Zutritt.Tests.Analysis.ScanBuilder;
@@ -113,9 +112,9 @@ public sealed class InheritanceReconstructionTests
     public void Ordner_erben_ContainerInherit_auch_nur_vererbende_Eintraege()
     {
         var parent = Parent(
-            Allow(U, FileSystemRights.Modify, inheritance: InheritanceFlags.ContainerInherit, propagation: PropagationFlags.InheritOnly),
-            Allow(Sid(1001), FileSystemRights.Read, inheritance: InheritanceFlags.ObjectInherit),
-            Allow(Sid(1002), FileSystemRights.Read, inheritance: InheritanceFlags.None));
+            Allow(U, FileRights.Modify, inheritance: AceInheritance.ContainerInherit, propagation: AcePropagation.InheritOnly),
+            Allow(Sid(1001), FileRights.Read, inheritance: AceInheritance.ObjectInherit),
+            Allow(Sid(1002), FileRights.Read, inheritance: AceInheritance.None));
         var child = AccessContext.Inherit(parent, @"D:\A\B", 1, isFile: false);
 
         var ace = Assert.Single(child.Aces);
@@ -130,7 +129,7 @@ public sealed class InheritanceReconstructionTests
     [Fact]
     public void Nur_eine_Ebene_bei_NoPropagateInherit()
     {
-        var parent = Parent(Allow(U, FileSystemRights.Modify, propagation: PropagationFlags.NoPropagateInherit));
+        var parent = Parent(Allow(U, FileRights.Modify, propagation: AcePropagation.NoPropagateInherit));
         Assert.Single(AccessContext.Inherit(parent, @"D:\A\B", 1, false).Aces);
         Assert.Empty(AccessContext.Inherit(parent, @"D:\A\B\C", 2, false).Aces);
         Assert.Single(AccessContext.Inherit(parent, @"D:\A\x.txt", 1, true).Aces);
@@ -140,7 +139,7 @@ public sealed class InheritanceReconstructionTests
     [Fact]
     public void Dateien_erben_ObjectInherit_ueber_Zwischenordner()
     {
-        var parent = Parent(Allow(U, FileSystemRights.Modify, inheritance: InheritanceFlags.ObjectInherit));
+        var parent = Parent(Allow(U, FileRights.Modify, inheritance: AceInheritance.ObjectInherit));
         Assert.Empty(AccessContext.Inherit(parent, @"D:\A\B", 1, false).Aces);
         Assert.Single(AccessContext.Inherit(parent, @"D:\A\B\C\x.txt", 3, true).Aces);
     }
@@ -149,10 +148,10 @@ public sealed class InheritanceReconstructionTests
     public void Ersteller_Besitzer_entfaellt_generische_Rechte_werden_abgebildet()
     {
         var parent = Parent(
-            Allow("S-1-3-0", (FileSystemRights)0x10000000, propagation: PropagationFlags.InheritOnly),
-            Allow(U, unchecked((FileSystemRights)0x80000000)));
+            Allow("S-1-3-0", (FileRights)0x10000000, propagation: AcePropagation.InheritOnly),
+            Allow(U, unchecked((FileRights)0x80000000)));
         var ace = Assert.Single(AccessContext.Inherit(parent, @"D:\A\B", 1, false).Aces);
-        Assert.Equal(FileSystemRights.Read, ace.Rights);
+        Assert.Equal(FileRights.Read, ace.Rights);
         Assert.Equal(AccessLevel.Lesen, ace.Level);
     }
 
@@ -162,8 +161,8 @@ public sealed class InheritanceReconstructionTests
         // Explizites Erlauben am Vorfahren steht im Kind vor dessen geerbter Verweigerung – wie bei Windows
         var g = Sid(1001);
         var parent = Parent(
-            Deny(g, FileSystemRights.Write, inherited: true),
-            Allow(U, FileSystemRights.Modify));
+            Deny(g, FileRights.Write, inherited: true),
+            Allow(U, FileRights.Modify));
         var child = AccessContext.Inherit(parent, @"D:\A\B", 1, false);
         Assert.Equal([U, g], child.Aces.Select(a => a.Sid));
 

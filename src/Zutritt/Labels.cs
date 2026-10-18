@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Security.AccessControl;
 using Zutritt.Core.Model;
 
 namespace Zutritt;
@@ -45,8 +44,8 @@ public static class Labels
     public static string AppliesTo(AceEntry ace, bool isFile)
     {
         if (isFile) return "Nur diese Datei";
-        bool ci = (ace.Inheritance & InheritanceFlags.ContainerInherit) != 0;
-        bool oi = (ace.Inheritance & InheritanceFlags.ObjectInherit) != 0;
+        bool ci = (ace.Inheritance & AceInheritance.ContainerInherit) != 0;
+        bool oi = (ace.Inheritance & AceInheritance.ObjectInherit) != 0;
         string text = (ace.InheritOnly, ci, oi) switch
         {
             (false, true, true) => "Diesen Ordner, Unterordner und Dateien",
@@ -58,7 +57,7 @@ public static class Labels
             (true, false, true) => "Nur Dateien",
             _ => "Nur Unterordner und Dateien",
         };
-        return (ace.Propagation & PropagationFlags.NoPropagateInherit) != 0 && (ci || oi) ? text + " (eine Ebene)" : text;
+        return (ace.Propagation & AcePropagation.NoPropagateInherit) != 0 && (ci || oi) ? text + " (eine Ebene)" : text;
     }
 
     public static string Number(long n) => n.ToString("N0", German);

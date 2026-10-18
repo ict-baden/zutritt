@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Security.AccessControl;
 using Zutritt.Core.Analysis;
 using Zutritt.Core.Model;
 using Zutritt.Tests.TestSupport;
@@ -43,7 +42,7 @@ public sealed class ScanComparerTests
         return f;
     }
 
-    private static AceEntry Inherited(string sid, FileSystemRights rights) => Allow(sid, rights, inherited: true);
+    private static AceEntry Inherited(string sid, FileRights rights) => Allow(sid, rights, inherited: true);
 
     [Fact]
     public void Gleiche_Laeufe_ohne_Aenderungen()
@@ -304,11 +303,11 @@ public sealed class ScanComparerTests
     public void Gleicher_Schluessel_mehrfach_und_generische_Rechte_sind_keine_Aenderung()
     {
         var older = Evaluated(s => SetAces(s, @"\QC",
-            Allow(S.System, S.Full), Allow(S.Administrators, S.Full), Allow(S.QcTeam, FileSystemRights.ReadAndExecute),
-            Allow(S.QcTeam, FileSystemRights.Write | FileSystemRights.Delete | FileSystemRights.Synchronize), Allow(S.Max, S.Full)));
+            Allow(S.System, S.Full), Allow(S.Administrators, S.Full), Allow(S.QcTeam, FileRights.ReadAndExecute),
+            Allow(S.QcTeam, FileRights.Write | FileRights.Delete | FileRights.Synchronize), Allow(S.Max, S.Full)));
         var newer = Newer(s => SetAces(s, @"\QC",
-            Allow(S.System, (FileSystemRights)0x10000000), Allow(S.Administrators, S.Full),
-            Allow(S.QcTeam, FileSystemRights.ReadAndExecute | FileSystemRights.Write | FileSystemRights.Delete | FileSystemRights.Synchronize),
+            Allow(S.System, (FileRights)0x10000000), Allow(S.Administrators, S.Full),
+            Allow(S.QcTeam, FileRights.ReadAndExecute | FileRights.Write | FileRights.Delete | FileRights.Synchronize),
             Allow(S.Max, S.Full)));
         var result = ScanComparer.Compare(older, newer);
         Assert.Empty(result.AceChanges);
@@ -322,7 +321,7 @@ public sealed class ScanComparerTests
         {
             var qc = Node(s, @"\QC");
             var max = qc.Aces.Single(a => a.Sid == S.Max);
-            qc.Aces[qc.Aces.IndexOf(max)] = max with { Inheritance = InheritanceFlags.None };
+            qc.Aces[qc.Aces.IndexOf(max)] = max with { Inheritance = AceInheritance.None };
         });
         var result = ScanComparer.Compare(Evaluated(), newer);
         Assert.Equal([ChangeKind.Entfernt, ChangeKind.Hinzugefuegt], result.AceChanges.Select(c => c.Kind));

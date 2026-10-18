@@ -1,4 +1,3 @@
-using System.Security.Principal;
 using Zutritt.Core.Model;
 
 namespace Zutritt.Core.Identity;
@@ -163,8 +162,7 @@ public static class WellKnownSids
     public static string? AccountDomainOf(string sid)
     {
         if (!IsAccountSid(sid)) return null;
-        try { return new SecurityIdentifier(sid).AccountDomainSid?.Value; }
-        catch (ArgumentException) { return null; }
+        return SidText.AccountDomainOf(sid);
     }
 
     /// <summary>

@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using Zutritt.Core.Analysis;
 using Zutritt.Core.Model;
 using static Zutritt.Tests.Analysis.ScanBuilder;
@@ -13,13 +12,13 @@ namespace Zutritt.Tests.Analysis;
 /// </summary>
 public sealed class ScanComparerEquivalenceTests
 {
-    private static readonly InheritanceFlags[] InheritanceChoices =
-        [CIOI, InheritanceFlags.None, InheritanceFlags.ContainerInherit, InheritanceFlags.ObjectInherit];
+    private static readonly AceInheritance[] InheritanceChoices =
+        [CIOI, AceInheritance.None, AceInheritance.ContainerInherit, AceInheritance.ObjectInherit];
 
-    private static readonly FileSystemRights[] RightsChoices =
+    private static readonly FileRights[] RightsChoices =
     [
-        S.Read, S.Modify, S.Full, FileSystemRights.Write, FileSystemRights.Delete, FileSystemRights.ListDirectory,
-        FileSystemRights.ChangePermissions, unchecked((FileSystemRights)0x80000000),
+        S.Read, S.Modify, S.Full, FileRights.Write, FileRights.Delete, FileRights.ListDirectory,
+        FileRights.ChangePermissions, unchecked((FileRights)0x80000000),
     ];
 
     private static readonly string[] Paths =
@@ -142,9 +141,9 @@ public sealed class ScanComparerEquivalenceTests
         Inheritance = Pick(random, InheritanceChoices),
         Propagation = random.Next(6) switch
         {
-            0 => PropagationFlags.InheritOnly,
-            1 => PropagationFlags.NoPropagateInherit,
-            _ => PropagationFlags.None,
+            0 => AcePropagation.InheritOnly,
+            1 => AcePropagation.NoPropagateInherit,
+            _ => AcePropagation.None,
         },
     };
 

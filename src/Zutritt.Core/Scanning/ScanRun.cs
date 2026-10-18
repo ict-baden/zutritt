@@ -1,6 +1,6 @@
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using Zutritt.Core.Model;
+using Zutritt.Core.Platform;
 
 namespace Zutritt.Core.Scanning;
 
@@ -26,6 +26,7 @@ internal sealed class ScanRun
     private readonly record struct Pending(string Path, int Depth, string? ParentSignature, byte[]? ParentDescriptor, string? ShareUnc, bool IsLink,
         InheritanceExpectation? Expected);
 
+    private readonly IScanPlatform _platform;
     private readonly ScanResult _result;
     private readonly ScanRequest _request;
     private readonly IProgress<ScanProgress>? _progress;
@@ -51,8 +52,9 @@ internal sealed class ScanRun
     private InheritanceExpectation? _fileInheritance;
 
     /// <param name="progressIntervalMs">Mindestabstand zwischen zwei Fortschrittsmeldungen innerhalb einer Phase.</param>
-    public ScanRun(ScanResult result, IProgress<ScanProgress>? progress, long progressIntervalMs, CancellationToken ct)
+    public ScanRun(IScanPlatform platform, ScanResult result, IProgress<ScanProgress>? progress, long progressIntervalMs, CancellationToken ct)
     {
+        _platform = platform;
         _result = result;
         _request = result.Request;
         _progress = progress;
@@ -102,7 +104,7 @@ internal sealed class ScanRun
 
     private void ResolveTarget(string raw)
     {
-        var target = TargetParser.Parse(raw, out var error);
+        var target = _platform.ParseTarget(raw, out var error);
         if (target is null)
         {
             AddError(raw ?? "", "Ungültiges Ziel: " + error);
@@ -122,7 +124,7 @@ internal sealed class ScanRun
                 break;
 
             case TargetKind.Server:
-                var listing = ShareEnumerator.Enumerate(target.Server!);
+                var listing = _platform.EnumerateShares(target.Server!);
                 if (listing.Error is not null) { AddError(target.Path, listing.Error); break; }
                 var shares = listing.Shares.Where(s => !(_request.SkipAdminShares && s.Share.IsAdminShare)).ToList();
                 if (shares.Count == 0) { AddError(target.Path, "Keine Datenträger-Freigaben gefunden"); break; }
@@ -161,14 +163,10 @@ internal sealed class ScanRun
                 AddError(read.Share.UncPath, "Lokaler Pfad der Freigabe nicht lesbar – Freigabe nicht geprüft");
                 continue;
             }
-            try
-            {
-                AddRoot(new Root(LongPath.TrimEndSeparator(Path.GetFullPath(read.Share.LocalPath)), IsLocal: true, null, null));
-            }
-            catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException)
-            {
+            if (_platform.FullLocalPath(read.Share.LocalPath) is { } full)
+                AddRoot(new Root(WindowsPath.TrimEnd(full), IsLocal: true, null, null));
+            else
                 AddError(read.Share.UncPath, $"Ungültiger lokaler Pfad der Freigabe: „{read.Share.LocalPath}“");
-            }
         }
     }
 
@@ -176,15 +174,15 @@ internal sealed class ScanRun
     private ShareListing LocalListing()
     {
         if (_localListing is not null) return _localListing;
-        _localListing = ShareEnumerator.Enumerate(".");
-        _localMap = new LocalShareMap(_localListing.Shares, includeAdminShares: !_request.SkipAdminShares);
+        _localListing = _platform.EnumerateShares(".");
+        _localMap = new LocalShareMap(_localListing.Shares, includeAdminShares: !_request.SkipAdminShares, _platform.FullLocalPath);
         return _localListing;
     }
 
     private ShareLookup LookupShare(string server, string share)
     {
-        var key = $@"\\{server}\{share}";
-        if (!_lookups.TryGetValue(key, out var lookup)) _lookups[key] = lookup = ShareEnumerator.Lookup(server, share);
+        var key = WindowsPath.Unc(server, share);
+        if (!_lookups.TryGetValue(key, out var lookup)) _lookups[key] = lookup = _platform.LookupShare(server, share);
         return lookup;
     }
 
@@ -213,19 +211,14 @@ internal sealed class ScanRun
             _localMapChecked = true;
             var listing = LocalListing();
             // Ohne Serverdienst gibt es keine Freigaben – das ist kein Fehler, sondern das Ergebnis.
-            if (listing.Error is not null && listing.ErrorCode != Native.NERR_ServerNotStarted)
+            if (listing.Error is not null && !listing.ServerServiceStopped)
                 AddError(Environment.MachineName, listing.Error + " – lokale Ordner ohne Zuordnung zu Freigaben");
         }
 
-        uint attributes = Native.GetFileAttributes(LongPath.ToExtended(root.Path));
-        // Ohne Recht auf Attribute (Elternordner nicht auflistbar) als Ordner weiterversuchen: Rechte lesen und
-        // Auflisten melden ihre Fehler dann genauer.
-        if (attributes == Native.INVALID_FILE_ATTRIBUTES && Marshal.GetLastPInvokeError() == Native.ERROR_ACCESS_DENIED)
-            attributes = (uint)FileAttributes.Directory;
-        if (attributes == Native.INVALID_FILE_ATTRIBUTES)
+        var probe = _platform.Probe(root.Path);
+        if (probe.Error is not null)
         {
-            int error = Marshal.GetLastPInvokeError();
-            var failed = new FolderNode { Path = root.Path, Depth = 0, Error = "Ziel nicht erreichbar: " + Win32Error.Describe(error) };
+            var failed = new FolderNode { Path = root.Path, Depth = 0, Error = "Ziel nicht erreichbar: " + probe.Error };
             failed.ShareUnc = root.IsLocal ? RootShareUnc(root) : root.Lookup?.Read?.Share.UncPath;
             _result.FoldersVisited++;
             _result.Folders.Add(failed);
@@ -243,10 +236,10 @@ internal sealed class ScanRun
         }
 
         var shareUnc = RootShareUnc(root);
-        if ((attributes & (uint)FileAttributes.Directory) == 0)
+        if (!probe.IsDirectory)
         {
             // Eine Datei als Ziel: nur sie selbst prüfen.
-            var file = AclReader.Read(root.Path, 0, isFile: true, followLinks: true, parentDescriptor: null, readParent: true,
+            var file = _platform.ReadSecurity(root.Path, 0, isFile: true, followLinks: true, parentDescriptor: null, readParent: true,
                 wantDescriptor: false, out _);
             file.ShareUnc = shareUnc;
             _result.FilesVisited++;
@@ -284,7 +277,7 @@ internal sealed class ScanRun
         bool descend = (isRoot || !item.IsLink) && (_request.MaxDepth is not int max || item.Depth < max);
 
         // Die Wurzel liest ihren Elternordner bei Bedarf selbst, alle anderen bekommen ihn mit.
-        var node = AclReader.Read(item.Path, item.Depth, isFile: false, followLinks: isRoot, item.ParentDescriptor,
+        var node = _platform.ReadSecurity(item.Path, item.Depth, isFile: false, followLinks: isRoot, item.ParentDescriptor,
             readParent: isRoot, wantDescriptor: descend, out var descriptor);
         _result.FoldersVisited++;
         node.ShareUnc = item.ShareUnc;
@@ -300,10 +293,10 @@ internal sealed class ScanRun
         if (descend)
         {
             _entries.Clear();
-            int error = DirectoryLister.List(item.Path, _entries);
-            if (error != Native.ERROR_SUCCESS)
+            var error = _platform.ListDirectory(item.Path, _entries);
+            if (error is not null)
             {
-                node.Error = Join(node.Error, "Inhalt nicht auflistbar: " + Win32Error.Describe(error));
+                node.Error = Join(node.Error, "Inhalt nicht auflistbar: " + error);
                 if (!store) { _result.Folders.Add(node); store = true; }
             }
 
@@ -314,7 +307,7 @@ internal sealed class ScanRun
                 // Rechte des Ordners nur als Maßstab, wenn sie lesbar waren (signature ist dann gesetzt).
                 var folder = signature is null ? null : node;
                 foreach (var entry in _entries)
-                    if (!entry.IsDirectory) VisitFile(LongPath.Combine(item.Path, entry.Name), item.Depth + 1, descriptor, folder, node.ShareUnc);
+                    if (!entry.IsDirectory) VisitFile(WindowsPath.Join(item.Path, entry.Name), item.Depth + 1, descriptor, folder, node.ShareUnc);
             }
             // Von einem Ordner mit Fehler (auch nur teilweise auflistbar) leitet die Auswertung nichts ab – seine
             // Unterordner müssen deshalb selbst gespeichert werden. Ob sie richtig erben, lässt sich dann auch nicht sagen.
@@ -324,7 +317,7 @@ internal sealed class ScanRun
             {
                 var entry = _entries[i];
                 if (!entry.IsDirectory) continue;
-                var child = LongPath.Combine(item.Path, entry.Name);
+                var child = WindowsPath.Join(item.Path, entry.Name);
                 if (_rootPaths.Contains(child)) continue; // eigenes Ziel, wird mit eigener Wurzel geprüft
                 // Einmal je Ordner und nur, wenn er Unterordner hat
                 if (childSignature is not null) expected ??= InheritanceExpectation.ForSubfolders(node);
@@ -341,7 +334,7 @@ internal sealed class ScanRun
     private void VisitFile(string path, int depth, byte[]? parentDescriptor, FolderNode? folder, string? shareUnc)
     {
         _ct.ThrowIfCancellationRequested();
-        var node = AclReader.Read(path, depth, isFile: true, followLinks: false, parentDescriptor, readParent: false,
+        var node = _platform.ReadSecurity(path, depth, isFile: true, followLinks: false, parentDescriptor, readParent: false,
             wantDescriptor: false, out _);
         _result.FilesVisited++;
         node.ShareUnc = shareUnc;

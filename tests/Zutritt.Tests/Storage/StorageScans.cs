@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using Zutritt.Core.Model;
 using Zutritt.Tests.TestSupport;
 
@@ -7,8 +6,8 @@ namespace Zutritt.Tests.Storage;
 /// <summary>Läufe für die Speicher-Tests: Randfälle und ein großer synthetischer Lauf.</summary>
 internal static class StorageScans
 {
-    public const FileSystemRights GenericRead = unchecked((FileSystemRights)0x80000000);
-    public const FileSystemRights GenericAll = (FileSystemRights)0x10000000;
+    public const FileRights GenericRead = unchecked((FileRights)0x80000000);
+    public const FileRights GenericAll = (FileRights)0x10000000;
 
     /// <summary>Beispiel-Lauf mit Befunden aller Schweregrade (SampleScan selbst hat keine).</summary>
     public static ScanResult SampleWithFindings(DateTimeOffset? started = null)
@@ -61,15 +60,15 @@ internal static class StorageScans
 
         scan.Folders.Add(new FolderNode { Path = @"C:\Daten; Archiv\Ä", Depth = 0 });  // ohne Einträge, ohne Besitzer, ShareUnc null
         var file = new FolderNode { Path = @"C:\Daten; Archiv\Ä\geheim.txt", Depth = 1, IsFile = true, ShareUnc = "", OwnerSid = SampleScan.Max, Error = "Pfad zu lang:\r\nZeile 2", InheritanceDiffers = true };
-        file.Aces.Add(new AceEntry { Sid = SampleScan.CreatorOwner, Rights = GenericAll, Inheritance = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, Propagation = PropagationFlags.InheritOnly });
+        file.Aces.Add(new AceEntry { Sid = SampleScan.CreatorOwner, Rights = GenericAll, Inheritance = AceInheritance.ContainerInherit | AceInheritance.ObjectInherit, Propagation = AcePropagation.InheritOnly });
         scan.Folders.Add(file);
 
         var longPath = @"\\fs01\Freigabe\" + string.Join('\\', Enumerable.Range(1, 60).Select(i => $"Ebene-{i:D2}-Überlänge"));
         var deep = new FolderNode { Path = longPath, Depth = 60, ShareUnc = @"\\fs01\Freigabe", OwnerSid = SampleScan.Verwaist, InheritanceBroken = true };
-        deep.Aces.Add(new AceEntry { Sid = SampleScan.Everyone, Rights = GenericRead | (FileSystemRights)0x20000000, Inheritance = InheritanceFlags.ContainerInherit, Propagation = PropagationFlags.InheritOnly | PropagationFlags.NoPropagateInherit });
-        deep.Aces.Add(new AceEntry { Sid = SampleScan.Max, Rights = SampleScan.Modify, IsDeny = true, IsInherited = true, Inheritance = InheritanceFlags.ObjectInherit });
+        deep.Aces.Add(new AceEntry { Sid = SampleScan.Everyone, Rights = GenericRead | (FileRights)0x20000000, Inheritance = AceInheritance.ContainerInherit, Propagation = AcePropagation.InheritOnly | AcePropagation.NoPropagateInherit });
+        deep.Aces.Add(new AceEntry { Sid = SampleScan.Max, Rights = SampleScan.Modify, IsDeny = true, IsInherited = true, Inheritance = AceInheritance.ObjectInherit });
         deep.Aces.Add(new AceEntry { Sid = SampleScan.Erika, Rights = 0 });
-        deep.Aces.Add(new AceEntry { Sid = SampleScan.Klaus, Rights = unchecked((FileSystemRights)(-1)) });
+        deep.Aces.Add(new AceEntry { Sid = SampleScan.Klaus, Rights = unchecked((FileRights)(-1)) });
         deep.Aces.Add(new AceEntry { Sid = SampleScan.Erika, Rights = SampleScan.Read });  // gleiche SID zweimal
         scan.Folders.Add(deep);
 
@@ -118,7 +117,7 @@ internal static class StorageScans
             scan.Principals[p.Sid] = p;
         }
 
-        FileSystemRights[] rights = [SampleScan.Read, SampleScan.Modify, SampleScan.Full, GenericRead, FileSystemRights.ReadData | FileSystemRights.Synchronize];
+        FileRights[] rights = [SampleScan.Read, SampleScan.Modify, SampleScan.Full, GenericRead, FileRights.ReadData | FileRights.Synchronize];
         for (var i = 0; i < folders; i++)
         {
             var depth = i % 25;
@@ -139,8 +138,8 @@ internal static class StorageScans
                     Rights = rights[(i + j) % rights.Length],
                     IsDeny = (i + j) % 41 == 0,
                     IsInherited = j % 2 == 1,
-                    Inheritance = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit,
-                    Propagation = j == 4 ? PropagationFlags.InheritOnly : PropagationFlags.None,
+                    Inheritance = AceInheritance.ContainerInherit | AceInheritance.ObjectInherit,
+                    Propagation = j == 4 ? AcePropagation.InheritOnly : AcePropagation.None,
                 });
             }
             scan.Folders.Add(f);

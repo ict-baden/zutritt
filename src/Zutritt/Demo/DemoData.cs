@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using Zutritt.Core.Model;
 
 namespace Zutritt.Demo;
@@ -64,13 +63,13 @@ public static class DemoData
     private const string FileserverAdmins = Domain + "-1215";
     private const string AltProjekt = Domain + "-1216";     // leere Gruppe
 
-    private const FileSystemRights Read = FileSystemRights.ReadAndExecute | FileSystemRights.Synchronize;
-    private const FileSystemRights Write = FileSystemRights.ReadAndExecute | FileSystemRights.Write | FileSystemRights.Synchronize;
-    private const FileSystemRights Modify = FileSystemRights.Modify | FileSystemRights.Synchronize;
-    private const FileSystemRights Full = FileSystemRights.FullControl;
-    private const FileSystemRights DeleteOnly = FileSystemRights.Delete | FileSystemRights.DeleteSubdirectoriesAndFiles;
+    private const FileRights Read = FileRights.ReadAndExecute | FileRights.Synchronize;
+    private const FileRights Write = FileRights.ReadAndExecute | FileRights.Write | FileRights.Synchronize;
+    private const FileRights Modify = FileRights.Modify | FileRights.Synchronize;
+    private const FileRights Full = FileRights.FullControl;
+    private const FileRights DeleteOnly = FileRights.Delete | FileRights.DeleteSubdirectoriesAndFiles;
 
-    private const InheritanceFlags CIOI = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit;
+    private const AceInheritance CIOI = AceInheritance.ContainerInherit | AceInheritance.ObjectInherit;
 
     /// <summary>Älterer Lauf (eine Woche vorher) und aktueller Lauf, beide noch ohne Id.</summary>
     public static (ScanResult Older, ScanResult Newer) Create()
@@ -424,16 +423,16 @@ public static class DemoData
             Scan.Findings.Add(new Finding { RuleId = rule, Severity = severity, Path = path, Sid = sid, Message = message });
 
         /// <summary>Expliziter Eintrag (gilt für diesen Ordner, Unterordner und Dateien).</summary>
-        private static AceEntry A(string sid, FileSystemRights rights, bool deny = false, bool inheritOnly = false) => new()
+        private static AceEntry A(string sid, FileRights rights, bool deny = false, bool inheritOnly = false) => new()
         {
             Sid = sid, Rights = rights, IsDeny = deny, Inheritance = CIOI,
-            Propagation = inheritOnly ? PropagationFlags.InheritOnly : PropagationFlags.None,
+            Propagation = inheritOnly ? AcePropagation.InheritOnly : AcePropagation.None,
         };
 
         /// <summary>Geerbter Eintrag.</summary>
-        private static AceEntry I(string sid, FileSystemRights rights) => new()
+        private static AceEntry I(string sid, FileRights rights) => new()
         {
-            Sid = sid, Rights = rights, IsInherited = true, Inheritance = CIOI, Propagation = PropagationFlags.None,
+            Sid = sid, Rights = rights, IsInherited = true, Inheritance = CIOI, Propagation = AcePropagation.None,
         };
     }
 }

@@ -1,4 +1,3 @@
-using System.Security.Principal;
 using Zutritt.Core.Model;
 
 namespace Zutritt.Core.Identity;
@@ -13,14 +12,6 @@ internal readonly record struct MembersAnswer(IReadOnlyList<string>? Members, bo
 /// </summary>
 internal sealed class ResolveSession
 {
-    // Fehler, die den ganzen Server betreffen: weitere Anfragen dort würden nur jeweils in die Zeitüberschreitung laufen.
-    private static readonly HashSet<int> ServerDownErrors =
-    [
-        Native.ERROR_ACCESS_DENIED, Native.ERROR_BAD_NETPATH, 67 /* ERROR_BAD_NET_NAME */, 1203 /* ERROR_NO_NET_OR_BAD_PATH */,
-        1231 /* ERROR_NETWORK_UNREACHABLE */, 1232 /* ERROR_HOST_UNREACHABLE */, Native.RPC_S_SERVER_UNAVAILABLE,
-        Native.RPC_S_CALL_FAILED_DNE, 1753 /* EPT_S_NOT_REGISTERED */,
-    ];
-
     private readonly IReadOnlyList<IDirectory> _chain;
     private readonly IReadOnlyList<IDirectory> _machineDirectories;
     private readonly IReadOnlyList<IAccountLookup> _lookups;
@@ -53,9 +44,7 @@ internal sealed class ResolveSession
     /// <summary>SID in die übliche Schreibweise bringen (S-1-…, Großbuchstaben); ungültige bleiben, wie sie sind.</summary>
     public static string Normalize(string sid)
     {
-        var s = sid.Trim();
-        try { return new SecurityIdentifier(s).Value; }
-        catch (ArgumentException) { return s; }
+        return SidText.Normalize(sid);
     }
 
     public void Note(string path, string message)
@@ -137,7 +126,7 @@ internal sealed class ResolveSession
         {
             // Lokale Konten und Dienste eines Servers kennt nur dessen eigene LSA, nicht die dieses Rechners.
             foreach (var unasked in _unaskedServers)
-                Note(@"\\" + unasked, "Konten wurden nicht beim Server selbst nachgeschlagen. Nicht auflösbare Konten bleiben "
+                Note(WindowsPath.Server(unasked), "Konten wurden nicht beim Server selbst nachgeschlagen. Nicht auflösbare Konten bleiben "
                     + "deshalb „Unbekannt“ statt „Verwaist“ – lokale Konten des Servers kennt nur der Server.");
             return Make(sid, sid, PrincipalKind.Unbekannt);
         }
@@ -235,7 +224,6 @@ internal sealed class ResolveSession
     {
         // Ohne irgendeine LSA lässt sich nichts prüfen – dann nie „verwaist“.
         var error = _lookups.Count == 0;
-        var lastError = 0;
         foreach (var lookup in _lookups)
         {
             if (_deadLookups.Contains(lookup))
@@ -259,13 +247,12 @@ internal sealed class ResolveSession
             if (r.Status == LookupStatus.Fehler)
             {
                 error = true;
-                lastError = r.Error;
-                Note(LsaSource(lookup.Server), $"Kontennamen nicht auflösbar: {Native.Describe(r.Error)}. Betroffene Konten bleiben „Unbekannt“.");
-                if (ServerDownErrors.Contains(r.Error)) _deadLookups.Add(lookup);
+                Note(LsaSource(lookup.Server), $"Kontennamen nicht auflösbar: {r.Error ?? "unbekannter Fehler"}. Betroffene Konten bleiben „Unbekannt“.");
+                // Fehler, die den ganzen Server betreffen: weitere Anfragen dort liefen nur jeweils in die Zeitüberschreitung.
+                if (r.SourceDown) _deadLookups.Add(lookup);
             }
         }
-        var status = error ? LookupStatus.Fehler : LookupStatus.NichtZugeordnet;
-        return (new AccountLookupResult(status, "", "", Native.SidNameUse.Unknown, lastError), null);
+        return (error ? AccountLookupResult.Failed("") : AccountLookupResult.NotMapped, null);
     }
 
     private static Principal FromLsa(string sid, AccountLookupResult r, string? server)
@@ -305,7 +292,7 @@ internal sealed class ResolveSession
         Sid = sid,
         Name = name,
         // Bei Verwaisten und Unbekannten steht die SID im Namen; einen Anzeigenamen gibt es dann nicht.
-        DisplayName = kind is PrincipalKind.Verwaist or PrincipalKind.Unbekannt ? "" : name.Split('\\')[^1],
+        DisplayName = kind is PrincipalKind.Verwaist or PrincipalKind.Unbekannt ? "" : AccountName.LastPart(name),
         Kind = kind,
         IsLocal = isLocal,
     };
@@ -320,25 +307,14 @@ internal sealed class ResolveSession
         return list;
     }
 
-    private static bool IsValidSid(string sid)
-    {
-        try
-        {
-            _ = new SecurityIdentifier(sid);
-            return true;
-        }
-        catch (ArgumentException)
-        {
-            return false;
-        }
-    }
+    private static bool IsValidSid(string sid) => SidText.IsValid(sid);
 
-    private static string LsaSource(string? server) => @"\\" + (server ?? Environment.MachineName);
+    private static string LsaSource(string? server) => WindowsPath.Server(server ?? Environment.MachineName);
 
     private static string SourceOf(IDirectory directory) => directory switch
     {
         IAuthoritativeDirectory a => a.SourceName,
-        IMachineDirectory m => @"\\" + (m.Server ?? Environment.MachineName),
+        IMachineDirectory m => WindowsPath.Server(m.Server ?? Environment.MachineName),
         _ => directory.GetType().Name,
     };
 }

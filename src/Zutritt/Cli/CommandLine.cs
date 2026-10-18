@@ -4,6 +4,7 @@ using Zutritt.Core.Model;
 using Zutritt.Core.Reports;
 using Zutritt.Core.Scanning;
 using Zutritt.Core.Storage;
+using Zutritt.Platform.Windows;
 
 namespace Zutritt.Cli;
 
@@ -96,7 +97,7 @@ internal static class CommandLine
         {
             Console.WriteLine($"Zutritt {AppInfo.Version} – Scan von {string.Join(", ", request.Targets.Select(Labels.TargetName))}");
             var progress = new ConsoleProgress();
-            var scanner = new Scanner(IdentityResolver.CreateDefault());
+            var scanner = WindowsPlatform.CreateScanner();
             var scan = scanner.RunAsync(request, progress, cts.Token).GetAwaiter().GetResult();
             progress.Finish();
 

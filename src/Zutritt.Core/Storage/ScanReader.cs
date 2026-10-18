@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Security.AccessControl;
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
 using Zutritt.Core.Model;
@@ -178,11 +177,11 @@ internal static class ScanReader
                 current.Aces.Add(new AceEntry
                 {
                     Sid = r.GetString(1),
-                    Rights = (FileSystemRights)unchecked((int)(uint)r.GetInt64(2)),
+                    Rights = (FileRights)unchecked((uint)r.GetInt64(2)),
                     IsDeny = r.GetBoolean(3),
                     IsInherited = r.GetBoolean(4),
-                    Inheritance = (InheritanceFlags)r.GetInt32(5),
-                    Propagation = (PropagationFlags)r.GetInt32(6),
+                    Inheritance = (AceInheritance)r.GetInt32(5),
+                    Propagation = (AcePropagation)r.GetInt32(6),
                 });
             }
         }

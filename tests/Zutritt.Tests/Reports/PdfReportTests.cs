@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using System.Text;
 using MigraDoc.DocumentObjectModel;
 using MigraDoc.DocumentObjectModel.Tables;
@@ -30,7 +29,7 @@ public sealed class PdfReportTests : IDisposable
         return pdf.PageCount;
     }
 
-    [Fact]
+    [PdfFact]
     public void Datei_IstPdfMitMehrerenSeitenUndMetadaten()
     {
         var path = Write(Data());
@@ -48,7 +47,7 @@ public sealed class PdfReportTests : IDisposable
         Assert.Equal([path], Directory.GetFiles(_temp.Path));
     }
 
-    [Fact]
+    [PdfFact]
     public void Dokument_AbschnitteInReihenfolge_OhneVergleichKeineAenderungen()
     {
         var doc = PdfReport.CreateDocument(Data());
@@ -56,7 +55,7 @@ public sealed class PdfReportTests : IDisposable
             "Nicht geprüfte Bereiche", "Prüfung und Freigabe"], PdfDom.Headings(doc));
     }
 
-    [Fact]
+    [PdfFact]
     public void Dokument_MitVergleich_AenderungenVorDemAbzeichnen()
     {
         var doc = PdfReport.CreateDocument(DataWithComparison());
@@ -68,7 +67,7 @@ public sealed class PdfReportTests : IDisposable
         Assert.Contains("Vergleich mit dem letzten Lauf", text);
     }
 
-    [Fact]
+    [PdfFact]
     public void Deckblatt_Kopf_Fusszeile()
     {
         var data = Data();
@@ -92,7 +91,7 @@ public sealed class PdfReportTests : IDisposable
             Assert.Contains(expected, text);
     }
 
-    [Fact]
+    [PdfFact]
     public void Inhalt_BefundeFreigabenOrdnerPersonen()
     {
         var text = PdfDom.Text(PdfReport.CreateDocument(Data()));
@@ -119,7 +118,7 @@ public sealed class PdfReportTests : IDisposable
         Assert.Contains("direkt berechtigt", text);
     }
 
-    [Fact]
+    [PdfFact]
     public void Abzeichnen_BlockMitAllenFeldern_ZusammenAufEinerSeite()
     {
         var doc = PdfReport.CreateDocument(Data());
@@ -132,7 +131,7 @@ public sealed class PdfReportTests : IDisposable
         Assert.All(table.Rows.Cast<Row>(), r => Assert.True(r.Cells[1].Borders.Bottom.Visible));
     }
 
-    [Fact]
+    [PdfFact]
     public void LangerPfad_WirdUmgebrochen_UndRendert()
     {
         var scan = Scan();
@@ -152,7 +151,7 @@ public sealed class PdfReportTests : IDisposable
         Assert.True(PageCount(path) > 1);
     }
 
-    [Fact]
+    [PdfFact]
     public void Begrenzung_KuerztMitHinweis()
     {
         var limits = new PdfLimits(Findings: 2, Folders: 1, People: 1, Changes: 1, Errors: 0);
@@ -173,7 +172,7 @@ public sealed class PdfReportTests : IDisposable
         Assert.True(PageCount(Write(DataWithComparison(), limits: limits)) > 1);
     }
 
-    [Fact]
+    [PdfFact]
     public void FreigabeMitVielenEintraegen_WirdMitHinweisGekuerzt_StattStillAbgeschnitten()
     {
         // Eine Tabellenzeile kann nicht über Seiten laufen: vorher erschienen nur 33 von 150 Einträgen, ohne Hinweis
@@ -201,7 +200,7 @@ public sealed class PdfReportTests : IDisposable
         Assert.True(PageCount(Write(data)) > 1);
     }
 
-    [Fact]
+    [PdfFact]
     public void Deckblatt_VieleZiele_WerdenGekuerzt()
     {
         var scan = Scan();
@@ -222,7 +221,7 @@ public sealed class PdfReportTests : IDisposable
         Assert.Contains(pages[1], i => i.Object is Paragraph p && p.Style == StyleNames.Heading1 && PdfDom.Text(p).Trim() == "Zusammenfassung");
     }
 
-    [Fact]
+    [PdfFact]
     public void Deckblatt_InhaltsverzeichnisVerweistAufJedenAbschnitt()
     {
         var doc = PdfReport.CreateDocument(DataWithComparison());
@@ -248,7 +247,7 @@ public sealed class PdfReportTests : IDisposable
         Assert.DoesNotContain("Nicht geprüfte Bereiche", plain);
     }
 
-    [Fact]
+    [PdfFact]
     public void Seitenumbruch_KeineUeberschriftAllein_KeineVerschlucktenZeilen()
     {
         // Verschieden lange Befundlisten schieben die folgenden Abschnitte über alle Stellen der Seite – so landet
@@ -265,7 +264,7 @@ public sealed class PdfReportTests : IDisposable
         Assert.True(problems.Count == 0, string.Join("\n", problems));
     }
 
-    [Fact]
+    [PdfFact]
     public void Seitenumbruch_GrosserLauf_OrdnerkopfBleibtBeiSeinerTabelle()
     {
         var scan = Large(folders: 120, acesPerFolder: 6, users: 40);
@@ -284,7 +283,7 @@ public sealed class PdfReportTests : IDisposable
         Assert.All(tables, t => Assert.True(t.Rows[0].HeadingFormat, PdfDom.Text(t.Rows[0].Cells[0])));
     }
 
-    [Fact]
+    [PdfFact]
     public void NichtLesbarerOrdner_GelesenEintraegeWerdenTrotzdemGezeigt()
     {
         // Der Scanner setzt Error auch, wenn die Rechte gelesen wurden, aber der Inhalt nicht auflistbar war
@@ -302,7 +301,7 @@ public sealed class PdfReportTests : IDisposable
         Assert.DoesNotContain("Keine Einträge", block);
     }
 
-    [Fact]
+    [PdfFact]
     public void Kopfzeile_KuerztLangeZieleOhneHalbesZeichen()
     {
         var scan = Scan();
@@ -312,7 +311,7 @@ public sealed class PdfReportTests : IDisposable
         Assert.EndsWith(new string('a', 68) + "…", header);
     }
 
-    [Fact]
+    [PdfFact]
     public void LeererLauf_RendertTrotzdem()
     {
         var data = Data(new ScanResult { Request = new ScanRequest { Targets = [@"C:\Leer"] } });
@@ -323,7 +322,7 @@ public sealed class PdfReportTests : IDisposable
         Assert.True(PageCount(Write(data)) >= 2);
     }
 
-    [Fact]
+    [PdfFact]
     public void SonderzeichenUndFremdeSchriften_RendernOhneFehler()
     {
         var scan = Scan();
@@ -333,7 +332,7 @@ public sealed class PdfReportTests : IDisposable
         Assert.True(PageCount(Write(Data(scan))) > 1);
     }
 
-    [Fact]
+    [PdfFact]
     public void Parallel_SchriftenWerdenThreadsicherEingerichtet()
     {
         var data = Data();
@@ -342,7 +341,7 @@ public sealed class PdfReportTests : IDisposable
         Assert.All(Directory.GetFiles(_temp.Path), p => Assert.True(PageCount(p) > 1));
     }
 
-    [Fact]
+    [PdfFact]
     public void Parallel_GleicherSatzWieNacheinander()
     {
         // MigraDoc merkt sich die zuletzt benutzte Schrift statisch und ohne Sperre: ohne RenderGate setzt ein
@@ -367,7 +366,7 @@ public sealed class PdfReportTests : IDisposable
             .ToList();
     }
 
-    [Fact]
+    [WindowsFact("Dateisperren gelten nur unter Windows verbindlich")]
     public void GeoeffneteDatei_ReportWriteException_AlteDateiBleibt()
     {
         var path = Path.Combine(_temp.Path, "offen.pdf");
@@ -381,7 +380,7 @@ public sealed class PdfReportTests : IDisposable
         Assert.Equal([path], Directory.GetFiles(_temp.Path));
     }
 
-    [Fact]
+    [PdfFact]
     public void GrosserLauf_StandardgrenzenHaltenDasPdfHandlich()
     {
         var scan = Large(folders: 3_000, acesPerFolder: 4, users: 1_500);
@@ -397,7 +396,7 @@ public sealed class PdfReportTests : IDisposable
         Assert.InRange(PageCount(path), 50, 400);
     }
 
-    [Fact]
+    [PdfFact]
     public void Ordner_MitAbweichenderVererbung_SoGekennzeichnet()
     {
         var scan = Scan();
@@ -407,15 +406,15 @@ public sealed class PdfReportTests : IDisposable
         Assert.Contains("unterbrochene oder abweichende Vererbung", text);
     }
 
-    [Fact]
+    [PdfLayoutFact]
     public void Ordner_VerweigernNenntGesperrteRechte_OhneUmbruchImWort()
     {
         // „Nur Löschen verweigert“ hieß als Stufe „Kein Zugriff“ – jetzt steht da, was gesperrt ist, und passt in die Spalte
         var scan = Scan();
         scan.Folders.Single(f => f.Path == Archiv).Aces.Insert(0, new AceEntry
         {
-            Sid = Erika, Rights = FileSystemRights.Delete | FileSystemRights.DeleteSubdirectoriesAndFiles,
-            IsDeny = true, Inheritance = InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit,
+            Sid = Erika, Rights = FileRights.Delete | FileRights.DeleteSubdirectoriesAndFiles,
+            IsDeny = true, Inheritance = AceInheritance.ContainerInherit | AceInheritance.ObjectInherit,
         });
         var doc = PdfReport.CreateDocument(Data(scan));
         var rows = doc.Sections.Cast<Section>().Single().Elements.OfType<Table>()
@@ -429,7 +428,7 @@ public sealed class PdfReportTests : IDisposable
         Assert.All(rows, r => Assert.DoesNotContain('\n', r));
     }
 
-    [Fact]
+    [PdfLayoutFact]
     public void Aenderungen_SpalteAenderung_OhneUmbruchImWort()
     {
         // „Aufgenommen“ (jetzt groß geschrieben) passte nicht mehr in die Spalte und wurde mitten im Wort umbrochen

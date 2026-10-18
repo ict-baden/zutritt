@@ -1,4 +1,3 @@
-using System.Security.AccessControl;
 using Zutritt.Core.Analysis;
 using Zutritt.Core.Model;
 using Zutritt.Tests.TestSupport;
@@ -9,9 +8,9 @@ namespace Zutritt.Tests.Analysis;
 
 public sealed class EffectiveAccessTests
 {
-    private const FileSystemRights Read = S.Read;
-    private const FileSystemRights Modify = S.Modify;
-    private const FileSystemRights Full = S.Full;
+    private const FileRights Read = S.Read;
+    private const FileRights Modify = S.Modify;
+    private const FileRights Full = S.Full;
 
     private static FolderNode Node(ScanResult scan, string relative) =>
         scan.Folders.Single(f => f.Path.Equals(@"\\FS01\Labor" + relative, StringComparison.OrdinalIgnoreCase));
@@ -148,8 +147,8 @@ public sealed class EffectiveAccessTests
     {
         var u = Sid(2001);
         var b = new ScanBuilder().User(u, @"T\u").WithShare(new ShareAce(S.Everyone, ShareAccess.Vollzugriff, false));
-        b.Folder("", 0, Allow(u, FileSystemRights.Traverse | FileSystemRights.Synchronize));
-        b.Folder(@"\Leer", 1, Allow(u, FileSystemRights.Synchronize));
+        b.Folder("", 0, Allow(u, FileRights.Traverse | FileRights.Synchronize));
+        b.Folder(@"\Leer", 1, Allow(u, FileRights.Synchronize));
         b.Scan.Folders.Add(new FolderNode { Path = Share + @"\Gesperrt", Depth = 1, ShareUnc = Share, Error = "Zugriff verweigert" });
 
         var grant = Assert.Single(EffectiveAccess.ForPerson(b.Scan, u));
@@ -166,7 +165,7 @@ public sealed class EffectiveAccessTests
         var b = new ScanBuilder().User(u, @"T\u").Group(g, @"T\G", u);
         var f = b.LocalFolder(@"D:\Daten\X", 0,
             Allow(u, Modify),
-            Deny(g, FileSystemRights.Write, inherited: true));
+            Deny(g, FileRights.Write, inherited: true));
         var grant = EffectiveAccessInternals.Grant(b.Scan, f, u);
         Assert.Equal(AccessLevel.Aendern, grant.Ntfs);
         Assert.False(grant.ReducedByDeny);
@@ -178,7 +177,7 @@ public sealed class EffectiveAccessTests
         var u = Sid(2001); var g = Sid(1001);
         var b = new ScanBuilder().User(u, @"T\u").Group(g, @"T\G", u);
         // Erlauben steht (nicht kanonisch) vor Verweigern
-        var f = b.LocalFolder(@"D:\Daten\X", 0, Allow(g, Modify), Deny(u, FileSystemRights.Write));
+        var f = b.LocalFolder(@"D:\Daten\X", 0, Allow(g, Modify), Deny(u, FileRights.Write));
         var grant = EffectiveAccessInternals.Grant(b.Scan, f, u);
         Assert.Equal(AccessLevel.Lesen, grant.Ntfs);
         Assert.True(grant.ReducedByDeny);
@@ -191,11 +190,11 @@ public sealed class EffectiveAccessTests
         // Wie Windows: Erlauben vom Elternordner steht vor Verweigern vom Großelternordner
         var u = Sid(2001); var g = Sid(1001);
         var b = new ScanBuilder().User(u, @"T\u").Group(g, @"T\G", u);
-        var closerAllow = b.LocalFolder(@"D:\A", 0, Allow(u, Modify, inherited: true), Deny(g, FileSystemRights.Write, inherited: true));
+        var closerAllow = b.LocalFolder(@"D:\A", 0, Allow(u, Modify, inherited: true), Deny(g, FileRights.Write, inherited: true));
         Assert.Equal(AccessLevel.Aendern, EffectiveAccessInternals.Grant(b.Scan, closerAllow, u).Ntfs);
 
         // Gleicher Vorfahr: kanonisch steht Verweigern vorn und gewinnt
-        var sameLevel = b.LocalFolder(@"D:\B", 0, Deny(u, FileSystemRights.Write, inherited: true), Allow(g, Modify, inherited: true));
+        var sameLevel = b.LocalFolder(@"D:\B", 0, Deny(u, FileRights.Write, inherited: true), Allow(g, Modify, inherited: true));
         var grant = EffectiveAccessInternals.Grant(b.Scan, sameLevel, u);
         Assert.Equal(AccessLevel.Lesen, grant.Ntfs);
         Assert.True(grant.ReducedByDeny);
@@ -206,12 +205,12 @@ public sealed class EffectiveAccessTests
     {
         var u = Sid(2001);
         var b = new ScanBuilder().User(u, @"T\u");
-        var f = b.LocalFolder(@"D:\X", 0, Deny(u, FileSystemRights.Delete), Allow(u, Modify));
+        var f = b.LocalFolder(@"D:\X", 0, Deny(u, FileRights.Delete), Allow(u, Modify));
         var grant = EffectiveAccessInternals.Grant(b.Scan, f, u);
         Assert.Equal(AccessLevel.Schreiben, grant.Ntfs); // ohne Löschen
         Assert.True(grant.ReducedByDeny);
 
-        var g = b.LocalFolder(@"D:\Y", 0, Deny(u, FileSystemRights.TakeOwnership), Allow(u, Read));
+        var g = b.LocalFolder(@"D:\Y", 0, Deny(u, FileRights.TakeOwnership), Allow(u, Read));
         Assert.False(EffectiveAccessInternals.Grant(b.Scan, g, u).ReducedByDeny); // nichts erlaubt, was verweigert wird
     }
 
@@ -221,7 +220,7 @@ public sealed class EffectiveAccessTests
         var u = Sid(2001);
         var b = new ScanBuilder().User(u, @"T\u");
         var f = b.LocalFolder(@"D:\X", 0,
-            Allow(u, Full, propagation: PropagationFlags.InheritOnly),
+            Allow(u, Full, propagation: AcePropagation.InheritOnly),
             Allow(S.CreatorOwner, Full));
         Assert.Equal(AccessLevel.Keine, EffectiveAccessInternals.Grant(b.Scan, f, u).Ntfs);
         Assert.Empty(EffectiveAccess.ForFolder(b.Scan, f));
@@ -232,8 +231,8 @@ public sealed class EffectiveAccessTests
     {
         var u = Sid(2001);
         var b = new ScanBuilder().User(u, @"T\u");
-        var read = b.LocalFolder(@"D:\R", 0, Allow(u, unchecked((FileSystemRights)0x80000000)));
-        var all = b.LocalFolder(@"D:\A", 0, Allow(u, (FileSystemRights)0x10000000));
+        var read = b.LocalFolder(@"D:\R", 0, Allow(u, unchecked((FileRights)0x80000000)));
+        var all = b.LocalFolder(@"D:\A", 0, Allow(u, (FileRights)0x10000000));
         Assert.Equal(AccessLevel.Lesen, EffectiveAccessInternals.Grant(b.Scan, read, u).Ntfs);
         Assert.Equal(AccessLevel.Vollzugriff, EffectiveAccessInternals.Grant(b.Scan, all, u).Ntfs);
     }
@@ -263,8 +262,8 @@ public sealed class EffectiveAccessTests
     {
         var u = Sid(2001);
         var b = new ScanBuilder().User(u, @"T\u").WithShare(new ShareAce(S.Everyone, ShareAccess.Vollzugriff, false));
-        var shared = b.Folder("", 0, Allow(u, Modify), Deny(SidCatalog.Network, FileSystemRights.Write));
-        var local = b.LocalFolder(@"D:\Lokal", 0, Allow(u, Modify), Deny(SidCatalog.Network, FileSystemRights.Write));
+        var shared = b.Folder("", 0, Allow(u, Modify), Deny(SidCatalog.Network, FileRights.Write));
+        var local = b.LocalFolder(@"D:\Lokal", 0, Allow(u, Modify), Deny(SidCatalog.Network, FileRights.Write));
         var interactiveOnly = b.LocalFolder(@"D:\Konsole", 0, Allow(SidCatalog.Interactive, Read));
 
         Assert.Equal(AccessLevel.Lesen, EffectiveAccessInternals.Grant(b.Scan, shared, u).Effective);
@@ -416,7 +415,7 @@ public sealed class EffectiveAccessTests
     {
         var g = Sid(1001);
         var b = new ScanBuilder().Group(g, @"T\Team").WithShare(new ShareAce(S.Everyone, ShareAccess.Vollzugriff, false));
-        var f = b.Folder("", 0, Deny(S.Everyone, FileSystemRights.Delete), Allow(g, Modify));
+        var f = b.Folder("", 0, Deny(S.Everyone, FileRights.Delete), Allow(g, Modify));
         var grant = Assert.Single(EffectiveAccess.ForFolder(b.Scan, f));
         Assert.Equal(g, grant.Sid);
         Assert.Equal(AccessLevel.Schreiben, grant.Ntfs);
@@ -430,9 +429,9 @@ public sealed class EffectiveAccessTests
         var g = Sid(1001);
         var b = new ScanBuilder().Group(g, @"T\Team");
         var f = b.LocalFolder(@"D:\X", 0,
-            Allow(g, FileSystemRights.ReadAndExecute),
-            Allow(g, FileSystemRights.Write | FileSystemRights.Delete, inheritance: InheritanceFlags.None),
-            Allow(g, FileSystemRights.Synchronize));
+            Allow(g, FileRights.ReadAndExecute),
+            Allow(g, FileRights.Write | FileRights.Delete, inheritance: AceInheritance.None),
+            Allow(g, FileRights.Synchronize));
         var grant = Assert.Single(EffectiveAccess.ForFolder(b.Scan, f));
         Assert.Equal(AccessLevel.Aendern, grant.Ntfs);
         Assert.Null(grant.ViaShare);
@@ -443,7 +442,7 @@ public sealed class EffectiveAccessTests
     {
         var u = Sid(2001);
         var b = new ScanBuilder().User(u, @"T\u");
-        var f = b.LocalFolder(@"D:\X", 0, Allow(u, FileSystemRights.Synchronize));
+        var f = b.LocalFolder(@"D:\X", 0, Allow(u, FileRights.Synchronize));
         Assert.Empty(EffectiveAccess.ForFolder(b.Scan, f));
     }
 
