@@ -81,7 +81,7 @@ For support, Zutritt keeps a short log: one file per day, `%LocalAppData%\Zutrit
 |---|---|
 | start and end with version, build, Windows version, whether the PC is in a domain (yes/no) | targets, paths of scanned folders |
 | per scan: the options, duration and counts (folders, shares, accounts, findings per severity) | permissions, owners, group members |
-| the most frequent kinds of read errors, error messages and exception types, unexpected errors with stack trace | account names, SIDs, report contents |
+| the most frequent kinds of read errors (with group, domain and path names in them replaced), error messages and exception types, unexpected errors with stack trace | account names, SIDs, report contents |
 
 Error messages from Windows or .NET can contain a file path, for example of a report that could not be written. The log never leaves the PC unless you send it.
 

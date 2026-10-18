@@ -21,7 +21,7 @@ Alle wichtigen Änderungen an Zutritt. Format nach [Keep a Changelog](https://ke
 - MIT-Lizenz, Lizenzen der Fremdbestandteile in `THIRD-PARTY-NOTICES.txt`, Wege für Hilfe und Sicherheitsmeldungen in `SUPPORT.md` und `SECURITY.md`.
 - Seite *Info* nach den Richtlinien: Version mit Build (Commit), © und MIT-Lizenz mit Lizenztext, Drittanbieter-Lizenzen, Links zu Hilfe & Support, Quellcode, Datenschutz, Impressum und Webseite, der Satz „Diese Software sendet keine Daten an ICT-Baden.“ Links öffnen nur http/https.
 - Befehlszeile `--version` (`-v`), `--info` und `--lizenzen`.
-- Protokoll für den Support unter `%LocalAppData%\Zutritt\logs`: eine Datei je Tag, 7 Tage, höchstens 1 MB je Tag, ohne Rechte, Mitglieder und Kontennamen; unerwartete Fehler werden mitgeschrieben.
+- Protokoll für den Support unter `%LocalAppData%\Zutritt\logs`: eine Datei je Tag, 7 Tage, höchstens 1 MB je Tag, ohne Rechte, Mitglieder und Kontennamen (die häufigsten Fehlerarten eines Scans ohne Gruppen-, Domänen- und Pfadnamen); unerwartete Fehler werden mitgeschrieben.
 - *Info* › *Diagnosepaket erstellen*: Version, Systemangaben und Protokoll als ZIP, standardmäßig ohne Namen, Pfade und Adressen.
 - Zeitlimits: Ein Verzeichnis oder eine Kontenauflösung, die 60 Sekunden nicht antwortet, wird im Lauf nicht mehr gefragt; Freigabelisten und Freigaben bekommen 2 Minuten. Der Lauf hängt nicht mehr an einem Server, der nie antwortet.
 - Demo-Daten mit Rollenkonten (z. B. `MUSTER\qc.leitung`, „Labor Mitarbeitende 01“) statt Personennamen.

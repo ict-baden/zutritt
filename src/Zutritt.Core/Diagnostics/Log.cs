@@ -7,7 +7,8 @@ namespace Zutritt.Core.Diagnostics;
 /// Protokoll für den Support: eine Datei je Tag unter <c>%LocalAppData%\Zutritt\logs</c> (Linux: ~/.local/share/zutritt/logs),
 /// höchstens 7 Tage und 1 MB je Tag. Steht drin: Start mit Version und System, Beginn und Ende von Scans mit Zahlen und
 /// Dauer, Fehlermeldungen und Ausnahmetypen. Nie drin: Zugriffslisten, Mitglieder, Kontennamen – die gehören in die
-/// Datenbank, nicht in eine Datei, die man weitergibt.
+/// Datenbank, nicht in eine Datei, die man weitergibt. Fehlerarten eines Scans schreibt der Scanner deshalb erst nach dem
+/// <see cref="Anonymizer"/>.
 /// </summary>
 /// <remarks>
 /// Schreibt erst nach <see cref="Start"/> (die App ruft es beim Start auf; Tests nicht). Fehler beim Schreiben werden

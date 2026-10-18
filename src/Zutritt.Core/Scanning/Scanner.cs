@@ -127,16 +127,26 @@ public sealed class Scanner
         }
     }
 
-    private static void LogFinished(ScanResult r)
+    internal static void LogFinished(ScanResult r)
     {
         int Count(Severity s) => r.Findings.Count(f => f.Severity == s);
         Log.Info($"Scan beendet nach {(r.FinishedAt - r.StartedAt).TotalSeconds:0.0} s: {r.FoldersVisited} Ordner geprüft, " +
                  $"{r.Folders.Count} gespeichert, {r.FilesVisited} Dateien, {r.Shares.Count} Freigaben, {r.Principals.Count} Konten, " +
                  $"{r.Errors.Count} Fehler und Hinweise, Befunde Hoch {Count(Severity.Hoch)} · Mittel {Count(Severity.Mittel)} · " +
                  $"Niedrig {Count(Severity.Niedrig)} · Info {Count(Severity.Info)}");
-        // Häufigste Fehlerarten (Meldung ohne Pfad), damit der Support weiß, wonach er fragen muss
-        foreach (var group in r.Errors.GroupBy(e => e.Message, StringComparer.Ordinal).OrderByDescending(g => g.Count()).Take(5))
-            Log.Warning($"{group.Count()}× {group.Key}");
+        // Häufigste Fehlerarten, damit der Support weiß, wonach er fragen muss. Die Meldungen nennen teils Gruppen,
+        // Domänen oder lokale Pfade („Mitglieder von „MUSTER\Labor“ nicht lesbar“) – die ersetzt der Anonymizer, bevor
+        // gezählt wird. So landen keine Konten- oder Pfadnamen im Protokoll, und gleiche Fehlerarten werden zusammengefasst.
+        var anonymizer = new Anonymizer();
+        var kinds = r.Errors
+            .GroupBy(e => e.Message, StringComparer.Ordinal)
+            .GroupBy(g => anonymizer.Apply(g.Key), g => g.Count(), StringComparer.Ordinal)
+            .Select(g => (Message: g.Key, Count: g.Sum()))
+            .OrderByDescending(k => k.Count)
+            .ThenBy(k => k.Message, StringComparer.Ordinal)
+            .Take(5);
+        foreach (var (message, count) in kinds)
+            Log.Warning($"{count}× {message}");
     }
 
     private ScanResult RunCore(IScanPlatform platform, ScanRequest request, IProgress<ScanProgress>? progress, CancellationToken ct)

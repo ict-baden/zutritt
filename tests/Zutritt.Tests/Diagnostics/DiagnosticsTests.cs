@@ -1,5 +1,7 @@
 using System.IO.Compression;
 using Zutritt.Core.Diagnostics;
+using Zutritt.Core.Model;
+using Zutritt.Core.Scanning;
 using Zutritt.Tests.TestSupport;
 
 namespace Zutritt.Tests.Diagnostics;
@@ -59,6 +61,29 @@ public sealed class LogTests : IDisposable
         for (int i = 0; i < 200; i++) Log.Info(line);
         var size = new FileInfo(Log.Files().Single()).Length;
         Assert.InRange(size, Log.MaxBytesPerDay, Log.MaxBytesPerDay + 20_000);
+    }
+
+    [Fact]
+    public void Scanende_protokolliert_Fehlerarten_ohne_Konten_und_Pfade()
+    {
+        Log.Start(_temp.Path);
+        var result = new ScanResult();
+        result.Errors.AddRange(
+        [
+            new(@"\\FS01\Labor", @"Mitglieder von „MUSTER\Labor-Alle“ nicht lesbar: Zugriff verweigert"),
+            new(@"\\FS01\Labor", @"Mitglieder von „MUSTER\QC-Team“ nicht lesbar: Zugriff verweigert"),
+            new(@"\\FS01", @"Active Directory „muster.example“ nicht erreichbar"),
+            new(@"\\FS01\Austausch", @"Ungültiger lokaler Pfad der Freigabe: „D:\Daten\Austausch“"),
+        ]);
+
+        Scanner.LogFinished(result);
+
+        var log = File.ReadAllText(Log.Files().Single());
+        foreach (var secret in new[] { "Labor-Alle", "QC-Team", "MUSTER", "muster.example", "Daten", "Austausch" })
+            Assert.DoesNotContain(secret, log, StringComparison.OrdinalIgnoreCase);
+        // Gleiche Fehlerart mit verschiedenen Gruppen wird zusammengezählt
+        Assert.Contains("WARN   2× Mitglieder von „…“ nicht lesbar: Zugriff verweigert", log);
+        Assert.Contains("WARN   1× Active Directory „…“ nicht erreichbar", log);
     }
 
     [Fact]
