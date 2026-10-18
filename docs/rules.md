@@ -265,7 +265,7 @@ These exceptions were developed against `C:\Program Files`, `C:\ProgramData`, `C
 
 **Not reported.** For the built-in *Administrator*, for accounts that are not people, and in Windows-managed folders. An orphaned owner is ZT04.
 
-**Example.** *Besitzer ist das Benutzerkonto „MUSTER\\jonas.weber“.*
+**Example.** *Besitzer ist das Benutzerkonto „MUSTER\\labor.ma01“.*
 
 <details><summary>Text in the app and reports</summary>
 
