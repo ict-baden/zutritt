@@ -1,3 +1,5 @@
+using Zutritt.Core.Model;
+
 namespace Zutritt.Core.Reports;
 
 /// <summary>
@@ -19,8 +21,8 @@ internal sealed class PathOrder : IComparer<string>
         var compare = ReportText.German.CompareInfo;
         while (true)
         {
-            int ia = a.IndexOfAny('\\', '/');
-            int ib = b.IndexOfAny('\\', '/');
+            int ia = a.IndexOfAny(WindowsPath.Separator, '/');
+            int ib = b.IndexOfAny(WindowsPath.Separator, '/');
             var sa = ia < 0 ? a : a[..ia];
             var sb = ib < 0 ? b : b[..ib];
             int c = compare.Compare(sa, sb, System.Globalization.CompareOptions.IgnoreCase);
