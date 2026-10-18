@@ -2,9 +2,16 @@
 
 # Data & privacy
 
-What Zutritt reads, what it keeps where, and why a run is treated as confidential.
+What Zutritt reads, what it keeps where, how to delete it, which connections it makes, and why a run is treated as confidential.
 
-**Contents:** [Read-only](#read-only) · [What is stored](#what-is-stored) · [Where it is stored](#where-it-is-stored) · [Deleting runs](#deleting-runs) · [Exported files](#exported-files) · [Network connections](#network-connections)
+**Contents:** [In short](#in-short) · [Read-only](#read-only) · [What is stored](#what-is-stored) · [Where it is stored](#where-it-is-stored) · [Deleting runs](#deleting-runs) · [Exported files](#exported-files) · [Log](#log) · [Diagnostics package and support](#diagnostics-package-and-support) · [Network connections](#network-connections)
+
+## In short
+
+- **Zutritt sends no data to ICT-Baden** – no telemetry, no crash reports, no usage statistics, no update check. The *Info* page and `Zutritt.exe --info` say so: *Diese Software sendet keine Daten an ICT-Baden.*
+- **Everything stays on the PC that scans:** the run history in a per-user database, a short log, and the reports you save.
+- **The operator is responsible for the data.** A run contains names of people, their group memberships and their access. Whoever runs Zutritt – the customer – is the controller in the sense of the GDPR; ICT-Baden processes none of it through the software.
+- **There are no settings to store.** The options are chosen per scan (in the window or on the command line) and saved with the run; Zutritt keeps no settings file and no settings in the registry (it only reads whether Windows uses the light or dark theme). The MSI writes one registry value for its Start menu entry ([Installation › MSI](installation.md#msi-installer)).
 
 ## Read-only
 
@@ -16,7 +23,7 @@ Zutritt **never changes** permissions, files, shares, accounts or group membersh
 | Shares | name, local path, remark, share permissions | open sessions, open files |
 | Account databases and Active Directory | account name, display name, kind, *disabled* flag, group memberships | passwords, e-mail addresses, other attributes |
 
-The only things Zutritt writes are its own database and the Excel or PDF files you ask for.
+The only things Zutritt writes are its own database, its [log](#log), and the Excel, PDF or diagnostics files you ask for.
 
 ## What is stored
 
@@ -37,7 +44,7 @@ Folders that inherit unchanged are only counted, not stored by name. File names 
 
 ## Where it is stored
 
-**Per user, in the profile:** `%LocalAppData%\Zutritt\zutritt.db` – a single SQLite file. The *Info* page shows the path and opens the folder.
+**Per user, in the profile:** `%LocalAppData%\Zutritt\zutritt.db` – a single SQLite file – and the log in `%LocalAppData%\Zutritt\logs`. The *Info* page shows the path and opens the folder.
 
 This is deliberate. A run is a map of the permissions of a file server – including which folders are open to whom. Stored under `%ProgramData%`, it would be readable by every local user through the default permissions there. In the profile, the folder inherits the permissions of your profile: you, *SYSTEM* and the administrators of the PC.
 
@@ -54,7 +61,7 @@ The demo (`--demo`) uses a separate temporary database that is deleted when the 
 There is no automatic retention: runs accumulate until you delete them.
 
 - **App:** *Übersicht* › *Letzte Läufe* › select a run › <kbd>Del</kbd> or *Lauf löschen*. The run and everything belonging to it is removed, and the database file shrinks accordingly.
-- **Everything:** close Zutritt and delete `%LocalAppData%\Zutritt`.
+- **Everything:** close Zutritt and delete `%LocalAppData%\Zutritt` (database and log).
 
 Uninstalling the MSI does not remove the database.
 
@@ -66,9 +73,32 @@ Excel and PDF files contain the same map in a form that is easy to pass around: 
 - They contain personal data (names of employees and their access); handle them according to your data protection rules.
 - A fixed report path in a scheduled task overwrites last week's file. Keep older ones on purpose, or recreate them from the stored runs.
 
+## Log
+
+For support, Zutritt keeps a short log: one file per day, `%LocalAppData%\Zutritt\logs\zutritt-YYYY-MM-DD.log`, at most 1 MB per day, deleted after **7 days**.
+
+| In the log | Not in the log |
+|---|---|
+| start and end with version, build, Windows version, whether the PC is in a domain (yes/no) | targets, paths of scanned folders |
+| per scan: the options, duration and counts (folders, shares, accounts, findings per severity) | permissions, owners, group members |
+| the most frequent kinds of read errors, error messages and exception types, unexpected errors with stack trace | account names, SIDs, report contents |
+
+Error messages from Windows or .NET can contain a file path, for example of a report that could not be written. The log never leaves the PC unless you send it.
+
+## Diagnostics package and support
+
+*Info* › ***Diagnosepaket erstellen*** saves a ZIP file for a support request: version, build, Windows and .NET version, language and time zone, database schema and number of stored runs, and the logs of the last 7 days. It contains **no runs, no reports and no database**.
+
+The switch ***Ohne Namen und Adressen*** is on by default: names of this PC, its user and domain, server names and UNC paths, local paths, account SIDs, *DOMÄNE\\name* accounts, quoted names, IP and e-mail addresses are replaced (*RECHNER*, *BENUTZER*, *SERVER-1* …). Look into the ZIP before you send it.
+
+- **Free support on GitHub is public.** Attach only the anonymised package – never reports, `zutritt.db` or real server, share and account names ([SUPPORT.md](../SUPPORT.md)).
+- **Confidential analysis** of real runs or reports is part of a support contract with a data processing agreement (*Auftragsverarbeitungsvertrag*), because ICT-Baden then processes personal data on the customer's behalf.
+
 ## Network connections
 
-Zutritt connects only to what it scans and resolves: the file servers (SMB and the Windows network APIs for shares and local accounts), the LSA of these servers and of this PC, and – on domain-joined PCs – the domain controllers of its own domain. There is no telemetry, no update check and no other internet connection. The link on the *Info* page opens GitHub in your browser only when you click it.
+Zutritt connects only to what it scans and resolves: the file servers (SMB and the Windows network APIs for shares and local accounts), the LSA of these servers and of this PC, and – on domain-joined PCs – the domain controllers of its own domain. There is no telemetry, no update check and no other internet connection.
+
+The *Info* page has links to the source code, help and support, this page and the licence on GitHub, to the Impressum and to the ICT-Baden website. They open in your browser **only when you click them**, and only `http`/`https` addresses are opened.
 
 ---
 

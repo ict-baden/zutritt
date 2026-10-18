@@ -21,14 +21,18 @@ Mit einem Supportvertrag von ICT-Baden bekommen Sie:
 - Vorrang bei Fehlerbehebungen und Sicherheitsinformationen vorab
 - Anpassungen und Schulungen nach Absprache
 
-<!-- ⚠ Kontakt: Support-Adresse und Impressum-Link folgen, sobald E-Mail-Adressen und Domain feststehen (OFFEN.md). -->
+Kontakt: [Impressum](https://ict-baden.de/impressum)
+<!-- ⚠ Support-Adresse folgt, sobald die E-Mail-Adressen feststehen; Domain und Webseite für das Impressum sind noch offen (OFFEN.md). -->
 
 ## Was Sie mitschicken / What to include
 
-- **Version:** steht auf der Seite *Info* und in der ersten Zeile von `Zutritt.exe --hilfe`.
+- **Version:** steht auf der Seite *Info* und kommt von `Zutritt.exe --version` (z. B. `Zutritt 0.1.0-ci.12 (Build abc1234)`).
 - **Variante:** MSI, Einzeldatei `Zutritt.exe` oder ZIP.
 - **Umgebung:** Domäne oder Arbeitsgruppe, Windows-Version des Rechners und des Servers, Zutritt als Administrator gestartet oder nicht.
+- **Diagnosepaket:** *Info* › *Diagnosepaket erstellen* speichert Version, Systemangaben und das Protokoll der letzten 7 Tage als ZIP – mit dem Schalter *Ohne Namen und Adressen* (Standard) ohne Rechner-, Konto- und Servernamen, Pfade, SIDs und Adressen. Bitte vor dem Anhängen hineinschauen. Was drin ist: [Daten und Datenschutz](docs/data-and-privacy.md#diagnostics-package-and-support).
 - **Ausgabe der Befehlszeile** (z. B. mit `> zutritt.log 2>&1`, siehe [Befehlszeile](docs/command-line.md#logs-and-encoding)), mit ersetzten Server-, Freigabe-, Pfad- und Kontonamen.
+
+**English:** include the version (`Zutritt.exe --version`), the package (MSI, single exe, ZIP), your environment, and the anonymised diagnostics package from *Info* › *Diagnosepaket erstellen*.
 
 Berichte (Excel, PDF) und die Datenbank `zutritt.db` sind eine Landkarte der Berechtigungen. Bitte **nie öffentlich** in ein Issue stellen – zur vertraulichen Analyse gibt es den Supportvertrag mit Auftragsverarbeitungsvertrag.
 Reports and the database `zutritt.db` map who can access what. Never attach them to a public issue.

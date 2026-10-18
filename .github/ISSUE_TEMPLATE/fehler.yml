@@ -13,8 +13,8 @@ body:
     id: version
     attributes:
       label: Version
-      description: Von der Seite *Info* oder aus der ersten Zeile von `Zutritt.exe --hilfe`. / From the *Info* page or the first line of `Zutritt.exe --hilfe`.
-      placeholder: 0.1.0-ci.12
+      description: Von der Seite *Info* oder aus `Zutritt.exe --version`. / From the *Info* page or `Zutritt.exe --version`.
+      placeholder: Zutritt 0.1.0-ci.12 (Build abc1234)
     validations:
       required: true
   - type: dropdown
@@ -53,5 +53,5 @@ body:
     id: protokoll
     attributes:
       label: Ausgabe der Befehlszeile (anonymisiert) / Command-line output (anonymised)
-      description: Ohne Server-, Pfad- und Kontonamen. / Without server, path and account names.
+      description: Ohne Server-, Pfad- und Kontonamen. Das Diagnosepaket (*Info* › *Diagnosepaket erstellen*, „Ohne Namen und Adressen“) können Sie unten im Kommentar anhängen. / Without server, path and account names. The anonymised diagnostics package from *Info* can be attached in a comment.
       render: text
