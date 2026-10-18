@@ -1,5 +1,7 @@
+using System.Globalization;
 using System.Reflection;
 using Zutritt.Core.Analysis;
+using Zutritt.Core.Diagnostics;
 using Zutritt.Core.Identity;
 using Zutritt.Core.Model;
 using Zutritt.Core.Platform;
@@ -102,6 +104,42 @@ public sealed class Scanner
     }
 
     private ScanResult Run(IScanPlatform platform, ScanRequest request, IProgress<ScanProgress>? progress, CancellationToken ct)
+    {
+        // Ins Protokoll nur Zahlen und Einstellungen – keine Ziele, Pfade, Rechte oder Konten
+        Log.Info($"Scan gestartet: {request.Targets.Count} Ziel(e), Dateien {(request.IncludeFiles ? "ja" : "nein")}, " +
+                 $"Tiefe {(request.MaxDepth?.ToString(CultureInfo.InvariantCulture) ?? "unbegrenzt")}, Gruppen {(request.ResolveGroups ? "ja" : "nein")}, " +
+                 $"administrative Freigaben {(request.SkipAdminShares ? "nein" : "ja")}");
+        try
+        {
+            var done = RunCore(platform, request, progress, ct);
+            LogFinished(done);
+            return done;
+        }
+        catch (OperationCanceledException)
+        {
+            Log.Info("Scan abgebrochen");
+            throw;
+        }
+        catch (Exception e)
+        {
+            Log.Error("Scan fehlgeschlagen", e, withStack: true);
+            throw;
+        }
+    }
+
+    private static void LogFinished(ScanResult r)
+    {
+        int Count(Severity s) => r.Findings.Count(f => f.Severity == s);
+        Log.Info($"Scan beendet nach {(r.FinishedAt - r.StartedAt).TotalSeconds:0.0} s: {r.FoldersVisited} Ordner geprüft, " +
+                 $"{r.Folders.Count} gespeichert, {r.FilesVisited} Dateien, {r.Shares.Count} Freigaben, {r.Principals.Count} Konten, " +
+                 $"{r.Errors.Count} Fehler und Hinweise, Befunde Hoch {Count(Severity.Hoch)} · Mittel {Count(Severity.Mittel)} · " +
+                 $"Niedrig {Count(Severity.Niedrig)} · Info {Count(Severity.Info)}");
+        // Häufigste Fehlerarten (Meldung ohne Pfad), damit der Support weiß, wonach er fragen muss
+        foreach (var group in r.Errors.GroupBy(e => e.Message, StringComparer.Ordinal).OrderByDescending(g => g.Count()).Take(5))
+            Log.Warning($"{group.Count()}× {group.Key}");
+    }
+
+    private ScanResult RunCore(IScanPlatform platform, ScanRequest request, IProgress<ScanProgress>? progress, CancellationToken ct)
     {
         var result = new ScanResult
         {

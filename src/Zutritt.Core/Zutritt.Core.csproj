@@ -9,6 +9,12 @@
     <WarningsAsErrors>$(WarningsAsErrors);CA1416</WarningsAsErrors>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Version)' == ''">
+    <!-- Eine Versionsnummer für alle Teile (steht im Bericht und im Lauf): die Basisversion steht nur in
+         src/Zutritt/Zutritt.csproj, CI-Builds setzen -p:Version für alle Projekte -->
+    <Version>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)../Zutritt/Zutritt.csproj')), '(?&lt;=&lt;Version&gt;)[^&lt;]+'))</Version>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
     <PackageReference Include="ClosedXML" Version="0.105.1" />

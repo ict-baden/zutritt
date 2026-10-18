@@ -10,6 +10,12 @@
     <Description>Windows-Anbindung für Zutritt: NTFS-Rechte, SMB-Freigaben, lokale Konten und Active Directory.</Description>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Version)' == ''">
+    <!-- Eine Versionsnummer für alle Teile (steht im Bericht und im Lauf): die Basisversion steht nur in
+         src/Zutritt/Zutritt.csproj, CI-Builds setzen -p:Version für alle Projekte -->
+    <Version>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)../Zutritt/Zutritt.csproj')), '(?&lt;=&lt;Version&gt;)[^&lt;]+'))</Version>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Zutritt.Core\Zutritt.Core.csproj" />
   </ItemGroup>

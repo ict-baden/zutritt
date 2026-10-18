@@ -32,4 +32,16 @@
     <Resource Include="Assets\zutritt.png" />
   </ItemGroup>
 
+  <!-- Lizenztexte: neben der Exe (ZIP, MSI) und eingebettet für die Info-Seite
+       (die einzelne Exe zum Herunterladen hat keine Dateien daneben) -->
+  <ItemGroup>
+    <None Include="..\..\THIRD-PARTY-NOTICES.txt" Link="THIRD-PARTY-NOTICES.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <EmbeddedResource Include="..\..\THIRD-PARTY-NOTICES.txt" LogicalName="THIRD-PARTY-NOTICES.txt" />
+    <None Include="..\..\LICENSE" Link="LICENSE" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <EmbeddedResource Include="..\..\LICENSE" LogicalName="LICENSE" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Zutritt.Tests" />
+  </ItemGroup>
 </Project>
