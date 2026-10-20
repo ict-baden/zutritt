@@ -182,6 +182,7 @@ From top to bottom:
 | *Zutritt* | Version, build (commit) and .NET version, e.g. *Version 0.1.0 · Build abc1234*; *© 2026 ICT-Baden · MIT-Lizenz*. |
 | *Datenbank* | Where the run history is (`%LocalAppData%\Zutritt\zutritt.db`, in the demo a temporary file); *Ordner öffnen* opens the folder. |
 | *Nur lesend, Daten bleiben hier* | Zutritt changes nothing – and *Diese Software sendet keine Daten an ICT-Baden* (sends no data to ICT-Baden). |
+| *Sprache* | The language of window, command line and reports: *Wie Windows* or one of the five languages; takes effect at the next start ([Languages](#languages)). Not in the screenshot above yet. |
 | *MIT-Lizenz* › *Lizenztext anzeigen* | The licence text of Zutritt in a window. |
 | *Drittanbieter-Lizenzen* › *Anzeigen* | `THIRD-PARTY-NOTICES.txt`: every library Zutritt contains, with version, source, copyright and licence text. Built into the program, so it works for the single `Zutritt.exe` as well. |
 | *Hilfe & Support* | Opens [SUPPORT.md](../SUPPORT.md): free help on GitHub, guaranteed help with a support contract. |
@@ -218,7 +219,20 @@ Terms you meet on every page and in the reports:
 | *Verwaist / Unbekannt* | orphaned / unknown | see [identities](how-it-works.md#identities) |
 | *Abzeichnen* | sign off | |
 
-For well-known accounts – *Jeder*, *VORDEFINIERT\…*, *NT-AUTORITÄT\…* – Zutritt always uses the German names, so reports look the same on German and English installations. Domain groups keep the name they have in Active Directory.
+For well-known accounts – *Jeder*, *VORDEFINIERT\…*, *NT-AUTORITÄT\…* – Zutritt uses the names in the language of the interface (German above), so reports do not depend on the language of the scanning Windows. Domain groups keep the name they have in Active Directory.
+
+## Languages
+
+The window, the command-line output and the reports are available in **English, German, Spanish, French and Chinese (simplified)**. Spanish, French and Chinese are machine translations that have not been reviewed by native speakers yet.
+
+| How | Where | Wins over |
+|---|---|---|
+| Environment variable `ZUTRITT_LANGUAGE` = `en`, `de`, `es`, `fr` or `zh-Hans` | scripts, scheduled tasks | everything |
+| *Info* › *Sprache* (*Language*) | per user, saved in `%LocalAppData%\Zutritt\settings.json` | preset, Windows |
+| Preset for all users: `%ProgramData%\Zutritt\settings.json` with `{ "language": "de" }` | distribution via GPO or Intune | Windows |
+| Display language of Windows | – | – (English if Windows uses another language) |
+
+A change takes effect at the next start. Numbers and dates always follow the regional format of Windows. Texts stored with a run – finding messages and read errors – stay in the language the run was made in. Error messages end with a code such as *ZUT-0203* in every language ([Error codes](error-codes.md)).
 
 ---
 

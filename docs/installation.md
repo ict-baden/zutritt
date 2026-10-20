@@ -17,7 +17,7 @@ Which file to download, how to check it, how to roll it out, and which rights th
 | **.NET** | None for the MSI and for `Zutritt.exe` – both carry the .NET 10 runtime. The ZIP variant needs the **.NET 10 Desktop Runtime**. |
 | **Network** | The scanning PC must reach the file servers over SMB. Shares, share permissions, local accounts and account names are queried with the standard Windows network APIs (`NetShareEnum`, `NetShareGetInfo`, `NetLocalGroupGetMembers`, LSA lookups). |
 | **Active Directory** | Optional. Domain accounts are resolved and domain groups expanded only when the scanning PC is a **member of the domain** and a domain controller is reachable. |
-| **Language** | The user interface, the command-line output and the reports are German, regardless of the Windows display language. |
+| **Language** | English, German, Spanish, French or Chinese (simplified) for the window, the command-line output and the reports – following the Windows display language, otherwise English. Switch on the *Info* page, preset for all users in `%ProgramData%\Zutritt\settings.json` (`{ "language": "de" }`) or force with the environment variable `ZUTRITT_LANGUAGE` ([Using the app › Languages](usage.md#languages)). |
 
 **Why Windows only.** What Zutritt reads – NTFS permissions, SMB share permissions, the local account databases of servers (SAM, LSA) and Active Directory – exists only on Windows and is only reachable through Windows APIs. The program is therefore a Windows (WPF) application. Its analysis core – rules, effective access, comparison, storage and reports – is platform-neutral and tested on Linux as well ([Development › Architecture](development.md#architecture)).
 

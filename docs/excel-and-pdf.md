@@ -2,7 +2,7 @@
 
 # Reports: Excel & PDF
 
-Two formats from the same data: an **Excel workbook** to filter and work with, and a **PDF** to file and sign. Both are German – the title is *Berechtigungsbericht* (permissions report).
+Two formats from the same data: an **Excel workbook** to filter and work with, and a **PDF** to file and sign. Both are in the language of the interface (German here – the title is *Berechtigungsbericht*, permissions report); numbers and dates follow the regional format of Windows.
 
 **Contents:** [Creating one](#creating-one) · [What both contain](#what-both-contain) · [Excel workbook](#excel-workbook) · [PDF](#pdf) · [Sign-off](#sign-off) · [Size limits and truncation](#size-limits-and-truncation) · [Writing the file](#writing-the-file)
 
@@ -21,7 +21,7 @@ Each file always describes **one stored run**. The findings are taken from the r
 - **The run:** targets, period, PC, who scanned (*Gescannt von*), the Zutritt version of the scan and of the export.
 - **The scope** (*Umfang*), in one line – e.g. *nur Ordner (Dateien nicht einzeln) · alle Ebenen · Gruppen bis zur Person aufgelöst · administrative Freigaben übersprungen*. An auditor sees what was and was not checked.
 - **Notes** (*Hinweise*), warnings first (*Achtung*): unreadable folders, read errors, shares whose permissions were not readable, a depth limit, a run without group resolution, groups whose members could not be read, and any truncation of this file. Then reading aids: which folders are listed, what *effektiv* means, and that over the network the stricter of share and NTFS permission applies.
-- **Names** for every SID, taken from the run – for deleted accounts from the older run of a comparison, for well-known SIDs the fixed German name, otherwise the SID itself. A cell is never empty where an account is meant.
+- **Names** for every SID, taken from the run – for deleted accounts from the older run of a comparison, for well-known SIDs the fixed name in the language of the interface, otherwise the SID itself. A cell is never empty where an account is meant.
 
 ## Excel workbook
 

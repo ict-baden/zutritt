@@ -8,7 +8,7 @@
   <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white">
   <img alt="Data stays local" src="https://img.shields.io/badge/Data-stays%20local-2E7D32">
   <img alt="Read-only" src="https://img.shields.io/badge/Access-read--only-2E7D32">
-  <img alt="User interface in German" src="https://img.shields.io/badge/UI-German-6B7280">
+  <img alt="User interface in English, German, Spanish, French and Chinese" src="https://img.shields.io/badge/UI-en%20%C2%B7%20de%20%C2%B7%20es%20%C2%B7%20fr%20%C2%B7%20zh-6B7280">
   <img alt="Licence: MIT" src="https://img.shields.io/badge/Licence-MIT-blue">
   <img alt="Status: pre-release" src="https://img.shields.io/badge/Status-pre--release-E3A008">
   <a href="https://github.com/ict-baden/zutritt/actions/workflows/build.yml"><img alt="Build" src="https://github.com/ict-baden/zutritt/actions/workflows/build.yml/badge.svg"></a>
@@ -36,9 +36,9 @@
 </p>
 
 > [!NOTE]
-> **Deutsch:** Zutritt zeigt, wer auf Dateifreigaben worauf zugreifen darf – und über welche Gruppe. Es liest Freigabe- und NTFS-Rechte, löst Gruppen bis zur einzelnen Person auf, meldet riskante Berechtigungen und schreibt einen Excel- oder PDF-Bericht zum Abzeichnen. Nur lesend, ohne Server und ohne Agent. Download: [Zutritt.exe](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt.exe) oder [Zutritt-x64.msi](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt-x64.msi). Oberfläche, Befehlszeile und Berichte sind deutsch, diese Dokumentation ist englisch.
+> **Deutsch:** Zutritt zeigt, wer auf Dateifreigaben worauf zugreifen darf – und über welche Gruppe. Es liest Freigabe- und NTFS-Rechte, löst Gruppen bis zur einzelnen Person auf, meldet riskante Berechtigungen und schreibt einen Excel- oder PDF-Bericht zum Abzeichnen. Nur lesend, ohne Server und ohne Agent. Download: [Zutritt.exe](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt.exe) oder [Zutritt-x64.msi](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt-x64.msi). Oberfläche, Befehlszeile und Berichte gibt es auf Deutsch, Englisch, Spanisch, Französisch und Chinesisch (folgt Windows, umstellbar auf der Seite *Info*), diese Dokumentation ist englisch.
 >
-> **The application, its command-line output and the reports are in German.** This documentation is in English and quotes the German labels where you need to find them, for example *Befunde* (findings) or *Wer darf hier rein* (who can get in here).
+> **The application, its command-line output and the reports come in English, German, Spanish, French and Chinese (simplified)** – following the Windows display language, switchable on the *Info* page ([Languages](docs/usage.md#languages)). Spanish, French and Chinese are machine translations that have not been reviewed by native speakers yet. The screenshots in this documentation show the German interface and quote its labels, for example *Befunde* (findings) or *Wer darf hier rein* (who can get in here).
 
 ## What Zutritt does
 
@@ -170,7 +170,7 @@ ACL findings are reported where an entry is set explicitly – not again on ever
 | [ZT05](docs/rules.md#zt05--full-control-for-non-admins) | ![High](https://img.shields.io/badge/High-C62828) | Full control for an account or group that is not an administrator | *Vollzugriff für Nicht-Admins* |
 | [ZT06](docs/rules.md#zt06--deeply-hidden-exception) | ![Low](https://img.shields.io/badge/Low-FBC02D) | Inheritance broken deep in the tree | *Tief versteckte Ausnahme* |
 | [ZT07](docs/rules.md#zt07--deny-entry) | ![Info](https://img.shields.io/badge/Info-BDBDBD) | Explicit deny entry | *Verweigern-Eintrag* |
-| [ZT08](docs/rules.md#zt08--share-everyone-full-control) | ![Info](https://img.shields.io/badge/Info-BDBDBD) | Share permission gives *Everyone* or *Authenticated Users* at least *Change* | *Freigabe: Jeder Vollzugriff* |
+| [ZT08](docs/rules.md#zt08--share-everyone-can-change) | ![Info](https://img.shields.io/badge/Info-BDBDBD) | Share permission gives *Everyone* or *Authenticated Users* at least *Change* | *Freigabe: alle dürfen ändern* |
 | [ZT09](docs/rules.md#zt09--folder-not-readable) | ![Info](https://img.shields.io/badge/Info-BDBDBD) | Folder, file or target could not be read | *Ordner nicht lesbar* |
 | [ZT10](docs/rules.md#zt10--owner-is-a-user-account) | ![Low](https://img.shields.io/badge/Low-FBC02D) | Owner is a personal user account | *Besitzer ist ein Benutzerkonto* |
 | [ZT11](docs/rules.md#zt11--empty-group-has-rights) | ![Low](https://img.shields.io/badge/Low-FBC02D) | A group without members has rights | *Leere Gruppe berechtigt* |
@@ -193,7 +193,7 @@ Folders whose permissions Windows itself manages (owner *TrustedInstaller*, entr
 | Change permissions, request and approval workflows | ✔︎ (icacls) | ✔︎ usually | ✘ deliberately read-only |
 | Continuous monitoring, file-access auditing | ✘ | ◐ depends on the product | ✘ runs on demand or as a scheduled task |
 | Server, database or agents to operate | ✘ | usually yes | ✘ one exe, a per-user SQLite file |
-| Language | – | – | German UI and reports |
+| Language | – | – | English, German, Spanish, French, Chinese |
 
 <sub>✔︎ yes &nbsp;·&nbsp; ◐ partly or with effort &nbsp;·&nbsp; ✘ no. The commercial column describes the category in general, not a tested feature list of a specific product.</sub>
 

@@ -89,7 +89,7 @@ No statement is made for roots, folders with broken inheritance and folders belo
 
 ACLs contain SIDs. Zutritt resolves each SID once per run, in this order:
 
-1. **Well-known SIDs** – *Jeder*, *SYSTEM*, *ERSTELLER-BESITZER*, the *VORDEFINIERT* (BUILTIN) groups and others – get fixed German names, the way a German Windows shows them. Reports therefore look the same on German and English installations.
+1. **Well-known SIDs** – *Jeder*, *SYSTEM*, *ERSTELLER-BESITZER*, the *VORDEFINIERT* (BUILTIN) groups and others – get fixed names in the language of the interface, the way a Windows in that language shows them. Reports therefore do not depend on the language of the scanning Windows.
 2. **Account databases**: the local accounts and groups (SAM) of every machine the run touched – the scanned servers, and this PC when the run covers it (local folders, `.`, `\\localhost`) – and then **Active Directory** of the domain this PC is a member of.
 3. **LSA lookups** on the scanned servers and finally on this PC – they also find accounts of trusted domains and migrated accounts (SID history).
 
