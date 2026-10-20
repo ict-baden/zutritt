@@ -371,7 +371,9 @@ public class IdentityResolverTests
 
         Assert.Equal(42, scan.Principals.Count);
         Assert.Equal(40, dir.Lookups.Count);
-        Assert.True(sw.ElapsedMilliseconds < 3000, $"Auflösen dauerte {sw.ElapsedMilliseconds} ms");
+        // Lokal unter 100 ms; auf dem ausgelasteten CI-Runner (Tests laufen parallel) einmal 4,3 s. Die Grenze fängt nur
+        // ein quadratisches Verhalten (50.000 × 50.000 dauerte Minuten) – dass jede SID einmal gefragt wird, prüft Lookups.
+        Assert.True(sw.ElapsedMilliseconds < 15_000, $"Auflösen dauerte {sw.ElapsedMilliseconds} ms");
     }
 
     [Fact]
