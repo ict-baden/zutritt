@@ -65,6 +65,38 @@ public class ActiveDirectoryDirectoryTests
         Assert.Equal(DomainSid, ad.DomainSid);
     }
 
+    [Fact]
+    public void Dispose_wartet_nicht_auf_eine_haengende_Abfrage()
+    {
+        // Befund der Prüfung: Das Zeitlimit gibt eine hängende LDAP-Abfrage auf, die aber weiter die Sperre hält –
+        // Dispose am Ende des Scans hing dann an ihr, GUI und geplante Aufgabe wurden nie fertig.
+        var ad = new ActiveDirectoryDirectory(new ComputerDomainInfo("ZTTEST", Unreachable(), DomainSid));
+        var gate = typeof(ActiveDirectoryDirectory).GetField("_gate", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+            .GetValue(ad)!;
+        using var held = new ManualResetEventSlim();
+        using var release = new ManualResetEventSlim();
+        var hanging = new Thread(() =>
+        {
+            lock (gate)
+            {
+                held.Set();
+                release.Wait(TimeSpan.FromSeconds(30));
+            }
+        }) { IsBackground = true };
+        hanging.Start();
+        Assert.True(held.Wait(TimeSpan.FromSeconds(10)));
+
+        var sw = Stopwatch.StartNew();
+        ad.Dispose();
+        sw.Stop();
+        release.Set();
+        hanging.Join();
+
+        Assert.True(sw.ElapsedMilliseconds < 1_000, $"Dispose wartete {sw.ElapsedMilliseconds} ms auf die Abfrage");
+        // Danach antwortet das Verzeichnis nicht mehr, ohne Ausnahme
+        Assert.Equal(LookupState.NichtErreichbar, ad.Find(DomainSid + "-1001").State);
+    }
+
     [Theory]
     [InlineData("S-1-5-32-544")]
     [InlineData("S-1-1-0")]

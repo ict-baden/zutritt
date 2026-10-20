@@ -49,6 +49,7 @@ Alle wichtigen Änderungen an Zutritt. Format nach [Keep a Changelog](https://ke
 - Die Seite *Info* fragt die Datenbank nicht mehr im UI-Thread ab, sondern über die Warteschlange des Speichers.
 - Ließ sich die Datenbank beim Start nicht öffnen, meldete die Übersicht nach einem Scan „Scan abgeschlossen“ ohne Hinweis, dass der Lauf nicht gespeichert ist; jetzt kommt dieselbe Warnung wie bei gescheitertem Speichern.
 - Ein Vergleich zwischen einem Lauf mit und einem ohne aufgelöste Gruppen (`--ohne-gruppen`) listete ZT11 (leere Gruppe) unter „Behobene Befunde“.
+- Antwortet ein Domänencontroller nicht, gibt das Zeitlimit die Abfrage auf – am Ende des Scans wartete das Schließen der AD-Verbindung aber trotzdem auf sie, und Oberfläche oder geplante Aufgabe wurden nicht fertig.
 
 ### Entfernt
 - Die Pakete enthalten die Windows-SDK-Projektion (`Microsoft.Windows.SDK.NET.dll`, `WinRT.Runtime.dll`, rund 25 MB, Lizenz des Windows SDK) und die PDFsharp-Zusatzbibliotheken `PdfSharp.WPFonts.dll` (Segoe-WP-Schriften), `PdfSharp.Snippets.dll` und `PdfSharp.Quality.dll` nicht mehr. Zutritt hat keine davon benutzt; Ziel ist jetzt `net10.0-windows` ohne Windows-SDK-Version, Mindestversion bleibt Windows 10 1809 / Server 2019.

@@ -34,7 +34,8 @@ public sealed class ActiveDirectoryDirectory : IAuthoritativeDirectory, IDisposa
     private string? _lastError;
     private DateTime _retryAtUtc;
     private int _consecutiveFailures;
-    private bool _disposed;
+    // volatile: Dispose setzt es auch ohne _gate (siehe dort)
+    private volatile bool _disposed;
     private readonly Dictionary<string, (Zutritt.Core.Model.Principal Principal, DateTime AtUtc)> _recent = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Domäne dieses Rechners; in einer Arbeitsgruppe ohne Funktion (<see cref="IsConfigured"/> = false).</summary>
@@ -87,27 +88,39 @@ public sealed class ActiveDirectoryDirectory : IAuthoritativeDirectory, IDisposa
         if (!IsConfigured || !WellKnownSids.IsAccountSid(sid)) return LookupOutcome.NotResponsible;
         lock (_gate)
         {
-            var context = GetContext(out var error);
-            // Ohne DC lässt sich weder ein Konto dieser Domäne noch eines einer vertrauten Domäne prüfen.
-            if (context is null) return LookupOutcome.Unreachable(Problem(error));
-            if (!MayBelongHere(sid)) return LookupOutcome.NotResponsible;
-            // Einmal verwenden und vergessen: danach merkt sich der Resolver das Konto selbst.
-            if (_recent.Remove(sid, out var recent) && DateTime.UtcNow - recent.AtUtc < RecentLifetime)
-                return LookupOutcome.Found(recent.Principal);
             try
             {
-                using var found = Ad.Principal.FindByIdentity(context, Ad.IdentityType.Sid, sid);
-                var mapped = found is null ? null : Map(found, sid);
-                _consecutiveFailures = 0;
-                if (found is null) return _domainSid is null ? LookupOutcome.NotResponsible : LookupOutcome.Missing;
-                return mapped is null ? LookupOutcome.NotResponsible : LookupOutcome.Found(mapped);
+                return FindLocked(sid);
             }
-            catch (Exception ex) when (IsDirectoryError(ex))
+            finally
             {
-                return LookupOutcome.Unreachable(Failed(ex)
-                    ? Problem(ex.Message)
-                    : Texts.Format(Strings.Ad_AccountUnreadable, sid, DomainName, ex.Message));
+                CloseIfDisposed();
             }
+        }
+    }
+
+    private LookupOutcome FindLocked(string sid)
+    {
+        var context = GetContext(out var error);
+        // Ohne DC lässt sich weder ein Konto dieser Domäne noch eines einer vertrauten Domäne prüfen.
+        if (context is null) return LookupOutcome.Unreachable(Problem(error));
+        if (!MayBelongHere(sid)) return LookupOutcome.NotResponsible;
+        // Einmal verwenden und vergessen: danach merkt sich der Resolver das Konto selbst.
+        if (_recent.Remove(sid, out var recent) && DateTime.UtcNow - recent.AtUtc < RecentLifetime)
+            return LookupOutcome.Found(recent.Principal);
+        try
+        {
+            using var found = Ad.Principal.FindByIdentity(context, Ad.IdentityType.Sid, sid);
+            var mapped = found is null ? null : Map(found, sid);
+            _consecutiveFailures = 0;
+            if (found is null) return _domainSid is null ? LookupOutcome.NotResponsible : LookupOutcome.Missing;
+            return mapped is null ? LookupOutcome.NotResponsible : LookupOutcome.Found(mapped);
+        }
+        catch (Exception ex) when (IsDirectoryError(ex))
+        {
+            return LookupOutcome.Unreachable(Failed(ex)
+                ? Problem(ex.Message)
+                : Texts.Format(Strings.Ad_AccountUnreadable, sid, DomainName, ex.Message));
         }
     }
 
@@ -117,51 +130,80 @@ public sealed class ActiveDirectoryDirectory : IAuthoritativeDirectory, IDisposa
         if (!IsConfigured || !WellKnownSids.IsAccountSid(groupSid)) return MembersOutcome.NotResponsible;
         lock (_gate)
         {
-            var context = GetContext(out var error);
-            if (context is null) return MembersOutcome.Unreachable(Problem(error));
-            if (!MayBelongHere(groupSid)) return MembersOutcome.NotResponsible;
-            string label = groupSid;
             try
             {
-                using var group = Ad.GroupPrincipal.FindByIdentity(context, Ad.IdentityType.Sid, groupSid);
-                if (group is null) return _domainSid is null ? MembersOutcome.NotResponsible : MembersOutcome.Missing;
-                label = group.SamAccountName ?? group.Name ?? groupSid;
-
-                // Nur direkte Mitglieder: die Verschachtelung löst der Resolver selbst auf (mit Zyklenschutz).
-                // AccountManagement liefert dabei auch Mitglieder über die primäre Gruppe (z. B. Domänen-Benutzer).
-                var members = new List<string>();
-                ForgetExpired();
-                using var result = group.GetMembers(false);
-                foreach (var member in result)
-                {
-                    using (member)
-                    {
-                        if (member.Sid is null) continue;
-                        members.Add(member.Sid.Value);
-                        Remember(member);
-                    }
-                }
-                _consecutiveFailures = 0;
-                return MembersOutcome.Found(members);
+                return FindMembersLocked(groupSid);
             }
-            catch (Exception ex) when (IsDirectoryError(ex))
+            finally
             {
-                Failed(ex);
-                // Teilweise gelesene Mitgliederlisten wären für ein Audit irreführend – lieber „unbekannt“.
-                return MembersOutcome.Unreachable(Texts.Format(Strings.Ad_MembersUnreadable, label, DomainName, ex.Message));
+                CloseIfDisposed();
             }
         }
     }
 
+    private MembersOutcome FindMembersLocked(string groupSid)
+    {
+        var context = GetContext(out var error);
+        if (context is null) return MembersOutcome.Unreachable(Problem(error));
+        if (!MayBelongHere(groupSid)) return MembersOutcome.NotResponsible;
+        string label = groupSid;
+        try
+        {
+            using var group = Ad.GroupPrincipal.FindByIdentity(context, Ad.IdentityType.Sid, groupSid);
+            if (group is null) return _domainSid is null ? MembersOutcome.NotResponsible : MembersOutcome.Missing;
+            label = group.SamAccountName ?? group.Name ?? groupSid;
+
+            // Nur direkte Mitglieder: die Verschachtelung löst der Resolver selbst auf (mit Zyklenschutz).
+            // AccountManagement liefert dabei auch Mitglieder über die primäre Gruppe (z. B. Domänen-Benutzer).
+            var members = new List<string>();
+            ForgetExpired();
+            using var result = group.GetMembers(false);
+            foreach (var member in result)
+            {
+                using (member)
+                {
+                    if (member.Sid is null) continue;
+                    members.Add(member.Sid.Value);
+                    Remember(member);
+                }
+            }
+            _consecutiveFailures = 0;
+            return MembersOutcome.Found(members);
+        }
+        catch (Exception ex) when (IsDirectoryError(ex))
+        {
+            Failed(ex);
+            // Teilweise gelesene Mitgliederlisten wären für ein Audit irreführend – lieber „unbekannt“.
+            return MembersOutcome.Unreachable(Texts.Format(Strings.Ad_MembersUnreadable, label, DomainName, ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Blockiert nie: Hängt noch eine LDAP-Abfrage, auf die das Zeitlimit (<see cref="TimeBudget"/>) schon nicht mehr
+    /// wartet, hält sie <c>_gate</c> – mit <c>lock</c> hinge dann das Ende des Scans (und die geplante Aufgabe) an einem
+    /// DC, der nie antwortet. Dann schließt die Abfrage die Verbindung selbst, sobald sie zurückkommt.
+    /// </summary>
     public void Dispose()
     {
-        lock (_gate)
+        _disposed = true;
+        if (!Monitor.TryEnter(_gate)) return;
+        try
         {
-            _disposed = true;
-            _context?.Dispose();
-            _context = null;
-            _recent.Clear();
+            CloseIfDisposed();
         }
+        finally
+        {
+            Monitor.Exit(_gate);
+        }
+    }
+
+    /// <summary>Nur mit <c>_gate</c>: Verbindung und Zwischenspeicher freigeben, wenn <see cref="Dispose"/> schon lief.</summary>
+    private void CloseIfDisposed()
+    {
+        if (!_disposed) return;
+        _context?.Dispose();
+        _context = null;
+        _recent.Clear();
     }
 
     private void Remember(Ad.Principal member)
