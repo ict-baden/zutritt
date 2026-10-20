@@ -81,8 +81,8 @@ public static class DiagnosticsPackage
 
 /// <summary>
 /// Ersetzt in Texten, was auf Personen, Rechner oder das Netz des Kunden schließen lässt: Rechner-, Benutzer- und
-/// Domänenname dieses Rechners, UNC-Server und -Pfade, lokale Pfade, Konto-SIDs, „DOMÄNE\name“, Text in „…“,
-/// IP- und E-Mail-Adressen. Gleiche Server werden gleich nummeriert, damit das Protokoll lesbar bleibt.
+/// Domänenname dieses Rechners, UNC-Server und -Pfade, lokale Pfade, Konto-SIDs, „DOMÄNE\name“, Text in
+/// Anführungszeichen jeder Sprache der Oberfläche („…“, “…”, «…», "…"), IP- und E-Mail-Adressen. Gleiche Server werden gleich nummeriert, damit das Protokoll lesbar bleibt.
 /// </summary>
 public sealed partial class Anonymizer
 {
@@ -124,17 +124,19 @@ public sealed partial class Anonymizer
         return replacement;
     }
 
-    [GeneratedRegex(@"„[^“\r\n]*“")]
+    // Meldungen eines Scans kommen in der Sprache der Oberfläche und setzen Namen in deren Anführungszeichen
+    // (Text_Quote): deutsch „…“, englisch und chinesisch “…”, spanisch und französisch «…» bzw. « … ». Dazu "…".
+    [GeneratedRegex(@"„[^“\r\n]*“|“[^”\r\n]*”|«[^»\r\n]*»|""[^""\r\n]*""")]
     private static partial Regex Quoted();
 
     [GeneratedRegex(@"[\w.+-]+@[\w-]+(\.[\w-]+)+")]
     private static partial Regex Email();
 
     // \\server[\rest…] und \\?\UNC\server\…
-    [GeneratedRegex(@"\\\\(\?\\UNC\\)?(?<server>[^\\\s„“""'|<>:*?]+)(?<rest>\\[^\s„“""'|<>]*)?")]
+    [GeneratedRegex(@"\\\\(\?\\UNC\\)?(?<server>[^\\\s„“”«»""'|<>:*?]+)(?<rest>\\[^\s„“”«»""'|<>]*)?")]
     private static partial Regex Unc();
 
-    [GeneratedRegex(@"(?<![\w\\])(?<drive>[A-Za-z]):\\[^\s„“""'|<>]*")]
+    [GeneratedRegex(@"(?<![\w\\])(?<drive>[A-Za-z]):\\[^\s„“”«»""'|<>]*")]
     private static partial Regex DrivePath();
 
     [GeneratedRegex(@"S-1-5-21(-\d+){3,4}", RegexOptions.IgnoreCase)]
