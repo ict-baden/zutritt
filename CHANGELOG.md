@@ -28,9 +28,14 @@ Alle wichtigen Änderungen an Zutritt. Format nach [Keep a Changelog](https://ke
 - Neues App-Icon (Tür im Verlauf #22C3A6 → #3B6CF6), Banner und Screenshots der Doku neu erzeugt.
 - Auswertung, Vergleich, Speicher und Berichte (`Zutritt.Core`) sind plattformneutral und werden in der CI auch unter Linux getestet; alles Windows-Eigene liegt in `Zutritt.Platform.Windows`. Zutritt selbst bleibt an Windows gebunden (NTFS, Freigaben, SAM, Active Directory).
 - `--screenshots` bricht ab, statt in einer getrennten Windows-Sitzung leere Bilder zu schreiben.
+- Oberfläche, Befehlszeile und Berichte in fünf Sprachen: Englisch, Deutsch, Spanisch, Französisch und Chinesisch (vereinfacht). Spanisch, Französisch und Chinesisch sind maschinell vorübersetzt und noch nicht von Muttersprachlern gegengelesen. Die Sprache folgt Windows (sonst Englisch), lässt sich auf der Seite *Info* umstellen (`%LocalAppData%\Zutritt\settings.json`, gilt ab dem nächsten Start), für alle Benutzer vorgeben (`%ProgramData%\Zutritt\settings.json`) und mit der Umgebungsvariable `ZUTRITT_LANGUAGE` erzwingen. Zahlen und Daten folgen dem Gebietsschema von Windows. Auch die eingebaute Demo spricht die eingestellte Sprache. Protokoll und Diagnosepaket bleiben deutsch und ersetzen Namen in den Meldungen jeder Sprache.
+- Fehlermeldungen tragen einen Code `ZUT-xxxx` in jeder Sprache (Liste in `docs/error-codes.md`).
+- Befehle und Optionen der Befehlszeile gibt es auch englisch, gleichwertig zu den deutschen: `list`, `report`, `--help`, `--licenses`, `--files`, `--depth`, `--deep-from`, `--no-groups`, `--include-admin-shares`, `--report`, `--compare`.
 
 ### Geändert
 - Die CI prüft die MSI wieder mit den ICE-Regeln, installiert sie bei jedem Build auf dem Runner, startet `--info` und einen kleinen Scan, deinstalliert sie und sucht nach Resten.
+- ZT08 heißt „Freigabe: alle dürfen ändern“ statt „Jeder Vollzugriff“ – die Regel meldet *Jeder* oder *Authentifizierte Benutzer* schon ab „Ändern“ auf der Freigabe.
+- `scan` endet mit Exitcode 3, wenn nichts geprüft werden konnte (Server aus, einzige Freigabe nicht lesbar), damit eine geplante Aufgabe nicht sauber aussieht. Die Zusammenfassung *Achtung: N von M Zielen bzw. Freigaben konnten nicht geprüft werden* zählt jetzt auch Server, deren Freigabeliste nicht lesbar ist; ein Ordner mit unlesbaren Rechten zählt als geprüft, wenn darunter etwas lesbar war.
 
 ### Behoben
 - Ein fertiger Scan geht nicht mehr verloren, wenn das Speichern in der Datenbank scheitert. Die Befehlszeile prüft Datenbank und Berichtsordner jetzt vor dem Scan und bricht ab, bevor gescannt wird; scheitert das Speichern trotzdem, schreibt sie die Berichte und endet mit Exitcode 3. Die Oberfläche lädt den Lauf in diesem Fall trotzdem und weist darauf hin, dass er nicht gespeichert ist.
@@ -39,6 +44,11 @@ Alle wichtigen Änderungen an Zutritt. Format nach [Keep a Changelog](https://ke
 - Die Kachel der Vergleichsseite heißt „ACL- und Ordneränderungen“, weil sie auch Ordner mit neuen oder entfallenen eigenen Rechten zählt (Befehlszeile und Berichte zählen die ACL-Änderungen allein).
 - Impressum-Link in App, `--info`, README und SUPPORT.md führte ins Leere (404); er zeigt jetzt auf die erreichbare Seite `https://ict-baden.de/index.html?page=imprint`. Kontakt für den Supportvertrag sind bis zu einem eigenen Postfach die Kontaktangaben dort.
 - Ein MSI-Update oder eine Deinstallation beendet eine laufende Zutritt-Befehlszeile mit Exitcode 3 (Fehler oder Abbruch) statt 1 – für eine geplante Aufgabe hieß 1 „Befunde Mittel“.
+- Die Fortschrittszeile der Befehlszeile brach den Scan in Konsolen mit etwa 57 bis 75 Spalten Breite ab.
+- Chinesische Schriftzeichen in Ordner- und Kontonamen erscheinen im PDF nicht mehr als leere Kästchen, sofern Windows eine Schrift mit ihnen hat (z. B. DengXian, SimHei); bei chinesischer Oberfläche ist der ganze Bericht in dieser Schrift gesetzt.
+- Die Seite *Info* fragt die Datenbank nicht mehr im UI-Thread ab, sondern über die Warteschlange des Speichers.
+- Ließ sich die Datenbank beim Start nicht öffnen, meldete die Übersicht nach einem Scan „Scan abgeschlossen“ ohne Hinweis, dass der Lauf nicht gespeichert ist; jetzt kommt dieselbe Warnung wie bei gescheitertem Speichern.
+- Ein Vergleich zwischen einem Lauf mit und einem ohne aufgelöste Gruppen (`--ohne-gruppen`) listete ZT11 (leere Gruppe) unter „Behobene Befunde“.
 
 ### Entfernt
 - Die Pakete enthalten die Windows-SDK-Projektion (`Microsoft.Windows.SDK.NET.dll`, `WinRT.Runtime.dll`, rund 25 MB, Lizenz des Windows SDK) und die PDFsharp-Zusatzbibliotheken `PdfSharp.WPFonts.dll` (Segoe-WP-Schriften), `PdfSharp.Snippets.dll` und `PdfSharp.Quality.dll` nicht mehr. Zutritt hat keine davon benutzt; Ziel ist jetzt `net10.0-windows` ohne Windows-SDK-Version, Mindestversion bleibt Windows 10 1809 / Server 2019.
