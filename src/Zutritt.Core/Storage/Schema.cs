@@ -1,7 +1,7 @@
 using System.Globalization;
 using Microsoft.Data.Sqlite;
-
 using Zutritt.Core.Resources;
+
 namespace Zutritt.Core.Storage;
 
 /// <summary>Wo die Datenbank liegt – davon hängt das Journal ab.</summary>

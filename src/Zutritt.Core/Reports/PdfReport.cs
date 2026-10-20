@@ -4,6 +4,7 @@ using MigraDoc.DocumentObjectModel;
 using MigraDoc.DocumentObjectModel.Tables;
 using MigraDoc.Rendering;
 using Zutritt.Core.Model;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.Core.Reports;
 
@@ -32,15 +33,15 @@ public static class PdfReport
     internal static void Write(ReportData data, string path, PdfLimits? limits = null, IProgress<string>? progress = null)
     {
         ReportFile.FullPath(path);
-        progress?.Report("Dokument wird aufgebaut …");
+        progress?.Report(Strings.Pdf_ProgressBuilding);
         var document = CreateDocument(data, limits);
         lock (RenderGate)
         {
             // Erst vollständig rendern, dann schreiben: scheitert das Rendern, bleibt die Zieldatei unberührt
-            progress?.Report("Seiten werden gesetzt …");
+            progress?.Report(Strings.Pdf_ProgressLayout);
             var renderer = new PdfDocumentRenderer { Document = document };
             renderer.RenderDocument();
-            progress?.Report("PDF wird gespeichert …");
+            progress?.Report(Strings.Pdf_ProgressSaving);
             var pdf = renderer.PdfDocument;
             pdf.Info.Title = ReportText.Title;
             pdf.Info.Author = ReportText.Product;
@@ -63,7 +64,7 @@ public static class PdfReport
     {
         ArgumentNullException.ThrowIfNull(data);
         var family = PdfFonts.Family;
-        using var text = new PdfText(family);
+        using var text = new PdfText(family, PdfFonts.CjkFamily);
         return new Layout(data, limits ?? PdfLimits.Default, text, family).Build();
     }
 
@@ -119,11 +120,11 @@ public static class PdfReport
             SetupPage();
 
             // Inhaltsverzeichnis: Abschnitte, die es in diesem Bericht gibt (Seitenzahlen setzt MigraDoc beim Rendern)
-            var sections = new List<string> { "Zusammenfassung", "Befunde", "Prüfregeln und Empfehlungen", "Freigaben",
-                "Ordner mit eigenen Rechten", "Personen-Übersicht" };
-            if (data.Comparison is not null) sections.Add("Änderungen seit dem letzten Lauf");
-            if (data.Errors.Count > 0) sections.Add("Nicht geprüfte Bereiche");
-            sections.Add("Prüfung und Freigabe");
+            var sections = new List<string> { Strings.Pdf_SectionSummary, Strings.Pdf_SectionFindings, Strings.Pdf_SectionRules, Strings.Pdf_SectionShares,
+                Strings.Pdf_SectionFolders, Strings.Pdf_SectionPeople };
+            if (data.Comparison is not null) sections.Add(Strings.Pdf_SectionChanges);
+            if (data.Errors.Count > 0) sections.Add(Strings.Pdf_SectionErrors);
+            sections.Add(Strings.Pdf_SectionSignOff);
             foreach (var title in sections) _contents.Add((title, $"abschnitt{_contents.Count + 1}"));
 
             Cover();
@@ -220,12 +221,9 @@ public static class PdfReport
             p.Format.Borders.Top.Width = 0.5;
             p.Format.Borders.Top.Color = LineColor;
             p.Format.Borders.DistanceFromTop = 3;
-            p.AddText($"Erstellt am {ReportText.DateTime(data.Header.CreatedAt)} · Vertraulich");
+            p.AddText(Texts.Format(Strings.Pdf_FooterCreated, ReportText.DateTime(data.Header.CreatedAt)));
             p.AddTab();
-            p.AddText("Seite ");
-            p.AddPageField();
-            p.AddText(" von ");
-            p.AddNumPagesField();
+            AddWithFields(p, Strings.Pdf_PageOf, f => { if (f == 0) p.AddPageField(); else p.AddNumPagesField(); });
         }
 
         private void Cover()
@@ -242,7 +240,7 @@ public static class PdfReport
             title.Format.Font.Bold = true;
             title.Format.SpaceAfter = 2;
 
-            var subtitle = _section.AddParagraph("Freigaben und Ordnerrechte – wer darf worauf zugreifen und über welche Gruppe");
+            var subtitle = _section.AddParagraph(Strings.Pdf_Subtitle);
             subtitle.Format.Font.Size = 12;
             subtitle.Format.Font.Color = MutedColor;
             subtitle.Format.SpaceAfter = 14;
@@ -257,25 +255,24 @@ public static class PdfReport
             info.BottomPadding = 3;
             var targets = string.Join("\n", h.Targets.Take(CoverTargets));
             if (h.Targets.Count > CoverTargets)
-                targets += $"\n… und {ReportText.Number(h.Targets.Count - CoverTargets)} weitere (gekürzt – vollständig im Excel-Bericht)";
-            CoverRow(info, h.Targets.Count == 1 ? "Ziel" : $"Ziele ({ReportText.Number(h.Targets.Count)})", targets);
-            CoverRow(info, "Zeitraum", ReportText.Period(h.StartedAt, h.FinishedAt));
-            CoverRow(info, "Rechner", h.Machine);
-            CoverRow(info, "Gescannt von", h.ScannedBy);
-            CoverRow(info, "Zutritt-Version", h.ToolVersion);
-            CoverRow(info, "Umfang", ReportText.Scope(h.Request));
-            CoverRow(info, "Bericht erstellt", $"{ReportText.DateTime(h.CreatedAt)} mit Zutritt {h.ReportVersion}".TrimEnd());
+                targets += Texts.Format(Strings.Pdf_MoreTargets, ReportText.Number(h.Targets.Count - CoverTargets));
+            CoverRow(info, h.Targets.Count == 1 ? Strings.Pdf_Target : Texts.Format(Strings.Pdf_Targets, ReportText.Number(h.Targets.Count)), targets);
+            CoverRow(info, Strings.Pdf_Period, ReportText.Period(h.StartedAt, h.FinishedAt));
+            CoverRow(info, Strings.Pdf_Machine, h.Machine);
+            CoverRow(info, Strings.Pdf_ScannedBy, h.ScannedBy);
+            CoverRow(info, Strings.Pdf_ToolVersion, h.ToolVersion);
+            CoverRow(info, Strings.Pdf_Scope, ReportText.Scope(h.Request));
+            CoverRow(info, Strings.Pdf_ReportCreated, Texts.Format(Strings.Pdf_ReportCreatedWith, ReportText.DateTime(h.CreatedAt), h.ReportVersion).TrimEnd());
             // Ergebnis auf einen Blick – wer nur das Deckblatt sieht, weiß, ob es etwas zu tun gibt
-            CoverRow(info, "Befunde", data.Findings.Count == 0 ? "keine"
+            CoverRow(info, Strings.Col_Findings, data.Findings.Count == 0 ? Strings.Pdf_None
                 : string.Join(" · ", new[] { Severity.Hoch, Severity.Mittel, Severity.Niedrig, Severity.Info }
                     .Select(s => $"{ReportText.Number(data.CountFindings(s))} {ReportText.Severity(s)}")));
             if (data.Comparison is { } comparison)
-                CoverRow(info, "Verglichen mit", $"Lauf vom {ReportText.DateTime(comparison.OlderStartedAt)}");
+                CoverRow(info, Strings.Pdf_ComparedWith, Texts.Format(Strings.Pdf_RunOf, ReportText.DateTime(comparison.OlderStartedAt)));
 
             Contents();
 
-            var note = _section.AddParagraph("Vertraulich – enthält Angaben zu Konten und Zugriffsrechten. "
-                + "Nur für den internen Gebrauch und für Prüfer bestimmt.");
+            var note = _section.AddParagraph(Strings.Pdf_Confidential);
             note.Style = SmallStyle;
             note.Format.SpaceBefore = Unit.FromCentimeter(1.2);
         }
@@ -283,7 +280,7 @@ public static class PdfReport
         /// <summary>Inhaltsverzeichnis mit Seitenzahlen – beim Prüfen auf Papier findet man so jeden Abschnitt.</summary>
         private void Contents()
         {
-            var heading = _section.AddParagraph("Inhalt");
+            var heading = _section.AddParagraph(Strings.Pdf_Contents);
             heading.Format.SpaceBefore = Unit.FromCentimeter(0.9);
             heading.Format.SpaceAfter = 3;
             heading.Format.Font.Bold = true;
@@ -325,58 +322,56 @@ public static class PdfReport
         private void Summary()
         {
             var h = data.Header;
-            Heading1("Zusammenfassung");
-            var files = h.Request.IncludeFiles ? $" und {ReportText.Number(h.FilesVisited)} Dateien" : "";
-            Paragraph($"Geprüft wurden {ReportText.Number(h.FoldersVisited)} Ordner{files} unter "
-                + $"{(h.Targets.Count == 1 ? "einem Ziel" : $"{ReportText.Number(h.Targets.Count)} Zielen")}. "
-                + $"{ReportText.Number(h.FoldersStored)} davon haben eigene Rechte oder sind Wurzeln und sind in diesem Bericht aufgeführt.")
+            Heading1(Strings.Pdf_SectionSummary);
+            var targets = h.Targets.Count == 1 ? Strings.Pdf_OneTarget : Texts.Format(Strings.Pdf_ManyTargets, ReportText.Number(h.Targets.Count));
+            Paragraph(Texts.Format(h.Request.IncludeFiles ? Strings.Pdf_SummaryCheckedFiles : Strings.Pdf_SummaryChecked,
+                    ReportText.Number(h.FoldersVisited), targets, ReportText.Number(h.FoldersStored), ReportText.Number(h.FilesVisited)))
                 .Format.KeepWithNext = true;
 
             var numbers = NewTable(framed: false, 9.0, 4.0);
             numbers.Borders.Visible = false;
             numbers.Borders.Bottom.Visible = true;
-            KeyValue(numbers, "Ordner geprüft", ReportText.Number(h.FoldersVisited));
-            if (h.Request.IncludeFiles || h.FilesVisited > 0) KeyValue(numbers, "Dateien geprüft", ReportText.Number(h.FilesVisited));
-            KeyValue(numbers, "Ordner mit eigenen Rechten", ReportText.Number(h.FoldersStored));
-            if (h.FilesStored > 0) KeyValue(numbers, "Dateien mit eigenen Rechten", ReportText.Number(h.FilesStored));
-            KeyValue(numbers, "Freigaben", ReportText.Number(data.Shares.Count));
-            KeyValue(numbers, "Konten und Gruppen", ReportText.Number(h.Principals));
-            KeyValue(numbers, "Personen (davon mit Zugriff)", $"{ReportText.Number(data.People.Count)} ({ReportText.Number(data.PeopleWithAccess)})");
-            KeyValue(numbers, "Nicht lesbare Ordner", ReportText.Number(data.UnreadableFolders), warn: data.UnreadableFolders > 0);
-            KeyValue(numbers, "Fehler beim Lesen", ReportText.Number(data.Errors.Count), warn: data.Errors.Count > 0);
+            KeyValue(numbers, Strings.Pdf_FoldersChecked, ReportText.Number(h.FoldersVisited));
+            if (h.Request.IncludeFiles || h.FilesVisited > 0) KeyValue(numbers, Strings.Pdf_FilesChecked, ReportText.Number(h.FilesVisited));
+            KeyValue(numbers, Strings.Pdf_SectionFolders, ReportText.Number(h.FoldersStored));
+            if (h.FilesStored > 0) KeyValue(numbers, Strings.Pdf_FilesWithOwn, ReportText.Number(h.FilesStored));
+            KeyValue(numbers, Strings.Pdf_SectionShares, ReportText.Number(data.Shares.Count));
+            KeyValue(numbers, Strings.Pdf_AccountsGroups, ReportText.Number(h.Principals));
+            KeyValue(numbers, Strings.Pdf_PeopleWithAccess, $"{ReportText.Number(data.People.Count)} ({ReportText.Number(data.PeopleWithAccess)})");
+            KeyValue(numbers, Strings.Pdf_UnreadableFolders, ReportText.Number(data.UnreadableFolders), warn: data.UnreadableFolders > 0);
+            KeyValue(numbers, Strings.Pdf_ReadErrors, ReportText.Number(data.Errors.Count), warn: data.Errors.Count > 0);
             KeepStart(numbers, whole: true);
 
-            Heading2("Befunde je Schwere");
+            Heading2(Strings.Pdf_FindingsBySeverity);
             SeverityChips();
 
             // Warnungen zuerst (auch die zur Kürzung dieses PDFs), dann die Lesehilfen
-            Heading2("Hinweise");
+            Heading2(Strings.Pdf_Notes);
             foreach (var note in data.Notes.Where(n => n.Kind == NoteKind.Warnung)) Note(note.Kind, note.Text);
             if (Truncations() is { Count: > 0 } cut)
-                Note(NoteKind.Warnung, "Dieses PDF zeigt bei langen Listen nur einen Teil – vollständig ist der Excel-Bericht: "
-                    + string.Join(", ", cut) + ".");
+                Note(NoteKind.Warnung, Texts.Format(Strings.Pdf_TruncatedLists, string.Join(Strings.Text_ListSeparator, cut)));
             foreach (var note in data.Notes.Where(n => n.Kind != NoteKind.Warnung)) Note(note.Kind, note.Text);
 
             if (data.Comparison is { } c)
             {
-                Heading2("Vergleich mit dem letzten Lauf");
+                Heading2(Strings.Pdf_ComparisonHeading);
                 if (c.ScopeNote.Length > 0) Note(NoteKind.Warnung, c.ScopeNote);
                 if (!c.HasChanges)
                 {
-                    Paragraph($"Keine Änderungen seit dem Lauf vom {ReportText.DateTime(c.OlderStartedAt)}.");
+                    Paragraph(Texts.Format(Strings.Pdf_NoChangesSince, ReportText.DateTime(c.OlderStartedAt)));
                     return;
                 }
                 var table = NewTable(framed: false, 9.0, 4.0);
                 table.Borders.Visible = false;
-                KeyValue(table, "Vorheriger Lauf", ReportText.DateTime(c.OlderStartedAt));
-                KeyValue(table, "Neue Befunde", ReportText.Number(c.NewFindings), warn: c.NewFindings > 0);
-                KeyValue(table, "Behobene Befunde", ReportText.Number(c.ResolvedFindings));
-                KeyValue(table, "Geänderte Berechtigungseinträge", ReportText.Number(c.AceChanges));
-                KeyValue(table, "Geänderte Gruppenmitgliedschaften", ReportText.Number(c.MembershipChanges));
-                KeyValue(table, "Ordner neu mit eigenen Rechten / ohne eigene Rechte mehr",
+                KeyValue(table, Strings.Pdf_PreviousRun, ReportText.DateTime(c.OlderStartedAt));
+                KeyValue(table, Strings.Cmp_NewFindings, ReportText.Number(c.NewFindings), warn: c.NewFindings > 0);
+                KeyValue(table, Strings.Cmp_ResolvedFindings, ReportText.Number(c.ResolvedFindings));
+                KeyValue(table, Strings.Cmp_ChangedAces, ReportText.Number(c.AceChanges));
+                KeyValue(table, Strings.Cmp_ChangedMemberships, ReportText.Number(c.MembershipChanges));
+                KeyValue(table, Strings.Pdf_FoldersAddedRemoved,
                     $"{ReportText.Number(c.FoldersAdded)} / {ReportText.Number(c.FoldersRemoved)}");
-                KeyValue(table, "Personen-Zugriffe erweitert", ReportText.Number(c.MoreAccess), warn: c.MoreAccess > 0);
-                KeyValue(table, "Personen-Zugriffe eingeschränkt", ReportText.Number(c.LessAccess));
+                KeyValue(table, Strings.Cmp_MoreAccess, ReportText.Number(c.MoreAccess), warn: c.MoreAccess > 0);
+                KeyValue(table, Strings.Cmp_LessAccess, ReportText.Number(c.LessAccess));
                 KeepStart(table, whole: true);
             }
         }
@@ -387,24 +382,24 @@ public static class PdfReport
             var cut = new List<string>();
             void Check(string what, int total, int limit)
             {
-                if (total > limit) cut.Add($"{what} ({ReportText.Number(limit)} von {ReportText.Number(total)})");
+                if (total > limit) cut.Add(Texts.Format(Strings.Pdf_CutPart, what, ReportText.Number(limit), ReportText.Number(total)));
             }
-            Check("Befunde", data.Findings.Count, limits.Findings);
+            Check(Strings.Col_Findings, data.Findings.Count, limits.Findings);
             int longShares = data.Shares.Count(s => s.Readable && s.Permissions.Count > limits.ShareEntries);
             if (longShares > 0)
-                cut.Add($"Freigabe-Berechtigungen (höchstens {ReportText.Number(limits.ShareEntries)} Einträge je Freigabe, "
-                    + $"betrifft {(longShares == 1 ? "1 Freigabe" : $"{ReportText.Number(longShares)} Freigaben")})");
-            Check("Ordner mit eigenen Rechten", data.Folders.Count, limits.Folders);
-            Check("Personen", data.PeopleWithAccess, limits.People);
+                cut.Add(Texts.Format(Texts.Plural(longShares, Strings.Pdf_CutSharesOne, Strings.Pdf_CutSharesMany),
+                    ReportText.Number(limits.ShareEntries), ReportText.Number(longShares)));
+            Check(Strings.Pdf_SectionFolders, data.Folders.Count, limits.Folders);
+            Check(Strings.Col_People, data.PeopleWithAccess, limits.People);
             if (data.Comparison is { } c)
             {
                 // Die Grenze gilt je Bereich (Zugriffe: je Ordner zusammengefasst) – gezählt wird, was zu sehen ist
                 int shown = c.Rows.GroupBy(r => r.Area).Sum(g => g.Key == ChangeArea.Access
                     ? AccessGroups(g.ToList()).Take(limits.Changes).Sum(x => x.Count)
                     : Math.Min(g.Count(), limits.Changes));
-                if (shown < c.Rows.Count) cut.Add($"Änderungen ({ReportText.Number(shown)} von {ReportText.Number(c.Rows.Count)})");
+                if (shown < c.Rows.Count) cut.Add(Texts.Format(Strings.Pdf_CutChanges, ReportText.Number(shown), ReportText.Number(c.Rows.Count)));
             }
-            Check("nicht geprüfte Bereiche", data.Errors.Count, limits.Errors);
+            Check(Strings.Pdf_ErrorsLower, data.Errors.Count, limits.Errors);
             return cut;
         }
 
@@ -437,14 +432,14 @@ public static class PdfReport
 
         private void Findings()
         {
-            Heading1("Befunde");
+            Heading1(Strings.Pdf_SectionFindings);
             if (data.Findings.Count == 0)
             {
-                Paragraph("Keine Befunde – keine der Prüfregeln hat angeschlagen.");
+                Paragraph(Strings.Pdf_NoFindings);
             }
             else
             {
-                Intro("Nach Schwere und Regel gruppiert. Erklärung und Empfehlung je Regel stehen unter „Prüfregeln und Empfehlungen“.");
+                Intro(Texts.Format(Strings.Pdf_FindingsIntro, Texts.Quote(Strings.Pdf_SectionRules)));
                 // Je Regel eine Tabelle, deren Kopf (Schwere, Regel, Titel) sich auf jeder Seite wiederholt –
                 // so steht der Regeltitel einmal statt in jeder Zeile, und jede Seite bleibt für sich lesbar
                 var totals = data.Findings.GroupBy(f => (f.Severity, f.RuleId)).ToDictionary(g => g.Key, g => g.Count());
@@ -457,13 +452,13 @@ public static class PdfReport
                     if (start > 0) Spacer(6);
                     FindingGroup(shown.GetRange(start, end - start), totals[key]);
                 }
-                Truncated(data.Findings.Count, limits.Findings, "Befunden");
+                Truncated(data.Findings.Count, limits.Findings, Strings.Pdf_TruncatedFindings);
             }
 
-            Heading2("Prüfregeln und Empfehlungen");
-            Intro("Alle Regeln, nach denen dieser Lauf geprüft wurde – auch die ohne Befund.");
+            Heading2(Strings.Pdf_SectionRules);
+            Intro(Strings.Pdf_RulesIntro);
             var rules = NewTable(1.2, 1.6, 1.7, 6.8, 5.7);
-            HeaderRow(rules, "Regel", "Schwere", "Befunde", "Titel und Erklärung", "Empfehlung");
+            HeaderRow(rules, Strings.Col_Rule, Strings.Col_Severity, Strings.Col_Findings, Strings.Col_TitleExplanation, Strings.Col_Recommendation);
             foreach (var r in data.Rules)
             {
                 var row = rules.AddRow();
@@ -505,11 +500,11 @@ public static class PdfReport
             p.Format.TabStops.AddTabStop(Unit.FromCentimeter(ContentWidthCm) - 2 * PaddingPt - 1, TabAlignment.Right);
             p.AddText($"{ReportText.Severity(first.Severity)} · {ReportText.Clean(first.RuleId)} {ReportText.Clean(first.Title)}");
             p.AddTab();
-            var count = total == 1 ? "1 Befund" : $"{ReportText.Number(total)} Befunde";
-            p.AddText(rows.Count < total ? $"{count}, davon {ReportText.Number(rows.Count)} gezeigt" : count);
+            var count = Texts.Format(Texts.Plural(total, Strings.Pdf_FindingCountOne, Strings.Pdf_FindingCountMany), ReportText.Number(total));
+            p.AddText(rows.Count < total ? Texts.Format(Strings.Pdf_ShownOf, count, ReportText.Number(rows.Count)) : count);
 
-            if (accounts) HeaderRow(table, light: true, "Pfad", "Konto", "Meldung");
-            else HeaderRow(table, light: true, "Pfad", "Meldung");
+            if (accounts) HeaderRow(table, light: true, Strings.Col_Path, Strings.Col_Account, Strings.Col_Message);
+            else HeaderRow(table, light: true, Strings.Col_Path, Strings.Col_Message);
             foreach (var f in rows)
             {
                 var row = table.AddRow();
@@ -522,15 +517,15 @@ public static class PdfReport
 
         private void Shares()
         {
-            Heading1("Freigaben");
+            Heading1(Strings.Pdf_SectionShares);
             if (data.Shares.Count == 0)
             {
-                Paragraph("Keine Freigaben im Lauf – es wurden nur lokale Pfade gescannt.");
+                Paragraph(Strings.Pdf_NoShares);
                 return;
             }
-            Intro("Über das Netz gilt jeweils die strengere von Freigabe- und NTFS-Berechtigung.");
+            Intro(Strings.Pdf_SharesIntro);
             var table = NewTable(4.0, 3.6, 3.6, 5.8);
-            HeaderRow(table, "Freigabe", "Pfad", "Bemerkung", "Freigabe-Rechte");
+            HeaderRow(table, Strings.Col_Share, Strings.Col_Path, Strings.Col_Remark, Strings.Col_SharePermissions);
             foreach (var s in data.Shares)
             {
                 var row = table.AddRow();
@@ -538,7 +533,7 @@ public static class PdfReport
                 if (s.IsAdminShare)
                 {
                     name.AddLineBreak();
-                    name.AddFormattedText("administrative Freigabe", TextFormat.Italic);
+                    name.AddFormattedText(Strings.Pdf_AdminShare, TextFormat.Italic);
                 }
                 CellText(table, row, 1, s.LocalPath.Length == 0 ? ReportText.Dash : s.LocalPath);
                 CellText(table, row, 2, s.Remark);
@@ -552,21 +547,19 @@ public static class PdfReport
                     CellText(table, row, 3, $"{ace.Account}: {ace.Right}",
                         color: ace.IsDeny ? WarningColor : null);
                 if (s.Permissions.Count > limits.ShareEntries)
-                    CellText(table, row, 3, $"… und {ReportText.Number(s.Permissions.Count - limits.ShareEntries)} weitere Einträge "
-                        + "(vollständig im Excel-Bericht)", bold: true, color: WarningColor);
+                    CellText(table, row, 3, Texts.Format(Strings.Pdf_MoreEntries, ReportText.Number(s.Permissions.Count - limits.ShareEntries)), bold: true, color: WarningColor);
             }
             KeepStart(table);
         }
 
         private void Folders()
         {
-            Heading1("Ordner mit eigenen Rechten");
-            Intro("Aufgeführt sind die Wurzeln der Ziele und alle Ordner mit eigenen Rechten (explizite Einträge, unterbrochene "
-                + "oder abweichende Vererbung). Alle übrigen Ordner erben ihre Rechte vom nächsthöheren aufgeführten Ordner.",
+            Heading1(Strings.Pdf_SectionFolders);
+            Intro(Strings.Report_NoteListed,
                 keepWithNext: data.Folders.Count > 0);
             if (data.Folders.Count == 0)
             {
-                Paragraph("Keine Ordner im Lauf.");
+                Paragraph(Strings.Pdf_NoFolders);
                 return;
             }
 
@@ -579,12 +572,12 @@ public static class PdfReport
                 path.Format.KeepWithNext = true;
                 text.Append(path, f.Path, ContentWidth, NormalSize, bold: true);
 
-                var meta = new List<string> { $"Tiefe {f.Depth.ToString(CultureInfo.InvariantCulture)}" };
-                if (f.IsFile) meta.Add("Datei");
-                if (f.InheritanceBroken) meta.Add("Vererbung unterbrochen");
-                else if (f.InheritanceDiffers) meta.Add("Vererbung weicht ab (vermutlich verschoben)");
-                meta.Add("Besitzer: " + (f.Owner.Length == 0 ? "unbekannt" : f.Owner));
-                if (f.ShareUnc is { Length: > 0 } share) meta.Add("Freigabe: " + share);
+                var meta = new List<string> { Texts.Format(Strings.Pdf_Depth, f.Depth.ToString(CultureInfo.InvariantCulture)) };
+                if (f.IsFile) meta.Add(Strings.Pdf_File);
+                if (f.InheritanceBroken) meta.Add(Strings.Pdf_InheritanceBroken);
+                else if (f.InheritanceDiffers) meta.Add(Strings.Pdf_InheritanceDiffers);
+                meta.Add(Texts.Format(Strings.Pdf_Owner, f.Owner.Length == 0 ? Strings.Pdf_Unknown : f.Owner));
+                if (f.ShareUnc is { Length: > 0 } share) meta.Add(Texts.Format(Strings.Pdf_ShareLabel, share));
                 var info = _section.AddParagraph();
                 info.Style = SmallStyle;
                 info.Format.KeepWithNext = true;
@@ -595,20 +588,20 @@ public static class PdfReport
                     var error = _section.AddParagraph();
                     error.Format.Font.Color = WarningColor;
                     error.Format.KeepWithNext = f.Aces.Count > 0;
-                    text.Append(error, "Nicht lesbar: " + f.Error, ContentWidth, NormalSize);
+                    text.Append(error, Texts.Format(Strings.Pdf_NotReadable, f.Error), ContentWidth, NormalSize);
                     // Gelesene Einträge trotzdem zeigen (z. B. Rechte gelesen, aber Inhalt nicht auflistbar) – wie im Excel-Bericht
                     if (f.Aces.Count == 0) continue;
                 }
 
                 var explicitAces = f.Aces.Where(a => !a.IsInherited).ToList();
                 var inherited = f.Aces.Where(a => a.IsInherited).ToList();
-                var inheritedText = "Geerbt: " + string.Join(", ", inherited.Select(a =>
-                    $"{a.Account} ({(a.IsDeny ? "verweigert: " : "")}{a.Right})"));
+                var inheritedText = Texts.Format(Strings.Pdf_Inherited, string.Join(Strings.Text_ListSeparator, inherited.Select(a =>
+                    a.IsDeny ? Texts.Format(Strings.Pdf_InheritedDenyAce, a.Account, a.Right) : $"{a.Account} ({a.Right})")));
                 if (explicitAces.Count > 0)
                 {
                     // „Recht“ breit genug für Verweigerungen wie „Löschen, Unterordner und Dateien löschen“ (ohne Trennung im Wort)
                     var table = NewTable(4.8, 1.9, 2.25, 2.05, 6.0);
-                    HeaderRow(table, light: true, "Konto", "Art", "Recht", "Typ", "Gilt für");
+                    HeaderRow(table, light: true, Strings.Col_Account, Strings.Col_AccountKind, Strings.Col_Right, Strings.Col_AllowDeny, Strings.Col_AppliesTo);
                     foreach (var a in explicitAces)
                     {
                         var row = table.AddRow();
@@ -644,23 +637,22 @@ public static class PdfReport
                     text.Append(p, inheritedText, ContentWidth, SmallSize);
                 }
                 if (f.Aces.Count == 0)
-                    Paragraph("Keine Einträge – niemand hat Zugriff (nur der Besitzer kann Berechtigungen ändern).", small: true);
+                    Paragraph(Strings.Pdf_NoEntries, small: true);
             }
-            Truncated(data.Folders.Count, limits.Folders, "Ordnern");
+            Truncated(data.Folders.Count, limits.Folders, Strings.Pdf_TruncatedFolders);
         }
 
         private void People()
         {
-            Heading1("Personen-Übersicht");
+            Heading1(Strings.Pdf_SectionPeople);
             var withAccess = data.People.Where(p => p.FolderCount > 0).ToList();
-            Intro($"{ReportText.Number(withAccess.Count)} von {ReportText.Number(data.People.Count)} Benutzerkonten haben "
-                + "mindestens Auflisten-Recht auf einen aufgeführten Ordner (effektiv, über alle Gruppen und nach Abzug von Verweigerungen). "
-                + "„Ordner“ zählt die aufgeführten Ordner mit Zugriff; die einzelnen Zugriffe stehen im Excel-Bericht (Blatt „Zugriffe je Person“).",
+            Intro(Texts.Format(Strings.Pdf_PeopleIntro, ReportText.Number(withAccess.Count), ReportText.Number(data.People.Count),
+                    Texts.Quote(Strings.Col_Folders), Texts.Quote(Strings.Sheet_AccessPerPerson)),
                 keepWithNext: withAccess.Count > 0);
             if (withAccess.Count == 0) return;
 
             var table = NewTable(4.4, 1.5, 2.0, 6.5, 2.6);
-            HeaderRow(table, "Person", "Ordner", "Höchstes Recht", "Über Gruppen", "Hinweis");
+            HeaderRow(table, Strings.Col_Person, Strings.Col_Folders, Strings.Col_HighestRight, Strings.Col_ViaGroups, Strings.Col_Note);
             foreach (var person in withAccess.Take(limits.People))
             {
                 var row = table.AddRow();
@@ -673,30 +665,28 @@ public static class PdfReport
                 CellText(table, row, 1, ReportText.Number(person.FolderCount)).Format.Alignment = ParagraphAlignment.Right;
                 CellText(table, row, 2, Rights.Label(person.Highest));
                 CellText(table, row, 3, person.ViaGroups.Count > 0 ? string.Join(", ", person.ViaGroups)
-                    : person.HasDirect ? "nur direkt" : ReportText.Dash);
-                if (person.IsDisabled) CellText(table, row, 4, "deaktiviert", bold: true, color: WarningColor);
-                if (person.HasDirect) CellText(table, row, 4, "direkt berechtigt");
+                    : person.HasDirect ? Strings.Pdf_OnlyDirect : ReportText.Dash);
+                if (person.IsDisabled) CellText(table, row, 4, Strings.Pdf_Disabled, bold: true, color: WarningColor);
+                if (person.HasDirect) CellText(table, row, 4, Strings.Pdf_DirectlyGranted);
             }
             KeepStart(table);
-            Truncated(withAccess.Count, limits.People, "Personen");
+            Truncated(withAccess.Count, limits.People, Strings.Pdf_TruncatedPeople);
             int without = data.People.Count - withAccess.Count;
             if (without > 0)
-                Paragraph($"{ReportText.Number(without)} weitere Benutzerkonten ohne Zugriff auf die aufgeführten Ordner "
-                    + "stehen im Excel-Bericht (Blatt „Personen“).", small: true);
+                Paragraph(Texts.Format(Strings.Pdf_PeopleWithout, ReportText.Number(without), Texts.Quote(Strings.Sheet_People)), small: true);
         }
 
         private void Changes(ComparisonData comparison)
         {
-            Heading1("Änderungen seit dem letzten Lauf");
+            Heading1(Strings.Pdf_SectionChanges);
             if (comparison.ScopeNote.Length > 0) Note(NoteKind.Warnung, comparison.ScopeNote);
             if (!comparison.HasChanges)
             {
-                Intro($"Vergleich mit dem Lauf vom {ReportText.DateTime(comparison.OlderStartedAt)}.");
-                Paragraph("Keine Änderungen seit dem letzten Lauf.");
+                Intro(Texts.Format(Strings.Pdf_ComparedWithRun, ReportText.DateTime(comparison.OlderStartedAt)));
+                Paragraph(Strings.Pdf_NoChanges);
                 return;
             }
-            Intro($"Vergleich mit dem Lauf vom {ReportText.DateTime(comparison.OlderStartedAt)}. Zuerst die Befunde, dann die "
-                + "Ursachen (Berechtigungseinträge, Gruppenmitgliedschaften, Ordner), zuletzt die Folgen für einzelne Personen.");
+            Intro(Texts.Format(Strings.Pdf_ChangesIntro, ReportText.DateTime(comparison.OlderStartedAt)));
 
             // Je Bereich eine eigene Tabelle mit passenden Spalten; unbekannte Bereiche (neuere Version) hinten an
             var areas = ChangeArea.Order.Concat(comparison.Rows.Select(r => r.Area).Distinct().Except(ChangeArea.Order));
@@ -707,7 +697,7 @@ public static class PdfReport
                 switch (area)
                 {
                     case ChangeArea.Finding:
-                        ChangeTable("Befunde", null, rows, [1.8, 5.4, 3.4, 6.4], ["Änderung", "Pfad", "Konto", "Befund"], (t, row, r) =>
+                        ChangeTable(Strings.Col_Findings, null, rows, [1.8, 5.4, 3.4, 6.4], [Strings.Col_Change, Strings.Col_Path, Strings.Col_Account, Strings.Col_Finding], (t, row, r) =>
                         {
                             bool added = r.Change == ChangeText.New;
                             CellText(t, row, 0, r.Change, bold: added, color: added ? WarningColor : null);
@@ -717,8 +707,8 @@ public static class PdfReport
                         });
                         break;
                     case ChangeArea.Ace:
-                        ChangeTable("Berechtigungseinträge", "Einträge in den Ordner-ACLs, die hinzugekommen, entfallen oder geändert sind.",
-                            rows, [2.3, 4.1, 2.8, 3.9, 3.9], ["Änderung", "Pfad", "Konto", "Vorher", "Nachher"], (t, row, r) =>
+                        ChangeTable(Strings.Pdf_PermissionEntries, Strings.Pdf_PermissionEntriesIntro,
+                            rows, [2.3, 4.1, 2.8, 3.9, 3.9], [Strings.Col_Change, Strings.Col_Path, Strings.Col_Account, Strings.Col_Before, Strings.Col_After], (t, row, r) =>
                             {
                                 CellText(t, row, 0, r.Change, bold: r.Change == ReportText.Change(ChangeKind.Hinzugefuegt));
                                 CellText(t, row, 1, r.Subject);
@@ -728,7 +718,7 @@ public static class PdfReport
                             });
                         break;
                     case ChangeArea.Membership:
-                        ChangeTable("Gruppenmitgliedschaften", null, rows, [3.0, 7.0, 7.0], ["Änderung", "Gruppe", "Mitglied"], (t, row, r) =>
+                        ChangeTable(Strings.Pdf_GroupMemberships, null, rows, [3.0, 7.0, 7.0], [Strings.Col_Change, Strings.Col_Group, Strings.Col_Member], (t, row, r) =>
                         {
                             CellText(t, row, 0, r.Change, bold: r.Change == ChangeText.Joined);
                             CellText(t, row, 1, r.Subject);
@@ -736,7 +726,7 @@ public static class PdfReport
                         });
                         break;
                     case ChangeArea.Folder:
-                        ChangeTable("Ordner mit neuen oder entfallenen eigenen Rechten", null, rows, [4.5, 12.5], ["Änderung", "Pfad"], (t, row, r) =>
+                        ChangeTable(Strings.Pdf_FolderChanges, null, rows, [4.5, 12.5], [Strings.Col_Change, Strings.Col_Path], (t, row, r) =>
                         {
                             CellText(t, row, 0, r.Change);
                             CellText(t, row, 1, r.Subject);
@@ -746,7 +736,7 @@ public static class PdfReport
                         AccessChanges(rows);
                         break;
                     default:
-                        ChangeTable(area, null, rows, [2.4, 5.0, 3.4, 3.1, 3.1], ["Änderung", "Pfad bzw. Gruppe", "Konto", "Vorher", "Nachher"], (t, row, r) =>
+                        ChangeTable(area, null, rows, [2.4, 5.0, 3.4, 3.1, 3.1], [Strings.Col_Change, Strings.Col_PathOrGroup, Strings.Col_Account, Strings.Col_Before, Strings.Col_After], (t, row, r) =>
                         {
                             CellText(t, row, 0, r.Change);
                             CellText(t, row, 1, r.Subject);
@@ -769,7 +759,7 @@ public static class PdfReport
             HeaderRow(table, headers);
             foreach (var r in rows.Take(limits.Changes)) fill(table, table.AddRow(), r);
             KeepStart(table);
-            Truncated(rows.Count, limits.Changes, "Änderungen");
+            Truncated(rows.Count, limits.Changes, Strings.Pdf_TruncatedChanges);
         }
 
         /// <summary>
@@ -780,12 +770,10 @@ public static class PdfReport
         private void AccessChanges(List<ChangeRow> rows)
         {
             var groups = AccessGroups(rows);
-            Heading2($"Zugriffe von Personen ({ReportText.Number(rows.Count)})");
-            Intro("Folge der Änderungen oben: wer jetzt effektiv mehr oder weniger darf (über alle Gruppen, nach Abzug von "
-                + "Verweigerungen) – „Mehr Zugriff“ zuerst, je Ordner zusammengefasst. Jede einzelne Person mit Vorher und "
-                + "Nachher steht im Excel-Bericht (Blatt „Änderungen“).");
+            Heading2(Texts.Format(Strings.Pdf_PeopleAccess, ReportText.Number(rows.Count)));
+            Intro(Texts.Format(Strings.Pdf_AccessChangesIntro, Texts.Quote(ChangeText.MoreAccess), Texts.Quote(Strings.Sheet_Changes)));
             var table = NewTable(2.6, 5.3, 5.9, 3.2);
-            HeaderRow(table, "Änderung", "Pfad", "Personen", "Vorher → Nachher");
+            HeaderRow(table, Strings.Col_Change, Strings.Col_Path, Strings.Col_People, Strings.Col_BeforeAfter);
             foreach (var g in groups.Take(limits.Changes))
             {
                 var row = table.AddRow();
@@ -794,15 +782,15 @@ public static class PdfReport
                 var names = g.Select(r => OrDash(r.Account)).ToList();
                 const int maxNames = 15;
                 var people = names.Count == 1 ? names[0]
-                    : $"{ReportText.Number(names.Count)} Personen: {string.Join(", ", names.Take(maxNames))}"
-                      + (names.Count > maxNames ? $" … und {ReportText.Number(names.Count - maxNames)} weitere" : "");
+                    : Texts.Format(Strings.Pdf_PeopleList, ReportText.Number(names.Count), string.Join(", ", names.Take(maxNames)))
+                      + (names.Count > maxNames ? Texts.Format(Strings.Pdf_AndMore, ReportText.Number(names.Count - maxNames)) : "");
                 CellText(table, row, 2, people);
                 var steps = g.GroupBy(r => (r.Before, r.After))
                     .Select(t => $"{OrDash(t.Key.Before)} → {OrDash(t.Key.After)}" + (g.Count > 1 ? $" ({ReportText.Number(t.Count())})" : ""));
                 CellText(table, row, 3, string.Join("\n", steps));
             }
             KeepStart(table);
-            Truncated(groups.Count, limits.Changes, "Ordnern");
+            Truncated(groups.Count, limits.Changes, Strings.Pdf_TruncatedFolders);
         }
 
         /// <summary>Zugriffsänderungen je (Richtung, Pfad) in der Reihenfolge der Zeilen.</summary>
@@ -811,10 +799,10 @@ public static class PdfReport
 
         private void Errors()
         {
-            Heading1("Nicht geprüfte Bereiche");
-            Intro("Diese Pfade konnten nicht gelesen werden – über ihre Berechtigungen macht der Bericht keine Aussage.");
+            Heading1(Strings.Pdf_SectionErrors);
+            Intro(Strings.Pdf_ErrorsIntro);
             var table = NewTable(9.5, 7.5);
-            HeaderRow(table, "Pfad", "Meldung");
+            HeaderRow(table, Strings.Col_Path, Strings.Col_Message);
             foreach (var e in data.Errors.Take(limits.Errors))
             {
                 var row = table.AddRow();
@@ -822,27 +810,32 @@ public static class PdfReport
                 CellText(table, row, 1, e.Message);
             }
             KeepStart(table);
-            Truncated(data.Errors.Count, limits.Errors, "Einträgen");
+            Truncated(data.Errors.Count, limits.Errors, Strings.Pdf_TruncatedEntries);
         }
 
         private void SignOff()
         {
             var h = data.Header;
-            var heading = Heading1("Prüfung und Freigabe");
+            var heading = Heading1(Strings.Pdf_SectionSignOff);
             heading.Format.SpaceBefore = 22;
-            var intro = Paragraph("Mit der Unterschrift wird bestätigt, dass die aufgeführten Berechtigungen und Befunde geprüft wurden. "
-                + "Abweichungen und vereinbarte Maßnahmen sind unter „Bemerkungen“ vermerkt.");
+            var intro = Paragraph(Texts.Format(Strings.Pdf_SignOffIntro, Texts.Quote(Strings.Pdf_Remarks)));
             intro.Format.KeepWithNext = true;
 
             // Bezug zum Lauf: das unterschriebene Blatt bleibt zuordenbar, auch wenn es getrennt abgelegt wird
             var reference = _section.AddParagraph();
             reference.Style = IntroStyle;
             reference.Format.SpaceAfter = 6;
-            text.Append(reference, $"Bezieht sich auf den Lauf vom {ReportText.Period(h.StartedAt, h.FinishedAt)} auf "
-                + $"{(h.Machine.Length == 0 ? "unbekanntem Rechner" : h.Machine)} – {(h.Targets.Count == 1 ? "Ziel" : "Ziele")}: {ShortTargets()}; Bericht erstellt am "
-                + $"{ReportText.DateTime(h.CreatedAt)}, ", ContentWidth, SmallSize);
-            reference.AddNumPagesField();
-            reference.AddText(" Seiten.");
+            // {4} ist die Seitenzahl – ein Feld, das MigraDoc erst beim Setzen füllt: Text davor umbrechen, Feld, Rest anhängen
+            var format = Texts.Format(h.Targets.Count == 1 ? Strings.Pdf_SignOffReferenceOne : Strings.Pdf_SignOffReferenceMany,
+                ReportText.Period(h.StartedAt, h.FinishedAt), h.Machine.Length == 0 ? Strings.Pdf_UnknownMachine : h.Machine,
+                ShortTargets(), ReportText.DateTime(h.CreatedAt), "{0}");
+            var field = format.IndexOf("{0}", StringComparison.Ordinal);
+            text.Append(reference, field < 0 ? format : format[..field], ContentWidth, SmallSize);
+            if (field >= 0)
+            {
+                reference.AddNumPagesField();
+                reference.AddText(format[(field + 3)..]);
+            }
 
             var table = NewTable(framed: false, 3.5, 13.5);
             table.Style = StyleNames.Normal;
@@ -859,10 +852,10 @@ public static class PdfReport
                 row.Cells[1].Borders.Bottom.Width = 0.75;
                 row.Cells[1].Borders.Bottom.Color = TextColor;
             }
-            Line("Geprüft von", 1.1);
-            Line("Datum", 1.1);
-            Line("Unterschrift", 1.5);
-            Line("Bemerkungen", 1.1);
+            Line(Strings.Pdf_ReviewedBy, 1.1);
+            Line(Strings.Pdf_Date, 1.1);
+            Line(Strings.Pdf_Signature, 1.5);
+            Line(Strings.Pdf_Remarks, 1.1);
             Line("", 0.9);
             Line("", 0.9);
             Line("", 0.9);
@@ -919,7 +912,7 @@ public static class PdfReport
             p.AddTab();
             if (kind == NoteKind.Warnung)
             {
-                var label = p.AddFormattedText("Achtung: ", TextFormat.Bold);
+                var label = p.AddFormattedText(Strings.Pdf_Attention, TextFormat.Bold);
                 label.Color = WarningColor;
             }
             p.Format.TabStops.AddTabStop(Unit.FromCentimeter(0.4));
@@ -934,13 +927,28 @@ public static class PdfReport
         }
 
         /// <summary>Hinweis auf eine gekürzte Liste; <paramref name="what"/> im Dativ Plural („von 302 Ordnern“).</summary>
-        private void Truncated(int total, int shown, string what)
+        /// <param name="format">Satz mit {0} = gezeigt, {1} = insgesamt (Strings.Pdf_Truncated…).</param>
+        private void Truncated(int total, int shown, string format)
         {
             if (total <= shown) return;
             var p = _section.AddParagraph();
             p.Format.SpaceBefore = 4;
             p.Format.Font.Color = WarningColor;
-            p.AddText($"Gekürzt: {ReportText.Number(shown)} von {ReportText.Number(total)} {what} gezeigt – vollständig im Excel-Bericht.");
+            p.AddText(Texts.Format(format, ReportText.Number(shown), ReportText.Number(total)));
+        }
+
+        /// <summary>
+        /// Text mit Feldern, die MigraDoc erst beim Setzen füllt (Seite, Seitenzahl): {0}, {1} … im übersetzten Text werden
+        /// zu Feldern, damit die Reihenfolge der Sprache folgt („Seite 1 von 3“, „第 1 页，共 3 页“).
+        /// </summary>
+        private static void AddWithFields(Paragraph p, string format, Action<int> addField)
+        {
+            var parts = System.Text.RegularExpressions.Regex.Split(format, @"\{(\d)\}");
+            for (int i = 0; i < parts.Length; i++)
+            {
+                if (i % 2 == 0) { if (parts[i].Length > 0) p.AddText(parts[i]); }
+                else addField(int.Parse(parts[i], CultureInfo.InvariantCulture));
+            }
         }
 
         /// <summary>
@@ -1095,7 +1103,7 @@ public static class PdfReport
             {
                 0 => "",
                 1 => targets[0],
-                _ => $"{targets[0]} (+{targets.Count - 1} weitere)",
+                _ => Texts.Format(Strings.Pdf_FirstTargetMore, targets[0], targets.Count - 1),
             };
             label = ReportText.Clean(label);
             if (label.Length <= 70) return label;

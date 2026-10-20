@@ -1,6 +1,6 @@
 using System.Runtime.ExceptionServices;
-
 using Zutritt.Core.Resources;
+
 namespace Zutritt.Core.Platform;
 
 /// <summary>

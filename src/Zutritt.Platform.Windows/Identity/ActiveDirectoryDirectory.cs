@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Security.Principal;
 using Zutritt.Core.Identity;
 using Zutritt.Core.Model;
+using Zutritt.Core.Resources;
 using Ad = System.DirectoryServices.AccountManagement;
 
 namespace Zutritt.Platform.Windows.Identity;
@@ -104,7 +105,7 @@ public sealed class ActiveDirectoryDirectory : IAuthoritativeDirectory, IDisposa
             {
                 return LookupOutcome.Unreachable(Failed(ex)
                     ? Problem(ex.Message)
-                    : $"Konto „{sid}“ im Active Directory „{DomainName}“ nicht lesbar: {ex.Message}. Es bleibt „Unbekannt“.");
+                    : Texts.Format(Strings.Ad_AccountUnreadable, sid, DomainName, ex.Message));
             }
         }
     }
@@ -146,7 +147,7 @@ public sealed class ActiveDirectoryDirectory : IAuthoritativeDirectory, IDisposa
             {
                 Failed(ex);
                 // Teilweise gelesene Mitgliederlisten wären für ein Audit irreführend – lieber „unbekannt“.
-                return MembersOutcome.Unreachable($"Mitglieder von „{label}“ ({DomainName}) nicht lesbar: {ex.Message}");
+                return MembersOutcome.Unreachable(Texts.Format(Strings.Ad_MembersUnreadable, label, DomainName, ex.Message));
             }
         }
     }
@@ -220,7 +221,7 @@ public sealed class ActiveDirectoryDirectory : IAuthoritativeDirectory, IDisposa
         error = null;
         if (_disposed)
         {
-            error = "Verzeichnis wurde bereits geschlossen";
+            error = Strings.Ad_Closed;
             return null;
         }
         if (_context is not null) return _context;
@@ -300,7 +301,7 @@ public sealed class ActiveDirectoryDirectory : IAuthoritativeDirectory, IDisposa
     }
 
     private string Problem(string? error) =>
-        $"Active Directory „{DomainName}“ nicht erreichbar: {error ?? "unbekannter Fehler"}. Domänenkonten bleiben „Unbekannt“, ihre Gruppen werden nicht aufgelöst.";
+        Texts.Format(Strings.Ad_Unreachable, DomainName, error ?? Strings.Identity_UnknownError);
 
     private static string? FirstNonEmpty(params string?[] values) => values.FirstOrDefault(v => !string.IsNullOrWhiteSpace(v))?.Trim();
 

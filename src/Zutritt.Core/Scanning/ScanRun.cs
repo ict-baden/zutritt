@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using Zutritt.Core.Model;
 using Zutritt.Core.Platform;
-
 using Zutritt.Core.Resources;
+
 namespace Zutritt.Core.Scanning;
 
 /// <summary>

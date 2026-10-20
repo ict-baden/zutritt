@@ -1,5 +1,6 @@
 using Zutritt.Core.Analysis;
 using Zutritt.Core.Model;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.Core.Reports;
 
@@ -56,19 +57,19 @@ internal static class ReportDataBuilder
         var ruleMap = new Dictionary<string, RuleInfo>(StringComparer.OrdinalIgnoreCase);
         foreach (var rule in rules) ruleMap.TryAdd(rule.Id, rule);
 
-        progress?.Report("Ordner und Befunde werden aufbereitet …");
+        progress?.Report(Strings.Progress_PreparingFolders);
         var folders = BuildFolders(scan, names);
         var findings = BuildFindings(scan, ruleMap, names);
-        progress?.Report($"Effektive Rechte von {ReportText.Number(scan.Principals.Values.Count(p => p.Kind == PrincipalKind.Benutzer))} Personen werden berechnet …");
+        progress?.Report(Texts.Format(Strings.Progress_ComputingAccess, ReportText.Number(scan.Principals.Values.Count(p => p.Kind == PrincipalKind.Benutzer))));
         var people = BuildPeople(scan, access, maxPersonGrants, folders);
-        progress?.Report("Gruppen und Freigaben werden aufbereitet …");
+        progress?.Report(Strings.Progress_PreparingGroups);
         var groups = BuildGroups(scan, names);
         var shares = BuildShares(scan, names);
         var errors = scan.Errors.OrderBy(e => e.Path, PathOrder.Instance).ToList();
         ComparisonData? changes = null;
         if (comparison is not null)
         {
-            progress?.Report("Änderungen seit dem letzten Lauf werden aufbereitet …");
+            progress?.Report(Strings.Progress_PreparingChanges);
             changes = BuildComparison(comparison, ruleMap, names);
         }
 
@@ -195,7 +196,7 @@ internal static class ReportDataBuilder
                     .OrderBy(g => rank.TryGetValue(g.Path, out var r) ? r : int.MaxValue)
                     .ThenBy(g => g.Path, PathOrder.Instance)
                     .Select(g => new PersonGrantRow(g.Path, g.Effective, g.Ntfs, g.ViaShare,
-                        g.Via.Count == 0 ? "direkt" : string.Join(" → ", g.Via), g.ReducedByDeny))
+                        g.Via.Count == 0 ? Strings.Report_Direct : string.Join(" → ", g.Via), g.ReducedByDeny))
                     .ToList();
             }
 
@@ -304,11 +305,11 @@ internal static class ReportDataBuilder
         }
 
         var notes = new List<string>();
-        if (group.MembersUnknown) notes.Add("Mitglieder nicht lesbar");
+        if (group.MembersUnknown) notes.Add(Strings.Report_MembersUnreadable);
         if (unreadable.Count > 0)
-            notes.Add($"Mitglieder von {string.Join(", ", unreadable.Select(ReportText.Quote))} nicht lesbar – Anzahl unvollständig");
+            notes.Add(Texts.Format(Strings.Report_NestedMembersUnreadable, string.Join(", ", unreadable.Select(ReportText.Quote))));
         if (broad.Count > 0)
-            notes.Add($"enthält {string.Join(", ", broad.Select(ReportText.Quote))} – damit praktisch alle Benutzer");
+            notes.Add(Texts.Format(Strings.Report_ContainsBroad, string.Join(", ", broad.Select(ReportText.Quote))));
 
         return new GroupRow
         {
@@ -329,8 +330,8 @@ internal static class ReportDataBuilder
             .Select(s =>
             {
                 var aces = s.Permissions.Select(a => new ShareAceRow(names.Name(a.Sid), a.Sid, a.Access, a.IsDeny)).ToList();
-                string text = !s.PermissionsReadable ? "nicht lesbar"
-                    : aces.Count == 0 ? "keine Einträge – kein Zugriff über das Netz"
+                string text = !s.PermissionsReadable ? Strings.Report_NotReadable
+                    : aces.Count == 0 ? Strings.Report_ShareNoEntries
                     : string.Join("; ", aces.Select(a => $"{a.Account}: {a.Right}"));
                 return new ShareRow
                 {
@@ -353,52 +354,49 @@ internal static class ReportDataBuilder
 
         var unreadable = folders.Where(f => f.Error is not null).Select(f => f.Path).ToHashSet(StringComparer.OrdinalIgnoreCase);
         if (unreadable.Count > 0)
-            warnings.Add($"{ReportText.Number(unreadable.Count)} Ordner nicht lesbar – dort konnte nichts geprüft werden.");
+            warnings.Add(Count(unreadable.Count, Strings.Report_WarnUnreadableFoldersOne, Strings.Report_WarnUnreadableFoldersMany));
         int otherErrors = scan.Errors.Count(e => !unreadable.Contains(e.Path));
         if (otherErrors > 0)
         {
             // „weitere“ nur, wenn schon nicht lesbare Ordner genannt sind
             var more = unreadable.Count > 0;
-            warnings.Add(otherErrors == 1
-                ? $"1 {(more ? "weiterer " : "")}Fehler beim Lesen (z. B. Server oder Freigabe nicht erreichbar)."
-                : $"{ReportText.Number(otherErrors)} {(more ? "weitere " : "")}Fehler beim Lesen (z. B. Server oder Freigaben nicht erreichbar).");
+            warnings.Add(more
+                ? Count(otherErrors, Strings.Report_WarnMoreErrorsOne, Strings.Report_WarnMoreErrorsMany)
+                : Count(otherErrors, Strings.Report_WarnErrorsOne, Strings.Report_WarnErrorsMany));
         }
 
         int sharesUnreadable = shares.Count(s => !s.Readable);
         if (sharesUnreadable > 0)
-            warnings.Add($"Bei {Count(sharesUnreadable, "Freigabe", "Freigaben")} waren die Freigabe-Berechtigungen nicht lesbar – "
-                + "der Zugriff ist dort nur nach den NTFS-Rechten bewertet.");
+            warnings.Add(Count(sharesUnreadable, Strings.Report_WarnSharesUnreadableOne, Strings.Report_WarnSharesUnreadableMany));
 
         if (request.MaxDepth is { } depth)
             warnings.Add(depth <= 0
-                ? "Nur die Wurzeln der Ziele wurden geprüft (Tiefe 0) – Unterordner sind nicht erfasst."
-                : $"Die Tiefe war auf {Count(depth, "Ebene", "Ebenen")} begrenzt – tiefer liegende Ordner sind nicht erfasst.");
+                ? Strings.Report_WarnRootsOnly
+                : Count(depth, Strings.Report_WarnDepthOne, Strings.Report_WarnDepthMany));
 
         if (!request.ResolveGroups)
-            warnings.Add("Gruppen wurden nicht bis zur Person aufgelöst – die Personen-Sicht ist unvollständig.");
+            warnings.Add(Strings.Report_WarnGroupsNotResolved);
 
         int groupsUnreadable = scan.Principals.Values.Count(p => p.Kind == PrincipalKind.Gruppe && p.MembersUnknown);
         if (groupsUnreadable > 0)
-            warnings.Add($"Bei {Count(groupsUnreadable, "Gruppe", "Gruppen")} konnten die Mitglieder nicht gelesen werden – "
-                + "Personen darin fehlen in der Personen-Sicht.");
+            warnings.Add(Count(groupsUnreadable, Strings.Report_WarnGroupsUnreadableOne, Strings.Report_WarnGroupsUnreadableMany));
 
         int truncated = people.Count(p => !p.GrantsComplete);
         if (truncated > 0)
-            warnings.Add($"Die Einzelzugriffe je Person sind auf {ReportText.Number(maxGrants)} Zeilen begrenzt; "
-                + $"für {Count(truncated, "Person", "Personen")} sind nur die Summen enthalten.");
+            warnings.Add(Texts.Format(Texts.Plural(truncated, Strings.Report_WarnGrantsTruncatedOne, Strings.Report_WarnGrantsTruncatedMany),
+                ReportText.Number(maxGrants), ReportText.Number(truncated)));
 
         // Vergleich mit anderem Umfang: zuerst, denn er relativiert alle Zahlen der Änderungen
         if (comparison is { ScopeDiffers: true }) warnings.Insert(0, ScanScope.Describe(comparison));
 
         var notes = warnings.Select(w => new ReportNote(NoteKind.Warnung, w)).ToList();
         notes.Add(new ReportNote(NoteKind.Hinweis,
-            "Aufgeführt sind die Wurzeln der Ziele und alle Ordner mit eigenen Rechten (explizite Einträge, unterbrochene oder "
-            + "abweichende Vererbung). Alle übrigen Ordner erben ihre Rechte vom nächsthöheren aufgeführten Ordner."));
+            Strings.Report_NoteListed));
         notes.Add(new ReportNote(NoteKind.Hinweis,
-            "Effektives Recht = alle erlaubten Rechte der Person und ihrer Gruppen zusammen, abzüglich verweigerter Rechte."));
+            Strings.Report_NoteEffective));
         if (shares.Count > 0 || scan.Folders.Any(f => f.ShareUnc is not null))
             notes.Add(new ReportNote(NoteKind.Hinweis,
-                "Über das Netz gilt jeweils die strengere von Freigabe- und NTFS-Berechtigung; „Effektiv“ berücksichtigt beides."));
+                Strings.Report_NoteNetwork));
         return notes;
     }
 
@@ -433,12 +431,12 @@ internal static class ReportDataBuilder
         foreach (var m in c.MembershipChanges.OrderBy(m => names.Name(m.GroupSid), ReportText.NameOrder).ThenBy(m => names.Name(m.MemberSid), ReportText.NameOrder))
             rows.Add(new ChangeRow(ChangeArea.Membership, ChangeText.Membership(m.Kind),
                 names.Name(m.GroupSid), names.Name(m.MemberSid),
-                m.Kind == ChangeKind.Hinzugefuegt ? "" : "Mitglied", m.Kind == ChangeKind.Entfernt ? "" : "Mitglied"));
+                m.Kind == ChangeKind.Hinzugefuegt ? "" : Strings.Report_Member, m.Kind == ChangeKind.Entfernt ? "" : Strings.Report_Member));
 
         foreach (var p in c.FoldersAdded.OrderBy(p => p, PathOrder.Instance))
-            rows.Add(new ChangeRow(ChangeArea.Folder, ChangeText.FolderAdded, p, "", "", "eigene Rechte"));
+            rows.Add(new ChangeRow(ChangeArea.Folder, ChangeText.FolderAdded, p, "", "", Strings.Report_OwnPermissions));
         foreach (var p in c.FoldersRemoved.OrderBy(p => p, PathOrder.Instance))
-            rows.Add(new ChangeRow(ChangeArea.Folder, ChangeText.FolderRemoved, p, "", "eigene Rechte", ""));
+            rows.Add(new ChangeRow(ChangeArea.Folder, ChangeText.FolderRemoved, p, "", Strings.Report_OwnPermissions, ""));
 
         // Folgen für Personen zuletzt, „Mehr Zugriff“ (das Risiko) vor „Weniger Zugriff“
         foreach (var a in c.AccessChanges.OrderBy(a => a.After > a.Before ? 0 : 1).ThenBy(a => a.Path, PathOrder.Instance)
@@ -464,7 +462,8 @@ internal static class ReportDataBuilder
         string Account(string? sid) => string.IsNullOrEmpty(sid) ? "" : names.Name(sid);
     }
 
-    private static string Count(int n, string one, string many) => n == 1 ? $"1 {one}" : $"{ReportText.Number(n)} {many}";
+    /// <summary>Satz mit Anzahl in Einzahl oder Mehrzahl; {0} ist die Anzahl.</summary>
+    private static string Count(int n, string one, string many) => Texts.Format(Texts.Plural(n, one, many), ReportText.Number(n));
 
     /// <summary>
     /// Namen zu SIDs: zuerst aus dem aktuellen Lauf, dann aus dem älteren (gelöschte Konten kennt nur

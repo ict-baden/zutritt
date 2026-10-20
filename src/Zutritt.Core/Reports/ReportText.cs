@@ -2,52 +2,53 @@ using System.Globalization;
 using System.Reflection;
 using System.Text;
 using Zutritt.Core.Model;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.Core.Reports;
 
-/// <summary>Deutsche Bezeichnungen und Formatierungen, die Excel- und PDF-Bericht gemeinsam nutzen.</summary>
+/// <summary>
+/// Bezeichnungen und Formatierungen, die Excel- und PDF-Bericht gemeinsam nutzen: Texte in der Sprache der Oberfläche,
+/// Zahlen und Daten im Gebietsschema des Systems (Richtlinie 13).
+/// </summary>
 internal static class ReportText
 {
-    /// <summary>Berichte sind immer deutsch – unabhängig von der Spracheinstellung des Rechners.</summary>
-    public static readonly CultureInfo German = CultureInfo.GetCultureInfo("de-DE");
-
     /// <summary>Namen sortieren wie ein Mensch: Groß/Klein egal, Umlaute an ihrem Platz.</summary>
-    public static readonly StringComparer NameOrder = StringComparer.Create(German, CompareOptions.IgnoreCase);
+    public static StringComparer NameOrder => StringComparer.Create(CultureInfo.CurrentCulture, CompareOptions.IgnoreCase);
 
-    public const string Title = "Berechtigungsbericht";
+    public static string Title => Strings.Report_Title;
     public const string Product = "Zutritt";
     public const string Dash = "–";
 
     public static string Severity(Severity severity) => severity switch
     {
-        Model.Severity.Hoch => "Hoch",
-        Model.Severity.Mittel => "Mittel",
-        Model.Severity.Niedrig => "Niedrig",
-        _ => "Info",
+        Model.Severity.Hoch => Strings.Severity_High,
+        Model.Severity.Mittel => Strings.Severity_Medium,
+        Model.Severity.Niedrig => Strings.Severity_Low,
+        _ => Strings.Severity_Info,
     };
 
     public static string Kind(PrincipalKind kind) => kind switch
     {
-        PrincipalKind.Benutzer => "Benutzer",
-        PrincipalKind.Gruppe => "Gruppe",
-        PrincipalKind.Bekannt => "Integriert",
-        PrincipalKind.Computer => "Computer",
-        PrincipalKind.Verwaist => "Verwaist",
-        _ => "Unbekannt",
+        PrincipalKind.Benutzer => Strings.Kind_User,
+        PrincipalKind.Gruppe => Strings.Kind_Group,
+        PrincipalKind.Bekannt => Strings.Kind_BuiltIn,
+        PrincipalKind.Computer => Strings.Kind_Computer,
+        PrincipalKind.Verwaist => Strings.Kind_Orphaned,
+        _ => Strings.Kind_Unknown,
     };
 
     public static string Change(ChangeKind kind) => kind switch
     {
-        ChangeKind.Hinzugefuegt => "Hinzugefügt",
-        ChangeKind.Entfernt => "Entfernt",
-        _ => "Geändert",
+        ChangeKind.Hinzugefuegt => Strings.Change_Added,
+        ChangeKind.Entfernt => Strings.Change_Removed,
+        _ => Strings.Change_Changed,
     };
 
-    public static string YesNo(bool value) => value ? "Ja" : "Nein";
+    public static string YesNo(bool value) => value ? Strings.Text_Yes : Strings.Text_No;
 
-    public static string AllowDeny(bool isDeny) => isDeny ? "Verweigern" : "Erlauben";
+    public static string AllowDeny(bool isDeny) => isDeny ? Strings.Ace_Deny : Strings.Ace_Allow;
 
-    public static string Origin(bool isInherited) => isInherited ? "geerbt" : "explizit";
+    public static string Origin(bool isInherited) => isInherited ? Strings.Ace_Inherited : Strings.Ace_Explicit;
 
     /// <summary>
     /// „Anwenden auf“ wie im Windows-Dialog „Erweiterte Sicherheitseinstellungen“, damit Prüfer die
@@ -55,7 +56,7 @@ internal static class ReportText
     /// </summary>
     public static string AppliesTo(AceInheritance inheritance, AcePropagation propagation, bool isFile)
     {
-        if (isFile) return "Nur diese Datei";
+        if (isFile) return Strings.AppliesTo_ThisFile;
         bool containers = (inheritance & AceInheritance.ContainerInherit) != 0;
         bool objects = (inheritance & AceInheritance.ObjectInherit) != 0;
         bool inheritOnly = (propagation & AcePropagation.InheritOnly) != 0;
@@ -63,16 +64,16 @@ internal static class ReportText
 
         string text = (containers, objects, inheritOnly) switch
         {
-            (false, false, _) => "Nur diesen Ordner",
-            (true, true, false) => "Diesen Ordner, Unterordner und Dateien",
-            (true, false, false) => "Diesen Ordner und Unterordner",
-            (false, true, false) => "Diesen Ordner und Dateien",
-            (true, true, true) => "Nur Unterordner und Dateien",
-            (true, false, true) => "Nur Unterordner",
-            (false, true, true) => "Nur Dateien",
+            (false, false, _) => Strings.AppliesTo_ThisFolder,
+            (true, true, false) => Strings.AppliesTo_FolderSubfoldersFiles,
+            (true, false, false) => Strings.AppliesTo_FolderSubfolders,
+            (false, true, false) => Strings.AppliesTo_FolderFiles,
+            (true, true, true) => Strings.AppliesTo_SubfoldersFiles,
+            (true, false, true) => Strings.AppliesTo_Subfolders,
+            (false, true, true) => Strings.AppliesTo_Files,
         };
         // Ohne Vererbungs-Flags spielt „nur eine Ebene“ keine Rolle
-        return oneLevel && (containers || objects) ? text + " (nur eine Ebene)" : text;
+        return oneLevel && (containers || objects) ? Texts.Format(Strings.AppliesTo_OneLevel, text) : text;
     }
 
     /// <summary>Kurzbeschreibung eines Eintrags, z. B. „Ändern · Erlauben · explizit · Diesen Ordner, Unterordner und Dateien“.</summary>
@@ -84,23 +85,23 @@ internal static class ReportText
 
     public static string Mask(FileRights rights) => "0x" + ((uint)rights).ToString("X8", CultureInfo.InvariantCulture);
 
-    public static string Number(long value) => value.ToString("N0", German);
+    public static string Number(long value) => value.ToString("N0", CultureInfo.CurrentCulture);
 
-    public static string Quote(string text) => $"„{text}“";
+    public static string Quote(string text) => Texts.Quote(text);
 
-    /// <summary>Zeitpunkt in Ortszeit dieses Rechners, z. B. „14.10.2026 09:00“.</summary>
+    /// <summary>Zeitpunkt in Ortszeit dieses Rechners im Gebietsschema, z. B. „14.10.2026 09:00“.</summary>
     public static string DateTime(DateTimeOffset time) =>
-        time == default ? Dash : time.ToLocalTime().ToString("dd.MM.yyyy HH:mm", German);
+        time == default ? Dash : time.ToLocalTime().ToString("g", CultureInfo.CurrentCulture);
 
     /// <summary>Zeitraum eines Laufs; am selben Tag ohne zweites Datum.</summary>
     public static string Period(DateTimeOffset started, DateTimeOffset finished)
     {
         if (started == default) return Dash;
-        if (finished == default || finished < started) return DateTime(started) + " Uhr";
+        if (finished == default || finished < started) return Texts.Format(Strings.Report_TimeOfDay, DateTime(started));
         var a = started.ToLocalTime();
         var b = finished.ToLocalTime();
-        var end = a.Date == b.Date ? b.ToString("HH:mm", German) : DateTime(finished);
-        return $"{DateTime(started)} {Dash} {end} Uhr";
+        var end = a.Date == b.Date ? b.ToString("t", CultureInfo.CurrentCulture) : DateTime(finished);
+        return Texts.Format(Strings.Report_Period, DateTime(started), end);
     }
 
     /// <summary>Was gescannt wurde, in einer Zeile – damit der Prüfumfang im Bericht nachvollziehbar ist.</summary>
@@ -108,10 +109,10 @@ internal static class ReportText
     {
         var parts = new List<string>
         {
-            request.IncludeFiles ? "Ordner und Dateien" : "nur Ordner (Dateien nicht einzeln)",
-            request.MaxDepth is { } depth ? $"bis Tiefe {depth}" : "alle Ebenen",
-            request.ResolveGroups ? "Gruppen bis zur Person aufgelöst" : "Gruppen nicht aufgelöst",
-            request.SkipAdminShares ? "administrative Freigaben übersprungen" : "administrative Freigaben einbezogen",
+            request.IncludeFiles ? Strings.Scope_FoldersAndFiles : Strings.Scope_FoldersOnly,
+            request.MaxDepth is { } depth ? Texts.Format(Strings.Report_UpToDepth, depth) : Strings.Scope_AllLevels,
+            request.ResolveGroups ? Strings.Scope_GroupsResolved : Strings.Scope_GroupsNotResolved,
+            request.SkipAdminShares ? Strings.Scope_AdminSkipped : Strings.Scope_AdminIncluded,
         };
         return string.Join(" · ", parts);
     }

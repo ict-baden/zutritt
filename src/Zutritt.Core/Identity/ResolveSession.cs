@@ -1,7 +1,7 @@
 using Zutritt.Core.Model;
 using Zutritt.Core.Platform;
-
 using Zutritt.Core.Resources;
+
 namespace Zutritt.Core.Identity;
 
 /// <summary>Direkte Mitglieder einer Gruppe; null = nicht lesbar. <c>Incomplete</c>: nur ein Teil ließ sich lesen.</summary>

@@ -1,5 +1,6 @@
 using ClosedXML.Excel;
 using Zutritt.Core.Model;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.Core.Reports;
 
@@ -45,7 +46,7 @@ public static class ExcelReport
     internal static void Write(ReportData data, string path, IProgress<string>? progress = null) => ReportFile.Write(path, stream =>
     {
         using var workbook = Create(data, MaxRows, progress);
-        progress?.Report("Arbeitsmappe wird gespeichert …");
+        progress?.Report(Strings.Excel_ProgressSaving);
         workbook.SaveAs(stream);
     });
 
@@ -56,7 +57,7 @@ public static class ExcelReport
         var workbook = new XLWorkbook();
         try
         {
-            progress?.Report("Arbeitsmappe wird gefüllt …");
+            progress?.Report(Strings.Excel_ProgressFilling);
             var truncated = new List<string>();
             AddFindings(workbook, data, maxRows, truncated);
             AddFolders(workbook, data, maxRows, truncated);
@@ -83,7 +84,7 @@ public static class ExcelReport
 
     private static void AddOverview(XLWorkbook workbook, ReportData data, List<string> truncated)
     {
-        var ws = workbook.Worksheets.Add("Übersicht", 1);
+        var ws = workbook.Worksheets.Add(Strings.Sheet_Overview, 1);
         ws.TabColor = AccentViolet;
         ws.Column(1).Width = 36;
         ws.Column(2).Width = 95;
@@ -100,34 +101,34 @@ public static class ExcelReport
         title.Style.Font.Bold = true;
         title.Style.Font.FontColor = AccentViolet;
         var subtitle = ws.Cell(row++, 1);
-        subtitle.Value = "Zutritt · Freigaben und Ordnerrechte";
+        subtitle.Value = Strings.Excel_Subtitle;
         subtitle.Style.Font.FontColor = Muted;
         row++;
 
-        Section("Lauf");
-        Pair("Ziele", string.Join("\n", h.Targets), lines: Math.Max(1, h.Targets.Count));
-        Pair("Zeitraum", ReportText.Period(h.StartedAt, h.FinishedAt));
-        Pair("Rechner", h.Machine);
-        Pair("Gescannt von", h.ScannedBy);
-        Pair("Zutritt-Version (Scan)", h.ToolVersion);
-        Pair("Bericht erstellt", $"{ReportText.DateTime(h.CreatedAt)} mit Zutritt {h.ReportVersion}".TrimEnd());
-        Pair("Umfang", ReportText.Scope(h.Request));
+        Section(Strings.Excel_Run);
+        Pair(Strings.Excel_Targets, string.Join("\n", h.Targets), lines: Math.Max(1, h.Targets.Count));
+        Pair(Strings.Pdf_Period, ReportText.Period(h.StartedAt, h.FinishedAt));
+        Pair(Strings.Pdf_Machine, h.Machine);
+        Pair(Strings.Pdf_ScannedBy, h.ScannedBy);
+        Pair(Strings.Excel_ToolVersionScan, h.ToolVersion);
+        Pair(Strings.Pdf_ReportCreated, Texts.Format(Strings.Pdf_ReportCreatedWith, ReportText.DateTime(h.CreatedAt), h.ReportVersion).TrimEnd());
+        Pair(Strings.Pdf_Scope, ReportText.Scope(h.Request));
         row++;
 
-        Section("Zahlen");
-        Number("Ordner geprüft", h.FoldersVisited);
-        Number("Dateien geprüft", h.FilesVisited);
-        Number("Ordner mit eigenen Rechten", h.FoldersStored);
-        if (h.FilesStored > 0 || h.Request.IncludeFiles) Number("Dateien mit eigenen Rechten", h.FilesStored);
-        Number("Freigaben", data.Shares.Count);
-        Number("Konten und Gruppen", h.Principals);
-        Number("Personen (Benutzerkonten)", data.People.Count);
-        Number("Personen mit Zugriff", data.PeopleWithAccess);
-        Number("Nicht lesbare Ordner", data.UnreadableFolders, warn: data.UnreadableFolders > 0);
-        Number("Fehler beim Lesen", data.Errors.Count, warn: data.Errors.Count > 0);
+        Section(Strings.Excel_Numbers);
+        Number(Strings.Pdf_FoldersChecked, h.FoldersVisited);
+        Number(Strings.Pdf_FilesChecked, h.FilesVisited);
+        Number(Strings.Pdf_SectionFolders, h.FoldersStored);
+        if (h.FilesStored > 0 || h.Request.IncludeFiles) Number(Strings.Pdf_FilesWithOwn, h.FilesStored);
+        Number(Strings.Pdf_SectionShares, data.Shares.Count);
+        Number(Strings.Pdf_AccountsGroups, h.Principals);
+        Number(Strings.Excel_PeopleUserAccounts, data.People.Count);
+        Number(Strings.Excel_PeopleWithAccess, data.PeopleWithAccess);
+        Number(Strings.Pdf_UnreadableFolders, data.UnreadableFolders, warn: data.UnreadableFolders > 0);
+        Number(Strings.Pdf_ReadErrors, data.Errors.Count, warn: data.Errors.Count > 0);
         row++;
 
-        Section("Befunde je Schwere");
+        Section(Strings.Pdf_FindingsBySeverity);
         foreach (var severity in new[] { Severity.Hoch, Severity.Mittel, Severity.Niedrig, Severity.Info })
         {
             var label = ws.Cell(row, 1);
@@ -136,28 +137,28 @@ public static class ExcelReport
             SetNumber(ws.Cell(row, 2), data.CountFindings(severity));
             row++;
         }
-        Number("Gesamt", data.Findings.Count, bold: true);
+        Number(Strings.Excel_Total, data.Findings.Count, bold: true);
         row++;
 
         if (data.Comparison is { } c)
         {
-            Section($"Vergleich mit dem Lauf vom {ReportText.DateTime(c.OlderStartedAt)}");
+            Section(Texts.Format(Strings.Excel_ComparisonWithRun, ReportText.DateTime(c.OlderStartedAt)));
             if (c.ScopeNote.Length > 0) Note(NoteKind.Warnung, c.ScopeNote);
-            if (!c.HasChanges) Pair("Ergebnis", "Keine Änderungen seit dem letzten Lauf.");
+            if (!c.HasChanges) Pair(Strings.Excel_Result, Strings.Pdf_NoChanges);
             // Reihenfolge wie im Blatt „Änderungen“: Befunde, Ursachen, Folgen für Personen
-            Number("Neue Befunde", c.NewFindings, warn: c.NewFindings > 0);
-            Number("Behobene Befunde", c.ResolvedFindings);
-            Number("Geänderte Berechtigungseinträge", c.AceChanges);
-            Number("Geänderte Gruppenmitgliedschaften", c.MembershipChanges);
-            Number("Ordner neu mit eigenen Rechten", c.FoldersAdded);
-            Number("Ordner ohne eigene Rechte mehr", c.FoldersRemoved);
-            Number("Personen-Zugriffe erweitert", c.MoreAccess, warn: c.MoreAccess > 0);
-            Number("Personen-Zugriffe eingeschränkt", c.LessAccess);
+            Number(Strings.Cmp_NewFindings, c.NewFindings, warn: c.NewFindings > 0);
+            Number(Strings.Cmp_ResolvedFindings, c.ResolvedFindings);
+            Number(Strings.Cmp_ChangedAces, c.AceChanges);
+            Number(Strings.Cmp_ChangedMemberships, c.MembershipChanges);
+            Number(Strings.Excel_FoldersAdded, c.FoldersAdded);
+            Number(Strings.Excel_FoldersRemoved, c.FoldersRemoved);
+            Number(Strings.Cmp_MoreAccess, c.MoreAccess, warn: c.MoreAccess > 0);
+            Number(Strings.Cmp_LessAccess, c.LessAccess);
             row++;
         }
 
         // Warnungen zuerst – auch die zur Kürzung dieser Mappe –, dann die Lesehilfen
-        Section("Hinweise");
+        Section(Strings.Pdf_Notes);
         foreach (var note in data.Notes.Where(n => n.Kind == NoteKind.Warnung))
             Note(note.Kind, note.Text);
         foreach (var text in truncated)
@@ -167,7 +168,7 @@ public static class ExcelReport
         row++;
 
         // Wegweiser für Prüfer, die die Mappe zum ersten Mal sehen
-        Section("Blätter dieser Mappe");
+        Section(Strings.Excel_SheetsGuide);
         foreach (var sheet in workbook.Worksheets.Where(w => w != ws))
             if (SheetDescriptions.TryGetValue(sheet.Name, out var description))
                 Pair(ReportText.Quote(sheet.Name), description);
@@ -218,7 +219,7 @@ public static class ExcelReport
         void Note(NoteKind kind, string text)
         {
             var label = ws.Cell(row, 1);
-            label.Value = kind == NoteKind.Warnung ? "Achtung" : "Hinweis";
+            label.Value = kind == NoteKind.Warnung ? Strings.Excel_Attention : Strings.Col_Note;
             var cell = ws.Cell(row, 2);
             cell.Value = Text(text);
             if (kind == NoteKind.Warnung)
@@ -235,18 +236,17 @@ public static class ExcelReport
     }
 
     /// <summary>Kurzbeschreibung je Blatt für den Wegweiser in der Übersicht.</summary>
-    private static readonly Dictionary<string, string> SheetDescriptions = new()
+    private static Dictionary<string, string> SheetDescriptions => new()
     {
-        ["Befunde"] = "Alle Befunde nach Schwere – mit Regel, Pfad, Konto, Meldung und Empfehlung.",
-        ["Ordner & Rechte"] = "Jeder aufgeführte Ordner mit jedem Berechtigungseintrag (eine Zeile je Eintrag, auch geerbte); "
-            + "„Vererbung weicht ab“ kennzeichnet z. B. verschobene Ordner mit Rechten vom früheren Ort.",
-        ["Personen"] = "Je Benutzerkonto: Anzahl Ordner mit Zugriff, höchstes Recht und über welche Gruppen.",
-        ["Zugriffe je Person"] = "Jede Person je Ordner mit effektivem Recht, NTFS- und Freigabe-Recht und der Gruppenkette.",
-        ["Gruppen"] = "Mitglieder direkt und gesamt (auch verschachtelt) und in wie vielen Ordner-ACLs die Gruppe steht.",
-        ["Freigaben"] = "Freigaben mit Pfad, Bemerkung und Freigabe-Berechtigungen.",
-        ["Prüfregeln"] = "Prüfumfang: alle Regeln mit Erklärung, Empfehlung und Anzahl der Befunde.",
-        ["Änderungen"] = "Unterschiede zum vorherigen Lauf: Befunde, Einträge, Mitgliedschaften, Ordner, Zugriffe von Personen.",
-        ["Fehler"] = "Pfade, die nicht gelesen werden konnten – dort ist nichts geprüft.",
+        [Strings.Sheet_Findings] = Strings.Excel_DescFindings,
+        [Strings.Sheet_FoldersPermissions] = Strings.Excel_DescFolders,
+        [Strings.Sheet_People] = Strings.Excel_DescPeople,
+        [Strings.Sheet_AccessPerPerson] = Strings.Excel_DescAccessPerPerson,
+        [Strings.Sheet_Groups] = Strings.Excel_DescGroups,
+        [Strings.Sheet_Shares] = Strings.Excel_DescShares,
+        [Strings.Sheet_Rules] = Strings.Excel_DescRules,
+        [Strings.Sheet_Changes] = Strings.Excel_DescChanges,
+        [Strings.Sheet_Errors] = Strings.Excel_DescErrors,
     };
 
     private static void SetNumber(IXLCell cell, long value)
@@ -257,15 +257,15 @@ public static class ExcelReport
     }
 
     private static void AddFindings(XLWorkbook wb, ReportData data, int maxRows, List<string> truncated) =>
-        AddTable(wb, "Befunde", "Befunde", data.Findings, data.Findings.Count, maxRows, "Keine Befunde.", truncated,
+        AddTable(wb, Strings.Sheet_Findings, "Befunde", data.Findings, data.Findings.Count, maxRows, Strings.Excel_NoFindings, truncated,
         [
-            new("Schwere", f => ReportText.Severity(f.Severity), Style: (cell, f) => StyleSeverity(cell, f.Severity)),
-            new("Regel", f => f.RuleId),
-            new("Titel", f => Text(f.Title), MaxWidth: 40),
-            new("Pfad", f => Text(f.Path), MaxWidth: 70),
-            new("Konto", f => Text(f.Account), MaxWidth: 40),
-            new("Meldung", f => Text(f.Message), MaxWidth: 80),
-            new("Empfehlung", f => Text(f.Recommendation), MaxWidth: 80),
+            new(Strings.Col_Severity, f => ReportText.Severity(f.Severity), Style: (cell, f) => StyleSeverity(cell, f.Severity)),
+            new(Strings.Col_Rule, f => f.RuleId),
+            new(Strings.Col_Title, f => Text(f.Title), MaxWidth: 40),
+            new(Strings.Col_Path, f => Text(f.Path), MaxWidth: 70),
+            new(Strings.Col_Account, f => Text(f.Account), MaxWidth: 40),
+            new(Strings.Col_Message, f => Text(f.Message), MaxWidth: 80),
+            new(Strings.Col_Recommendation, f => Text(f.Recommendation), MaxWidth: 80),
             new("SID", f => f.Sid ?? "", MaxWidth: 50),
         ]);
 
@@ -277,27 +277,27 @@ public static class ExcelReport
             : f.Aces.Select(a => (Folder: f, Ace: (AceRow?)a)));
         int total = data.Folders.Sum(f => Math.Max(1, f.Aces.Count));
 
-        AddTable(wb, "Ordner & Rechte", "OrdnerRechte", rows, total, maxRows, "Keine Ordner gespeichert.", truncated,
+        AddTable(wb, Strings.Sheet_FoldersPermissions, "OrdnerRechte", rows, total, maxRows, Strings.Excel_NoFolders, truncated,
         [
-            new("Pfad", r => Text(r.Folder.Path), MaxWidth: 80),
-            new("Tiefe", r => r.Folder.Depth, Format: "0"),
-            new("Typ", r => r.Folder.IsFile ? "Datei" : "Ordner"),
-            new("Vererbung unterbrochen", r => ReportText.YesNo(r.Folder.InheritanceBroken)),
+            new(Strings.Col_Path, r => Text(r.Folder.Path), MaxWidth: 80),
+            new(Strings.Col_Depth, r => r.Folder.Depth, Format: "0"),
+            new(Strings.Col_ItemType, r => r.Folder.IsFile ? Strings.Pdf_File : Strings.Excel_Folder),
+            new(Strings.Pdf_InheritanceBroken, r => ReportText.YesNo(r.Folder.InheritanceBroken)),
             // Verschobene Ordner, die alte geerbte Rechte mitgenommen haben (Regel ZT14)
-            new("Vererbung weicht ab", r => ReportText.YesNo(r.Folder.InheritanceDiffers)),
-            new("Besitzer", r => Text(r.Folder.Owner), MaxWidth: 40),
-            new("Konto", r => Text(r.Ace?.Account), MaxWidth: 40),
-            new("Art", r => r.Ace is null ? "" : ReportText.Kind(r.Ace.Kind)),
-            new("Recht", r => r.Ace?.Right ?? "", MaxWidth: 40),
-            new("Erlauben/Verweigern", r => r.Ace is null ? "" : ReportText.AllowDeny(r.Ace.IsDeny),
+            new(Strings.Excel_ColInheritanceDiffers, r => ReportText.YesNo(r.Folder.InheritanceDiffers)),
+            new(Strings.Col_Owner, r => Text(r.Folder.Owner), MaxWidth: 40),
+            new(Strings.Col_Account, r => Text(r.Ace?.Account), MaxWidth: 40),
+            new(Strings.Col_AccountKind, r => r.Ace is null ? "" : ReportText.Kind(r.Ace.Kind)),
+            new(Strings.Col_Right, r => r.Ace?.Right ?? "", MaxWidth: 40),
+            new(Strings.Col_AllowDenyLong, r => r.Ace is null ? "" : ReportText.AllowDeny(r.Ace.IsDeny),
                 Style: (cell, _) => { cell.Style.Font.FontColor = Warning; cell.Style.Font.Bold = true; }, StyleIf: r => r.Ace?.IsDeny == true),
-            new("Geerbt/explizit", r => r.Ace is null ? "" : ReportText.Origin(r.Ace.IsInherited)),
-            new("Gilt für", r => r.Ace?.AppliesTo ?? "", MaxWidth: 45),
-            new("Freigabe", r => Text(r.Folder.ShareUnc), MaxWidth: 40),
-            new("Hinweis", r => r.Folder.Error is null ? "" : Text("Nicht lesbar: " + r.Folder.Error), MaxWidth: 60,
+            new(Strings.Col_InheritedExplicit, r => r.Ace is null ? "" : ReportText.Origin(r.Ace.IsInherited)),
+            new(Strings.Col_AppliesTo, r => r.Ace?.AppliesTo ?? "", MaxWidth: 45),
+            new(Strings.Col_Share, r => Text(r.Folder.ShareUnc), MaxWidth: 40),
+            new(Strings.Col_Note, r => r.Folder.Error is null ? "" : Text(Texts.Format(Strings.Pdf_NotReadable, r.Folder.Error)), MaxWidth: 60,
                 Style: (cell, _) => cell.Style.Font.FontColor = Warning, StyleIf: r => r.Folder.Error is not null),
             new("SID", r => r.Ace?.Sid ?? "", MaxWidth: 50),
-            new("Rechte-Maske", r => r.Ace is null ? "" : ReportText.Mask(r.Ace.Rights)),
+            new(Strings.Col_RightsMask, r => r.Ace is null ? "" : ReportText.Mask(r.Ace.Rights)),
         ]);
     }
 
@@ -305,94 +305,94 @@ public static class ExcelReport
     {
         List<Col<PersonRow>> cols =
         [
-            new("Person", p => Text(p.Name), MaxWidth: 40),
-            new("Anzeigename", p => Text(p.DisplayName), MaxWidth: 40),
-            new("Deaktiviert", p => ReportText.YesNo(p.IsDisabled)),
-            new("Ordner mit Zugriff", p => p.FolderCount, Format: "#,##0"),
-            new("Höchstes Recht", p => Rights.Label(p.Highest)),
-            new("Über Gruppen", p => Text(string.Join("; ", p.ViaGroups)), MaxWidth: 80),
-            new("Direkt berechtigt", p => ReportText.YesNo(p.HasDirect)),
+            new(Strings.Col_Person, p => Text(p.Name), MaxWidth: 40),
+            new(Strings.Col_DisplayName, p => Text(p.DisplayName), MaxWidth: 40),
+            new(Strings.Col_Disabled, p => ReportText.YesNo(p.IsDisabled)),
+            new(Strings.Col_FoldersWithAccess, p => p.FolderCount, Format: "#,##0"),
+            new(Strings.Col_HighestRight, p => Rights.Label(p.Highest)),
+            new(Strings.Col_ViaGroups, p => Text(string.Join("; ", p.ViaGroups)), MaxWidth: 80),
+            new(Strings.Col_DirectlyGranted, p => ReportText.YesNo(p.HasDirect)),
             new("SID", p => p.Sid, MaxWidth: 50),
         ];
         // Nur bei gekürzten Einzelzugriffen: sonst hielte man eine Person ohne Zeilen in „Zugriffe je Person“ für unberechtigt
         if (data.PersonGrantsTruncated)
-            cols.Insert(4, new("Einzelzugriffe aufgeführt", p => p.GrantsComplete ? "Ja" : "Nein – nur die Summe",
+            cols.Insert(4, new(Strings.Col_GrantsListed, p => p.GrantsComplete ? Strings.Text_Yes : Strings.Excel_NoOnlyTotal,
                 MaxWidth: 26, Style: (cell, _) => cell.Style.Font.FontColor = Warning, StyleIf: p => !p.GrantsComplete));
-        AddTable(wb, "Personen", "Personen", data.People, data.People.Count, maxRows, "Keine Benutzerkonten im Lauf.", truncated, cols);
+        AddTable(wb, Strings.Sheet_People, "Personen", data.People, data.People.Count, maxRows, Strings.Excel_NoUsers, truncated, cols);
     }
 
     private static void AddPersonGrants(XLWorkbook wb, ReportData data, int maxRows, List<string> truncated)
     {
         var rows = data.People.SelectMany(p => p.Grants.Select(g => (Person: p, Grant: g)));
         int total = data.People.Sum(p => p.Grants.Count);
-        AddTable(wb, "Zugriffe je Person", "ZugriffeJePerson", rows, total, maxRows, "Keine Zugriffe ermittelt.", truncated,
+        AddTable(wb, Strings.Sheet_AccessPerPerson, "ZugriffeJePerson", rows, total, maxRows, Strings.Excel_NoGrants, truncated,
         [
-            new("Person", r => Text(r.Person.Name), MaxWidth: 40),
-            new("Anzeigename", r => Text(r.Person.DisplayName), MaxWidth: 40),
-            new("Pfad", r => Text(r.Grant.Path), MaxWidth: 80),
-            new("Effektives Recht", r => Rights.Label(r.Grant.Effective)),
-            new("NTFS-Recht", r => Rights.Label(r.Grant.Ntfs)),
-            new("Über Freigabe", r => r.Grant.ViaShare is { } s ? Rights.Label(s) : ReportText.Dash),
-            new("Über Gruppen", r => Text(r.Grant.Via), MaxWidth: 70),
-            new("Durch Verweigern eingeschränkt", r => ReportText.YesNo(r.Grant.ReducedByDeny)),
+            new(Strings.Col_Person, r => Text(r.Person.Name), MaxWidth: 40),
+            new(Strings.Col_DisplayName, r => Text(r.Person.DisplayName), MaxWidth: 40),
+            new(Strings.Col_Path, r => Text(r.Grant.Path), MaxWidth: 80),
+            new(Strings.Col_EffectiveRight, r => Rights.Label(r.Grant.Effective)),
+            new(Strings.Col_NtfsRight, r => Rights.Label(r.Grant.Ntfs)),
+            new(Strings.Col_ViaShare, r => r.Grant.ViaShare is { } s ? Rights.Label(s) : ReportText.Dash),
+            new(Strings.Col_ViaGroups, r => Text(r.Grant.Via), MaxWidth: 70),
+            new(Strings.Col_ReducedByDeny, r => ReportText.YesNo(r.Grant.ReducedByDeny)),
         ]);
     }
 
     private static void AddGroups(XLWorkbook wb, ReportData data, int maxRows, List<string> truncated) =>
-        AddTable(wb, "Gruppen", "Gruppen", data.Groups, data.Groups.Count, maxRows, "Keine Gruppen im Lauf.", truncated,
+        AddTable(wb, Strings.Sheet_Groups, "Gruppen", data.Groups, data.Groups.Count, maxRows, Strings.Excel_NoGroups, truncated,
         [
-            new("Gruppe", g => Text(g.Name), MaxWidth: 45),
-            new("Mitglieder direkt", g => g.DirectCount, Format: "#,##0"),
-            new("Mitglieder gesamt (Personen)", g => g.TotalPeople, Format: "#,##0"),
-            new("Vollständig", g => ReportText.YesNo(g.Complete),
+            new(Strings.Col_Group, g => Text(g.Name), MaxWidth: 45),
+            new(Strings.Col_MembersDirect, g => g.DirectCount, Format: "#,##0"),
+            new(Strings.Col_MembersTotal, g => g.TotalPeople, Format: "#,##0"),
+            new(Strings.Col_Complete, g => ReportText.YesNo(g.Complete),
                 Style: (cell, _) => cell.Style.Font.FontColor = Warning, StyleIf: g => !g.Complete),
-            new("In Ordner-ACLs", g => g.UsedInFolders, Format: "#,##0"),
-            new("Direkte Mitglieder", g => Text(string.Join("; ", g.DirectMembers)), MaxWidth: 80),
-            new("Hinweis", g => Text(g.Note), MaxWidth: 70),
+            new(Strings.Col_InFolderAcls, g => g.UsedInFolders, Format: "#,##0"),
+            new(Strings.Col_DirectMembers, g => Text(string.Join("; ", g.DirectMembers)), MaxWidth: 80),
+            new(Strings.Col_Note, g => Text(g.Note), MaxWidth: 70),
             new("SID", g => g.Sid, MaxWidth: 50),
         ]);
 
     private static void AddShares(XLWorkbook wb, ReportData data, int maxRows, List<string> truncated) =>
-        AddTable(wb, "Freigaben", "Freigaben", data.Shares, data.Shares.Count, maxRows,
-            "Keine Freigaben im Lauf (nur lokale Pfade gescannt).", truncated,
+        AddTable(wb, Strings.Sheet_Shares, "Freigaben", data.Shares, data.Shares.Count, maxRows,
+            Strings.Excel_NoShares, truncated,
         [
-            new("Freigabe", s => Text(s.Unc), MaxWidth: 50),
-            new("Pfad", s => Text(s.LocalPath), MaxWidth: 50),
-            new("Bemerkung", s => Text(s.Remark), MaxWidth: 40),
-            new("Freigabe-Rechte", s => Text(s.PermissionsText), MaxWidth: 90,
+            new(Strings.Col_Share, s => Text(s.Unc), MaxWidth: 50),
+            new(Strings.Col_Path, s => Text(s.LocalPath), MaxWidth: 50),
+            new(Strings.Col_Remark, s => Text(s.Remark), MaxWidth: 40),
+            new(Strings.Col_SharePermissions, s => Text(s.PermissionsText), MaxWidth: 90,
                 Style: (cell, _) => cell.Style.Font.FontColor = Warning, StyleIf: s => !s.Readable),
-            new("Admin-Freigabe", s => ReportText.YesNo(s.IsAdminShare)),
-            new("Rechte lesbar", s => ReportText.YesNo(s.Readable)),
+            new(Strings.Col_AdminShare, s => ReportText.YesNo(s.IsAdminShare)),
+            new(Strings.Col_PermissionsReadable, s => ReportText.YesNo(s.Readable)),
         ]);
 
     private static void AddRules(XLWorkbook wb, ReportData data, int maxRows, List<string> truncated) =>
-        AddTable(wb, "Prüfregeln", "Pruefregeln", data.Rules, data.Rules.Count, maxRows, "Keine Prüfregeln.", truncated,
+        AddTable(wb, Strings.Sheet_Rules, "Pruefregeln", data.Rules, data.Rules.Count, maxRows, Strings.Excel_NoRules, truncated,
         [
-            new("Regel", r => r.Id),
-            new("Schwere", r => ReportText.Severity(r.Severity), Style: (cell, r) => StyleSeverity(cell, r.Severity)),
-            new("Titel", r => Text(r.Title), MaxWidth: 45),
-            new("Erklärung", r => Text(r.Explanation), MaxWidth: 90),
-            new("Empfehlung", r => Text(r.Recommendation), MaxWidth: 90),
-            new("Befunde", r => r.Count, Format: "#,##0"),
+            new(Strings.Col_Rule, r => r.Id),
+            new(Strings.Col_Severity, r => ReportText.Severity(r.Severity), Style: (cell, r) => StyleSeverity(cell, r.Severity)),
+            new(Strings.Col_Title, r => Text(r.Title), MaxWidth: 45),
+            new(Strings.Col_Explanation, r => Text(r.Explanation), MaxWidth: 90),
+            new(Strings.Col_Recommendation, r => Text(r.Recommendation), MaxWidth: 90),
+            new(Strings.Col_Findings, r => r.Count, Format: "#,##0"),
         ]);
 
     private static void AddChanges(XLWorkbook wb, ComparisonData comparison, int maxRows, List<string> truncated) =>
-        AddTable(wb, "Änderungen", "Aenderungen", comparison.Rows, comparison.Rows.Count, maxRows,
-            "Keine Änderungen seit dem letzten Lauf.", truncated,
+        AddTable(wb, Strings.Sheet_Changes, "Aenderungen", comparison.Rows, comparison.Rows.Count, maxRows,
+            Strings.Pdf_NoChanges, truncated,
         [
-            new("Bereich", r => r.Area),
-            new("Änderung", r => r.Change, MaxWidth: 30),
-            new("Pfad bzw. Gruppe", r => Text(r.Subject), MaxWidth: 70),
-            new("Konto", r => Text(r.Account), MaxWidth: 40),
-            new("Vorher", r => Text(r.Before), MaxWidth: 70),
-            new("Nachher", r => Text(r.After), MaxWidth: 70),
+            new(Strings.Col_Area, r => ChangeArea.Label(r.Area)),
+            new(Strings.Col_Change, r => r.Change, MaxWidth: 30),
+            new(Strings.Col_PathOrGroup, r => Text(r.Subject), MaxWidth: 70),
+            new(Strings.Col_Account, r => Text(r.Account), MaxWidth: 40),
+            new(Strings.Col_Before, r => Text(r.Before), MaxWidth: 70),
+            new(Strings.Col_After, r => Text(r.After), MaxWidth: 70),
         ]);
 
     private static void AddErrors(XLWorkbook wb, ReportData data, int maxRows, List<string> truncated) =>
-        AddTable(wb, "Fehler", "Fehler", data.Errors, data.Errors.Count, maxRows, "Keine Fehler beim Lesen.", truncated,
+        AddTable(wb, Strings.Sheet_Errors, "Fehler", data.Errors, data.Errors.Count, maxRows, Strings.Excel_NoErrors, truncated,
         [
-            new("Pfad", e => Text(e.Path), MaxWidth: 90),
-            new("Meldung", e => Text(e.Message), MaxWidth: 90),
+            new(Strings.Col_Path, e => Text(e.Path), MaxWidth: 90),
+            new(Strings.Col_Message, e => Text(e.Message), MaxWidth: 90),
         ]);
 
     // ---- Tabellen-Helfer --------------------------------------------------------------------------
@@ -448,8 +448,7 @@ public static class ExcelReport
             ws.Cell(2, 1).Style.Font.FontColor = Muted;
         }
         if (written < total)
-            truncated.Add($"Blatt {ReportText.Quote(sheetName)} gekürzt: {ReportText.Number(written)} von {ReportText.Number(total)} Zeilen "
-                + "(Größenbegrenzung des Excel-Berichts).");
+            truncated.Add(Texts.Format(Strings.Excel_SheetTruncated, ReportText.Quote(sheetName), ReportText.Number(written), ReportText.Number(total)));
 
         var table = ws.Range(1, 1, row, cols.Count).CreateTable(tableName);
         table.Theme = XLTableTheme.TableStyleLight1;
@@ -519,10 +518,13 @@ public static class ExcelReport
     private static void Footer(IXLWorksheet ws)
     {
         ws.PageSetup.Footer.Left.AddText($"{ReportText.Product} · {ReportText.Title}");
-        ws.PageSetup.Footer.Right.AddText("Seite ");
-        ws.PageSetup.Footer.Right.AddText(XLHFPredefinedText.PageNumber);
-        ws.PageSetup.Footer.Right.AddText(" von ");
-        ws.PageSetup.Footer.Right.AddText(XLHFPredefinedText.NumberOfPages);
+        // „Seite {0} von {1}“ in der Reihenfolge der Sprache, die Platzhalter werden zu Feldern von Excel
+        var parts = System.Text.RegularExpressions.Regex.Split(Strings.Pdf_PageOf, @"\{(\d)\}");
+        for (int i = 0; i < parts.Length; i++)
+        {
+            if (i % 2 == 0) { if (parts[i].Length > 0) ws.PageSetup.Footer.Right.AddText(parts[i]); }
+            else ws.PageSetup.Footer.Right.AddText(parts[i] == "0" ? XLHFPredefinedText.PageNumber : XLHFPredefinedText.NumberOfPages);
+        }
     }
 
     private static void SetProperties(XLWorkbook wb, ReportData data)
@@ -530,7 +532,7 @@ public static class ExcelReport
         wb.Properties.Title = ReportText.Title;
         wb.Properties.Subject = Text(string.Join("; ", data.Header.Targets));
         wb.Properties.Author = ReportText.Product;
-        wb.Properties.Comments = $"Erstellt mit {ReportText.Product} {data.Header.ReportVersion}".TrimEnd();
+        wb.Properties.Comments = Texts.Format(Strings.Excel_CreatedWith, ReportText.Product, data.Header.ReportVersion).TrimEnd();
         wb.Properties.Created = data.Header.CreatedAt == default ? DateTime.Now : data.Header.CreatedAt.LocalDateTime;
     }
 

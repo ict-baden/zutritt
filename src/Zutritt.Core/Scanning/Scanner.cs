@@ -5,8 +5,8 @@ using Zutritt.Core.Diagnostics;
 using Zutritt.Core.Identity;
 using Zutritt.Core.Model;
 using Zutritt.Core.Platform;
-
 using Zutritt.Core.Resources;
+
 namespace Zutritt.Core.Scanning;
 
 /// <summary>

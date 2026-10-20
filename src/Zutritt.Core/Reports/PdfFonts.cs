@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
+using System.Globalization;
 using PdfSharp.Fonts;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.Core.Reports;
 
@@ -10,6 +12,12 @@ namespace Zutritt.Core.Reports;
 /// Jede angefragte Familie wird auf die erste gefundene Schrift abgebildet: unter Windows Segoe UI (Rückfall Arial,
 /// Tahoma, Verdana), unter Linux und macOS DejaVu Sans oder Liberation Sans. Der Bericht braucht nur eine Schrift,
 /// und so scheitert auch MigraDocs interne Standardschrift nicht.
+/// <para>
+/// Dazu, falls vorhanden, eine Schrift mit chinesischen Zeichen (Richtlinie 13, Regel 6): Ist die Oberfläche chinesisch,
+/// wird der ganze Bericht damit gesetzt; sonst nur Namen und Pfade mit solchen Zeichen (siehe <see cref="PdfText"/>),
+/// damit „D:\Daten\研发部“ nicht als Kästchen erscheint. PDFsharp kann keine Schriftsammlungen (.ttc) lesen – gesucht
+/// werden deshalb nur einzelne .ttf-Dateien.
+/// </para>
 /// </summary>
 internal sealed class PdfFonts : IFontResolver
 {
@@ -29,27 +37,64 @@ internal sealed class PdfFonts : IFontResolver
         new("Liberation Sans", "LiberationSans-Regular.ttf", "LiberationSans-Bold.ttf", "LiberationSans-Italic.ttf", "LiberationSans-BoldItalic.ttf"),
     ];
 
+    /// <summary>Schriften mit chinesischen (vereinfachten) Zeichen als einzelne .ttf-Datei, in dieser Reihenfolge gesucht.</summary>
+    internal static readonly FaceSet[] CjkCandidates =
+    [
+        new("DengXian", "Deng.ttf", "Dengb.ttf", null, null),
+        new("SimHei", "simhei.ttf", null, null, null),
+        new("Noto Sans SC", "NotoSansSC-Regular.ttf", "NotoSansSC-Bold.ttf", null, null),
+        new("Droid Sans Fallback", "DroidSansFallbackFull.ttf", null, null, null),
+        new("Droid Sans Fallback", "DroidSansFallback.ttf", null, null, null),
+        new("Arial Unicode MS", "Arial Unicode.ttf", null, null, null),
+        new("Arial Unicode MS", "ARIALUNI.TTF", null, null, null),
+    ];
+
     private static readonly Lock Gate = new();
     private static string? _family;
     private static Found? _found;
+    private static Found? _cjk;
     private static bool _searched;
+    private static bool _cjkSearched;
+    private static bool _ownResolver;
 
     private readonly Found _fonts;
+    private readonly Found? _cjkFonts;
     private readonly ConcurrentDictionary<string, byte[]> _cache = new(StringComparer.OrdinalIgnoreCase);
 
-    private PdfFonts(Found fonts) => _fonts = fonts;
+    private PdfFonts(Found fonts, Found? cjk)
+    {
+        _fonts = fonts;
+        _cjkFonts = cjk;
+    }
 
     /// <summary>
-    /// Schriftfamilie, mit der der Bericht gesetzt wird. Der erste Aufruf richtet den Resolver ein.
+    /// Schriftfamilie, mit der der Bericht gesetzt wird – bei chinesischer Oberfläche die Schrift mit chinesischen
+    /// Zeichen, falls es eine gibt. Der erste Aufruf richtet den Resolver ein.
     /// </summary>
     /// <exception cref="InvalidOperationException">In den Schriftordnern des Systems gibt es keine der Schriften.</exception>
     public static string Family
     {
         get
         {
-            lock (Gate) return _family ??= Initialize();
+            lock (Gate)
+            {
+                _family ??= Initialize();
+                return ChineseText && CjkFamily is { } cjk ? cjk : _family;
+            }
         }
     }
+
+    /// <summary>Schrift mit chinesischen Zeichen für Namen und Pfade (nach <see cref="Family"/> abgefragt), null = keine.</summary>
+    public static string? CjkFamily
+    {
+        get
+        {
+            lock (Gate) return _ownResolver ? _cjk?.Faces.Family : null;
+        }
+    }
+
+    /// <summary>Die Oberfläche ist chinesisch – dann ist fast jeder Text des Berichts chinesisch.</summary>
+    private static bool ChineseText => CultureInfo.CurrentUICulture.Name.StartsWith("zh", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Gibt es auf diesem System eine passende Schrift? (Tests überspringen den PDF-Bericht sonst.)</summary>
     public static bool IsAvailable
@@ -96,16 +141,20 @@ internal sealed class PdfFonts : IFontResolver
     private static string Initialize()
     {
         var current = GlobalFontSettings.FontResolver;
-        if (current is PdfFonts own) return own._fonts.Faces.Family;
+        if (current is PdfFonts own)
+        {
+            _ownResolver = true;
+            return own._fonts.Faces.Family;
+        }
         if (current is null)
         {
             var found = Search() ?? throw new InvalidOperationException(
-                $"Für den PDF-Bericht wurde keine Schrift gefunden (gesucht: {string.Join(", ", Candidates.Select(c => c.Family))} " +
-                $"in {string.Join(", ", Directories())}). Unter Linux hilft z. B. das Paket fonts-dejavu-core.");
-            var resolver = new PdfFonts(found);
+                Texts.Format(Strings.Pdf_NoFont, string.Join(", ", Candidates.Select(c => c.Family)), string.Join(", ", Directories())));
+            var resolver = new PdfFonts(found, SearchCjk());
             try
             {
                 GlobalFontSettings.FontResolver = resolver;
+                _ownResolver = true;
                 return found.Faces.Family;
             }
             catch (InvalidOperationException)
@@ -126,6 +175,19 @@ internal sealed class PdfFonts : IFontResolver
         foreach (var faces in Candidates)
         {
             if (Find(faces, directories) is { } found) return _found = found;
+        }
+        return null;
+    }
+
+    /// <summary>Erste vorhandene Schrift mit chinesischen Zeichen aus <see cref="CjkCandidates"/>, einmal je Prozess gesucht.</summary>
+    private static Found? SearchCjk()
+    {
+        if (_cjkSearched) return _cjk;
+        _cjkSearched = true;
+        var directories = Directories().Where(Directory.Exists).ToList();
+        foreach (var faces in CjkCandidates)
+        {
+            if (Find(faces, directories) is { } found) return _cjk = found;
         }
         return null;
     }
@@ -173,7 +235,8 @@ internal sealed class PdfFonts : IFontResolver
 
     public FontResolverInfo? ResolveTypeface(string familyName, bool isBold, bool isItalic)
     {
-        var faces = _fonts.Faces;
+        var fonts = _cjkFonts is { } cjk && familyName.Equals(cjk.Faces.Family, StringComparison.OrdinalIgnoreCase) ? cjk : _fonts;
+        var faces = fonts.Faces;
         // Gewünschten Schnitt nehmen, sonst den regulären und PDFsharp fett/kursiv nachbilden lassen
         string? exact = (isBold, isItalic) switch
         {
@@ -182,13 +245,14 @@ internal sealed class PdfFonts : IFontResolver
             (false, true) => faces.Italic,
             _ => faces.Regular,
         };
-        if (exact is not null && _fonts.Files.ContainsKey(exact))
+        if (exact is not null && fonts.Files.ContainsKey(exact))
             return new FontResolverInfo(exact);
-        if (isBold && isItalic && faces.Bold is not null && _fonts.Files.ContainsKey(faces.Bold))
+        if (isBold && isItalic && faces.Bold is not null && fonts.Files.ContainsKey(faces.Bold))
             return new FontResolverInfo(faces.Bold, false, true);
         return new FontResolverInfo(faces.Regular, isBold, isItalic);
     }
 
     public byte[]? GetFont(string faceName) =>
-        _cache.GetOrAdd(faceName, name => File.ReadAllBytes(_fonts.Files[name]));
+        _cache.GetOrAdd(faceName, name => File.ReadAllBytes(
+            _fonts.Files.TryGetValue(name, out var path) ? path : _cjkFonts!.Files[name]));
 }

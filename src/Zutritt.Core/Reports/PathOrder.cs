@@ -18,7 +18,7 @@ internal sealed class PathOrder : IComparer<string>
 
         var a = x.AsSpan();
         var b = y.AsSpan();
-        var compare = ReportText.German.CompareInfo;
+        var compare = System.Globalization.CultureInfo.CurrentCulture.CompareInfo;
         while (true)
         {
             int ia = a.IndexOfAny(WindowsPath.Separator, '/');

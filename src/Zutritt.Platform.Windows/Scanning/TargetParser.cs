@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Zutritt.Core.Model;
 using Zutritt.Core.Scanning;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.Platform.Windows.Scanning;
 
@@ -15,13 +16,13 @@ internal static partial class TargetParser
     {
         error = null;
         var t = (raw ?? "").Trim();
-        if (t.Length == 0) { error = "Leeres Ziel"; return null; }
+        if (t.Length == 0) { error = Strings.Target_Empty; return null; }
         if (t == ".") return new ScanTarget(TargetKind.LocalShares, "");
 
         t = t.Replace('/', '\\');
         if (t.StartsWith(@"\\.\", StringComparison.Ordinal) || t.StartsWith(@"\\?\GLOBALROOT", StringComparison.OrdinalIgnoreCase))
         {
-            error = $"Gerätepfade werden nicht unterstützt: „{raw}“";
+            error = Texts.Format(Strings.Target_DevicePath, raw);
             return null;
         }
         var readable = LongPath.FromExtended(t);
@@ -29,7 +30,7 @@ internal static partial class TargetParser
         // Verzeichnis – der Scanner prüfte still einen ganz anderen Ordner.
         if (LongPath.IsDevicePath(t, readable))
         {
-            error = $"Gerätepfade werden nicht unterstützt: „{raw}“";
+            error = Texts.Format(Strings.Target_DevicePath, raw);
             return null;
         }
         t = readable;
@@ -40,7 +41,7 @@ internal static partial class TargetParser
         }
         catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException)
         {
-            error = $"Ungültiger Pfad: „{raw}“";
+            error = Texts.Format(Strings.Target_InvalidPath, raw);
             return null;
         }
     }
@@ -51,13 +52,13 @@ internal static partial class TargetParser
         var parts = t[2..].TrimEnd('\\').Split('\\');
         if (parts.Length == 0 || parts[0].Length == 0 || parts[0].IndexOfAny(['?', '*', ':', '"', '<', '>', '|']) >= 0)
         {
-            error = $"Ungültiger UNC-Pfad: „{raw}“";
+            error = Texts.Format(Strings.Target_InvalidUnc, raw);
             return null;
         }
         if (parts.Length == 1) return new ScanTarget(TargetKind.Server, @"\\" + parts[0], parts[0]);
         if (parts[1].Length == 0)
         {
-            error = $"Ungültiger UNC-Pfad: „{raw}“";
+            error = Texts.Format(Strings.Target_InvalidUnc, raw);
             return null;
         }
 

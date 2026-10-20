@@ -1,6 +1,6 @@
 using Microsoft.Data.Sqlite;
-
 using Zutritt.Core.Resources;
+
 namespace Zutritt.Core.Storage;
 
 /// <summary>

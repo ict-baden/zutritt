@@ -1,6 +1,6 @@
 using Zutritt.Core.Model;
-
 using Zutritt.Core.Resources;
+
 namespace Zutritt.Core.Scanning;
 
 /// <summary>Ergebnis der Auswertung einer Freigabe-Sicherheitsbeschreibung.</summary>

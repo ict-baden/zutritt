@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 using Zutritt.Core.Model;
-
 using Zutritt.Core.Resources;
+
 namespace Zutritt.Core.Analysis;
 
 /// <summary>Eine Einstellung, in der sich zwei Läufe über dieselben Ziele unterscheiden und die bestimmt, was sie erfassen.</summary>

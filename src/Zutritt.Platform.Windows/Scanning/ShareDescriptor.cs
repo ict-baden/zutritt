@@ -1,6 +1,7 @@
 using System.Security.AccessControl;
 using Zutritt.Core.Model;
 using Zutritt.Core.Scanning;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.Platform.Windows.Scanning;
 
@@ -19,7 +20,7 @@ internal static class ShareDescriptor
         try { sd = new RawSecurityDescriptor(descriptor, 0); }
         catch (Exception e) when (e is ArgumentException or OverflowException)
         {
-            return ShareSecurityResult.NotReadable("Freigabe-Berechtigungen nicht lesbar: Sicherheitsbeschreibung ist beschädigt");
+            return ShareSecurityResult.NotReadable(Strings.Share_PermissionsCorrupt);
         }
         return FromDescriptor(sd);
     }
@@ -37,7 +38,7 @@ internal static class ShareDescriptor
             {
                 // Eintragstyp ohne SID (veraltet/unbekannt) – lieber als „nicht lesbar“ melden als still weglassen,
                 // dann rechnet die Auswertung nur mit NTFS (obere Grenze).
-                return ShareSecurityResult.NotReadable($"Freigabe-Berechtigungen nicht vollständig auswertbar: unbekannter Eintragstyp {(int)ace.AceType}");
+                return ShareSecurityResult.NotReadable(Texts.Format(Strings.Share_UnknownAceType, (int)ace.AceType));
             }
             // Nur-vererben-Einträge wirken nie auf die Freigabe selbst.
             if ((ace.PropagationFlags & PropagationFlags.InheritOnly) != 0) continue;

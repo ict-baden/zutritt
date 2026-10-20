@@ -1,6 +1,6 @@
 using Zutritt.Core.Model;
-
 using Zutritt.Core.Resources;
+
 namespace Zutritt.Core.Analysis;
 
 /// <summary>Prüfregeln (ZT01 …) und ihre Auswertung.</summary>
