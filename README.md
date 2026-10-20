@@ -102,7 +102,7 @@
 <table>
   <tr>
     <td width="50%" valign="top"><b>Effective access, computed like Windows</b><br>Canonical ACE order, deny entries, inheritance, <i>OWNER RIGHTS</i>, share ∩ NTFS – checked against the Windows access check in the test suite</td>
-    <td width="50%" valign="top"><b>Groups down to people</b><br>Local accounts and groups of the scanned server and, on domain-joined PCs, Active Directory – nested, with cycle protection</td>
+    <td width="50%" valign="top"><b>Groups down to people</b><br>Local accounts and groups of the scanned server and, on domain-joined PCs, Active Directory – nested, with cycle protection. Active Directory is so far tested against a simulated directory only (<a href="#limits-honestly">Limits</a>)</td>
   </tr>
   <tr>
     <td valign="top"><b>Orphaned is really orphaned</b><br>A SID is only reported as orphaned when the responsible account database was reachable and does not know the SID – an unreachable domain gives <i>Unbekannt</i> (unknown), not a deletion hint</td>
