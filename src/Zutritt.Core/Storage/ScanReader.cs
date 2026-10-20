@@ -37,14 +37,19 @@ internal static class ScanReader
     }
 
     /// <param name="machine">Nur Läufe dieses Rechners (Groß/Klein egal), null = egal.</param>
-    public static ScanSummary? FindPrevious(SqliteConnection db, string targetsKey, long startedUtc, long excludeId, string? machine)
+    /// <param name="request">
+    /// Einstellungen des neuen Laufs: bevorzugt wird der letzte Lauf mit demselben Umfang (<see cref="Analysis.ScanScope.Same"/>),
+    /// sonst der letzte mit denselben Zielen – der Vergleich beschränkt sich dann auf den gemeinsamen Umfang.
+    /// </param>
+    public static ScanSummary? FindPrevious(SqliteConnection db, string targetsKey, long startedUtc, long excludeId, string? machine,
+        ScanRequest? request = null)
     {
         // Der Rechnername wird hier verglichen, nicht per COLLATE NOCASE: SQLite faltet nur ASCII,
         // „PRÜF-PC“ und „prüf-pc“ wären dort verschiedene Rechner. Der Index liefert die Läufe schon
-        // absteigend; gelesen wird nur bis zum ersten passenden.
+        // absteigend; gelesen wird nur bis zum ersten mit gleichem Umfang.
         using var cmd = db.CreateCommand();
         cmd.CommandText = $"""
-            SELECT {SummaryColumns}, machine FROM scan
+            SELECT {SummaryColumns}, machine, request_json FROM scan
             WHERE targets_key = $key AND started_utc < $started AND id <> $id
             ORDER BY started_utc DESC, id DESC;
             """;
@@ -52,12 +57,28 @@ internal static class ScanReader
         cmd.Parameters.AddWithValue("$started", startedUtc);
         cmd.Parameters.AddWithValue("$id", excludeId);
         using var r = cmd.ExecuteReader();
+        ScanSummary? fallback = null;
         while (r.Read())
         {
-            if (machine is null || string.Equals(r.GetString(SummaryColumnCount), machine, StringComparison.OrdinalIgnoreCase))
-                return ReadSummary(r);
+            if (machine is not null && !string.Equals(r.GetString(SummaryColumnCount), machine, StringComparison.OrdinalIgnoreCase)) continue;
+            var summary = ReadSummary(r);
+            if (request is null || SameScope(r.GetString(SummaryColumnCount + 1), request)) return summary;
+            fallback ??= summary;
         }
-        return null;
+        return fallback;
+    }
+
+    private static bool SameScope(string json, ScanRequest request)
+    {
+        try
+        {
+            return Analysis.ScanScope.Same(ParseRequest(json), request);
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidDataException or NotSupportedException)
+        {
+            // Unlesbare Einstellungen: nicht bevorzugen; ob der Lauf selbst lesbar ist, zeigt erst das Laden
+            return false;
+        }
     }
 
     private static ScanSummary ReadSummary(SqliteDataReader r) => new(

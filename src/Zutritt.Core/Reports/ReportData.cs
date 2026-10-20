@@ -149,6 +149,8 @@ internal sealed record ReportNote(NoteKind Kind, string Text);
 internal sealed record ComparisonData
 {
     public DateTimeOffset OlderStartedAt { get; init; }
+    /// <summary>Hinweis, dass die Läufe einen anderen Umfang hatten und nur der gemeinsame verglichen ist; sonst leer.</summary>
+    public string ScopeNote { get; init; } = "";
     public int NewFindings { get; init; }
     public int ResolvedFindings { get; init; }
     public int MoreAccess { get; init; }

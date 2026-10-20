@@ -360,6 +360,7 @@ public static class PdfReport
             if (data.Comparison is { } c)
             {
                 Heading2("Vergleich mit dem letzten Lauf");
+                if (c.ScopeNote.Length > 0) Note(NoteKind.Warnung, c.ScopeNote);
                 if (!c.HasChanges)
                 {
                     Paragraph($"Keine Änderungen seit dem Lauf vom {ReportText.DateTime(c.OlderStartedAt)}.");
@@ -687,6 +688,7 @@ public static class PdfReport
         private void Changes(ComparisonData comparison)
         {
             Heading1("Änderungen seit dem letzten Lauf");
+            if (comparison.ScopeNote.Length > 0) Note(NoteKind.Warnung, comparison.ScopeNote);
             if (!comparison.HasChanges)
             {
                 Intro($"Vergleich mit dem Lauf vom {ReportText.DateTime(comparison.OlderStartedAt)}.");

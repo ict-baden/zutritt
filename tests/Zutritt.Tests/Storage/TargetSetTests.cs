@@ -12,7 +12,8 @@ public sealed class TargetSetTests
     [InlineData(@"c:\daten\", @"C:\DATEN")]
     [InlineData(@"C:\", @"C:\")]
     [InlineData(@"c:/", @"C:\")]
-    [InlineData(@"C:", @"C:")]
+    [InlineData(@"C:", @"C:\")]       // wie TargetParser: das ganze Laufwerk, sonst fände „scan D:“ nie „scan D:\“
+    [InlineData(@"d:", @"D:\")]
     [InlineData(".", ".")]
     [InlineData(@"\", @"\")]
     [InlineData(@"\\server", @"\\SERVER")]

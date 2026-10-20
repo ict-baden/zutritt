@@ -401,6 +401,7 @@ internal static class CommandLine
             Console.WriteLine($"Seit dem Lauf vom {Labels.Date(comparison.Older.StartedAt)}: {comparison.NewFindings.Count} neue, " +
                 $"{comparison.ResolvedFindings.Count} behobene Befunde, {comparison.AccessChanges.Count} Zugriffsänderungen, " +
                 $"{comparison.AceChanges.Count} ACL-Änderungen, {comparison.MembershipChanges.Count} Mitgliedschaftsänderungen.");
+            if (comparison.ScopeDiffers) Console.WriteLine($"Achtung: {ScanScope.Describe(comparison)}");
         }
     }
 

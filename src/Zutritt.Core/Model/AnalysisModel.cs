@@ -25,6 +25,15 @@ public sealed class ComparisonResult
     public required ScanResult Older { get; init; }
     public required ScanResult Newer { get; init; }
 
+    /// <summary>
+    /// Einstellungen, in denen sich die Läufe unterscheiden (z. B. nur einer mit Dateien). Nicht leer: verglichen ist
+    /// nur der gemeinsame Umfang, siehe <see cref="Analysis.ScanScope"/>.
+    /// </summary>
+    public IReadOnlyList<Analysis.ScopeDifference> ScopeDifferences { get; init; } = [];
+
+    /// <summary>Die Läufe hatten einen anderen Umfang – Oberfläche und Berichte weisen darauf hin.</summary>
+    public bool ScopeDiffers => ScopeDifferences.Count > 0;
+
     public List<AceChange> AceChanges { get; } = [];
     /// <summary>Ordner, die neu eigene Rechte haben bzw. keine mehr haben.</summary>
     public List<string> FoldersAdded { get; } = [];

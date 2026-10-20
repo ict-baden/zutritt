@@ -120,7 +120,9 @@ public sealed class ScanStore : IDisposable
     /// <summary>
     /// Der letzte Lauf vor <paramref name="scan"/> mit denselben Zielen, für den Vergleich: gleiche Zielmenge
     /// (Reihenfolge, Groß/Klein und abschließendes „\“ egal), früher gestartet, nicht der Lauf selbst. Hängen
-    /// die Ziele vom Rechner ab („.“, lokale Pfade, \\localhost), zählt nur ein Lauf desselben Rechners.
+    /// die Ziele vom Rechner ab („.“, lokale Pfade, \\localhost), zählt nur ein Lauf desselben Rechners. Unter
+    /// diesen hat ein Lauf mit denselben Einstellungen (Dateien, Tiefe, administrative Freigaben, Gruppen, ZT06-Ebene)
+    /// Vorrang – ein zwischendurch flach gestarteter Lauf verdrängt so nicht den letzten vollständigen.
     /// </summary>
     public ScanSummary? FindPrevious(ScanResult scan)
     {
@@ -129,7 +131,7 @@ public sealed class ScanStore : IDisposable
         var key = TargetSet.Key(targets);
         var machine = TargetSet.DependsOnMachine(targets) ? scan.Machine ?? "" : null;
         return Run("Der vorige Lauf konnte nicht gesucht werden.",
-            () => ScanReader.FindPrevious(_db, key, scan.StartedAt.UtcTicks, scan.Id, machine));
+            () => ScanReader.FindPrevious(_db, key, scan.StartedAt.UtcTicks, scan.Id, machine, scan.Request));
     }
 
     /// <summary>Löscht einen Lauf mit allem, was dazugehört. Unbekannte Nummern werden ignoriert.</summary>

@@ -26,10 +26,15 @@
             </Grid>
             <Border x:Name="TargetsWarning" Grid.Row="1" CornerRadius="6" Padding="12,8" Margin="0,10,0,0" Visibility="Collapsed"
                     Background="{DynamicResource SystemFillColorCautionBackgroundBrush}">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="&#xE7BA;" Style="{StaticResource Icon}" FontSize="13" Margin="0,0,10,0" Foreground="{DynamicResource SystemFillColorCautionBrush}"/>
-                    <TextBlock x:Name="TargetsWarningText" Style="{StaticResource Body}" FontSize="13"/>
-                </StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="&#xE7BA;" Style="{StaticResource Icon}" FontSize="13" Margin="0,2,10,0" VerticalAlignment="Top"
+                               Foreground="{DynamicResource SystemFillColorCautionBrush}"/>
+                    <TextBlock x:Name="TargetsWarningText" Grid.Column="1" Style="{StaticResource Body}" FontSize="13" TextWrapping="Wrap"/>
+                </Grid>
             </Border>
 
             <!-- ========== Kacheln ========== -->
@@ -59,7 +64,7 @@
                     <StackPanel>
                         <TextBlock Text="&#xE8D7;" Style="{StaticResource Icon}" FontSize="14" Height="18" HorizontalAlignment="Left" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
                         <TextBlock x:Name="CountAces" Text="0" FontFamily="{StaticResource DisplayFont}" FontSize="26" FontWeight="SemiBold" Margin="0,6,0,0"/>
-                        <TextBlock Text="ACL-Änderungen" Style="{StaticResource Caption}"/>
+                        <TextBlock Text="ACL- und Ordneränderungen" Style="{StaticResource Caption}" TextWrapping="Wrap"/>
                     </StackPanel>
                 </RadioButton>
                 <RadioButton x:Name="TileMembers" Style="{StaticResource TileChoice}" GroupName="cmp" Checked="Tile_Checked">

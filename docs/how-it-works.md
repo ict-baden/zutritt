@@ -148,7 +148,9 @@ The test suite checks this calculation bit for bit against the Windows access ch
 
 ## Comparison
 
-A comparison takes an older and a newer run. By default the older one is the **newest earlier run with the same set of targets** (order, upper/lower case and a trailing `\` do not matter); for machine-dependent targets – `.`, local paths, `\\localhost` – only runs from the same PC qualify. In the app, any earlier run can be chosen on *Vergleich*.
+A comparison takes an older and a newer run. By default the older one is the **newest earlier run with the same set of targets** (order, upper/lower case, `/` instead of `\`, a trailing `\` and `D:` instead of `D:\` do not matter); for machine-dependent targets – `.`, local paths, `\\localhost` – only runs from the same PC qualify. Among those, a run with the **same options** (files, depth, administrative shares, group resolution, level for ZT06) is preferred, so an ad-hoc shallow run in between does not push out the last full one. In the app, any earlier run can be chosen on *Vergleich*.
+
+**Different scope.** If the two runs were made with different options, only what both of them covered is compared: files only if both included files, folders only down to the smaller depth, administrative shares only if both included them (shares named explicitly as targets always count), ZT06 only from the higher level on. Otherwise a run with `--tiefe 1` after a full run would report every deeper folder as removed and its findings as resolved. The *Vergleich* page, the command line, the PDF and the Excel report then say *Umfang weicht ab* and name the differences.
 
 | Compared | How |
 |---|---|

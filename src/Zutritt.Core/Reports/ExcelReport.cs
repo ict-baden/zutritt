@@ -142,6 +142,7 @@ public static class ExcelReport
         if (data.Comparison is { } c)
         {
             Section($"Vergleich mit dem Lauf vom {ReportText.DateTime(c.OlderStartedAt)}");
+            if (c.ScopeNote.Length > 0) Note(NoteKind.Warnung, c.ScopeNote);
             if (!c.HasChanges) Pair("Ergebnis", "Keine Änderungen seit dem letzten Lauf.");
             // Reihenfolge wie im Blatt „Änderungen“: Befunde, Ursachen, Folgen für Personen
             Number("Neue Befunde", c.NewFindings, warn: c.NewFindings > 0);

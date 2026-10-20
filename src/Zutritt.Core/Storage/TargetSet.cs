@@ -11,8 +11,8 @@ internal static class TargetSet
     public static string Display(IEnumerable<string>? targets) => string.Join("; ", targets ?? []);
 
     /// <summary>
-    /// Schlüssel der Zielmenge: Reihenfolge, Groß/Klein, doppelte Einträge, „/“ statt „\“ und ein
-    /// abschließendes „\“ spielen keine Rolle. Zeilenumbruch als Trenner, weil er in Pfaden nicht vorkommen kann.
+    /// Schlüssel der Zielmenge: Reihenfolge, Groß/Klein, doppelte Einträge, „/“ statt „\“, ein
+    /// abschließendes „\“ und „D:“ statt „D:\“ spielen keine Rolle. Zeilenumbruch als Trenner, weil er in Pfaden nicht vorkommen kann.
     /// </summary>
     public static string Key(IEnumerable<string>? targets) =>
         string.Join("\n", (targets ?? [])
@@ -26,7 +26,8 @@ internal static class TargetSet
         var t = WindowsPath.WithBackslashes((target ?? "").Trim());
         var trimmed = t.TrimEnd(WindowsPath.Separator);
         if (trimmed.Length == 0) trimmed = t;                                     // „\“ allein: nichts zu kürzen
-        else if (trimmed.Length == 2 && trimmed[1] == ':' && t.Length > 2) trimmed += WindowsPath.Separator;  // „C:\“ bleibt Laufwerkswurzel
+        // „C:“ und „C:\“ meinen beide das ganze Laufwerk (so liest es auch der TargetParser) und bleiben Laufwerkswurzel
+        else if (trimmed.Length == 2 && trimmed[1] == ':') trimmed += WindowsPath.Separator;
         return trimmed.ToUpperInvariant();
     }
 

@@ -82,7 +82,7 @@ internal static class ReportDataBuilder
             Groups = groups,
             Shares = shares,
             Errors = errors,
-            Notes = BuildNotes(scan, folders, shares, people, maxPersonGrants),
+            Notes = BuildNotes(scan, folders, shares, people, maxPersonGrants, comparison),
             Comparison = changes,
         };
     }
@@ -346,7 +346,7 @@ internal static class ReportDataBuilder
             .ToList();
 
     private static List<ReportNote> BuildNotes(ScanResult scan, List<FolderRow> folders, List<ShareRow> shares,
-        List<PersonRow> people, int maxGrants)
+        List<PersonRow> people, int maxGrants, ComparisonResult? comparison)
     {
         var warnings = new List<string>();
         var request = scan.Request;
@@ -386,6 +386,9 @@ internal static class ReportDataBuilder
         if (truncated > 0)
             warnings.Add($"Die Einzelzugriffe je Person sind auf {ReportText.Number(maxGrants)} Zeilen begrenzt; "
                 + $"für {Count(truncated, "Person", "Personen")} sind nur die Summen enthalten.");
+
+        // Vergleich mit anderem Umfang: zuerst, denn er relativiert alle Zahlen der Änderungen
+        if (comparison is { ScopeDiffers: true }) warnings.Insert(0, ScanScope.Describe(comparison));
 
         var notes = warnings.Select(w => new ReportNote(NoteKind.Warnung, w)).ToList();
         notes.Add(new ReportNote(NoteKind.Hinweis,
@@ -446,6 +449,7 @@ internal static class ReportDataBuilder
         return new ComparisonData
         {
             OlderStartedAt = c.Older.StartedAt,
+            ScopeNote = ScanScope.Describe(c),
             NewFindings = c.NewFindings.Count,
             ResolvedFindings = c.ResolvedFindings.Count,
             MoreAccess = c.AccessChanges.Count(a => a.After > a.Before),

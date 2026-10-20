@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Zutritt.Core.Analysis;
 using Zutritt.Core.Model;
 
 namespace Zutritt.UI.Pages;
@@ -87,13 +88,12 @@ public partial class ComparisonPage : UserControl, IPage
     {
         var runs = await _state.ListRunsAsync();
         if (version != _choicesVersion || !ReferenceEquals(scan, _shownScan)) return;
-        var targets = new HashSet<string>(scan.Request.Targets.Select(t => t.Trim()), StringComparer.OrdinalIgnoreCase);
         _choices = runs
             .Where(r => r.Id != scan.Id && r.StartedAt < scan.StartedAt)
             .OrderByDescending(r => r.StartedAt)
             .Select(r =>
             {
-                var same = targets.SetEquals(r.Targets.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+                var same = ScanScope.SameTargets(scan.Request.Targets, r.Targets.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
                 var findings = r.Findings == 1 ? "1 Befund" : $"{Labels.Number(r.Findings)} Befunde";
                 return new OlderChoice(r.Id, $"{Labels.Date(r.StartedAt)} · {r.Targets} · {findings}", same);
             })
@@ -156,9 +156,13 @@ public partial class ComparisonPage : UserControl, IPage
 
         var days = (c.Newer.StartedAt - c.Older.StartedAt).TotalDays;
         CompareInfo.Text = days >= 1.5 ? $"{Math.Round(days):0} Tage vorher" : days >= 0.5 ? "1 Tag vorher" : "am selben Tag";
-        var sameTargets = new HashSet<string>(c.Older.Request.Targets, StringComparer.OrdinalIgnoreCase).SetEquals(c.Newer.Request.Targets);
-        TargetsWarning.Visibility = sameTargets ? Visibility.Collapsed : Visibility.Visible;
-        TargetsWarningText.Text = $"Der ältere Lauf hatte andere Ziele ({Labels.Targets(c.Older.Request.Targets)}) – Unterschiede können auch daher kommen.";
+        // Ziele wie beim automatischen Vergleich normalisiert („D:“ = „D:\“, „/“ = „\“, Groß/Klein egal)
+        var warnings = new List<string>();
+        if (!ScanScope.SameTargets(c.Older.Request.Targets, c.Newer.Request.Targets))
+            warnings.Add($"Der ältere Lauf hatte andere Ziele ({Labels.Targets(c.Older.Request.Targets)}) – Unterschiede können auch daher kommen.");
+        if (c.ScopeDiffers) warnings.Add(ScanScope.Describe(c));
+        TargetsWarning.Visibility = warnings.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        TargetsWarningText.Text = string.Join(Environment.NewLine, warnings);
 
         if (!ReferenceEquals(_rowsFor, c))
         {

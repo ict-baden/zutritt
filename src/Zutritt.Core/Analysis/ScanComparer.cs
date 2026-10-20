@@ -20,6 +20,9 @@ public static class ScanComparer
     /// dort gerade erst Zugriff bekommen. Hat einer der Läufe keine Gruppen aufgelöst, werden die effektiven Rechte
     /// auf beiden Seiten ohne Gruppenmitgliedschaften verglichen (direkte Einträge, Jeder, Authentifizierte Benutzer).</item>
     /// <item>Mitgliedschaften nur für Gruppen, deren Mitglieder in beiden Läufen bekannt sind.</item>
+    /// <item>Haben die Läufe einen anderen Umfang (Dateien, Tiefe, administrative Freigaben, Ebene für ZT06), wird nur
+    /// der gemeinsame Umfang verglichen (<see cref="ScanScope.Restrict"/>); <see cref="ComparisonResult.ScopeDifferences"/>
+    /// nennt die Unterschiede, damit Oberfläche und Berichte darauf hinweisen.</item>
     /// </list>
     /// </remarks>
     public static ComparisonResult Compare(ScanResult older, ScanResult newer)
@@ -27,7 +30,10 @@ public static class ScanComparer
         ArgumentNullException.ThrowIfNull(older);
         ArgumentNullException.ThrowIfNull(newer);
 
-        var result = new ComparisonResult { Older = older, Newer = newer };
+        var differences = ScanScope.Differences(older.Request, newer.Request);
+        var result = new ComparisonResult { Older = older, Newer = newer, ScopeDifferences = differences };
+        // Gruppen allein ändern den Umfang der Ordner nicht – das gleicht CompareAccess selbst aus
+        if (differences.Any(d => d != ScopeDifference.Groups)) (older, newer) = ScanScope.Restrict(older, newer);
         var oldFolders = IndexFolders(older);
         var newFolders = IndexFolders(newer);
 
