@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;

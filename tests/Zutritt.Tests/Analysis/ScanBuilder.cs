@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using Zutritt.Core.Model;
 
 namespace Zutritt.Tests.Analysis;

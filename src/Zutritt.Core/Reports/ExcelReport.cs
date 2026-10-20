@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using ClosedXML.Excel;
 using Zutritt.Core.Model;
 using Zutritt.Core.Resources;

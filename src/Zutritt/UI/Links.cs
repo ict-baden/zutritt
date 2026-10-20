@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using System.Diagnostics;
 using Zutritt.Core;
 using Zutritt.Core.Resources;

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Zutritt.UI;

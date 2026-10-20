@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using System.DirectoryServices;
 using System.DirectoryServices.ActiveDirectory;
 using System.Runtime.InteropServices;

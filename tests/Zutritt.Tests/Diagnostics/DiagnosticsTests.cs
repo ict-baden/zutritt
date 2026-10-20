@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using System.IO.Compression;
 using Zutritt.Core.Diagnostics;
 using Zutritt.Core.Model;

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using MigraDoc.DocumentObjectModel;
 using Zutritt.Core.Reports;
 using Zutritt.Tests.TestSupport;

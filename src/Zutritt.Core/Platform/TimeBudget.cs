@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using System.Runtime.ExceptionServices;
 using Zutritt.Core.Resources;
 

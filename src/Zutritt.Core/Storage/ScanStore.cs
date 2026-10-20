@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
 using Zutritt.Core.Model;

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using System.Collections.Concurrent;
 using System.Globalization;
 using PdfSharp.Fonts;

@@ -12,6 +12,7 @@
 .EXAMPLE
     cd tools\screenshots; pip install pypdfium2 pillow; npm install; .\make-assets.ps1
 #>
+# SPDX-License-Identifier: MIT
 $ErrorActionPreference = 'Stop'
 $repo = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 $assets = Join-Path $repo 'docs\assets'

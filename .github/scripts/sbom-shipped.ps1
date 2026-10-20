@@ -23,6 +23,7 @@
 .EXAMPLE
     ./.github/scripts/sbom-shipped.ps1 -Sbom dist/Zutritt-sbom.cdx.json -DepsJson src/Zutritt/obj/Release/net10.0-windows/win-x64/Zutritt.deps.json
 #>
+# SPDX-License-Identifier: MIT
 param(
     [Parameter(Mandatory)] [string] $Sbom,
     [Parameter(Mandatory)] [string] $DepsJson

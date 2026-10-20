@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using Zutritt.Cli;
 using Zutritt.Core.Localization;
 

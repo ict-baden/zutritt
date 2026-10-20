@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using Zutritt.Core.Resources;
 
 namespace Zutritt.Core.Reports;

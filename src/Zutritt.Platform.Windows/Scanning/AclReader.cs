@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using Microsoft.Win32.SafeHandles;

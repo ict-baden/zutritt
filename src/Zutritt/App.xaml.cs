@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using System.Windows;
 using System.Windows.Threading;
 using Zutritt.Cli;

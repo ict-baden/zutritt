@@ -39,6 +39,7 @@ dotnet run --project src/Zutritt -- --demo
 ## Regeln
 
 - Commit-Nachrichten auf Deutsch.
+- Jede `.cs`-Datei beginnt mit `// SPDX-License-Identifier: MIT` (Richtlinie 06, Test `SourceHeaderTests`).
 - Kein Text fest im Code: jeden neuen Text in alle Sprachdateien eintragen (en, de, es, fr, zh-Hans), Fachbegriffe aus `ict-baden/richtlinien/sprachen/glossar.csv`. Unsichere Übersetzung: englischen Text eintragen, mit `TODO-übersetzen` markieren. Regeln in Richtlinie 13. Im Code `Strings.X` bzw. `Texts.Format(Strings.X, …)`, in XAML `{x:Static res:Strings.X}` – Platzhalter statt `+`, Mehrzahl über `Texts.Plural`.
 - Nach Arbeit an diesem Projekt: Verlauf in `ict-baden-projekte/notizen/freigaben-berechtigungen.md` und Logbuch dort ergänzen.
 - Vor jedem Release: Abschnitt „Unveröffentlicht“ im `CHANGELOG.md` pflegen.

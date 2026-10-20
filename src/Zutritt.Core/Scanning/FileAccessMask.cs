@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 namespace Zutritt.Core.Scanning;
 
 /// <summary>Zugriffsmasken für Dateien und Freigaben (winnt.h) und die Generic-Abbildung von Windows.</summary>

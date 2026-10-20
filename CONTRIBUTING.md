@@ -12,6 +12,7 @@ Please open an issue first and describe your plan.
 - Ein Thema pro Pull Request, mit Tests.
 - `dotnet build` und `dotnet test` müssen grün sein. Viele Tests legen echte Freigaben und lokale Konten an (`[AdminFact]`) und werden ohne Administratorrechte übersprungen – `dotnet test Zutritt.sln` deshalb in einem Terminal mit Administratorrechten ausführen. Die CI führt sie aus.
 - Keine neuen Abhängigkeiten ohne Rücksprache. Nur freizügige Lizenzen (MIT, BSD, Apache-2.0, ISC), keine GPL/AGPL. Jede neue oder aktualisierte Abhängigkeit gehört mit Version, Quelle, Copyright und Lizenztext in [`THIRD-PARTY-NOTICES.txt`](THIRD-PARTY-NOTICES.txt).
+- Jede `.cs`-Datei beginnt mit `// SPDX-License-Identifier: MIT` (der Test `SourceHeaderTests` prüft das).
 - Keine Passwörter, internen Hostnamen oder Kundendaten in Code, Tests oder Screenshots. Demo-Daten und Screenshots ohne echte Personennamen.
 - Bilder der Doku nicht von Hand bearbeiten, sondern mit `tools/screenshots/make-assets.ps1` neu erzeugen.
 

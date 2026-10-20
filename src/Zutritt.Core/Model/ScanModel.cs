@@ -1,4 +1,4 @@
-
+// SPDX-License-Identifier: MIT
 namespace Zutritt.Core.Model;
 
 /// <summary>Was gescannt werden soll.</summary>

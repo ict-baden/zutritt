@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 namespace Zutritt.Tests.TestSupport;
 
 /// <summary>Temporärer Ordnerbaum für Tests, wird beim Dispose samt Inhalt gelöscht.</summary>
