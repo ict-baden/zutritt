@@ -152,6 +152,19 @@ public sealed class AnonymizerTests
     [InlineData("Version 0.1.0-ci.12, .NET 10.0.0", "Version 0.1.0-ci.12, .NET 10.0.0")]
     public void Ersetzt_Namen_Pfade_und_Adressen(string input, string expected) => Assert.Equal(expected, _anonymizer.Apply(input));
 
+    [Theory]
+    [InlineData(@"Ordner D:\Daten\Personal\Erika Mustermann Akte\Vertrag.pdf fehlt", @"Ordner D:\… fehlt")]
+    [InlineData(@"Freigabe \\FS01\Personal\Kündigung Hans Meier\2026 nicht lesbar", @"Freigabe \\SERVER-1\… nicht lesbar")]
+    [InlineData(@"Could not find a part of the path 'C:\Users\x\Erika Mustermann'.", "Could not find a part of the path '…'.")]
+    [InlineData(@"Access to the path '\\FS01\Personal\Hans Meier.docx' is denied.", "Access to the path '…' is denied.")]
+    [InlineData("LDAP://CN=Hans Meier,OU=Vorstand,DC=kanzlei,DC=local", "LDAP://CN=…,OU=…,DC=…,DC=…")]
+    [InlineData("Gruppe cn=Projekt Geheim,ou=Gruppen nicht lesbar", "Gruppe cn=…,ou=…")]
+    [InlineData("Domäne (kanzlei-mueller.local) antwortet nicht, Server dc01.kanzlei-mueller.local", "Domäne (DNS-DOMÄNE) antwortet nicht, Server dc01.DNS-DOMÄNE")]
+    [InlineData("Zutritt's Protokoll bleibt", "Zutritt's Protokoll bleibt")]
+    [InlineData(@"Kopie von D:\Akte Muster\a nach E:\Ziel\b fertig", @"Kopie von D:\… nach E:\… fertig")]
+    public void Ersetzt_Pfade_mit_Leerzeichen_LDAP_Namen_und_DNS_Domaene(string input, string expected) =>
+        Assert.Equal(expected, new Anonymizer("PC-LABOR-07", "jdoe", "MUSTER", "kanzlei-mueller.local").Apply(input));
+
     public static TheoryData<string> Languages => [.. Zutritt.Core.Localization.UiLanguage.Supported];
 
     [Theory]

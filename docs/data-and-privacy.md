@@ -89,7 +89,7 @@ Error messages from Windows or .NET can contain a file path, for example of a re
 
 *Info* › ***Diagnosepaket erstellen*** saves a ZIP file for a support request: version, build, Windows and .NET version, language and time zone, database schema and number of stored runs, and the logs of the last 7 days. It contains **no runs, no reports and no database**.
 
-The switch ***Ohne Namen und Adressen*** is on by default: names of this PC, its user and domain, server names and UNC paths, local paths, account SIDs, *DOMÄNE\\name* accounts, quoted names, IP and e-mail addresses are replaced (*RECHNER*, *BENUTZER*, *SERVER-1* …). Look into the ZIP before you send it.
+The switch ***Ohne Namen und Adressen*** is on by default: names of this PC, its user, its domain and DNS domain, server names and UNC paths, local paths (also with spaces in the middle), account SIDs, *DOMÄNE\\name* accounts, names in LDAP paths (*CN=…*, *OU=…*, *DC=…*), quoted names in every language of the interface, IP and e-mail addresses are replaced (*RECHNER*, *BENUTZER*, *SERVER-1* …). A path without quotes ends at the first space after which no further part of the path follows – Zutritt's own messages quote paths, but a message from Windows might not. Look into the ZIP before you send it.
 
 - **Free support on GitHub is public.** Attach only the anonymised package – never reports, `zutritt.db` or real server, share and account names ([SUPPORT.md](../SUPPORT.md)).
 - **Confidential analysis** of real runs or reports is part of a support contract with a data processing agreement (*Auftragsverarbeitungsvertrag*), because ICT-Baden then processes personal data on the customer's behalf.
