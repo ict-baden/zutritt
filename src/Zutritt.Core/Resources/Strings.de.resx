@@ -1196,6 +1196,9 @@ Es wird nur gelesen – an Rechten und Dateien ändert Zutritt nichts.
   <data name="Info_LanguageForced" xml:space="preserve">
     <value>Vorgegeben durch die Umgebungsvariable {0} – die Wahl hier gilt erst ohne sie.</value>
   </data>
+  <data name="Info_LanguageMachine" xml:space="preserve">
+    <value>Vorgabe für diesen Rechner ({0})</value>
+  </data>
   <data name="Info_LanguageNotSaved" xml:space="preserve">
     <value>Die Sprache ließ sich nicht speichern: {0}</value>
   </data>

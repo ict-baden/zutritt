@@ -1196,6 +1196,9 @@ Zutritt solo lee: no cambia permisos ni archivos.
   <data name="Info_LanguageForced" xml:space="preserve">
     <value>Establecido por la variable de entorno {0}; la elección de aquí solo se aplica sin ella.</value>
   </data>
+  <data name="Info_LanguageMachine" xml:space="preserve">
+    <value>Predeterminado de este equipo ({0})</value>
+  </data>
   <data name="Info_LanguageNotSaved" xml:space="preserve">
     <value>No se pudo guardar el idioma: {0}</value>
   </data>

@@ -1196,6 +1196,9 @@ Zutritt se contente de lire – il ne modifie ni les autorisations ni les fichie
   <data name="Info_LanguageForced" xml:space="preserve">
     <value>Défini par la variable d’environnement {0} – le choix ici ne s’applique que sans elle.</value>
   </data>
+  <data name="Info_LanguageMachine" xml:space="preserve">
+    <value>Valeur par défaut de cet ordinateur ({0})</value>
+  </data>
   <data name="Info_LanguageNotSaved" xml:space="preserve">
     <value>La langue n’a pas pu être enregistrée : {0}</value>
   </data>

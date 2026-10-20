@@ -111,6 +111,19 @@ public static class UiLanguage
     /// <summary>Die Einstellung des Benutzers ("" = Systemsprache), ohne Umgebungsvariable und Rechnervorgabe.</summary>
     public static string UserSetting() => Read(UserSettingsPath);
 
+    /// <summary>Die Vorgabe für alle Benutzer dieses Rechners ("" = keine).</summary>
+    public static string MachineSetting() => Read(MachineSettingsPath);
+
+    /// <summary>
+    /// Was gilt, wenn der Benutzer nichts wählt (erster Eintrag der Auswahl auf der Seite <i>Info</i>): die Vorgabe des
+    /// Rechners, sonst die Sprache des Systems. <c>FromMachine</c> sagt, woher sie kommt.
+    /// </summary>
+    public static (string Code, bool FromMachine) WithoutUserChoice(string machineSetting, CultureInfo system)
+    {
+        var machine = Normalize(machineSetting);
+        return machine.Length > 0 ? (machine, true) : (Resolve(null, system), false);
+    }
+
     /// <summary>
     /// Speichert die Wahl des Benutzers ("" = Systemsprache). Andere Einträge der Datei bleiben erhalten. Gilt ab dem
     /// nächsten Start.

@@ -1191,6 +1191,9 @@ Zutritt 只读取——不会更改任何权限或文件。
   <data name="Info_LanguageForced" xml:space="preserve">
     <value>由环境变量 {0} 指定——此处的选择仅在没有该变量时生效。</value>
   </data>
+  <data name="Info_LanguageMachine" xml:space="preserve">
+    <value>此计算机的默认设置（{0}）</value>
+  </data>
   <data name="Info_LanguageNotSaved" xml:space="preserve">
     <value>无法保存语言：{0}</value>
   </data>

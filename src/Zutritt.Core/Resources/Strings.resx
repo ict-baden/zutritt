@@ -1269,6 +1269,10 @@ Zutritt only reads – it changes no permissions and no files.
   <data name="Info_LanguageForced" xml:space="preserve">
     <value>Set by the environment variable {0} – the choice here only applies without it.</value>
   </data>
+  <data name="Info_LanguageMachine" xml:space="preserve">
+    <value>Default for this computer ({0})</value>
+    <comment>{0} = name of the language set in %ProgramData%\Zutritt\settings.json; shown instead of Info_LanguageSystem when that file sets a language</comment>
+  </data>
   <data name="Info_LanguageNotSaved" xml:space="preserve">
     <value>The language could not be saved: {0}</value>
   </data>

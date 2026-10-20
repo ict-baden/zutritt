@@ -121,6 +121,18 @@ public sealed partial class LocalizationTests
     }
 
     [Fact]
+    public void Ohne_eigene_Wahl_gilt_die_Vorgabe_des_Rechners_sonst_Windows()
+    {
+        // Befund der Prüfung: Die Auswahl zeigte „Wie Windows (Deutsch)“, obwohl die Vorgabe des Rechners Englisch war
+        var german = CultureInfo.GetCultureInfo("de-DE");
+        Assert.Equal(("en", true), UiLanguage.WithoutUserChoice("en", german));
+        Assert.Equal(("zh-Hans", true), UiLanguage.WithoutUserChoice("zh-CN", german));
+        Assert.Equal(("de", false), UiLanguage.WithoutUserChoice("", german));
+        Assert.Equal(("de", false), UiLanguage.WithoutUserChoice("klingonisch", german));
+        Assert.Equal(("en", false), UiLanguage.WithoutUserChoice("", CultureInfo.GetCultureInfo("ja-JP")));
+    }
+
+    [Fact]
     public void Einstellungsdatei_wird_gelesen_und_geschrieben_ohne_Fremdes_zu_verlieren()
     {
         using var temp = new TempFolder();

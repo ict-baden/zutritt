@@ -17,7 +17,7 @@ namespace Zutritt.UI.Pages;
 /// </summary>
 public partial class InfoPage : UserControl, IPage
 {
-    /// <summary>Eintrag der Sprachauswahl: "" = wie Windows.</summary>
+    /// <summary>Eintrag der Sprachauswahl: "" = keine eigene Wahl (Vorgabe des Rechners, sonst wie Windows).</summary>
     public sealed record LanguageChoice(string Code, string Name)
     {
         public override string ToString() => Name;
@@ -26,6 +26,8 @@ public partial class InfoPage : UserControl, IPage
     private readonly AppState _state;
     private string? _lastFolder;
     private bool _languageReady;
+    /// <summary>Sprache ohne eigene Wahl: Vorgabe des Rechners (%ProgramData%), sonst die von Windows.</summary>
+    private string _defaultLanguage = UiLanguage.Fallback;
 
     public InfoPage(AppState state)
     {
@@ -46,8 +48,12 @@ public partial class InfoPage : UserControl, IPage
 
     private void SetUpLanguages()
     {
-        var system = UiLanguage.Resolve(null, UiLanguage.System);
-        var choices = new List<LanguageChoice> { new("", Texts.Format(Strings.Info_LanguageSystem, UiLanguage.NativeName(system))) };
+        // Der erste Eintrag nennt, was ohne eigene Wahl gilt: Gibt es eine Vorgabe für den Rechner, ist das sie –
+        // „Wie Windows“ wäre dann falsch
+        var (fallback, fromMachine) = UiLanguage.WithoutUserChoice(UiLanguage.MachineSetting(), UiLanguage.System);
+        _defaultLanguage = fallback;
+        var first = Texts.Format(fromMachine ? Strings.Info_LanguageMachine : Strings.Info_LanguageSystem, UiLanguage.NativeName(fallback));
+        var choices = new List<LanguageChoice> { new("", first) };
         choices.AddRange(UiLanguage.Supported.Select(code => new LanguageChoice(code, UiLanguage.NativeName(code))));
         LanguageBox.ItemsSource = choices;
         var current = UiLanguage.UserSetting();
@@ -64,7 +70,7 @@ public partial class InfoPage : UserControl, IPage
         {
             UiLanguage.SaveUserSetting(choice.Code);
             // Der Hinweis gleich in der gewählten Sprache – die Oberfläche selbst wechselt erst beim nächsten Start
-            var culture = System.Globalization.CultureInfo.GetCultureInfo(UiLanguage.Resolve(choice.Code, UiLanguage.System));
+            var culture = System.Globalization.CultureInfo.GetCultureInfo(choice.Code.Length > 0 ? choice.Code : _defaultLanguage);
             _state.Report(NoticeKind.Info, Strings.ResourceManager.GetString(nameof(Strings.Info_LanguageRestart), culture) ?? Strings.Info_LanguageRestart);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
