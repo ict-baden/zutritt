@@ -27,8 +27,9 @@
     <Property Id="ARPURLINFOABOUT" Value="https://github.com/ict-baden/zutritt" />
     <Property Id="ARPHELPLINK" Value="https://github.com/ict-baden/zutritt/blob/main/SUPPORT.md" />
 
-    <!-- Laufende Instanzen beenden, sonst sind die Dateien gesperrt -->
-    <util:CloseApplication Id="CloseZutritt" Target="Zutritt.exe" CloseMessage="yes" TerminateProcess="1" RebootPrompt="no" />
+    <!-- Laufende Instanzen beenden, sonst sind die Dateien gesperrt. TerminateProcess ist der Exitcode des beendeten
+         Prozesses: 3 = „Fehler oder Abbruch“ wie bei Strg+C – nicht 1, das hieße für eine geplante Aufgabe „Befunde Mittel“. -->
+    <util:CloseApplication Id="CloseZutritt" Target="Zutritt.exe" CloseMessage="yes" TerminateProcess="3" RebootPrompt="no" />
 
     <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="INSTALLFOLDER" Name="Zutritt" />

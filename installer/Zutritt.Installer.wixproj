@@ -16,8 +16,8 @@
          ICE61 warnt vor AllowSameVersionUpgrades, das ist hier gewollt (siehe Package.wxs).
          ICE60 bemängelt native DLLs (SQLite) ohne Sprache in der Versionsinfo – für Programm-DLLs bedeutungslos. -->
     <SuppressIces>ICE38;ICE43;ICE57;ICE60;ICE61</SuppressIces>
-    <!-- ICE-Prüfungen brauchen den Windows Installer-Dienst; auf CI-Runnern unnötig langsam/fehleranfällig -->
-    <SuppressValidation Condition="'$(CI)' == 'true'">true</SuppressValidation>
+    <!-- Die übrigen ICE-Prüfungen laufen auch in der CI (sie brauchen den Windows Installer-Dienst, den die Runner haben);
+         danach installiert und deinstalliert die CI das Paket einmal zur Probe (build.yml, „MSI-Probe“). -->
   </PropertyGroup>
 
   <ItemGroup>

@@ -31,7 +31,7 @@ Which file to download, how to check it, how to roll it out, and which rights th
 | [`Zutritt.exe`](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt.exe) | included | Running without installation, e.g. from an admin share or a USB stick. |
 | [`Zutritt-win-x64-framework.zip`](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt-win-x64-framework.zip) | .NET 10 Desktop Runtime | A small download where the runtime is already installed. |
 | [`SHA256SUMS.txt`](https://github.com/ict-baden/zutritt/releases/download/latest/SHA256SUMS.txt) | – | SHA-256 checksums of all files in the release. |
-| [`Zutritt-sbom.cdx.json`](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt-sbom.cdx.json) | – | Bill of materials (CycloneDX): every library the program contains, and the .NET, Windows Desktop and Windows SDK runtime packs with their versions. |
+| [`Zutritt-sbom.cdx.json`](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt-sbom.cdx.json) | – | Bill of materials (CycloneDX): every library the program contains, and the .NET and Windows Desktop runtime packs with their versions. |
 
 Builds from `main` carry versions like `0.1.0-ci.12` (12 = the number of the build run). A **tagged version** `v1.2.0` gets its own release whose file names contain the version: `Zutritt-1.2.0-x64.msi`, `Zutritt-1.2.0-win-x64-framework.zip`, `Zutritt-1.2.0-sbom.cdx.json`, plus `Zutritt.exe` and `SHA256SUMS.txt`. Tags with a hyphen (`v1.2.0-rc1`) are marked as pre-releases.
 

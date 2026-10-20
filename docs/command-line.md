@@ -138,6 +138,8 @@ Writes one or more reports for a saved run, as stored – the findings are not r
 > [!WARNING]
 > **A partly unreachable scan is not an error in this sense.** If some servers, shares or folders cannot be read, the scan completes: the problem becomes a finding [ZT09](rules.md#zt09--folder-not-readable) or [ZT13](rules.md#zt13--share-permissions-not-readable) of severity *Info*, which does not raise the exit code, and the summary says *Achtung: N von M Zielen konnten nicht geprüft werden*. Only when **no** target could be read at all – the server is off, the only share is not readable – the exit code is `3`, so that a scheduled task does not look clean. When you monitor scheduled runs, also check the *Info* count and *Ordner geprüft* in the summary, or the *Fehler* sheet of the Excel report.
 
+An MSI update or uninstall closes a running Zutritt; a scan stopped this way ends with exit code `3`, like one cancelled with Ctrl+C.
+
 If the run cannot be saved (database read-only, locked, disk full), the reports given with `--bericht` are written anyway and the exit code is `3`. The database and the report folders are checked **before** the scan: if they cannot be written, Zutritt stops at once with exit code `3` and scans nothing.
 
 ## Waiting for the end

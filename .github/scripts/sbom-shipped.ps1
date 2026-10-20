@@ -11,7 +11,8 @@
     1. Komponenten, die dort nicht als Paket stehen, fliegen raus (samt ihrer Kanten in „dependencies“).
     2. Fehlt ein ausgeliefertes Paket in der Stückliste, bricht das Skript ab – lieber kein Release als eine
        unvollständige Stückliste.
-    3. Die Runtime-Pakete (.NET, Windows Desktop, Windows-SDK-Projektion) kommen mit ihrer echten Version dazu.
+    3. Die Runtime-Pakete (.NET, Windows Desktop) kommen mit ihrer echten Version dazu. Ein unbekanntes Runtime-Paket
+       (etwa wieder die Windows-SDK-Projektion) bricht das Skript ab.
 
 .PARAMETER Sbom
     Die von dotnet-CycloneDX erzeugte JSON-Datei; wird überschrieben.
@@ -20,7 +21,7 @@
     deps.json eines self-contained Publish (enthält Pakete und Runtime-Pakete).
 
 .EXAMPLE
-    ./.github/scripts/sbom-shipped.ps1 -Sbom dist/Zutritt-sbom.cdx.json -DepsJson src/Zutritt/obj/Release/net10.0-windows10.0.19041.0/win-x64/Zutritt.deps.json
+    ./.github/scripts/sbom-shipped.ps1 -Sbom dist/Zutritt-sbom.cdx.json -DepsJson src/Zutritt/obj/Release/net10.0-windows/win-x64/Zutritt.deps.json
 #>
 param(
     [Parameter(Mandatory)] [string] $Sbom,
@@ -52,11 +53,10 @@ $dropped = @($all | Where-Object { -not $shipped.Contains($_.purl) })
 $missing = @($shipped | Where-Object { $url = $_; -not ($kept | Where-Object purl -eq $url) })
 if ($missing.Count -gt 0) { throw "In der Stückliste fehlen ausgelieferte Pakete: $($missing -join ', ')" }
 
-# Runtime-Pakete: welche Dateien in welchem Paket stecken, steht in THIRD-PARTY-NOTICES.txt (Einträge 13 und 14)
+# Runtime-Pakete: welche Dateien in welchem Paket stecken, steht in THIRD-PARTY-NOTICES.txt (Eintrag 13)
 $runtimeInfo = @{
     'Microsoft.NETCore.App.Runtime'      = @{ Text = '.NET runtime, only in the self-contained packages (MSI and single-file exe)'; Licence = @{ id = 'MIT' } }
     'Microsoft.WindowsDesktop.App.Runtime' = @{ Text = 'Windows Desktop runtime (WPF), only in the self-contained packages (MSI and single-file exe)'; Licence = @{ id = 'MIT' } }
-    'Microsoft.Windows.SDK.NET.Ref'      = @{ Text = 'C#/WinRT and the Windows SDK projection (WinRT.Runtime.dll, Microsoft.Windows.SDK.NET.dll), in every package'; Licence = @{ name = 'MIT (WinRT.Runtime.dll); Microsoft Software License Terms for the Windows SDK (Microsoft.Windows.SDK.NET.dll)'; url = 'https://aka.ms/WinSDKLicenseURL' } }
 }
 $added = foreach ($r in $runtimePacks) {
     $key = $runtimeInfo.Keys | Where-Object { $r.Id -eq $_ -or $r.Id -like "$_.*" } | Select-Object -First 1

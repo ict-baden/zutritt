@@ -21,7 +21,7 @@ New-Item -ItemType Directory -Force $shots, $tmp | Out-Null
 
 try {
     dotnet build (Join-Path $repo 'src\Zutritt\Zutritt.csproj') -c Release -nologo -v q
-    $exe = Join-Path $repo 'src\Zutritt\bin\Release\net10.0-windows10.0.19041.0\Zutritt.exe'
+    $exe = Join-Path $repo 'src\Zutritt\bin\Release\net10.0-windows\Zutritt.exe'
 
     # 1. Screenshots – Dateinamen der App (deutsch) auf englische Doku-Namen abbilden
     & $exe --screenshots $tmp | Out-Host
