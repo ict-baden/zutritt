@@ -264,12 +264,12 @@ Needs the .NET 10 SDK (`global.json`: 10.0.100, roll forward to the latest featu
 
 ---
 
-<!-- ⚠ Impressum: Domain und Webseite sind noch offen (OFFEN.md). Bis dahin dieselbe Adresse wie in der App und in den übrigen Repos von ICT-Baden. -->
+<!-- Impressum: dieselbe Adresse wie in der App (AppInfo.ImpressumUrl); die neue Webseite leitet sie später weiter. -->
 <sub>
 Zutritt is free and open source software by <b>ICT-Baden</b>. &nbsp;·&nbsp;
 Licence: <a href="LICENSE">MIT</a> &nbsp;·&nbsp;
 Third-party licences: <a href="THIRD-PARTY-NOTICES.txt">THIRD-PARTY-NOTICES.txt</a> &nbsp;·&nbsp;
 Support: free via GitHub, guaranteed with a <a href="SUPPORT.md">support contract</a> &nbsp;·&nbsp;
 <a href="SECURITY.md">Security</a> &nbsp;·&nbsp;
-<a href="https://ict-baden.de/impressum">Impressum</a>
+<a href="https://ict-baden.de/index.html?page=imprint">Impressum</a>
 </sub>

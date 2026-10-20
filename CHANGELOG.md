@@ -34,6 +34,7 @@ Alle wichtigen Änderungen an Zutritt. Format nach [Keep a Changelog](https://ke
 - Der Vergleich zweier Läufe mit anderem Umfang (z. B. einmal mit Dateien, einmal nur bis Tiefe 1, mit und ohne administrative Freigaben oder mit anderer Ebene für versteckte Ausnahmen) meldet keine scheinbar entfallenen Rechte und „behobenen“ Befunde mehr: Verglichen wird nur, was beide Läufe erfasst haben, und Vergleichsseite, Befehlszeile, PDF und Excel weisen auf den abweichenden Umfang hin. Der automatische Vergleich nimmt bevorzugt den letzten Lauf mit denselben Einstellungen.
 - `scan D:` und `scan D:\` gelten beim Vergleich als dasselbe Ziel; die Warnung „andere Ziele“ auf der Vergleichsseite ordnet Ziele genauso zu wie der automatische Vergleich (abschließendes `\`, `/`).
 - Die Kachel der Vergleichsseite heißt „ACL- und Ordneränderungen“, weil sie auch Ordner mit neuen oder entfallenen eigenen Rechten zählt (Befehlszeile und Berichte zählen die ACL-Änderungen allein).
+- Impressum-Link in App, `--info`, README und SUPPORT.md führte ins Leere (404); er zeigt jetzt auf die erreichbare Seite `https://ict-baden.de/index.html?page=imprint`. Kontakt für den Supportvertrag sind bis zu einem eigenen Postfach die Kontaktangaben dort.
 
 ### Sicherheit
 - System.Security.Cryptography.Pkcs auf 10.0.13 festgelegt: PDFsharp brachte 8.0.1 mit bekannten Schwachstellen (GHSA-846f-f764-76mx, GHSA-2fmv-rv2c-59x7) mit.
