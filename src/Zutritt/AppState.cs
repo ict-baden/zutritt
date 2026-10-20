@@ -172,14 +172,21 @@ public sealed class AppState : IDisposable
     }
 
     /// <summary>
-    /// Frisch gescannten Lauf speichern, mit dem Vorgänger vergleichen und laden. Scheitert das Speichern, wird der
-    /// Lauf trotzdem geladen (ansehen, Bericht erstellen) – das Ergebnis ist dann die Fehlermeldung, sonst null.
+    /// Frisch gescannten Lauf speichern, mit dem Vorgänger vergleichen und laden. Scheitert das Speichern – oder ist gar
+    /// keine Datenbank offen –, wird der Lauf trotzdem geladen (ansehen, Bericht erstellen); das Ergebnis ist dann die
+    /// Fehlermeldung mit Code, sonst null.
     /// </summary>
     public async Task<string?> AdoptAsync(ScanResult scan)
     {
         ComparisonResult? comparison = null;
         string? notSaved = null;
-        if (Store is not null)
+        if (Store is null)
+        {
+            // Die Datenbank ließ sich beim Start nicht öffnen: Der Lauf ist nirgends gespeichert – das muss die Meldung
+            // nach dem Scan sagen, nicht nur der Hinweis beim Start
+            notSaved = ErrorCodes.WithCode(Strings.App_NoDatabase, ErrorCodes.DatabaseOpen);
+        }
+        else
         {
             try
             {
