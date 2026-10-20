@@ -204,7 +204,7 @@ Zutritt answers one question well – *who can access what, and why* – for adm
 <table>
   <tr>
     <td width="50%" valign="top"><a href="docs/installation.md"><b>Installation &amp; rights</b></a><br><sub>MSI, single exe, ZIP, checksums and signatures, Intune and GPO, requirements, which rights the scanning account needs locally and on servers, updates</sub></td>
-    <td width="50%" valign="top"><a href="docs/usage.md"><b>Using the app</b></a><br><sub>Every page with screenshots: overview and scan, findings, folders, people, comparison, report, info – German labels explained</sub></td>
+    <td width="50%" valign="top"><a href="docs/usage.md"><b>Using the app</b></a><br><sub>Every page with screenshots: overview and scan, findings, folders, people, comparison, report, info – the German labels of the screenshots explained</sub></td>
   </tr>
   <tr>
     <td valign="top"><a href="docs/command-line.md"><b>Command line</b></a><br><sub><code>scan</code>, <code>liste</code>, <code>bericht</code>, <code>--version</code>, <code>--info</code>, options, exit codes, scheduled tasks, logging and encoding</sub></td>

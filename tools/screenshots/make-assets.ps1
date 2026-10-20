@@ -19,6 +19,9 @@ $assets = Join-Path $repo 'docs\assets'
 $shots = Join-Path $assets 'screenshots'
 $tmp = Join-Path ([IO.Path]::GetTempPath()) ("zutritt-assets-" + [Guid]::NewGuid().ToString('N').Substring(0, 8))
 New-Item -ItemType Directory -Force $shots, $tmp | Out-Null
+# Doku und Bilder zeigen die deutsche Oberfläche – unabhängig von der Sprache des Rechners (der Runner ist englisch)
+$language = $env:ZUTRITT_LANGUAGE
+$env:ZUTRITT_LANGUAGE = 'de'
 
 try {
     dotnet build (Join-Path $repo 'src\Zutritt\Zutritt.csproj') -c Release -nologo -v q
@@ -48,5 +51,6 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "Banner fehlgeschlagen ($LASTEXITCODE)" }
 }
 finally {
+    $env:ZUTRITT_LANGUAGE = $language
     Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
 }

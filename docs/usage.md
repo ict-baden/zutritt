@@ -2,7 +2,7 @@
 
 # Using the app
 
-A walk through every page of the Zutritt window. The interface is German; each section names the German labels you will see, with a translation.
+A walk through every page of the Zutritt window. The interface comes in five languages ([Languages](#languages)); the screenshots and the labels quoted here show the German interface, each with a translation.
 
 **Contents:** [Start and navigate](#start-and-navigate) · [Übersicht – scan and runs](#übersicht--scan-and-runs) · [Befunde – findings](#befunde--findings) · [Ordner – folders](#ordner--folders) · [Personen – people](#personen--people) · [Vergleich – comparison](#vergleich--comparison) · [Bericht – report](#bericht--report) · [Info](#info) · [Glossary](#glossary)
 
@@ -182,7 +182,7 @@ From top to bottom:
 | *Zutritt* | Version, build (commit) and .NET version, e.g. *Version 0.1.0 · Build abc1234*; *© 2026 ICT-Baden · MIT-Lizenz*. |
 | *Datenbank* | Where the run history is (`%LocalAppData%\Zutritt\zutritt.db`, in the demo a temporary file); *Ordner öffnen* opens the folder. |
 | *Nur lesend, Daten bleiben hier* | Zutritt changes nothing – and *Diese Software sendet keine Daten an ICT-Baden* (sends no data to ICT-Baden). |
-| *Sprache* | The language of window, command line and reports: *Wie Windows* or one of the five languages; takes effect at the next start ([Languages](#languages)). Not in the screenshot above yet. |
+| *Sprache* | The language of window, command line and reports: *Wie Windows* (*Vorgabe für diesen Rechner* if an administrator preset a language for all users) or one of the five languages; takes effect at the next start ([Languages](#languages)). Not in the screenshot above yet. |
 | *MIT-Lizenz* › *Lizenztext anzeigen* | The licence text of Zutritt in a window. |
 | *Drittanbieter-Lizenzen* › *Anzeigen* | `THIRD-PARTY-NOTICES.txt`: every library Zutritt contains, with version, source, copyright and licence text. Built into the program, so it works for the single `Zutritt.exe` as well. |
 | *Hilfe & Support* | Opens [SUPPORT.md](../SUPPORT.md): free help on GitHub, guaranteed help with a support contract. |
