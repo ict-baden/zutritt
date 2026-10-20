@@ -38,24 +38,27 @@ internal static class ScanReader
         return list;
     }
 
+    /// <param name="legacyKeys">Dieselbe Zielmenge in der Schreibweise älterer Ausgaben (<see cref="TargetSet.LegacyKeys"/>).</param>
     /// <param name="machine">Nur Läufe dieses Rechners (Groß/Klein egal), null = egal.</param>
     /// <param name="request">
     /// Einstellungen des neuen Laufs: bevorzugt wird der letzte Lauf mit demselben Umfang (<see cref="Analysis.ScanScope.Same"/>),
     /// sonst der letzte mit denselben Zielen – der Vergleich beschränkt sich dann auf den gemeinsamen Umfang.
     /// </param>
-    public static ScanSummary? FindPrevious(SqliteConnection db, string targetsKey, long startedUtc, long excludeId, string? machine,
-        ScanRequest? request = null)
+    public static ScanSummary? FindPrevious(SqliteConnection db, string targetsKey, IReadOnlyList<string> legacyKeys, long startedUtc,
+        long excludeId, string? machine, ScanRequest? request = null)
     {
         // Der Rechnername wird hier verglichen, nicht per COLLATE NOCASE: SQLite faltet nur ASCII,
         // „PRÜF-PC“ und „prüf-pc“ wären dort verschiedene Rechner. Der Index liefert die Läufe schon
         // absteigend; gelesen wird nur bis zum ersten mit gleichem Umfang.
         using var cmd = db.CreateCommand();
+        var keys = string.Join(", ", legacyKeys.Select((_, i) => $"$legacy{i}").Prepend("$key"));
         cmd.CommandText = $"""
             SELECT {SummaryColumns}, machine, request_json FROM scan
-            WHERE targets_key = $key AND started_utc < $started AND id <> $id
+            WHERE targets_key IN ({keys}) AND started_utc < $started AND id <> $id
             ORDER BY started_utc DESC, id DESC;
             """;
         cmd.Parameters.AddWithValue("$key", targetsKey);
+        for (int i = 0; i < legacyKeys.Count; i++) cmd.Parameters.AddWithValue($"$legacy{i}", legacyKeys[i]);
         cmd.Parameters.AddWithValue("$started", startedUtc);
         cmd.Parameters.AddWithValue("$id", excludeId);
         using var r = cmd.ExecuteReader();

@@ -38,6 +38,19 @@ public sealed class TargetSetTests
     }
 
     [Fact]
+    public void Alte_Schluessel_fuer_Laufwerkswurzeln()
+    {
+        // Bis zu dieser Änderung blieb „D:“ im Schlüssel „D:“ (heute „D:\“) – gespeicherte Läufe behalten ihn
+        Assert.Equal(["D:"], TargetSet.LegacyKeys(["D:"]));
+        Assert.Equal(["D:"], TargetSet.LegacyKeys([@"d:\"]));
+        Assert.Empty(TargetSet.LegacyKeys([@"D:\Daten", @"\\FS01\Labor", "."]));
+        Assert.Equal(
+            ["C:\nD:\\", "C:\\\nD:", "C:\nD:"],
+            TargetSet.LegacyKeys(["C:", @"D:\"]));
+        Assert.Equal([@"C:\DATEN" + "\n" + "D:"], TargetSet.LegacyKeys([@"D:", @"C:\Daten"]));
+    }
+
+    [Fact]
     public void Trenner_im_Schluessel_kann_nicht_aus_Pfaden_entstehen()
     {
         // „;“ ist in Pfaden erlaubt – die Anzeige verbindet mit „; “, der Schlüssel darf das nicht

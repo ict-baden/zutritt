@@ -131,9 +131,10 @@ public sealed class ScanStore : IDisposable
         ArgumentNullException.ThrowIfNull(scan);
         var targets = scan.Request?.Targets;
         var key = TargetSet.Key(targets);
+        var legacy = TargetSet.LegacyKeys(targets);
         var machine = TargetSet.DependsOnMachine(targets) ? scan.Machine ?? "" : null;
         return Run(Strings.Store_FindPreviousFailed, ErrorCodes.DatabaseRead,
-            () => ScanReader.FindPrevious(_db, key, scan.StartedAt.UtcTicks, scan.Id, machine, scan.Request));
+            () => ScanReader.FindPrevious(_db, key, legacy, scan.StartedAt.UtcTicks, scan.Id, machine, scan.Request));
     }
 
     /// <summary>Löscht einen Lauf mit allem, was dazugehört. Unbekannte Nummern werden ignoriert.</summary>
