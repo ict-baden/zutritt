@@ -56,6 +56,16 @@ public sealed class FakePlatformTests
     }
 
     [Fact]
+    public async Task Server_ohne_Freigabeliste_wird_als_nicht_geprueft_gezaehlt()
+    {
+        var platform = new FakeScanPlatform().Folder(@"D:\Daten");
+        var scan = await new Scanner(platform, (_, _) => { }, _ => []).RunAsync(new ScanRequest { Targets = [@"D:\Daten", @"\\FS02"] });
+
+        Assert.Equal([@"\\FS02"], scan.TargetsWithoutRoot);
+        Assert.Equal((1, 2), Core.Analysis.ScanCoverage.Count(scan));
+    }
+
+    [Fact]
     public async Task Konten_kommen_vom_Resolver_der_Plattform()
     {
         var platform = new FakeScanPlatform().Folder(@"D:\Daten", explicitAce: true);

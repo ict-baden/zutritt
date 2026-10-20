@@ -419,7 +419,7 @@ Es wird nur gelesen – an Rechten und Dateien ändert Zutritt nichts.
     <value>Unbekannte Option „{0}“.</value>
   </data>
   <data name="Cli_UnreachableTargets" xml:space="preserve">
-    <value>Achtung: {0} von {1} Zielen konnten nicht geprüft werden – das Ergebnis ist unvollständig.</value>
+    <value>Achtung: {0} von {1} Zielen bzw. Freigaben konnten nicht geprüft werden – das Ergebnis ist unvollständig.</value>
   </data>
   <data name="Cli_UsageReport" xml:space="preserve">
     <value>Aufruf: Zutritt.exe bericht &lt;id&gt; --bericht &lt;datei.xlsx|datei.pdf&gt; [--vergleich] [--db &lt;pfad&gt;] – die Id zeigt „Zutritt.exe liste“.</value>

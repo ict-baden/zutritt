@@ -437,7 +437,7 @@ Zutritt only reads – it changes no permissions and no files.
     <value>Unknown option “{0}”.</value>
   </data>
   <data name="Cli_UnreachableTargets" xml:space="preserve">
-    <value>Attention: {0} of {1} targets could not be checked – the result is incomplete.</value>
+    <value>Attention: {0} of {1} targets or shares could not be checked – the result is incomplete.</value>
   </data>
   <data name="Cli_UsageReport" xml:space="preserve">
     <value>Usage: Zutritt.exe report &lt;id&gt; --report &lt;file.xlsx|file.pdf&gt; [--compare] [--db &lt;path&gt;] – “Zutritt.exe list” shows the id.</value>

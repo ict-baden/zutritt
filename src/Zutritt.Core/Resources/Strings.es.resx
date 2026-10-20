@@ -419,7 +419,7 @@ Zutritt solo lee: no cambia permisos ni archivos.
     <value>Opción desconocida «{0}».</value>
   </data>
   <data name="Cli_UnreachableTargets" xml:space="preserve">
-    <value>Atención: no se pudieron comprobar {0} de {1} destinos; el resultado está incompleto.</value>
+    <value>Atención: no se pudieron comprobar {0} de {1} destinos o recursos compartidos; el resultado está incompleto.</value>
   </data>
   <data name="Cli_UsageReport" xml:space="preserve">
     <value>Uso: Zutritt.exe report &lt;id&gt; --report &lt;archivo.xlsx|archivo.pdf&gt; [--compare] [--db &lt;ruta&gt;]; «Zutritt.exe list» muestra el id.</value>

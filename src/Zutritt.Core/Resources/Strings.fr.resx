@@ -419,7 +419,7 @@ Zutritt se contente de lire – il ne modifie ni les autorisations ni les fichie
     <value>Option inconnue « {0} ».</value>
   </data>
   <data name="Cli_UnreachableTargets" xml:space="preserve">
-    <value>Attention : {0} cibles sur {1} n’ont pas pu être vérifiées – le résultat est incomplet.</value>
+    <value>Attention : {0} cibles ou partages sur {1} n’ont pas pu être vérifiés – le résultat est incomplet.</value>
   </data>
   <data name="Cli_UsageReport" xml:space="preserve">
     <value>Utilisation : Zutritt.exe report &lt;id&gt; --report &lt;fichier.xlsx|fichier.pdf&gt; [--compare] [--db &lt;chemin&gt;] – « Zutritt.exe list » affiche l’id.</value>

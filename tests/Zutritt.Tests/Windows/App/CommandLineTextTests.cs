@@ -63,7 +63,7 @@ public sealed class CommandLineTextTests
         scan.Folders.Add(new FolderNode { Path = @"\\AUS\Labor", Depth = 0, Error = "Ziel nicht erreichbar: Netzwerkpfad nicht gefunden" });
         scan.Findings.AddRange(Core.Analysis.FindingRules.Evaluate(scan));
 
-        var (failed, total) = CommandLine.UncheckedTargets(scan);
+        var (failed, total) = Core.Analysis.ScanCoverage.Count(scan);
         Assert.Equal((1, 1), (failed, total));
         var output = new StringWriter();
         var previous = Console.Out;
@@ -80,10 +80,28 @@ public sealed class CommandLineTextTests
     }
 
     [Fact]
-    public void Ein_lesbares_Ziel_reicht_fuer_den_Exitcode_der_Befunde()
+    public void Server_ohne_Antwort_wird_in_der_Zusammenfassung_genannt()
     {
+        using var db = new Zutritt.Tests.Storage.TestDb();
+        using var store = db.Open();
         var scan = SampleScan.Create();
-        Assert.Equal((0, 1), CommandLine.UncheckedTargets(scan));
+        scan.Request = scan.Request with { Targets = [.. scan.Request.Targets, @"\\FS02"] };
+        scan.Errors.Add(new ScanError(@"\\FS02", "Netzwerkpfad nicht gefunden"));
+        scan.TargetsWithoutRoot.Add(@"\\FS02");
+        var output = new StringWriter();
+        var previous = Console.Out;
+        Console.SetOut(output);
+        int code;
+        try
+        {
+            code = CommandLine.FinishScan(store, scan, compare: false, []);
+        }
+        finally
+        {
+            Console.SetOut(previous);
+        }
+        Assert.NotEqual(CommandLine.ExitError, code);   // ein Ziel wurde geprüft: Exitcode nach den Befunden
+        Assert.Contains("Achtung: 1 von 2 Zielen bzw. Freigaben konnten nicht geprüft werden", output.ToString());
     }
 
     [Fact]

@@ -414,7 +414,7 @@ Zutritt 只读取——不会更改任何权限或文件。
     <value>未知选项“{0}”。</value>
   </data>
   <data name="Cli_UnreachableTargets" xml:space="preserve">
-    <value>注意：{1} 个目标中有 {0} 个无法检查——结果不完整。</value>
+    <value>注意：{1} 个目标或共享中有 {0} 个无法检查——结果不完整。</value>
   </data>
   <data name="Cli_UsageReport" xml:space="preserve">
     <value>用法：Zutritt.exe report &lt;id&gt; --report &lt;文件.xlsx|文件.pdf&gt; [--compare] [--db &lt;路径&gt;]——“Zutritt.exe list”可显示 id。</value>

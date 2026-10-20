@@ -303,7 +303,7 @@ internal static class CommandLine
             }
         }
         if (!WriteReports(scan, comparison, reports)) problems.Add(Strings.Cli_ProblemReport);
-        var (unchecked_, targets) = UncheckedTargets(scan);
+        var (unchecked_, targets) = ScanCoverage.Count(scan);
         if (targets == 0 || unchecked_ == targets) problems.Add(Strings.Cli_ProblemNothingChecked);
         PrintSummary(scan, comparison, unchecked_, targets);
 
@@ -311,18 +311,6 @@ internal static class CommandLine
         Console.WriteLine();
         Console.WriteLine(Texts.Format(Strings.Cli_ExitCode, code, problems.Count > 0 ? string.Join("; ", problems) : ExitMeaning(code)));
         return code;
-    }
-
-    /// <summary>
-    /// Wie viele Wurzeln (Ziele bzw. Freigaben eines Servers) gar nicht geprüft werden konnten: ohne lesbare Rechte,
-    /// weil das Ziel nicht erreichbar oder der Zugriff verweigert war. Ergibt ein Ziel gar keine Wurzel (z. B. die
-    /// Freigabeliste eines Servers ist nicht lesbar), steht das als Befund ZT09 im Lauf; ohne jede Wurzel gilt der Lauf
-    /// als „nichts geprüft“.
-    /// </summary>
-    internal static (int Unchecked, int Total) UncheckedTargets(ScanResult scan)
-    {
-        var roots = scan.Folders.Where(f => f.IsRoot).ToList();
-        return (roots.Count(r => r.Error is not null && r.Aces.Count == 0), roots.Count);
     }
 
     // ================= liste =================

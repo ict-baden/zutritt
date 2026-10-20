@@ -112,7 +112,7 @@ internal sealed class ScanRun
         var target = _platform.ParseTarget(raw, out var error);
         if (target is null)
         {
-            AddError(raw ?? "", Texts.Format(Strings.Scan_InvalidTarget, error));
+            NotChecked(raw ?? "", Texts.Format(Strings.Scan_InvalidTarget, error));
             return;
         }
 
@@ -130,9 +130,9 @@ internal sealed class ScanRun
 
             case TargetKind.Server:
                 var listing = EnumerateShares(target.Server!);
-                if (listing.Error is not null) { AddError(target.Path, listing.Error); break; }
+                if (listing.Error is not null) { NotChecked(target.Path, listing.Error); break; }
                 var shares = listing.Shares.Where(s => !(_request.SkipAdminShares && s.Share.IsAdminShare)).ToList();
-                if (shares.Count == 0) { AddError(target.Path, Strings.Scan_NoDiskShares); break; }
+                if (shares.Count == 0) { NotChecked(target.Path, Strings.Scan_NoDiskShares); break; }
                 foreach (var read in shares)
                 {
                     AddShare(read);
@@ -150,11 +150,11 @@ internal sealed class ScanRun
     private void ResolveLocalShares()
     {
         var listing = LocalListing();
-        if (listing.Error is not null) { AddError(".", listing.Error); return; }
+        if (listing.Error is not null) { NotChecked(".", listing.Error); return; }
         var shares = listing.Shares.Where(s => !(_request.SkipAdminShares && s.Share.IsAdminShare)).ToList();
         if (shares.Count == 0)
         {
-            AddError(".", Strings.Scan_NoLocalDiskShares);
+            NotChecked(".", Strings.Scan_NoLocalDiskShares);
             return;
         }
         foreach (var read in shares)
@@ -165,13 +165,13 @@ internal sealed class ScanRun
             if (read.Share.LocalPath.Length == 0)
             {
                 // Ohne lokalen Pfad (Rechte fehlen) lässt sich die Freigabe hier nicht prüfen – wenigstens nennen.
-                AddError(read.Share.UncPath, Strings.Scan_ShareLocalPathUnreadable);
+                NotChecked(read.Share.UncPath, Strings.Scan_ShareLocalPathUnreadable);
                 continue;
             }
             if (_platform.FullLocalPath(read.Share.LocalPath) is { } full)
                 AddRoot(new Root(WindowsPath.TrimEnd(full), IsLocal: true, null, null));
             else
-                AddError(read.Share.UncPath, Texts.Format(Strings.Scan_ShareLocalPathInvalid, read.Share.LocalPath));
+                NotChecked(read.Share.UncPath, Texts.Format(Strings.Scan_ShareLocalPathInvalid, read.Share.LocalPath));
         }
     }
 
@@ -216,6 +216,13 @@ internal sealed class ScanRun
     }
 
     private void AddError(string path, string message) => _result.Errors.Add(new ScanError(path, message));
+
+    /// <summary>Ein Ziel oder eine Freigabe, die keine Wurzel ergibt und deshalb gar nicht geprüft wird.</summary>
+    private void NotChecked(string path, string message)
+    {
+        AddError(path, message);
+        _result.TargetsWithoutRoot.Add(path);
+    }
 
     // ---------- Bäume ----------
 
