@@ -198,10 +198,15 @@ public partial class OverviewPage : UserControl, IPage
             });
             ProgressPhase.Text = "Speichern und vergleichen …";
             ProgressPath.Text = "";
-            await _state.AdoptAsync(scan);
+            var notSaved = await _state.AdoptAsync(scan);
             var findings = scan.Findings.Count;
-            _state.Report(NoticeKind.Success,
-                $"Scan abgeschlossen: {Labels.Number(scan.FoldersVisited)} Ordner geprüft, {Labels.Number(findings)} {(findings == 1 ? "Befund" : "Befunde")}.");
+            if (notSaved is not null)
+                _state.Report(NoticeKind.Warning,
+                    $"Scan abgeschlossen, aber nicht gespeichert: {notSaved} Der Lauf ist geladen – bitte jetzt unter „Bericht“ "
+                    + "einen Bericht erstellen, sonst ist er nach dem Schließen verloren.");
+            else
+                _state.Report(NoticeKind.Success,
+                    $"Scan abgeschlossen: {Labels.Number(scan.FoldersVisited)} Ordner geprüft, {Labels.Number(findings)} {(findings == 1 ? "Befund" : "Befunde")}.");
         }
         catch (OperationCanceledException)
         {

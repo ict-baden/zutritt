@@ -12,6 +12,12 @@ public sealed class ScanStoreException : Exception
 
     public ScanStoreException(string message, Exception inner) : base(message, inner) { }
 
+    /// <summary>
+    /// Die Datenbank war nur gerade von einem anderen Programm gesperrt (z. B. speichert die Oberfläche gleichzeitig
+    /// einen großen Lauf) – ein späterer Versuch kann gelingen.
+    /// </summary>
+    public bool IsLocked => InnerException is SqliteException { SqliteErrorCode: var code } && (code & 0xFF) is 5 or 6;
+
     /// <summary>Deutscher Grund zu einem SQLite-Fehler, ohne den Pfad.</summary>
     internal static string Describe(SqliteException ex) => (ex.SqliteErrorCode & 0xFF) switch
     {

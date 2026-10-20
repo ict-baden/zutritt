@@ -91,6 +91,21 @@ public sealed class ScanStore : IDisposable
         });
     }
 
+    /// <summary>
+    /// Prüft vor einem langen Scan, ob sich ein Lauf überhaupt speichern ließe: schreibt probeweise in einer
+    /// Transaktion und nimmt es sofort zurück. Erkennt eine schreibgeschützte Datei, einen schreibgeschützten Ordner
+    /// (Journal nicht anlegbar) und eine gerade gesperrte Datei – nicht aber einen später voll werdenden Datenträger.
+    /// </summary>
+    /// <exception cref="ScanStoreException">Die Datenbank ist nicht beschreibbar.</exception>
+    public void CheckWritable() => Run("In die Datenbank kann nicht geschrieben werden.", () =>
+    {
+        using var tx = _db.BeginTransaction();
+        // Schreibt die Kopfseite (gleicher Wert) – braucht Schreibrecht auf Datei und Journal, ändert aber nichts
+        Schema.Execute(_db, $"PRAGMA user_version = {Schema.CurrentVersion};", tx);
+        tx.Rollback();
+        return true;
+    });
+
     /// <summary>Lädt einen Lauf vollständig, null wenn es ihn nicht gibt.</summary>
     public ScanResult? Load(long id) =>
         Run($"Lauf {id} konnte nicht geladen werden.", () => ScanReader.Load(_db, id));

@@ -168,20 +168,38 @@ public sealed class AppState : IDisposable
         SetScan(scan, comparison);
     }
 
-    /// <summary>Frisch gescannten Lauf speichern, mit dem Vorgänger vergleichen und laden.</summary>
-    public async Task AdoptAsync(ScanResult scan)
+    /// <summary>
+    /// Frisch gescannten Lauf speichern, mit dem Vorgänger vergleichen und laden. Scheitert das Speichern, wird der
+    /// Lauf trotzdem geladen (ansehen, Bericht erstellen) – das Ergebnis ist dann die Fehlermeldung, sonst null.
+    /// </summary>
+    public async Task<string?> AdoptAsync(ScanResult scan)
     {
         ComparisonResult? comparison = null;
+        string? notSaved = null;
         if (Store is not null)
         {
-            comparison = await WithStoreAsync(store =>
+            try
             {
-                store.Save(scan);
-                return CompareWithPrevious(store, scan);
-            });
-            RunsChanged?.Invoke();
+                await WithStoreAsync(store => store.Save(scan));
+                RunsChanged?.Invoke();
+            }
+            catch (Exception ex) when (!Strict && ex is ScanStoreException or IOException)
+            {
+                Zutritt.Core.Diagnostics.Log.Error("Lauf nicht gespeichert", ex, withStack: false);
+                notSaved = ex.Message;
+            }
+            try
+            {
+                comparison = await WithStoreAsync(store => CompareWithPrevious(store, scan));
+            }
+            catch (Exception ex) when (!Strict && ex is ScanStoreException or IOException)
+            {
+                // Ohne Vergleich bleibt der Lauf vollständig nutzbar
+                Zutritt.Core.Diagnostics.Log.Error("Vergleich nach dem Scan fehlgeschlagen", ex, withStack: false);
+            }
         }
         SetScan(scan, comparison);
+        return notSaved;
     }
 
     /// <summary>Den geladenen Lauf mit einem frei gewählten älteren Lauf vergleichen.</summary>

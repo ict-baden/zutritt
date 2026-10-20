@@ -29,6 +29,9 @@ Alle wichtigen Änderungen an Zutritt. Format nach [Keep a Changelog](https://ke
 - Auswertung, Vergleich, Speicher und Berichte (`Zutritt.Core`) sind plattformneutral und werden in der CI auch unter Linux getestet; alles Windows-Eigene liegt in `Zutritt.Platform.Windows`. Zutritt selbst bleibt an Windows gebunden (NTFS, Freigaben, SAM, Active Directory).
 - `--screenshots` bricht ab, statt in einer getrennten Windows-Sitzung leere Bilder zu schreiben.
 
+### Behoben
+- Ein fertiger Scan geht nicht mehr verloren, wenn das Speichern in der Datenbank scheitert. Die Befehlszeile prüft Datenbank und Berichtsordner jetzt vor dem Scan und bricht ab, bevor gescannt wird; scheitert das Speichern trotzdem, schreibt sie die Berichte und endet mit Exitcode 3. Die Oberfläche lädt den Lauf in diesem Fall trotzdem und weist darauf hin, dass er nicht gespeichert ist.
+
 ### Sicherheit
 - System.Security.Cryptography.Pkcs auf 10.0.13 festgelegt: PDFsharp brachte 8.0.1 mit bekannten Schwachstellen (GHSA-846f-f764-76mx, GHSA-2fmv-rv2c-59x7) mit.
 

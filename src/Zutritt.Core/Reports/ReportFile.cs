@@ -36,6 +36,35 @@ internal static class ReportFile
         return full;
     }
 
+    /// <summary>
+    /// Prüft vor einem langen Scan, ob der Bericht später geschrieben werden kann: gültiger Dateiname, Ordner anlegbar
+    /// und beschreibbar (probeweise eine temporäre Datei, die sofort wieder verschwindet). Eine vorhandene Datei, die
+    /// gerade in Excel offen ist, fällt erst beim Schreiben auf.
+    /// </summary>
+    /// <exception cref="ReportWriteException">Das Ziel ist ungültig oder der Ordner nicht beschreibbar.</exception>
+    public static string CheckWritable(string path)
+    {
+        var full = FullPath(path);
+        var dir = Path.GetDirectoryName(full) ?? throw new ReportWriteException(full, $"{ReportText.Quote(full)} hat keinen Ordner.");
+        var probe = Path.Combine(dir, $"~{Path.GetFileName(full)}.{Guid.NewGuid():N}.tmp");
+        try
+        {
+            Directory.CreateDirectory(dir);
+            using (new FileStream(probe, FileMode.CreateNew, FileAccess.Write, FileShare.None, 1, FileOptions.DeleteOnClose)) { }
+        }
+        catch (UnauthorizedAccessException e)
+        {
+            TryDelete(probe);
+            throw new ReportWriteException(full, $"Keine Berechtigung, {ReportText.Quote(full)} zu schreiben.", e);
+        }
+        catch (IOException e)
+        {
+            TryDelete(probe);
+            throw new ReportWriteException(full, Describe(e, full), e);
+        }
+        return full;
+    }
+
     public static void Write(string path, Action<Stream> write)
     {
         ArgumentNullException.ThrowIfNull(write);
@@ -89,4 +118,12 @@ internal static class ReportFile
         try { File.Delete(file); }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { /* Aufräumen ist best effort */ }
     }
+}
+
+/// <summary>Berichtsziele prüfen, bevor ein langer Scan beginnt (Befehlszeile).</summary>
+public static class ReportTarget
+{
+    /// <summary>Voller Pfad, wenn der Bericht dort geschrieben werden kann; siehe <see cref="ReportFile.CheckWritable"/>.</summary>
+    /// <exception cref="ReportWriteException">Das Ziel ist ungültig oder der Ordner nicht beschreibbar.</exception>
+    public static string Check(string path) => ReportFile.CheckWritable(path);
 }

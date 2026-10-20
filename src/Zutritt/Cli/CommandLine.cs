@@ -63,6 +63,11 @@ internal static class CommandLine
             Console.Error.WriteLine("Hilfe: Zutritt.exe --hilfe");
             return ExitError;
         }
+        catch (PreconditionException ex)
+        {
+            Console.Error.WriteLine($"Fehler: {ex.Message}");
+            return ExitError;
+        }
         catch (OperationCanceledException)
         {
             Console.Error.WriteLine();
@@ -145,6 +150,11 @@ internal static class CommandLine
         };
         var database = DatabasePath(a);
 
+        // Vorher prüfen, was am Ende gebraucht wird: Ein Scan kann Stunden dauern und darf nicht erst danach an der
+        // Datenbank oder am Berichtsordner scheitern.
+        using var store = OpenStoreForScan(database);
+        foreach (var report in reports) CheckReportTarget(report);
+
         using var cts = new CancellationTokenSource();
         ConsoleCancelEventHandler onCancel = (_, e) =>
         {
@@ -160,24 +170,100 @@ internal static class CommandLine
             var scanner = WindowsPlatform.CreateScanner();
             var scan = scanner.RunAsync(request, progress, cts.Token).GetAwaiter().GetResult();
             progress.Finish();
-
-            using var store = new ScanStore(database);
-            store.Save(scan);
-            Console.WriteLine($"Lauf {scan.Id} gespeichert in {database}");
-
-            var comparison = a.Has("--vergleich") ? CompareWithPrevious(store, scan) : null;
-            bool reportFailed = !WriteReports(scan, comparison, reports);
-            PrintSummary(scan, comparison);
-
-            int code = reportFailed ? ExitError : ExitCodeFor(scan);
-            Console.WriteLine();
-            Console.WriteLine($"Exitcode {code}: {ExitMeaning(code)}");
-            return code;
+            return FinishScan(store, scan, a.Has("--vergleich"), reports);
         }
         finally
         {
             Console.CancelKeyPress -= onCancel;
         }
+    }
+
+    /// <summary>
+    /// Öffnet die Datenbank vor dem Scan und prüft, ob sich ein Lauf darin speichern ließe. Ist sie nur gerade
+    /// gesperrt, läuft der Scan trotzdem (beim Speichern wartet Zutritt bis zu 30 s); sonst bricht Zutritt ab,
+    /// bevor gescannt wird.
+    /// </summary>
+    internal static ScanStore OpenStoreForScan(string database)
+    {
+        ScanStore store;
+        try
+        {
+            store = new ScanStore(database);
+        }
+        catch (ScanStoreException ex)
+        {
+            throw new PreconditionException($"{ex.Message} Es wurde nicht gescannt. Mit --db <pfad> lässt sich eine andere Datenbank wählen.");
+        }
+        try
+        {
+            store.CheckWritable();
+        }
+        catch (ScanStoreException ex) when (ex.IsLocked)
+        {
+            Console.Error.WriteLine($"Hinweis: {ex.Message} Der Scan läuft trotzdem; gespeichert wird am Ende.");
+        }
+        catch (ScanStoreException ex)
+        {
+            store.Dispose();
+            throw new PreconditionException($"{ex.Message} ({database}) Es wurde nicht gescannt. Mit --db <pfad> lässt sich eine andere Datenbank wählen.");
+        }
+        return store;
+    }
+
+    private static void CheckReportTarget(string path)
+    {
+        try
+        {
+            ReportTarget.Check(path);
+        }
+        catch (ReportWriteException ex)
+        {
+            throw new PreconditionException($"{ex.Message} Es wurde nicht gescannt.");
+        }
+    }
+
+    /// <summary>
+    /// Nach dem Scan: speichern, vergleichen, Berichte schreiben, Zusammenfassung. Scheitert das Speichern, werden die
+    /// Berichte trotzdem geschrieben – der Lauf ist dann wenigstens dort festgehalten – und der Exitcode ist 3.
+    /// </summary>
+    internal static int FinishScan(ScanStore store, ScanResult scan, bool compare, IReadOnlyList<string> reports)
+    {
+        var problems = new List<string>();
+        try
+        {
+            store.Save(scan);
+            Console.WriteLine($"Lauf {scan.Id} gespeichert in {store.DatabasePath}");
+        }
+        catch (ScanStoreException ex)
+        {
+            Log.Error("Lauf nicht gespeichert", ex, withStack: false);
+            Console.Error.WriteLine($"Fehler: {ex.Message}");
+            Console.Error.WriteLine(reports.Count > 0
+                ? "Der Lauf ist nicht in der Datenbank – die Berichte werden trotzdem geschrieben."
+                : "Der Lauf ist nicht in der Datenbank und geht verloren. Mit --bericht <datei> hält Zutritt ihn auch dann in einem Bericht fest.");
+            problems.Add("der Lauf wurde nicht gespeichert");
+        }
+
+        ComparisonResult? comparison = null;
+        if (compare)
+        {
+            try
+            {
+                comparison = CompareWithPrevious(store, scan);
+            }
+            catch (ScanStoreException ex)
+            {
+                // Der Vergleich ist eine Zugabe – ohne ihn sind die Berichte immer noch richtig
+                Console.Error.WriteLine($"Vergleich nicht möglich: {ex.Message}");
+            }
+        }
+        if (!WriteReports(scan, comparison, reports)) problems.Add("mindestens ein Bericht ließ sich nicht schreiben");
+        PrintSummary(scan, comparison);
+
+        int code = problems.Count > 0 ? ExitError : ExitCodeFor(scan);
+        Console.WriteLine();
+        Console.WriteLine($"Exitcode {code}: {(problems.Count > 0 ? string.Join("; ", problems) : ExitMeaning(code))}");
+        return code;
     }
 
     // ================= liste =================
@@ -331,7 +417,6 @@ internal static class CommandLine
 
     private static string ExitMeaning(int code) => code switch
     {
-        ExitError => "mindestens ein Bericht ließ sich nicht schreiben",
         ExitHigh => "mindestens ein Befund „Hoch“",
         ExitMedium => "Befunde „Mittel“, keine „Hoch“",
         _ => "keine Befunde ab „Mittel“",
@@ -446,6 +531,9 @@ internal static class CommandLine
     }
 
     private sealed class UsageException(string message) : Exception(message);
+
+    /// <summary>Etwas, das der Scan am Ende braucht (Datenbank, Berichtsordner), ist nicht nutzbar – vor dem Scan gemeldet.</summary>
+    internal sealed class PreconditionException(string message) : Exception(message);
 
     /// <summary>Einfache Zerlegung: Optionen mit „--“, alles andere sind Ziele bzw. Ids.</summary>
     private sealed class Arguments
