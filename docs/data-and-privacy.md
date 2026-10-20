@@ -23,7 +23,7 @@ Zutritt **never changes** permissions, files, shares, accounts or group membersh
 | Shares | name, local path, remark, share permissions | open sessions, open files |
 | Account databases and Active Directory | account name, display name, kind, *disabled* flag, group memberships | passwords, e-mail addresses, other attributes |
 
-The only things Zutritt writes are its own database, its [log](#log), the language you choose on the *Info* page (`settings.json`), and the Excel, PDF or diagnostics files you ask for.
+The only things Zutritt writes are its own database, its [log](#log), the language you choose on the *Info* page (`settings.json`), and the Excel, PDF or diagnostics files you ask for. The single `Zutritt.exe` (not the MSI and not the ZIP) also unpacks its native libraries – SQLite and the WPF graphics files, about 10 MB – into `%TEMP%\.net\Zutritt\…` at the first start and reuses them later; .NET does not delete them. The environment variable `DOTNET_BUNDLE_EXTRACT_BASE_DIR` moves that folder.
 
 ## What is stored
 

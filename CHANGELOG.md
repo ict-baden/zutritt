@@ -36,6 +36,7 @@ Alle wichtigen Änderungen an Zutritt. Format nach [Keep a Changelog](https://ke
 - Die CI prüft die MSI wieder mit den ICE-Regeln, installiert sie bei jedem Build auf dem Runner, startet `--info` und einen kleinen Scan, deinstalliert sie und sucht nach Resten.
 - ZT08 heißt „Freigabe: alle dürfen ändern“ statt „Jeder Vollzugriff“ – die Regel meldet *Jeder* oder *Authentifizierte Benutzer* schon ab „Ändern“ auf der Freigabe.
 - `scan` endet mit Exitcode 3, wenn nichts geprüft werden konnte (Server aus, einzige Freigabe nicht lesbar), damit eine geplante Aufgabe nicht sauber aussieht. Die Zusammenfassung *Achtung: N von M Zielen bzw. Freigaben konnten nicht geprüft werden* zählt jetzt auch Server, deren Freigabeliste nicht lesbar ist; ein Ordner mit unlesbaren Rechten zählt als geprüft, wenn darunter etwas lesbar war.
+- Die Dateiversion von `Zutritt.exe` trägt die Build-Nummer als vierte Stelle (wie die MSI), statt bei jedem Build 0.1.0.0.
 
 ### Behoben
 - Ein fertiger Scan geht nicht mehr verloren, wenn das Speichern in der Datenbank scheitert. Die Befehlszeile prüft Datenbank und Berichtsordner jetzt vor dem Scan und bricht ab, bevor gescannt wird; scheitert das Speichern trotzdem, schreibt sie die Berichte und endet mit Exitcode 3. Die Oberfläche lädt den Lauf in diesem Fall trotzdem und weist darauf hin, dass er nicht gespeichert ist.

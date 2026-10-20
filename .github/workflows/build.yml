@@ -126,7 +126,9 @@ jobs:
         shell: pwsh
         run: |
           $v = '${{ steps.version.outputs.version }}'
-          $common = @("src/$env:APP/$env:APP.csproj", '-c', 'Release', '-r', 'win-x64', '-p:PublishSingleFile=true', "-p:Version=$v", '-p:DebugType=none')
+          # Dateiversion mit der Build-Nummer als 4. Stelle (wie die MSI), sonst trüge jeder Build 0.1.0.0
+          $common = @("src/$env:APP/$env:APP.csproj", '-c', 'Release', '-r', 'win-x64', '-p:PublishSingleFile=true', "-p:Version=$v",
+                      '-p:FileVersion=${{ steps.version.outputs.msi }}', '-p:DebugType=none')
           # Benötigt .NET 10 Desktop Runtime auf dem Zielgerät
           dotnet publish @common --self-contained false -o out/framework
           if ($LASTEXITCODE -ne 0) { throw "Publish (framework) fehlgeschlagen ($LASTEXITCODE)" }

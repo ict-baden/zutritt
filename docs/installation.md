@@ -91,7 +91,7 @@ Zutritt only needs to be installed on the PCs that scan – usually a few admin 
 
 ## Single exe and ZIP
 
-**`Zutritt.exe`** is the whole program in one file – runtime and native libraries (SQLite, WPF) are embedded. Copy it anywhere and start it. While it is not signed, SmartScreen may show *Windows protected your PC*; *More info* › *Run anyway* starts it.
+**`Zutritt.exe`** is the whole program in one file – runtime and native libraries (SQLite, WPF) are embedded. Copy it anywhere and start it. At the first start .NET unpacks the native libraries (about 10 MB) into `%TEMP%\.net\Zutritt\…` and leaves them there for later starts; set `DOTNET_BUNDLE_EXTRACT_BASE_DIR` to use another folder. Where AppLocker or WDAC block programs in `%TEMP%`, use the MSI or the ZIP instead. While it is not signed, SmartScreen may show *Windows protected your PC*; *More info* › *Run anyway* starts it.
 
 **The ZIP** contains a smaller, framework-dependent build, `LICENSE`, `THIRD-PARTY-NOTICES.txt` and a copy of the project's `README.md` (its images and links point into the repository and only work on GitHub). Extract it and start `Zutritt.exe`; Windows asks for the .NET 10 Desktop Runtime if it is missing.
 
@@ -128,7 +128,7 @@ A server, directory or account database that does not answer at all does not sto
 
 ## Updates and uninstalling
 
-- **MSI:** install the newer MSI over the old one. Builds from `main` replace each other (Windows Installer compares only the first three parts of the version, and the package allows same-version upgrades); a release with a higher version replaces them as well. Installing an *older* version over a newer one is refused (*Eine neuere Version von Zutritt ist bereits installiert.*).
+- **MSI:** install the newer MSI over the old one. Builds from `main` replace each other (Windows Installer compares only the first three parts of the version, and the package allows same-version upgrades); a release with a higher version replaces them as well. Installing a version whose first three parts are *lower* is refused (*Eine neuere Version von Zutritt ist bereits installiert.*). Builds with the same first three parts – the builds from `main` and the tagged release of that version – replace each other in **either** direction, so check the version under *Info* (the file version of `Zutritt.exe` carries the build number as its fourth part).
 - **Exe and ZIP:** replace the files.
 - **Database:** a newer Zutritt upgrades the database schema automatically. An older Zutritt refuses to open a database written by a newer version instead of damaging it.
 - **Uninstalling** removes the program files, the Start menu entry and the registry value. The run history and the logs in `%LocalAppData%\Zutritt` of each user stay; delete that folder to remove them.
