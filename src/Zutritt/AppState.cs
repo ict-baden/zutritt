@@ -1,7 +1,9 @@
 using Zutritt.Core.Analysis;
 using Zutritt.Core.Model;
 using Zutritt.Core.Storage;
+using Zutritt.Core;
 using Zutritt.Demo;
+using Zutritt.Core.Resources;
 
 namespace Zutritt;
 
@@ -67,10 +69,10 @@ public sealed class AppState : IDisposable
         catch (Exception ex)
         {
             // Ohne Datenbank bleibt Zutritt benutzbar (scannen, ansehen, Bericht), speichert aber nichts.
-            var where = path.Length > 0 ? $" „{path}“" : "";
+            var reason = ErrorCodes.Describe(ex, ErrorCodes.DatabaseOpen);
             return new AppState(null, path, isDemo: false, strict: false, tempDatabase: null)
             {
-                StartupProblem = $"Die Datenbank{where} lässt sich nicht öffnen ({ex.Message}). Läufe werden in dieser Sitzung nicht gespeichert.",
+                StartupProblem = path.Length > 0 ? Texts.Format(Strings.App_DbNotOpenPath, path, reason) : Texts.Format(Strings.App_DbNotOpen, reason),
             };
         }
     }
@@ -93,7 +95,7 @@ public sealed class AppState : IDisposable
             DeleteDatabaseFiles(temp);
             var state = new AppState(null, "", isDemo: true, strict: false, tempDatabase: null)
             {
-                StartupProblem = $"Die Demo-Datenbank ließ sich nicht anlegen ({ex.Message}). Der Demo-Lauf wird ohne Speicher und ohne Vergleich gezeigt.",
+                StartupProblem = Texts.Format(Strings.App_DemoDbFailed, ErrorCodes.Describe(ex)),
             };
             state.SetScan(newer, null);
             return state;
@@ -130,7 +132,7 @@ public sealed class AppState : IDisposable
         else
         {
             try { comparison = ScanComparer.Compare(older, newer); }
-            catch (Exception ex) { state.StartupProblem = $"Der Vergleich der Demo-Läufe ist fehlgeschlagen ({ex.Message})."; }
+            catch (Exception ex) { state.StartupProblem = Texts.Format(Strings.App_DemoCompareFailed, ErrorCodes.Describe(ex, ErrorCodes.ComparisonFailed)); }
         }
         state.SetScan(newer, comparison);
         return state;
@@ -148,7 +150,7 @@ public sealed class AppState : IDisposable
     /// <summary>Datenbankarbeit im Hintergrund, nacheinander.</summary>
     public async Task<T> WithStoreAsync<T>(Func<ScanStore, T> work)
     {
-        var store = Store ?? throw new InvalidOperationException("Es ist keine Datenbank geöffnet.");
+        var store = Store ?? throw new ScanStoreException(Strings.App_NoDatabase, ErrorCodes.DatabaseOpen);
         await _storeGate.WaitAsync();
         try { return await Task.Run(() => work(store)); }
         finally { _storeGate.Release(); }
@@ -162,7 +164,7 @@ public sealed class AppState : IDisposable
     {
         var (scan, comparison) = await WithStoreAsync(store =>
         {
-            var scan = store.Load(id) ?? throw new InvalidOperationException($"Lauf {id} gibt es nicht mehr.");
+            var scan = store.Load(id) ?? throw new ScanStoreException(Texts.Format(Strings.App_RunGone, id), ErrorCodes.DatabaseRead);
             return (scan, CompareWithPrevious(store, scan));
         });
         SetScan(scan, comparison);
@@ -186,7 +188,7 @@ public sealed class AppState : IDisposable
             catch (Exception ex) when (!Strict && ex is ScanStoreException or IOException)
             {
                 Zutritt.Core.Diagnostics.Log.Error("Lauf nicht gespeichert", ex, withStack: false);
-                notSaved = ex.Message;
+                notSaved = ErrorCodes.Describe(ex, ErrorCodes.DatabaseSave);
             }
             try
             {

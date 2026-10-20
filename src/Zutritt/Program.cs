@@ -1,4 +1,5 @@
 using Zutritt.Cli;
+using Zutritt.Core.Localization;
 
 namespace Zutritt;
 
@@ -11,6 +12,8 @@ internal static class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        // Sprache vor dem ersten Text: Umgebungsvariable, Einstellung, Vorgabe für den Rechner, sonst wie Windows
+        UiLanguage.Apply();
         var options = StartOptions.Parse(args);
         if (options.Mode == AppMode.CommandLine) return CommandLine.Run(args);
 
@@ -44,6 +47,8 @@ internal sealed record StartOptions(AppMode Mode, string ScreenshotFolder = "", 
             var theme = "beide";
             if (args.Length == 4 && args[2].Equals("--theme", StringComparison.OrdinalIgnoreCase)) theme = args[3].Trim().ToLowerInvariant();
             else if (args.Length != 2) return new(AppMode.CommandLine);
+            // Englische Schreibweisen wie in der Hilfe auf Englisch
+            theme = theme switch { "light" => "hell", "dark" => "dunkel", "both" => "beide", _ => theme };
             if (theme is not ("hell" or "dunkel" or "beide")) return new(AppMode.CommandLine);
             return new(AppMode.Screenshots, Path.GetFullPath(args[1]), theme);
         }

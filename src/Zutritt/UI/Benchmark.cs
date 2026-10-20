@@ -148,7 +148,7 @@ internal static class Benchmark
                     await Step(beat, $"Vergleich: Liste „{name}“", () => { tile.IsChecked = true; return Task.CompletedTask; });
                 c.TileAccess.IsChecked = true;
                 await Ui.IdleAsync();
-                await Step(beat, $"Vergleich: {Labels.Number(c.AccessGrid.Items.Count)} Zugriffsänderungen nach Pfad sortieren", () => ClickHeader(c.AccessGrid, "Pfad"));
+                await Step(beat, $"Vergleich: {Labels.Number(c.AccessGrid.Items.Count)} Zugriffsänderungen nach Pfad sortieren", () => ClickHeader(c.AccessGrid, Zutritt.Core.Resources.Strings.Col_Path));
                 if (folder.Length > 0) await SaveAsync(window, folder, "gross-vergleich-zugriffe");
                 break;
         }
@@ -286,7 +286,7 @@ internal static class Benchmark
         await Ui.IdleAsync();
         sw.Stop();
         // „direkt“: Zeit im Aufruf selbst, der Rest ist Hintergrundarbeit, Layout und Zeichnen danach
-        Add(name, sw.Elapsed, beat.MaxGapMs(), direct.TotalMilliseconds >= 20 ? $"direkt {direct.TotalMilliseconds.ToString("0", Labels.German)} ms" : "");
+        Add(name, sw.Elapsed, beat.MaxGapMs(), direct.TotalMilliseconds >= 20 ? $"direkt {direct.TotalMilliseconds.ToString("0", System.Globalization.CultureInfo.CurrentCulture)} ms" : "");
     }
 
     private static void Add(string step, TimeSpan duration, string note = "") => Add(step, duration, null, note);
@@ -301,9 +301,9 @@ internal static class Benchmark
     private static string Format(string step, TimeSpan duration, double? blocked, string note)
     {
         var time = duration == TimeSpan.Zero ? "" : duration.TotalSeconds >= 1
-            ? duration.TotalSeconds.ToString("0.00 's'", Labels.German)
-            : duration.TotalMilliseconds.ToString("0 'ms'", Labels.German);
-        var block = blocked is { } b ? $"{b.ToString("0", Labels.German)} ms{(b > SmoothMs ? " !" : "")}" : "";
+            ? duration.TotalSeconds.ToString("0.00 's'", System.Globalization.CultureInfo.CurrentCulture)
+            : duration.TotalMilliseconds.ToString("0 'ms'", System.Globalization.CultureInfo.CurrentCulture);
+        var block = blocked is { } b ? $"{b.ToString("0", System.Globalization.CultureInfo.CurrentCulture)} ms{(b > SmoothMs ? " !" : "")}" : "";
         return $"  {step,-60} {time,9}  {block,12}  {note}".TrimEnd();
     }
 
@@ -323,7 +323,7 @@ internal static class Benchmark
         var worst = Rows.Where(r => r.BlockedMs is not null).MaxBy(r => r.BlockedMs!.Value);
         Console.WriteLine();
         Console.WriteLine(worst.BlockedMs is { } max
-            ? $"Längste Blockade: {max.ToString("0", Labels.German)} ms bei „{worst.Step}“ – {(max <= SmoothMs ? "flüssig" : $"über {SmoothMs:0} ms, spürbar")}."
+            ? $"Längste Blockade: {max.ToString("0", System.Globalization.CultureInfo.CurrentCulture)} ms bei „{worst.Step}“ – {(max <= SmoothMs ? "flüssig" : $"über {SmoothMs:0} ms, spürbar")}."
             : "Keine Schritte gemessen.");
         var slow = Rows.Where(r => r.BlockedMs > SmoothMs).ToList();
         if (slow.Count > 0) Console.WriteLine($"{slow.Count} Schritte über {SmoothMs:0} ms.");

@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Data;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.UI;
 
@@ -159,7 +160,7 @@ public static class ListTable
             var arrow = new TextBlock { Text = descending ? "\uE70D" : "\uE70E", FontSize = 9, Margin = new Thickness(6, 1, 0, 0), VerticalAlignment = VerticalAlignment.Center };
             arrow.SetResourceReference(TextBlock.FontFamilyProperty, "IconFont");
             header.Children.Add(arrow);
-            AutomationProperties.SetName(header, $"{title}, {(descending ? "absteigend" : "aufsteigend")} sortiert");
+            AutomationProperties.SetName(header, Texts.Format(descending ? Strings.Ui_SortedDescending : Strings.Ui_SortedAscending, title));
             c.Header = header;
         }
     }

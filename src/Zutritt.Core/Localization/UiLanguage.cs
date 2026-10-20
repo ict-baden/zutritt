@@ -65,7 +65,12 @@ public static class UiLanguage
         {
             // Traditionelles Chinesisch (zh-TW, zh-Hant) bekommt Englisch, nicht vereinfachtes
             if (c.Name.StartsWith("zh", StringComparison.OrdinalIgnoreCase))
-                return c.Name.Equals("zh-Hans", StringComparison.OrdinalIgnoreCase) || c.Name is "zh-CN" or "zh-SG" ? "zh-Hans" : Fallback;
+            {
+                var name = c.Name;
+                bool simplified = name.Equals("zh", StringComparison.OrdinalIgnoreCase) || name.Contains("Hans", StringComparison.OrdinalIgnoreCase)
+                                  || name.EndsWith("-CN", StringComparison.OrdinalIgnoreCase) || name.EndsWith("-SG", StringComparison.OrdinalIgnoreCase);
+                return simplified ? "zh-Hans" : Fallback;
+            }
             var match = Supported.FirstOrDefault(s => s.Equals(c.Name, StringComparison.OrdinalIgnoreCase));
             if (match is not null) return match;
         }

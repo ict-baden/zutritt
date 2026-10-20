@@ -5,6 +5,7 @@ using System.Windows.Threading;
 using Zutritt.Core.Model;
 using Zutritt.UI.Pages;
 using Zutritt.UI.Theme;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.UI;
 
@@ -33,13 +34,13 @@ public partial class MainWindow : Window, IThemedWindow
         _overview = new OverviewPage(state);
         _pages =
         [
-            new(NavOverview, "uebersicht", "Übersicht", "Neuen Scan starten oder einen gespeicherten Lauf öffnen", _overview),
-            new(NavFindings, "befunde", "Befunde", "Was auffällt – nach Schwere geordnet, mit Erklärung und Empfehlung", new FindingsPage(state)),
-            new(NavFolders, "ordner", "Ordner", "Wer darf hier rein?", _folders),
-            new(NavPeople, "personen", "Personen", "Wo darf jemand überall hin?", new PeoplePage(state)),
-            new(NavCompare, "vergleich", "Vergleich", "Was hat sich seit dem letzten Lauf geändert?", new ComparisonPage(state)),
-            new(NavReport, "bericht", "Bericht", "Excel zum Weiterarbeiten, PDF zum Abzeichnen", new ReportPage(state)),
-            new(NavInfo, "info", "Info", "Über Zutritt", new InfoPage(state)),
+            new(NavOverview, "uebersicht", Strings.Nav_Overview, Strings.Page_OverviewSubtitle, _overview),
+            new(NavFindings, "befunde", Strings.Nav_Findings, Strings.Page_FindingsSubtitle, new FindingsPage(state)),
+            new(NavFolders, "ordner", Strings.Nav_Folders, Strings.Page_FoldersSubtitle, _folders),
+            new(NavPeople, "personen", Strings.Nav_People, Strings.Page_PeopleSubtitle, new PeoplePage(state)),
+            new(NavCompare, "vergleich", Strings.Nav_Comparison, Strings.Page_ComparisonSubtitle, new ComparisonPage(state)),
+            new(NavReport, "bericht", Strings.Nav_Report, Strings.Page_ReportSubtitle, new ReportPage(state)),
+            new(NavInfo, "info", Strings.Nav_Info, Strings.Page_InfoSubtitle, new InfoPage(state)),
         ];
 
         _infoTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(8) };
@@ -69,7 +70,7 @@ public partial class MainWindow : Window, IThemedWindow
         Loaded += (_, _) => { if (state.StartupProblem is { } problem) ShowNotice(NoticeKind.Warning, problem); };
         PreviewKeyDown += OnPreviewKeyDown;
         Closing += OnClosing;
-        if (state.IsDemo) Title = "Zutritt – Demo";
+        if (state.IsDemo) Title = Strings.Ui_DemoTitle;
 
         UpdateStatus();
         NavOverview.IsChecked = true;
@@ -138,8 +139,8 @@ public partial class MainWindow : Window, IThemedWindow
     private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
         if (_screenshot || !_overview.IsScanning) return;
-        var answer = MessageBox.Show(this, "Ein Scan läuft noch. Zutritt trotzdem beenden? Der Lauf wird dann nicht gespeichert.",
-            "Zutritt beenden", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
+        var answer = MessageBox.Show(this, Strings.Ui_CloseWhileScanning,
+            Strings.Ui_CloseTitle, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
         if (answer != MessageBoxResult.Yes) e.Cancel = true;
     }
 
@@ -150,8 +151,8 @@ public partial class MainWindow : Window, IThemedWindow
         var scan = _state.Scan;
         if (scan is null)
         {
-            StatusTitle.Text = "Kein Lauf geladen";
-            StatusDetail.Text = _state.IsDemo ? "Demo" : "Scan starten oder Lauf öffnen";
+            StatusTitle.Text = Strings.Ui_NoRunLoaded;
+            StatusDetail.Text = _state.IsDemo ? Strings.Ui_Demo : Strings.Ui_StartOrOpen;
             StatusGlyph.Text = "\uE81C";
             Nav.SetBadge(NavFindings, null);
             return;
@@ -159,14 +160,15 @@ public partial class MainWindow : Window, IThemedWindow
 
         StatusTitle.Text = Labels.Targets(scan.Request.Targets);
         StatusTitle.ToolTip = string.Join(Environment.NewLine, scan.Request.Targets.Select(Labels.TargetName));
-        StatusDetail.Text = (_state.IsDemo ? "Demo · " : "") + Labels.Date(scan.StartedAt);
+        StatusDetail.Text = (_state.IsDemo ? Strings.Ui_Demo + " · " : "") + Labels.Date(scan.StartedAt);
         StatusGlyph.Text = "\uE8B7";
 
         int count = scan.Findings.Count;
-        Nav.SetBadge(NavFindings, count == 0 ? null : count > 999 ? "999+" : count.ToString(Labels.German));
+        Nav.SetBadge(NavFindings, count == 0 ? null : count > 999 ? "999+" : count.ToString(System.Globalization.CultureInfo.CurrentCulture));
         var worst = count == 0 ? Severity.Info : scan.Findings.Max(f => f.Severity);
         Nav.SetBadgeTone(NavFindings, worst switch { Severity.Hoch => "Hoch", Severity.Mittel => "Mittel", _ => "" });
-        NavFindings.ToolTip = count == 0 ? "Keine Befunde" : $"{count} Befunde";
+        NavFindings.ToolTip = count == 0 ? Strings.Ui_NoFindings
+            : Texts.Format(Texts.Plural(count, Strings.Pdf_FindingCountOne, Strings.Pdf_FindingCountMany), Labels.Number(count));
     }
 
     // ================= Meldungen =================

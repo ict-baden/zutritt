@@ -1,9 +1,11 @@
 using System.Windows;
 using System.Windows.Threading;
 using Zutritt.Cli;
+using Zutritt.Core;
 using Zutritt.Core.Diagnostics;
 using Zutritt.UI;
 using Zutritt.UI.Theme;
+using Zutritt.Core.Resources;
 
 namespace Zutritt;
 
@@ -71,7 +73,7 @@ public partial class App : Application
             Shutdown(CommandLine.ExitError);
             return;
         }
-        _state?.Report(NoticeKind.Error, $"Unerwarteter Fehler: {e.Exception.Message}");
+        _state?.Report(NoticeKind.Error, Texts.Format(Strings.App_UnexpectedError, ErrorCodes.Describe(e.Exception)));
     }
 
     protected override void OnExit(ExitEventArgs e)

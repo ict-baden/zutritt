@@ -2,7 +2,11 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
+using Zutritt.Core;
 using Zutritt.Core.Diagnostics;
+using Zutritt.Core.Localization;
+using Zutritt.Core.Storage;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.UI.Pages;
 
@@ -12,20 +16,60 @@ namespace Zutritt.UI.Pages;
 /// </summary>
 public partial class InfoPage : UserControl, IPage
 {
+    /// <summary>Eintrag der Sprachauswahl: "" = wie Windows.</summary>
+    public sealed record LanguageChoice(string Code, string Name)
+    {
+        public override string ToString() => Name;
+    }
+
     private readonly AppState _state;
     private string? _lastFolder;
+    private bool _languageReady;
 
     public InfoPage(AppState state)
     {
         InitializeComponent();
         _state = state;
-        VersionText.Text = $"Version {AppInfo.Version}{(AppInfo.Commit is { } c ? $" · Build {c}" : "")} · .NET {Environment.Version.ToString(3)}";
+        VersionText.Text = AppInfo.Commit is { } c
+            ? Texts.Format(Strings.Info_VersionBuild, AppInfo.Version, c, Environment.Version.ToString(3))
+            : Texts.Format(Strings.Info_Version, AppInfo.Version, Environment.Version.ToString(3));
         CopyrightText.Text = $"{AppInfo.Copyright} · {AppInfo.LicenseName}";
         LicenseCard.Header = $"{AppInfo.LicenseName} · {AppInfo.Copyright}";
-        ReadOnlyCard.Description = "Zutritt liest Freigaben, NTFS-Rechte und Gruppenmitgliedschaften. An Rechten, Dateien und Konten ändert es nichts. "
-                                   + AppInfo.NoDataSentence;
+        ReadOnlyCard.Description = Texts.Format(Strings.Info_ReadOnlyDescription, AppInfo.NoDataSentence);
         ImpressumCard.Description = AppInfo.Publisher;
-        CommandExample.Text = "\"C:\\Program Files\\Zutritt\\Zutritt.exe\" scan \\\\FS01 --vergleich --bericht D:\\Berichte\\Zutritt.pdf";
+        CommandExample.Text = Strings.Info_CliExample;
+        SetUpLanguages();
+    }
+
+    // ================= Sprache (Richtlinie 13, Regel 8) =================
+
+    private void SetUpLanguages()
+    {
+        var system = UiLanguage.Resolve(null, UiLanguage.System);
+        var choices = new List<LanguageChoice> { new("", Texts.Format(Strings.Info_LanguageSystem, UiLanguage.NativeName(system))) };
+        choices.AddRange(UiLanguage.Supported.Select(code => new LanguageChoice(code, UiLanguage.NativeName(code))));
+        LanguageBox.ItemsSource = choices;
+        var current = UiLanguage.UserSetting();
+        LanguageBox.SelectedItem = choices.FirstOrDefault(c => c.Code == current) ?? choices[0];
+        if (UiLanguage.Normalize(Environment.GetEnvironmentVariable(UiLanguage.EnvironmentVariable)).Length > 0)
+            LanguageCard.Description = Texts.Format(Strings.Info_LanguageForced, UiLanguage.EnvironmentVariable);
+        _languageReady = true;
+    }
+
+    private void Language_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_languageReady || LanguageBox.SelectedItem is not LanguageChoice choice) return;
+        try
+        {
+            UiLanguage.SaveUserSetting(choice.Code);
+            // Der Hinweis gleich in der gewählten Sprache – die Oberfläche selbst wechselt erst beim nächsten Start
+            var culture = System.Globalization.CultureInfo.GetCultureInfo(UiLanguage.Resolve(choice.Code, UiLanguage.System));
+            _state.Report(NoticeKind.Info, Strings.ResourceManager.GetString(nameof(Strings.Info_LanguageRestart), culture) ?? Strings.Info_LanguageRestart);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _state.Report(NoticeKind.Error, Texts.Format(Strings.Info_LanguageNotSaved, ErrorCodes.Describe(ex, ErrorCodes.SettingsSave)));
+        }
     }
 
     public void OnShown()
@@ -35,13 +79,13 @@ public partial class InfoPage : UserControl, IPage
         if (_state.Store is null)
         {
             DatabaseCard.Description = _state.DatabasePath.Length > 0
-                ? $"{shown} – konnte nicht geöffnet werden, Läufe werden nicht gespeichert"
-                : "Keine Datenbank geöffnet – Läufe werden nicht gespeichert";
+                ? Texts.Format(Strings.Info_DbNotOpened, shown)
+                : Strings.Info_NoDb;
             DatabaseButton.IsEnabled = _state.DatabasePath.Length > 0;
         }
         else
         {
-            DatabaseCard.Description = _state.IsDemo ? $"{shown} (Demo, wird beim Beenden gelöscht)" : shown;
+            DatabaseCard.Description = _state.IsDemo ? Texts.Format(Strings.Info_DemoDb, shown) : shown;
             DatabaseButton.IsEnabled = true;
         }
     }
@@ -63,22 +107,22 @@ public partial class InfoPage : UserControl, IPage
         }
         catch (Exception ex)
         {
-            _state.Report(NoticeKind.Warning, $"Der Ordner ließ sich nicht öffnen: {ex.Message}");
+            _state.Report(NoticeKind.Warning, Texts.Format(Strings.Rp_FolderOpenFailed, ex.Message));
         }
     }
 
     private void ShowLicense_Click(object sender, RoutedEventArgs e) =>
-        ShowText("Lizenz", LicenseTexts.License(), "Der Lizenztext fehlt in dieser Ausgabe von Zutritt", AppInfo.LicenseUrl);
+        ShowText(Strings.Info_License, LicenseTexts.License(), Strings.Info_LicenseMissing, AppInfo.LicenseUrl);
 
     private void ShowNotices_Click(object sender, RoutedEventArgs e) =>
-        ShowText("Drittanbieter-Lizenzen", LicenseTexts.ThirdPartyNotices(), "Die Drittanbieter-Lizenzen fehlen in dieser Ausgabe von Zutritt",
+        ShowText(Strings.Cli_InfoNotices, LicenseTexts.ThirdPartyNotices(), Strings.Info_NoticesMissing,
             AppInfo.RepositoryUrl + "/blob/main/THIRD-PARTY-NOTICES.txt");
 
     private void ShowText(string title, string? text, string missing, string url)
     {
         if (text is null)
         {
-            _state.Report(NoticeKind.Warning, $"{missing} – sie stehen unter {url}.");
+            _state.Report(NoticeKind.Warning, Texts.Format(Strings.Info_MissingAt, missing, url));
             return;
         }
         TextViewerWindow.Show(Window.GetWindow(this), title, text);
@@ -103,8 +147,8 @@ public partial class InfoPage : UserControl, IPage
     {
         var dialog = new SaveFileDialog
         {
-            Title = "Diagnosepaket speichern",
-            Filter = "ZIP-Archiv (*.zip)|*.zip",
+            Title = Strings.Info_SaveDiagnostics,
+            Filter = Strings.Info_ZipFilter,
             FileName = DiagnosticsPackage.SuggestedFileName(DateTime.Now),
             DefaultExt = ".zip",
             AddExtension = true,
@@ -116,19 +160,28 @@ public partial class InfoPage : UserControl, IPage
         var path = dialog.FileName;
         _lastFolder = Path.GetDirectoryName(path);
         bool anonymize = AnonymizeDiagnostics.IsChecked == true;
-        var info = AppDiagnostics.Info(_state);
+        // Zahl der Läufe über die Warteschlange des Speichers – nicht im UI-Thread und nicht neben einem laufenden Speichern
+        int? runs = null;
+        try
+        {
+            if (_state.Store is not null) runs = (await _state.ListRunsAsync()).Count;
+        }
+        catch (Exception ex) when (ex is ScanStoreException or IOException)
+        {
+        }
+        var info = AppDiagnostics.Info(_state, runs);
         try
         {
             await Task.Run(() => DiagnosticsPackage.Write(path, info, anonymize));
             Log.Info($"Diagnosepaket erstellt ({(anonymize ? "ohne" : "mit")} Namen und Adressen)");
             _state.Report(NoticeKind.Success, anonymize
-                ? $"Diagnosepaket gespeichert: {path} – ohne Namen, Pfade und Adressen."
-                : $"Diagnosepaket gespeichert: {path} – mit Namen und Pfaden, bitte nur vertraulich weitergeben.");
+                ? Texts.Format(Strings.Info_DiagSavedAnon, path)
+                : Texts.Format(Strings.Info_DiagSavedFull, path));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {
             Log.Error("Diagnosepaket nicht erstellt", ex);
-            _state.Report(NoticeKind.Error, $"Das Diagnosepaket ließ sich nicht speichern: {ex.Message}");
+            _state.Report(NoticeKind.Error, Texts.Format(Strings.Info_DiagFailed, ErrorCodes.Describe(ex, ErrorCodes.DiagnosticsPackage)));
         }
     }
 }

@@ -43,8 +43,12 @@ internal static class AppDiagnostics
         catch (Exception e) when (e is not OutOfMemoryException) { return false; }
     }
 
-    /// <summary>Angaben für das Diagnosepaket – Version, Build, Domäne ja/nein, Datenbank mit Schema und Zahl der Läufe.</summary>
-    public static IReadOnlyList<KeyValuePair<string, string>> Info(AppState? state)
+    /// <summary>
+    /// Angaben für das Diagnosepaket – Version, Build, Domäne ja/nein, Datenbank mit Schema und Zahl der Läufe. Das Paket
+    /// ist für den Support und bleibt deutsch; <paramref name="runCount"/> liest der Aufrufer vorher über die Warteschlange
+    /// des Speichers (null = nicht lesbar).
+    /// </summary>
+    public static IReadOnlyList<KeyValuePair<string, string>> Info(AppState? state, int? runCount = null)
     {
         var info = new List<KeyValuePair<string, string>>
         {
@@ -53,20 +57,14 @@ internal static class AppDiagnostics
             new("Herausgeber", AppInfo.Publisher),
             new("Ausführung", Environment.ProcessPath is { } exe ? Labels.WithVariables(exe) : "unbekannt"),
             new("Rechner in einer Domäne", IsDomainJoined() ? "ja" : "nein"),
-            new("Datenbankschema", ScanStore.CurrentSchemaVersion.ToString(Labels.German)),
+            new("Datenbankschema", ScanStore.CurrentSchemaVersion.ToString(System.Globalization.CultureInfo.InvariantCulture)),
         };
         if (state is not null)
         {
             info.Add(new("Datenbank", state.DatabasePath.Length > 0 ? Labels.WithVariables(state.DatabasePath) : "keine"));
             info.Add(new("Demo-Modus", state.IsDemo ? "ja" : "nein"));
-            try
-            {
-                if (state.Store is { } store) info.Add(new("Gespeicherte Läufe", store.List().Count.ToString(Labels.German)));
-            }
-            catch (Exception e) when (e is ScanStoreException or InvalidOperationException)
-            {
-                info.Add(new("Gespeicherte Läufe", "nicht lesbar"));
-            }
+            if (state.Store is not null)
+                info.Add(new("Gespeicherte Läufe", runCount?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "nicht lesbar"));
         }
         return info;
     }

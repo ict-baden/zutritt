@@ -80,6 +80,42 @@
     <value>Active Directory “{0}” not reachable: {1}. Domain accounts remain “Unknown”, their groups are not resolved.</value>
     <comment>{0} = DomainName, {1} = error ?? Strings.Identity_UnknownError</comment>
   </data>
+  <data name="App_DbNotOpen" xml:space="preserve">
+    <value>The database cannot be opened ({0}). Runs are not saved in this session.</value>
+    <comment>{0} = reason</comment>
+  </data>
+  <data name="App_DbNotOpenPath" xml:space="preserve">
+    <value>The database “{0}” cannot be opened ({1}). Runs are not saved in this session.</value>
+    <comment>{0} = path, {1} = reason</comment>
+  </data>
+  <data name="App_DemoCompareFailed" xml:space="preserve">
+    <value>Comparing the demo runs failed ({0}).</value>
+    <comment>{0} = reason</comment>
+  </data>
+  <data name="App_DemoDbFailed" xml:space="preserve">
+    <value>The demo database could not be created ({0}). The demo run is shown without storage and without comparison.</value>
+    <comment>{0} = reason</comment>
+  </data>
+  <data name="App_LicenseName" xml:space="preserve">
+    <value>MIT License</value>
+  </data>
+  <data name="App_NoDatabase" xml:space="preserve">
+    <value>No database is open.</value>
+  </data>
+  <data name="App_NoDataSentence" xml:space="preserve">
+    <value>This software does not send any data to ICT-Baden.</value>
+    <comment>Required sentence (guideline 07); company name unchanged</comment>
+  </data>
+  <data name="App_RunGone" xml:space="preserve">
+    <value>Run {0} no longer exists.</value>
+  </data>
+  <data name="App_Tagline" xml:space="preserve">
+    <value>Shows who can access what on file shares – with findings, comparison and report.</value>
+  </data>
+  <data name="App_UnexpectedError" xml:space="preserve">
+    <value>Unexpected error: {0}</value>
+    <comment>{0} = message with error code</comment>
+  </data>
   <data name="AppliesTo_Files" xml:space="preserve">
     <value>Files only</value>
   </data>
@@ -94,6 +130,10 @@
   </data>
   <data name="AppliesTo_OneLevel" xml:space="preserve">
     <value>{0} (one level only)</value>
+    <comment>{0} = “Applies to” text</comment>
+  </data>
+  <data name="AppliesTo_OneLevelShort" xml:space="preserve">
+    <value>{0} (one level)</value>
     <comment>{0} = “Applies to” text</comment>
   </data>
   <data name="AppliesTo_Subfolders" xml:space="preserve">
@@ -153,23 +193,369 @@
   <data name="Change_Resolved" xml:space="preserve">
     <value>Resolved</value>
   </data>
+  <data name="Cli_AndMore" xml:space="preserve">
+    <value>  … and {0} more (all in the report)</value>
+  </data>
+  <data name="Cli_Attention" xml:space="preserve">
+    <value>Attention: {0}</value>
+  </data>
+  <data name="Cli_Cancelled" xml:space="preserve">
+    <value>Cancelled.</value>
+  </data>
+  <data name="Cli_CompareFailed" xml:space="preserve">
+    <value>Comparison not possible: {0}</value>
+  </data>
+  <data name="Cli_DemoAlone" xml:space="preserve">
+    <value>“--demo” stands alone: Zutritt.exe --demo</value>
+  </data>
+  <data name="Cli_ErrorLine" xml:space="preserve">
+    <value>Error {1}: {0}</value>
+    <comment>{0} = message, {1} = error code</comment>
+  </data>
+  <data name="Cli_ExitClean" xml:space="preserve">
+    <value>no findings from “Medium” up</value>
+  </data>
+  <data name="Cli_ExitCode" xml:space="preserve">
+    <value>Exit code {0}: {1}</value>
+  </data>
+  <data name="Cli_ExitHigh" xml:space="preserve">
+    <value>at least one “High” finding</value>
+  </data>
+  <data name="Cli_ExitMedium" xml:space="preserve">
+    <value>“Medium” findings, no “High”</value>
+  </data>
+  <data name="Cli_Help" xml:space="preserve">
+    <value>Zutritt {0} – who can access what on file shares?
+
+Usage:
+  Zutritt.exe                         start the window
+  Zutritt.exe scan &lt;target&gt; [&lt;target&gt; …] [options]
+  Zutritt.exe list [--db &lt;path&gt;]
+  Zutritt.exe report &lt;id&gt; --report &lt;file&gt; [--compare] [--db &lt;path&gt;]
+  Zutritt.exe --demo                  window with built-in demo data
+  Zutritt.exe --screenshots &lt;folder&gt; [--theme light|dark|both]
+  Zutritt.exe --help
+  Zutritt.exe --version               version and build
+  Zutritt.exe --info                  version, licence, links to help, privacy, imprint
+  Zutritt.exe --licenses              licence text and third-party licences
+
+Targets:
+  \\server\share[\folder]       a share or a folder in it
+  \\server                      all disk shares of a server
+  D:\Data                       a local folder
+  .                             all shares of this computer
+
+Options for “scan”:
+  --files                  also record files with their own permissions (takes longer)
+  --depth N                at most N levels below the target (default: unlimited)
+  --deep-from N            report broken inheritance from level N on as a “deeply hidden
+                           exception” (default: 3)
+  --no-groups              do not resolve groups down to people
+  --include-admin-shares   also check C$, ADMIN$ etc.
+  --report &lt;file&gt;          write a report, .xlsx or .pdf (can be repeated)
+  --compare                determine the changes since the last run with the same targets
+                           and include them in the reports
+  --db &lt;path&gt;              another database (default: %LocalAppData%\Zutritt\zutritt.db,
+                           i.e. per user)
+
+“list” shows the saved runs with their id, “report” writes reports for one of them
+afterwards.
+
+The German spellings work as well: liste, bericht, --hilfe, --lizenzen, --dateien, --tiefe,
+--ausnahme-ab, --ohne-gruppen, --mit-admin-freigaben, --bericht, --vergleich.
+Output language: as Windows, otherwise set with the environment variable ZUTRITT_LANGUAGE
+(en, de, es, fr, zh-Hans) or on the Info page of the window.
+
+Exit codes (for scheduled tasks):
+  0  no findings from “Medium” up
+  1  “Medium” findings, but no “High”
+  2  at least one “High” finding
+  3  error or cancelled – also when no target could be checked
+
+Example – every Monday at 6:00 with comparison and a PDF to sign:
+  schtasks /create /tn "Zutritt weekly report" /sc weekly /d MO /st 06:00 /tr ^
+    "\"C:\Program Files\Zutritt\Zutritt.exe\" scan \\FS01 --compare --report D:\Reports\Zutritt.pdf"
+
+Zutritt.exe is a window program; to make the command prompt wait for it to finish:
+  start /wait Zutritt.exe scan …            (cmd)
+  Zutritt.exe scan … | Out-Default          (PowerShell)
+Log for scheduled tasks: redirect in a .cmd file – cmd waits for the end there, and the
+file becomes UTF-8 (with BOM):
+  "C:\Program Files\Zutritt\Zutritt.exe" scan \\FS01 --compare &gt; D:\Reports\zutritt.log 2&gt;&amp;1
+Zutritt only reads – it changes no permissions and no files.
+{1}</value>
+    <comment>{0} = version, {1} = sentence “This software sends no data …”. Keep option names and the line structure.</comment>
+  </data>
+  <data name="Cli_HelpHint" xml:space="preserve">
+    <value>Help: Zutritt.exe --help</value>
+  </data>
+  <data name="Cli_ImportantFindings" xml:space="preserve">
+    <value>Most important findings:</value>
+  </data>
+  <data name="Cli_InfoDatabase" xml:space="preserve">
+    <value>Database</value>
+  </data>
+  <data name="Cli_InfoImprint" xml:space="preserve">
+    <value>Imprint</value>
+  </data>
+  <data name="Cli_InfoLanguage" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Cli_InfoLanguageValue" xml:space="preserve">
+    <value>{0} – change with the environment variable {1} or on the Info page</value>
+    <comment>{0} = language name, {1} = ZUTRITT_LANGUAGE</comment>
+  </data>
+  <data name="Cli_InfoLicense" xml:space="preserve">
+    <value>Licence text</value>
+  </data>
+  <data name="Cli_InfoLicenseValue" xml:space="preserve">
+    <value>{0} (Zutritt.exe --licenses, {1})</value>
+    <comment>{0} = file name, {1} = URL</comment>
+  </data>
+  <data name="Cli_InfoLog" xml:space="preserve">
+    <value>Log</value>
+  </data>
+  <data name="Cli_InfoNotices" xml:space="preserve">
+    <value>Third-party licences</value>
+  </data>
+  <data name="Cli_InfoNoticesValue" xml:space="preserve">
+    <value>{0} (Zutritt.exe --licenses, also under Info in the app)</value>
+    <comment>{0} = file name</comment>
+  </data>
+  <data name="Cli_InfoPrivacy" xml:space="preserve">
+    <value>Privacy</value>
+  </data>
+  <data name="Cli_InfoSource" xml:space="preserve">
+    <value>Source code (GitHub)</value>
+  </data>
+  <data name="Cli_InfoSupport" xml:space="preserve">
+    <value>Help &amp; support</value>
+  </data>
+  <data name="Cli_InfoWebsite" xml:space="preserve">
+    <value>Website</value>
+  </data>
+  <data name="Cli_LicensesMissing" xml:space="preserve">
+    <value>The licence texts are missing from this build – they are available at {0}.</value>
+  </data>
+  <data name="Cli_ListNoArgs" xml:space="preserve">
+    <value>“list” expects no further arguments (“{0}”).</value>
+  </data>
+  <data name="Cli_LockedHint" xml:space="preserve">
+    <value>Note: {0} The scan runs anyway; it is saved at the end.</value>
+  </data>
+  <data name="Cli_NeedReport" xml:space="preserve">
+    <value>Please specify with --report &lt;file.xlsx|file.pdf&gt; where the report should go.</value>
+  </data>
+  <data name="Cli_NeedsInteger" xml:space="preserve">
+    <value>“{0}” expects a whole number from {1}, not “{2}”.</value>
+  </data>
+  <data name="Cli_NeedsValue" xml:space="preserve">
+    <value>“{0}” needs a value.</value>
+  </data>
+  <data name="Cli_NeedTarget" xml:space="preserve">
+    <value>Please specify at least one target, e.g. Zutritt.exe scan \\server\share</value>
+  </data>
+  <data name="Cli_NoArguments" xml:space="preserve">
+    <value>“{0}” expects no further arguments.</value>
+  </data>
+  <data name="Cli_NoDatabaseYet" xml:space="preserve">
+    <value>No database yet ({0}).</value>
+  </data>
+  <data name="Cli_NoPreviousRun" xml:space="preserve">
+    <value>Comparison: there is no earlier run with the same targets yet.</value>
+  </data>
+  <data name="Cli_NoRuns" xml:space="preserve">
+    <value>No saved runs in {0}.</value>
+  </data>
+  <data name="Cli_NoSuchDatabase" xml:space="preserve">
+    <value>The database {0} does not exist.</value>
+  </data>
+  <data name="Cli_NoSuchRun" xml:space="preserve">
+    <value>Run {0} does not exist. “Zutritt.exe list” shows the saved runs.</value>
+  </data>
+  <data name="Cli_NotSavedLost" xml:space="preserve">
+    <value>The run is not in the database and will be lost. With --report &lt;file&gt;, Zutritt keeps it in a report even then.</value>
+  </data>
+  <data name="Cli_NotSavedReportsFollow" xml:space="preserve">
+    <value>The run is not in the database – the reports are written anyway.</value>
+  </data>
+  <data name="Cli_NotScanned" xml:space="preserve">
+    <value>{0} Nothing was scanned.</value>
+  </data>
+  <data name="Cli_NotScannedDb" xml:space="preserve">
+    <value>{0} Nothing was scanned. Use --db &lt;path&gt; to choose another database.</value>
+  </data>
+  <data name="Cli_NotScannedDbPath" xml:space="preserve">
+    <value>{0} ({1}) Nothing was scanned. Use --db &lt;path&gt; to choose another database.</value>
+  </data>
+  <data name="Cli_ProblemNothingChecked" xml:space="preserve">
+    <value>no target could be checked</value>
+  </data>
+  <data name="Cli_ProblemNotSaved" xml:space="preserve">
+    <value>the run was not saved</value>
+  </data>
+  <data name="Cli_ProblemReport" xml:space="preserve">
+    <value>at least one report could not be written</value>
+  </data>
+  <data name="Cli_Progress" xml:space="preserve">
+    <value>{0}: {1} folders, {2} with own permissions, {3} errors</value>
+  </data>
+  <data name="Cli_ReportExtension" xml:space="preserve">
+    <value>Report “{0}”: please specify .xlsx (Excel) or .pdf.</value>
+  </data>
+  <data name="Cli_ReportFailed" xml:space="preserve">
+    <value>Report {0} could not be written: {1}</value>
+  </data>
+  <data name="Cli_ReportWritten" xml:space="preserve">
+    <value>Report written: {0}</value>
+  </data>
+  <data name="Cli_RunSaved" xml:space="preserve">
+    <value>Run {0} saved in {1}</value>
+  </data>
+  <data name="Cli_RunsIn" xml:space="preserve">
+    <value>Saved runs in {0}:</value>
+  </data>
+  <data name="Cli_ScanStart" xml:space="preserve">
+    <value>Zutritt {0} – scan of {1}</value>
+  </data>
+  <data name="Cli_SinceRun" xml:space="preserve">
+    <value>Since the run of {0}: {1} new, {2} resolved findings, {3} access changes, {4} ACL changes, {5} membership changes.</value>
+  </data>
+  <data name="Cli_SumDuration" xml:space="preserve">
+    <value>Duration</value>
+  </data>
+  <data name="Cli_SumFoldersValue" xml:space="preserve">
+    <value>{0}, of which {1} with own permissions</value>
+  </data>
+  <data name="Cli_SumUnreadable" xml:space="preserve">
+    <value>Not readable</value>
+  </data>
+  <data name="Cli_UnknownCommand" xml:space="preserve">
+    <value>Unknown command “{0}”.</value>
+  </data>
+  <data name="Cli_UnknownOption" xml:space="preserve">
+    <value>Unknown option “{0}”.</value>
+  </data>
+  <data name="Cli_UnreachableTargets" xml:space="preserve">
+    <value>Attention: {0} of {1} targets could not be checked – the result is incomplete.</value>
+  </data>
+  <data name="Cli_UsageReport" xml:space="preserve">
+    <value>Usage: Zutritt.exe report &lt;id&gt; --report &lt;file.xlsx|file.pdf&gt; [--compare] [--db &lt;path&gt;] – “Zutritt.exe list” shows the id.</value>
+  </data>
+  <data name="Cli_UsageScreenshots" xml:space="preserve">
+    <value>Usage: Zutritt.exe --screenshots &lt;folder&gt; [--theme light|dark|both]</value>
+  </data>
+  <data name="Cmp_AccessChanges" xml:space="preserve">
+    <value>Access changes</value>
+  </data>
+  <data name="Cmp_AccessRowText" xml:space="preserve">
+    <value>{0}, {1}, before {2}, after {3}</value>
+    <comment>{0} = Person, {1} = Path, {2} = Before, {3} = After</comment>
+  </data>
+  <data name="Cmp_AclAndFolderChanges" xml:space="preserve">
+    <value>ACL and folder changes</value>
+  </data>
+  <data name="Cmp_AclChanges" xml:space="preserve">
+    <value>ACL changes</value>
+  </data>
   <data name="Cmp_ChangedAces" xml:space="preserve">
     <value>Changed permission entries</value>
   </data>
   <data name="Cmp_ChangedMemberships" xml:space="preserve">
     <value>Changed group memberships</value>
   </data>
+  <data name="Cmp_ChangedMembershipsShort" xml:space="preserve">
+    <value>Changed memberships</value>
+  </data>
+  <data name="Cmp_DaysBefore" xml:space="preserve">
+    <value>{0:0} days before</value>
+    <comment>{0} = Math.Round(days)</comment>
+  </data>
+  <data name="Cmp_Direction" xml:space="preserve">
+    <value>Direction</value>
+  </data>
+  <data name="Cmp_Failed" xml:space="preserve">
+    <value>The comparison failed</value>
+  </data>
+  <data name="Cmp_InheritedSuffix" xml:space="preserve">
+    <value> (inherited)</value>
+  </data>
+  <data name="Cmp_Joined" xml:space="preserve">
+    <value>Joined</value>
+  </data>
   <data name="Cmp_LessAccess" xml:space="preserve">
     <value>People’s access restricted</value>
+  </data>
+  <data name="Cmp_LessRights" xml:space="preserve">
+    <value>less access</value>
+  </data>
+  <data name="Cmp_MemberRowText" xml:space="preserve">
+    <value>{0}: {1} in {2}</value>
+    <comment>{0} = Change, {1} = Member, {2} = Group</comment>
+  </data>
+  <data name="Cmp_Memberships" xml:space="preserve">
+    <value>Memberships</value>
   </data>
   <data name="Cmp_MoreAccess" xml:space="preserve">
     <value>People’s access extended</value>
   </data>
+  <data name="Cmp_MoreRights" xml:space="preserve">
+    <value>more access</value>
+  </data>
+  <data name="Cmp_NeedTwoRuns" xml:space="preserve">
+    <value>A comparison needs at least two runs. After the next scan of the same targets you will see here what has changed: new and resolved findings, who can do more or less, changed entries and group memberships.</value>
+  </data>
   <data name="Cmp_NewFindings" xml:space="preserve">
     <value>New findings</value>
   </data>
+  <data name="Cmp_NoAccessChanges" xml:space="preserve">
+    <value>Nobody can do more or less anywhere than before.</value>
+  </data>
+  <data name="Cmp_NoAceChanges" xml:space="preserve">
+    <value>No entries in the access control lists changed.</value>
+  </data>
+  <data name="Cmp_NoDatabase" xml:space="preserve">
+    <value>Without a database there are no earlier runs to compare with.</value>
+  </data>
+  <data name="Cmp_NoEarlierRun" xml:space="preserve">
+    <value>No earlier run yet</value>
+  </data>
+  <data name="Cmp_NoMembershipChanges" xml:space="preserve">
+    <value>No group membership has changed.</value>
+  </data>
+  <data name="Cmp_NoNewFindings" xml:space="preserve">
+    <value>No new findings since the older run.</value>
+  </data>
+  <data name="Cmp_NoResolved" xml:space="preserve">
+    <value>No finding has been resolved since the older run.</value>
+  </data>
+  <data name="Cmp_NoRunText" xml:space="preserve">
+    <value>Load a run on the Overview page – this page then shows what has changed since the run before it.</value>
+  </data>
+  <data name="Cmp_NoSameTargets" xml:space="preserve">
+    <value>There is no earlier run with the same targets. Choose a run above to compare with.</value>
+  </data>
+  <data name="Cmp_OneDayBefore" xml:space="preserve">
+    <value>1 day before</value>
+  </data>
+  <data name="Cmp_OtherTargets" xml:space="preserve">
+    <value>The older run had other targets ({0}) – differences may also come from that.</value>
+    <comment>{0} = Labels.Targets(c.Older.Request.Targets)</comment>
+  </data>
+  <data name="Cmp_OwnRightsGone" xml:space="preserve">
+    <value>Own permissions removed</value>
+  </data>
+  <data name="Cmp_OwnRightsNew" xml:space="preserve">
+    <value>Own permissions new</value>
+  </data>
+  <data name="Cmp_Preparing" xml:space="preserve">
+    <value>Preparing changes …</value>
+  </data>
   <data name="Cmp_ResolvedFindings" xml:space="preserve">
     <value>Resolved findings</value>
+  </data>
+  <data name="Cmp_SameDay" xml:space="preserve">
+    <value>on the same day</value>
   </data>
   <data name="Col_Account" xml:space="preserve">
     <value>Account</value>
@@ -454,6 +840,54 @@
   <data name="Excel_Total" xml:space="preserve">
     <value>Total</value>
   </data>
+  <data name="Fi_AccountGone" xml:space="preserve">
+    <value> · account no longer exists</value>
+  </data>
+  <data name="Fi_AllRules" xml:space="preserve">
+    <value>All rules</value>
+  </data>
+  <data name="Fi_DetailPlaceholder" xml:space="preserve">
+    <value>The explanation and recommendation for the selected finding appear here.</value>
+  </data>
+  <data name="Fi_Disabled" xml:space="preserve">
+    <value> · disabled</value>
+  </data>
+  <data name="Fi_FilterByRule" xml:space="preserve">
+    <value>Filter by rule</value>
+  </data>
+  <data name="Fi_FindingPath" xml:space="preserve">
+    <value>Path of the finding</value>
+  </data>
+  <data name="Fi_NoDescription" xml:space="preserve">
+    <value>There is no description for this rule.</value>
+  </data>
+  <data name="Fi_NoMatches" xml:space="preserve">
+    <value>No matches</value>
+  </data>
+  <data name="Fi_NoMatchesText" xml:space="preserve">
+    <value>No finding matches the filter and search.</value>
+  </data>
+  <data name="Fi_NoRunText" xml:space="preserve">
+    <value>Start a scan on the Overview page or open a saved run.</value>
+  </data>
+  <data name="Fi_NothingFound" xml:space="preserve">
+    <value>Nothing stood out in this run. The Folders page still shows who can go where.</value>
+  </data>
+  <data name="Fi_Search" xml:space="preserve">
+    <value>Search findings</value>
+  </data>
+  <data name="Fi_SearchHint" xml:space="preserve">
+    <value>Path, account or text</value>
+  </data>
+  <data name="Fi_SelectFinding" xml:space="preserve">
+    <value>Select a finding to see the explanation and recommendation.</value>
+  </data>
+  <data name="Fi_ShowFolder" xml:space="preserve">
+    <value>Show folder</value>
+  </data>
+  <data name="Fi_WhyImportant" xml:space="preserve">
+    <value>Why does this matter?</value>
+  </data>
   <data name="Finding_BroadRead" xml:space="preserve">
     <value>“{0}” has “{1}”{2} – practically every signed-in person can read here.</value>
     <comment>{0} = who, {1} = Rights.Label(scopes.Net), {2} = suffix</comment>
@@ -554,6 +988,164 @@
     <value>Folder not readable: {0} – permissions here and below not checked.</value>
     <comment>{0} = error message</comment>
   </data>
+  <data name="Fo_AccountDisabled" xml:space="preserve">
+    <value>The account is disabled</value>
+  </data>
+  <data name="Fo_AclEntries" xml:space="preserve">
+    <value>Entries of the access control list</value>
+  </data>
+  <data name="Fo_AlsoBroad" xml:space="preserve">
+    <value>Also granted: {0}. This means practically every signed-in person can get in here – including those not listed individually below.</value>
+    <comment>{0} = list</comment>
+  </data>
+  <data name="Fo_BrokenTip" xml:space="preserve">
+    <value>Permissions from above do not apply here – only the folder’s own entries.</value>
+  </data>
+  <data name="Fo_Calculating" xml:space="preserve">
+    <value>Calculating …</value>
+  </data>
+  <data name="Fo_DenyPrefix" xml:space="preserve">
+    <value>Deny: {0}</value>
+    <comment>{0} = rights</comment>
+  </data>
+  <data name="Fo_DiffersFactTip" xml:space="preserve">
+    <value>The inherited entries do not match the parent folder – probably moved. Permissions from the previous location may still apply here (finding ZT14).</value>
+  </data>
+  <data name="Fo_DiffersTip" xml:space="preserve">
+    <value>Inheritance differs – probably moved, with permissions from the previous location</value>
+  </data>
+  <data name="Fo_Entries" xml:space="preserve">
+    <value>Entries</value>
+  </data>
+  <data name="Fo_EntriesCount" xml:space="preserve">
+    <value>Entries ({0})</value>
+    <comment>{0} = Labels.Number(folder.Aces.Count)</comment>
+  </data>
+  <data name="Fo_FindingsCount" xml:space="preserve">
+    <value>Findings ({0})</value>
+    <comment>{0} = Labels.Number(findings.Count)</comment>
+  </data>
+  <data name="Fo_FolderFindings" xml:space="preserve">
+    <value>Findings of this folder</value>
+  </data>
+  <data name="Fo_GreyLegend" xml:space="preserve">
+    <value>grey: no own permissions</value>
+  </data>
+  <data name="Fo_HasFinding" xml:space="preserve">
+    <value>Has a finding</value>
+  </data>
+  <data name="Fo_InheritsFrom" xml:space="preserve">
+    <value>“{0}” has no permissions of its own – what is set on “{1}” applies. Zutritt only stores folders with their own permissions.</value>
+    <comment>{0} = node.Name, {1} = ancestor.Path</comment>
+  </data>
+  <data name="Fo_InheritsFromParent" xml:space="preserve">
+    <value>Inherits from the parent folder</value>
+  </data>
+  <data name="Fo_InheritsRootless" xml:space="preserve">
+    <value>“{0}” has no permissions of its own. Zutritt only stores folders with their own permissions and the scan roots.</value>
+    <comment>{0} = node.Name</comment>
+  </data>
+  <data name="Fo_Level" xml:space="preserve">
+    <value>Level {0}</value>
+    <comment>{0} = folder.Depth</comment>
+  </data>
+  <data name="Fo_Loading" xml:space="preserve">
+    <value>Loading folders …</value>
+  </data>
+  <data name="Fo_NobodyIndividual" xml:space="preserve">
+    <value>No individual person has access here.</value>
+  </data>
+  <data name="Fo_NoFindings" xml:space="preserve">
+    <value>There are no findings for this folder.</value>
+  </data>
+  <data name="Fo_NoFolders" xml:space="preserve">
+    <value>No folders are stored in this run.</value>
+  </data>
+  <data name="Fo_NoOwnPermissions" xml:space="preserve">
+    <value>No own permissions</value>
+  </data>
+  <data name="Fo_NoPersonNoGroups" xml:space="preserve">
+    <value>No individual person found – the run was made without resolving groups.</value>
+  </data>
+  <data name="Fo_NoRun" xml:space="preserve">
+    <value>No run loaded. Start a scan on the Overview page or open a saved run.</value>
+  </data>
+  <data name="Fo_NoRunShort" xml:space="preserve">
+    <value>No run loaded.</value>
+  </data>
+  <data name="Fo_NoSearchMatch" xml:space="preserve">
+    <value>No stored folder matches “{0}”.</value>
+    <comment>{0} = query</comment>
+  </data>
+  <data name="Fo_NoShare" xml:space="preserve">
+    <value>no share</value>
+  </data>
+  <data name="Fo_NotReadableCap" xml:space="preserve">
+    <value>Not readable</value>
+  </data>
+  <data name="Fo_NotStored" xml:space="preserve">
+    <value>“{0}” is not stored as a folder in this run.</value>
+    <comment>{0} = path</comment>
+  </data>
+  <data name="Fo_Origin" xml:space="preserve">
+    <value>Origin</value>
+  </data>
+  <data name="Fo_OwnerUnknown" xml:space="preserve">
+    <value>Owner unknown</value>
+  </data>
+  <data name="Fo_PersonRowText" xml:space="preserve">
+    <value>{0}, share {1}, NTFS {2}, {3}</value>
+    <comment>{0} = Person, {1} = ViaShare, {2} = Ntfs, {3} = Via</comment>
+  </data>
+  <data name="Fo_ReducedByDeny" xml:space="preserve">
+    <value>Restricted by a deny entry</value>
+  </data>
+  <data name="Fo_ScanRoot" xml:space="preserve">
+    <value>Scan root</value>
+  </data>
+  <data name="Fo_Search" xml:space="preserve">
+    <value>Search folders</value>
+  </data>
+  <data name="Fo_SearchResults" xml:space="preserve">
+    <value>Search results</value>
+  </data>
+  <data name="Fo_SelectFolder" xml:space="preserve">
+    <value>Select a folder on the left to see its permissions.</value>
+  </data>
+  <data name="Fo_ShareFact" xml:space="preserve">
+    <value>Share {0}</value>
+    <comment>{0} = unc</comment>
+  </data>
+  <data name="Fo_SharePermissionsTip" xml:space="preserve">
+    <value>Share permissions:
+{0}</value>
+    <comment>{0} = one line per entry</comment>
+  </data>
+  <data name="Fo_ShowFailed" xml:space="preserve">
+    <value>The folder could not be shown</value>
+  </data>
+  <data name="Fo_ShowParent" xml:space="preserve">
+    <value>Show parent folder</value>
+  </data>
+  <data name="Fo_Tree" xml:space="preserve">
+    <value>Folder tree</value>
+  </data>
+  <data name="Fo_TreeFailed" xml:space="preserve">
+    <value>The folder tree could not be built</value>
+  </data>
+  <data name="Fo_UnreadableWho" xml:space="preserve">
+    <value>The folder is not readable – who can get in cannot be determined.</value>
+  </data>
+  <data name="Fo_WhoCanEnter" xml:space="preserve">
+    <value>Who can get in</value>
+  </data>
+  <data name="Fo_WhoCanEnterCount" xml:space="preserve">
+    <value>Who can get in ({0})</value>
+    <comment>{0} = Labels.Number(people.Count)</comment>
+  </data>
+  <data name="Fo_WhoFailed" xml:space="preserve">
+    <value>“Who can get in” could not be calculated</value>
+  </data>
   <data name="Identity_DirectoryErrorAccounts" xml:space="preserve">
     <value>Directory error while resolving accounts: {0}</value>
     <comment>{0} = ex.Message</comment>
@@ -594,6 +1186,173 @@
   <data name="Identity_UnknownError" xml:space="preserve">
     <value>unknown error</value>
   </data>
+  <data name="Info_Anonymize" xml:space="preserve">
+    <value>Without names and addresses</value>
+  </data>
+  <data name="Info_AnonymizeName" xml:space="preserve">
+    <value>Diagnostics package without names, paths and addresses</value>
+  </data>
+  <data name="Info_CliExample" xml:space="preserve">
+    <value>"C:\Program Files\Zutritt\Zutritt.exe" scan \\FS01 --compare --report D:\Reports\Zutritt.pdf</value>
+  </data>
+  <data name="Info_CliExampleName" xml:space="preserve">
+    <value>Command line example</value>
+  </data>
+  <data name="Info_CliHeading" xml:space="preserve">
+    <value>Command line and scheduled tasks</value>
+  </data>
+  <data name="Info_CliIntro" xml:space="preserve">
+    <value>The same Zutritt.exe also runs without a window – for example every week as a scheduled task with a report to sign:</value>
+  </data>
+  <data name="Info_CliMore" xml:space="preserve">
+    <value>All commands and options: Zutritt.exe --help · version and this information as text: Zutritt.exe --info</value>
+  </data>
+  <data name="Info_Create" xml:space="preserve">
+    <value>Create …</value>
+  </data>
+  <data name="Info_DbNotOpened" xml:space="preserve">
+    <value>{0} – could not be opened, runs are not saved</value>
+    <comment>{0} = shown</comment>
+  </data>
+  <data name="Info_DemoDb" xml:space="preserve">
+    <value>{0} (demo, deleted on exit)</value>
+    <comment>{0} = shown</comment>
+  </data>
+  <data name="Info_DiagFailed" xml:space="preserve">
+    <value>The diagnostics package could not be saved: {0}</value>
+    <comment>{0} = ErrorCodes.Describe(ex, ErrorCodes.DiagnosticsPackage)</comment>
+  </data>
+  <data name="Info_Diagnostics" xml:space="preserve">
+    <value>Create diagnostics package</value>
+  </data>
+  <data name="Info_DiagnosticsDescription" xml:space="preserve">
+    <value>Version, system information and the log of the last 7 days as a ZIP for support.</value>
+  </data>
+  <data name="Info_DiagSavedAnon" xml:space="preserve">
+    <value>Diagnostics package saved: {0} – without names, paths and addresses.</value>
+    <comment>{0} = path</comment>
+  </data>
+  <data name="Info_DiagSavedFull" xml:space="preserve">
+    <value>Diagnostics package saved: {0} – with names and paths, please share only confidentially.</value>
+    <comment>{0} = path</comment>
+  </data>
+  <data name="Info_ExitCode0" xml:space="preserve">
+    <value>Exit code 0</value>
+  </data>
+  <data name="Info_ExitCode1" xml:space="preserve">
+    <value>Exit code 1</value>
+  </data>
+  <data name="Info_ExitCode2" xml:space="preserve">
+    <value>Exit code 2</value>
+  </data>
+  <data name="Info_ExitCode3" xml:space="preserve">
+    <value>Exit code 3</value>
+  </data>
+  <data name="Info_ExitError" xml:space="preserve">
+    <value>Error or cancelled</value>
+  </data>
+  <data name="Info_ExitMediumLong" xml:space="preserve">
+    <value>“Medium” findings, but no “High”</value>
+  </data>
+  <data name="Info_HelpLinks" xml:space="preserve">
+    <value>Help and links</value>
+  </data>
+  <data name="Info_Keyboard" xml:space="preserve">
+    <value>Keyboard</value>
+  </data>
+  <data name="Info_KeyboardText" xml:space="preserve">
+    <value>Ctrl+1 to Ctrl+7 switch between pages · Ctrl+F jumps to the search box · Enter opens the selected run, Del deletes it</value>
+  </data>
+  <data name="Info_LanguageDescription" xml:space="preserve">
+    <value>Follows Windows unless chosen here and takes effect at the next start. Default for all users: %ProgramData%\Zutritt\settings.json, for scripts: environment variable ZUTRITT_LANGUAGE.</value>
+  </data>
+  <data name="Info_LanguageForced" xml:space="preserve">
+    <value>Set by the environment variable {0} – the choice here only applies without it.</value>
+  </data>
+  <data name="Info_LanguageNotSaved" xml:space="preserve">
+    <value>The language could not be saved: {0}</value>
+  </data>
+  <data name="Info_LanguageRestart" xml:space="preserve">
+    <value>The language changes the next time Zutritt starts.</value>
+  </data>
+  <data name="Info_LanguageSystem" xml:space="preserve">
+    <value>As Windows ({0})</value>
+    <comment>{0} = name of the language Windows uses</comment>
+  </data>
+  <data name="Info_License" xml:space="preserve">
+    <value>Licence</value>
+  </data>
+  <data name="Info_LicenseDescription" xml:space="preserve">
+    <value>Free use, modification and distribution as long as the copyright and licence text are retained.</value>
+  </data>
+  <data name="Info_LicenseMissing" xml:space="preserve">
+    <value>The licence text is missing from this build of Zutritt</value>
+  </data>
+  <data name="Info_MissingAt" xml:space="preserve">
+    <value>{0} – they are available at {1}.</value>
+    <comment>{0} = missing, {1} = url</comment>
+  </data>
+  <data name="Info_NoDb" xml:space="preserve">
+    <value>No database open – runs are not saved</value>
+  </data>
+  <data name="Info_NoticesDescription" xml:space="preserve">
+    <value>Libraries that come with Zutritt – with version, source, copyright and licence text.</value>
+  </data>
+  <data name="Info_NoticesMissing" xml:space="preserve">
+    <value>The third-party licences are missing from this build of Zutritt</value>
+  </data>
+  <data name="Info_OpenFolder" xml:space="preserve">
+    <value>Open folder</value>
+  </data>
+  <data name="Info_OpenImprint" xml:space="preserve">
+    <value>Open imprint</value>
+  </data>
+  <data name="Info_OpenPrivacy" xml:space="preserve">
+    <value>Open privacy</value>
+  </data>
+  <data name="Info_OpenSource" xml:space="preserve">
+    <value>Open source code on GitHub</value>
+  </data>
+  <data name="Info_OpenSupport" xml:space="preserve">
+    <value>Open help and support</value>
+  </data>
+  <data name="Info_OpenWebsite" xml:space="preserve">
+    <value>Open website</value>
+  </data>
+  <data name="Info_PrivacyDescription" xml:space="preserve">
+    <value>Which data Zutritt stores where, which connections it makes and how to delete everything.</value>
+  </data>
+  <data name="Info_ReadOnlyDescription" xml:space="preserve">
+    <value>Zutritt reads shares, NTFS permissions and group memberships. It changes no permissions, files or accounts. {0}</value>
+    <comment>{0} = “This software sends no data …”</comment>
+  </data>
+  <data name="Info_ReadOnlyHeader" xml:space="preserve">
+    <value>Read-only, data stays here</value>
+  </data>
+  <data name="Info_SaveDiagnostics" xml:space="preserve">
+    <value>Save diagnostics package</value>
+  </data>
+  <data name="Info_Show" xml:space="preserve">
+    <value>Show</value>
+  </data>
+  <data name="Info_ShowLicense" xml:space="preserve">
+    <value>Show licence text</value>
+  </data>
+  <data name="Info_SupportDescription" xml:space="preserve">
+    <value>Report bugs and ask questions on GitHub – with guaranteed response under a support contract.</value>
+  </data>
+  <data name="Info_Version" xml:space="preserve">
+    <value>Version {0} · .NET {1}</value>
+  </data>
+  <data name="Info_VersionBuild" xml:space="preserve">
+    <value>Version {0} · build {1} · .NET {2}</value>
+  </data>
+  <data name="Info_WebsiteDescription" xml:space="preserve">
+    <value>ICT-Baden on GitHub</value>
+  </data>
+  <data name="Info_ZipFilter" xml:space="preserve">
+    <value>ZIP archive (*.zip)|*.zip</value>
+  </data>
   <data name="Kind_BuiltIn" xml:space="preserve">
     <value>Built-in</value>
   </data>
@@ -602,6 +1361,9 @@
   </data>
   <data name="Kind_Group" xml:space="preserve">
     <value>Group</value>
+  </data>
+  <data name="Kind_KnownAccount" xml:space="preserve">
+    <value>Well-known account</value>
   </data>
   <data name="Kind_Orphaned" xml:space="preserve">
     <value>Orphaned</value>
@@ -619,6 +1381,272 @@
   <data name="Local_Unreadable" xml:space="preserve">
     <value>Local accounts and groups not readable: {0}. Members of local and BUILTIN groups are missing, local accounts remain “Unknown”.</value>
     <comment>{0} = error</comment>
+  </data>
+  <data name="Nav_Comparison" xml:space="preserve">
+    <value>Comparison</value>
+  </data>
+  <data name="Nav_Findings" xml:space="preserve">
+    <value>Findings</value>
+  </data>
+  <data name="Nav_Folders" xml:space="preserve">
+    <value>Folders</value>
+  </data>
+  <data name="Nav_Info" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="Nav_Overview" xml:space="preserve">
+    <value>Overview</value>
+  </data>
+  <data name="Nav_People" xml:space="preserve">
+    <value>People</value>
+  </data>
+  <data name="Nav_Report" xml:space="preserve">
+    <value>Report</value>
+  </data>
+  <data name="Ov_AccessChangesMany" xml:space="preserve">
+    <value>{0} access changes</value>
+  </data>
+  <data name="Ov_AccessChangesOne" xml:space="preserve">
+    <value>{0} access change</value>
+  </data>
+  <data name="Ov_BadDeepFrom" xml:space="preserve">
+    <value>“Exception counts as deep from level”: please enter a whole number from 1.</value>
+  </data>
+  <data name="Ov_BadDepth" xml:space="preserve">
+    <value>Maximum depth: please enter a whole number from 0 or leave it empty.</value>
+  </data>
+  <data name="Ov_Cancelling" xml:space="preserve">
+    <value>Cancelling …</value>
+  </data>
+  <data name="Ov_ChangesSince" xml:space="preserve">
+    <value>Since the run of {0}: {1}, {2} and {3}.</value>
+    <comment>{0} = date, {1} = new findings, {2} = resolved, {3} = access changes</comment>
+  </data>
+  <data name="Ov_ChooseFolder" xml:space="preserve">
+    <value>Choose folder …</value>
+  </data>
+  <data name="Ov_ChooseFolderTitle" xml:space="preserve">
+    <value>Choose a folder for the scan</value>
+  </data>
+  <data name="Ov_CurrentlyLoaded" xml:space="preserve">
+    <value>Currently loaded</value>
+  </data>
+  <data name="Ov_DeepFrom" xml:space="preserve">
+    <value>Exception counts as deep from level</value>
+  </data>
+  <data name="Ov_DeepFromHint" xml:space="preserve">
+    <value>for “deeply hidden exception”</value>
+  </data>
+  <data name="Ov_DeleteConfirm" xml:space="preserve">
+    <value>Permanently delete the run of {0} ({1})?
+
+Reports that have already been saved are kept.</value>
+    <comment>{0} = row.Date, {1} = row.Targets</comment>
+  </data>
+  <data name="Ov_DeleteRun" xml:space="preserve">
+    <value>Delete run</value>
+  </data>
+  <data name="Ov_DemoDatabase" xml:space="preserve">
+    <value>Demo database, deleted on exit: {0}</value>
+    <comment>{0} = state.DatabasePath</comment>
+  </data>
+  <data name="Ov_DemoSuffix" xml:space="preserve">
+    <value> · demo</value>
+  </data>
+  <data name="Ov_Duration" xml:space="preserve">
+    <value> · duration {0}</value>
+    <comment>{0} = Labels.Duration(scan.FinishedAt - scan.StartedAt)</comment>
+  </data>
+  <data name="Ov_Elapsed" xml:space="preserve">
+    <value>Elapsed</value>
+  </data>
+  <data name="Ov_FindingsHigh" xml:space="preserve">
+    <value>Findings High</value>
+  </data>
+  <data name="Ov_FindingsInfo" xml:space="preserve">
+    <value>Notes (Info)</value>
+  </data>
+  <data name="Ov_FindingsLow" xml:space="preserve">
+    <value>Findings Low</value>
+  </data>
+  <data name="Ov_FindingsMedium" xml:space="preserve">
+    <value>Findings Medium</value>
+  </data>
+  <data name="Ov_FoldersCheckedFiles" xml:space="preserve">
+    <value>Folders checked (+ {0} files)</value>
+    <comment>{0} = Labels.Number(scan.FilesVisited)</comment>
+  </data>
+  <data name="Ov_FoldersCounted" xml:space="preserve">
+    <value>Folders counted</value>
+  </data>
+  <data name="Ov_Hero" xml:space="preserve">
+    <value>Who can access your shares?</value>
+  </data>
+  <data name="Ov_HighCount" xml:space="preserve">
+    <value>{0} High</value>
+    <comment>{0} = Labels.Number(Summary.HighFindings)</comment>
+  </data>
+  <data name="Ov_IncludeFiles" xml:space="preserve">
+    <value>Include files</value>
+  </data>
+  <data name="Ov_IncludeFilesTip" xml:space="preserve">
+    <value>Also record files with their own permissions – takes considerably longer.</value>
+  </data>
+  <data name="Ov_Intro" xml:space="preserve">
+    <value>Zutritt reads shares and NTFS permissions, resolves groups down to people and shows what stands out – with a comparison to the last run and a report to sign. Enter a target below and start the scan.</value>
+  </data>
+  <data name="Ov_MaxDepth" xml:space="preserve">
+    <value>Maximum depth</value>
+  </data>
+  <data name="Ov_MaxDepthHint" xml:space="preserve">
+    <value>empty = unlimited</value>
+  </data>
+  <data name="Ov_NeedTarget" xml:space="preserve">
+    <value>Please enter at least one target – e.g. \\server\share or “.” for the shares of this computer.</value>
+  </data>
+  <data name="Ov_NewFindingsMany" xml:space="preserve">
+    <value>{0} new findings</value>
+  </data>
+  <data name="Ov_NewFindingsOne" xml:space="preserve">
+    <value>{0} new finding</value>
+  </data>
+  <data name="Ov_NewScan" xml:space="preserve">
+    <value>New scan</value>
+  </data>
+  <data name="Ov_NoDatabase" xml:space="preserve">
+    <value>No database open – runs are not saved in this session.</value>
+  </data>
+  <data name="Ov_NoDatabaseNoRuns" xml:space="preserve">
+    <value>Without a database there are no saved runs.</value>
+  </data>
+  <data name="Ov_NoRuns" xml:space="preserve">
+    <value>No saved runs yet – after the first scan it will appear here.</value>
+  </data>
+  <data name="Ov_NotSaved" xml:space="preserve">
+    <value>Scan finished but not saved: {0} The run is loaded – please create a report under “Report” now, otherwise it is lost after closing.</value>
+    <comment>{0} = error message with code</comment>
+  </data>
+  <data name="Ov_Options" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="Ov_Preparing" xml:space="preserve">
+    <value>Preparing scan …</value>
+  </data>
+  <data name="Ov_ReadOnly" xml:space="preserve">
+    <value>Zutritt only reads – it changes no permissions and no files.</value>
+  </data>
+  <data name="Ov_RecentRuns" xml:space="preserve">
+    <value>Recent runs</value>
+  </data>
+  <data name="Ov_RefreshList" xml:space="preserve">
+    <value>Refresh list</value>
+  </data>
+  <data name="Ov_ResolvedMany" xml:space="preserve">
+    <value>{0} resolved</value>
+  </data>
+  <data name="Ov_ResolvedOne" xml:space="preserve">
+    <value>{0} resolved</value>
+  </data>
+  <data name="Ov_ResolveGroups" xml:space="preserve">
+    <value>Resolve groups down to people</value>
+  </data>
+  <data name="Ov_ResolveGroupsTip" xml:space="preserve">
+    <value>Resolve local groups and – if reachable – Active Directory groups down to the individual account.</value>
+  </data>
+  <data name="Ov_ResultMeta" xml:space="preserve">
+    <value>{0}{1} · {2} on {3}</value>
+    <comment>{0} = Labels.Date(scan.StartedAt), {1} = duration, {2} = scan.ScannedBy, {3} = scan.Machine</comment>
+  </data>
+  <data name="Ov_RunDeleted" xml:space="preserve">
+    <value>Run of {0} deleted.</value>
+    <comment>{0} = row.Date</comment>
+  </data>
+  <data name="Ov_RunLoaded" xml:space="preserve">
+    <value>Run of {0} loaded ({1}).</value>
+    <comment>{0} = row.Date, {1} = row.Targets</comment>
+  </data>
+  <data name="Ov_RunNotDeleted" xml:space="preserve">
+    <value>The run could not be deleted</value>
+  </data>
+  <data name="Ov_RunNotOpened" xml:space="preserve">
+    <value>The run could not be opened</value>
+  </data>
+  <data name="Ov_RunRowText" xml:space="preserve">
+    <value>{0}, {1}, {2} findings</value>
+    <comment>{0} = Date, {1} = Targets, {2} = FindingsText</comment>
+  </data>
+  <data name="Ov_RunsUnreadable" xml:space="preserve">
+    <value>The saved runs could not be read</value>
+  </data>
+  <data name="Ov_SavedIn" xml:space="preserve">
+    <value>Saved in {0}</value>
+    <comment>{0} = state.DatabasePath</comment>
+  </data>
+  <data name="Ov_SavingComparing" xml:space="preserve">
+    <value>Saving and comparing …</value>
+  </data>
+  <data name="Ov_ScanCancelled" xml:space="preserve">
+    <value>Scan cancelled – nothing was saved.</value>
+  </data>
+  <data name="Ov_ScanDoneMany" xml:space="preserve">
+    <value>Scan finished: {0} folders checked, {1} findings.</value>
+  </data>
+  <data name="Ov_ScanDoneOne" xml:space="preserve">
+    <value>Scan finished: {0} folders checked, {1} finding.</value>
+  </data>
+  <data name="Ov_ScanFailed" xml:space="preserve">
+    <value>The scan failed: {0}</value>
+  </data>
+  <data name="Ov_ScanRunning" xml:space="preserve">
+    <value>Scan running …</value>
+  </data>
+  <data name="Ov_ShowChanges" xml:space="preserve">
+    <value>View changes</value>
+  </data>
+  <data name="Ov_ShowFindings" xml:space="preserve">
+    <value>View findings</value>
+  </data>
+  <data name="Ov_SkipAdmin" xml:space="preserve">
+    <value>Skip admin shares</value>
+  </data>
+  <data name="Ov_SkipAdminTip" xml:space="preserve">
+    <value>Do not check C$, ADMIN$, IPC$ and print$.</value>
+  </data>
+  <data name="Ov_StartScan" xml:space="preserve">
+    <value>Start scan</value>
+  </data>
+  <data name="Ov_TargetsHint" xml:space="preserve">
+    <value>\\server\share, D:\Data or . for all shares of this computer</value>
+  </data>
+  <data name="Ov_TargetsLabel" xml:space="preserve">
+    <value>Targets – one per line</value>
+  </data>
+  <data name="Ov_TargetsName" xml:space="preserve">
+    <value>Targets, one per line</value>
+  </data>
+  <data name="Ov_WithOwnPermissions" xml:space="preserve">
+    <value>with own permissions</value>
+  </data>
+  <data name="Page_ComparisonSubtitle" xml:space="preserve">
+    <value>What has changed since the last run?</value>
+  </data>
+  <data name="Page_FindingsSubtitle" xml:space="preserve">
+    <value>What stands out – sorted by severity, with explanation and recommendation</value>
+  </data>
+  <data name="Page_FoldersSubtitle" xml:space="preserve">
+    <value>Who can get in here?</value>
+  </data>
+  <data name="Page_InfoSubtitle" xml:space="preserve">
+    <value>About Zutritt</value>
+  </data>
+  <data name="Page_OverviewSubtitle" xml:space="preserve">
+    <value>Start a new scan or open a saved run</value>
+  </data>
+  <data name="Page_PeopleSubtitle" xml:space="preserve">
+    <value>Where can someone go?</value>
+  </data>
+  <data name="Page_ReportSubtitle" xml:space="preserve">
+    <value>Excel to work with, PDF to sign</value>
   </data>
   <data name="Pdf_AccessChangesIntro" xml:space="preserve">
     <value>Consequence of the changes above: who can now effectively do more or less (across all groups, after deducting denials) – {0} first, combined per folder. Every individual person with before and after is in the Excel report (sheet {1}).</value>
@@ -978,6 +2006,101 @@
   <data name="Pdf_UnreadableFolders" xml:space="preserve">
     <value>Unreadable folders</value>
   </data>
+  <data name="Pe_AccessList" xml:space="preserve">
+    <value>Folders the person can access</value>
+  </data>
+  <data name="Pe_AccessNote" xml:space="preserve">
+    <value>Folders with their own permissions – subfolders without their own permissions inherit from them.</value>
+  </data>
+  <data name="Pe_AccessToMany" xml:space="preserve">
+    <value>Access to {0} folders</value>
+    <comment>{0} = number</comment>
+  </data>
+  <data name="Pe_AccessToOne" xml:space="preserve">
+    <value>Access to {0} folder</value>
+    <comment>{0} = 1</comment>
+  </data>
+  <data name="Pe_AccountDisabled" xml:space="preserve">
+    <value>Account disabled</value>
+  </data>
+  <data name="Pe_CountFailed" xml:space="preserve">
+    <value>The number of folders per person could not be calculated</value>
+  </data>
+  <data name="Pe_CountMany" xml:space="preserve">
+    <value>{0} people</value>
+    <comment>{0} = number</comment>
+  </data>
+  <data name="Pe_CountOne" xml:space="preserve">
+    <value>{0} person</value>
+    <comment>{0} = 1</comment>
+  </data>
+  <data name="Pe_DisabledSuffix" xml:space="preserve">
+    <value>, disabled</value>
+  </data>
+  <data name="Pe_DomainAccount" xml:space="preserve">
+    <value>Domain account</value>
+  </data>
+  <data name="Pe_FolderCountMany" xml:space="preserve">
+    <value>{0} folders</value>
+    <comment>{0} = number</comment>
+  </data>
+  <data name="Pe_FolderCountOne" xml:space="preserve">
+    <value>{0} folder</value>
+    <comment>{0} = 1</comment>
+  </data>
+  <data name="Pe_LocalAccount" xml:space="preserve">
+    <value>Local account</value>
+  </data>
+  <data name="Pe_MemberOf" xml:space="preserve">
+    <value>Member of</value>
+  </data>
+  <data name="Pe_MemberOfCount" xml:space="preserve">
+    <value>Member of ({0}, including through nested groups)</value>
+    <comment>{0} = memberOf.Count</comment>
+  </data>
+  <data name="Pe_NoAccess" xml:space="preserve">
+    <value>This person has no access to any of the stored folders.</value>
+  </data>
+  <data name="Pe_NoGroup" xml:space="preserve">
+    <value>Member of no group in this run</value>
+  </data>
+  <data name="Pe_NoMatch" xml:space="preserve">
+    <value>Nobody matches “{0}”.</value>
+    <comment>{0} = query</comment>
+  </data>
+  <data name="Pe_NoUsers" xml:space="preserve">
+    <value>There are no user accounts in this run.</value>
+  </data>
+  <data name="Pe_NoUsersNoGroups" xml:space="preserve">
+    <value>No user accounts – the run was made without resolving groups.</value>
+  </data>
+  <data name="Pe_NtfsNoShare" xml:space="preserve">
+    <value>NTFS: {0} · without share permissions</value>
+    <comment>{0} = Labels.Of(g.Ntfs)</comment>
+  </data>
+  <data name="Pe_NtfsViaShare" xml:space="preserve">
+    <value>NTFS: {0} · via the share: {1}</value>
+    <comment>{0} = Labels.Of(g.Ntfs), {1} = Labels.Of(share)</comment>
+  </data>
+  <data name="Pe_OfWhichDisabled" xml:space="preserve">
+    <value>, {0} of them disabled</value>
+    <comment>{0} = number</comment>
+  </data>
+  <data name="Pe_RightsFailed" xml:space="preserve">
+    <value>The person’s permissions could not be calculated</value>
+  </data>
+  <data name="Pe_Search" xml:space="preserve">
+    <value>Search people</value>
+  </data>
+  <data name="Pe_SearchHint" xml:space="preserve">
+    <value>Search name or account</value>
+  </data>
+  <data name="Pe_SelectPerson" xml:space="preserve">
+    <value>Select a person on the left to see where they can go.</value>
+  </data>
+  <data name="Pe_ShareCaps" xml:space="preserve">
+    <value>The share permission limits the NTFS permission</value>
+  </data>
   <data name="Phase_Accounts" xml:space="preserve">
     <value>Accounts</value>
   </data>
@@ -1218,6 +2341,121 @@
   </data>
   <data name="Rights_WriteAttributes" xml:space="preserve">
     <value>Write attributes</value>
+  </data>
+  <data name="Rp_After" xml:space="preserve">
+    <value> after {0}</value>
+    <comment>{0} = Labels.Duration(duration)</comment>
+  </data>
+  <data name="Rp_ComparisonWith" xml:space="preserve">
+    <value>Comparison with the run of {0}: new and resolved findings, changed permissions and memberships as a separate section.</value>
+    <comment>{0} = Labels.Date(c.Older.StartedAt)</comment>
+  </data>
+  <data name="Rp_Creating" xml:space="preserve">
+    <value>Creating report …</value>
+  </data>
+  <data name="Rp_Excel" xml:space="preserve">
+    <value>Excel report</value>
+  </data>
+  <data name="Rp_ExcelDescription" xml:space="preserve">
+    <value>To work with: overview, findings, folders &amp; permissions, people, groups, shares and – with a comparison – changes, each with filters.</value>
+  </data>
+  <data name="Rp_ExcelFilter" xml:space="preserve">
+    <value>Excel workbook (*.xlsx)|*.xlsx</value>
+  </data>
+  <data name="Rp_ExcelSaved" xml:space="preserve">
+    <value>Excel report saved</value>
+  </data>
+  <data name="Rp_FolderOpenFailed" xml:space="preserve">
+    <value>The folder could not be opened: {0}</value>
+    <comment>{0} = ex.Message</comment>
+  </data>
+  <data name="Rp_IncludeChanges" xml:space="preserve">
+    <value>Include changes since the last run</value>
+  </data>
+  <data name="Rp_IncludeChangesDescription" xml:space="preserve">
+    <value>New and resolved findings, changed permissions and memberships as a separate section.</value>
+  </data>
+  <data name="Rp_NoEarlier" xml:space="preserve">
+    <value>There is no earlier run to compare with – the report then has no “Changes” section.</value>
+  </data>
+  <data name="Rp_NoRunText" xml:space="preserve">
+    <value>Load a run on the Overview page or start a scan – then the report can be saved here.</value>
+  </data>
+  <data name="Rp_OpenFailed" xml:space="preserve">
+    <value>The file could not be opened: {0}</value>
+    <comment>{0} = ex.Message</comment>
+  </data>
+  <data name="Rp_Pdf" xml:space="preserve">
+    <value>PDF report</value>
+  </data>
+  <data name="Rp_PdfDescription" xml:space="preserve">
+    <value>To file and sign: cover page, summary, findings, shares, folders with their own permissions, people and a sign-off block.</value>
+  </data>
+  <data name="Rp_PdfFilter" xml:space="preserve">
+    <value>PDF document (*.pdf)|*.pdf</value>
+  </data>
+  <data name="Rp_PdfSaved" xml:space="preserve">
+    <value>PDF report saved</value>
+  </data>
+  <data name="Rp_Preparing" xml:space="preserve">
+    <value>Preparing …</value>
+  </data>
+  <data name="Rp_ReportFor" xml:space="preserve">
+    <value>Report for {0}</value>
+    <comment>{0} = Labels.Targets(scan.Request.Targets)</comment>
+  </data>
+  <data name="Rp_RunSummaryHighMany" xml:space="preserve">
+    <value>Run of {0}: {1} folders checked, {2} findings, of which {3} “High”.</value>
+  </data>
+  <data name="Rp_RunSummaryHighOne" xml:space="preserve">
+    <value>Run of {0}: {1} folders checked, {2} finding, of which {3} “High”.</value>
+  </data>
+  <data name="Rp_RunSummaryMany" xml:space="preserve">
+    <value>Run of {0}: {1} folders checked, {2} findings.</value>
+  </data>
+  <data name="Rp_RunSummaryOne" xml:space="preserve">
+    <value>Run of {0}: {1} folders checked, {2} finding.</value>
+  </data>
+  <data name="Rp_Save" xml:space="preserve">
+    <value>Save report</value>
+  </data>
+  <data name="Rp_SaveExcel" xml:space="preserve">
+    <value>Save Excel report …</value>
+  </data>
+  <data name="Rp_SaveExcelTitle" xml:space="preserve">
+    <value>Save Excel report</value>
+  </data>
+  <data name="Rp_SaveFailed" xml:space="preserve">
+    <value>The report could not be saved: {0}</value>
+    <comment>{0} = ErrorCodes.Describe(ex, ErrorCodes.ReportWrite)</comment>
+  </data>
+  <data name="Rp_SavePdf" xml:space="preserve">
+    <value>Save PDF report …</value>
+  </data>
+  <data name="Rp_SavePdfTitle" xml:space="preserve">
+    <value>Save PDF report</value>
+  </data>
+  <data name="Rp_Scheduled" xml:space="preserve">
+    <value>Regularly and without clicking: as a scheduled task with “Zutritt.exe scan … ‑‑compare ‑‑report …” (see Info).</value>
+  </data>
+  <data name="Rp_ShowInFolder" xml:space="preserve">
+    <value>Show in folder</value>
+  </data>
+  <data name="Rp_SignOff" xml:space="preserve">
+    <value>Sign-off</value>
+  </data>
+  <data name="Rp_SignOffBlock" xml:space="preserve">
+    <value>At the end of the PDF report there is a sign-off block with “Reviewed by”, “Date”, “Signature” and “Remarks”.</value>
+  </data>
+  <data name="Rp_SignOffWhy" xml:space="preserve">
+    <value>Printed and signed – or with an electronic signature in the PDF – it documents the regular review of access rights that audits under GMP (Annex 11), ISO 27001 (A.5.18) or NIS2 expect. Under “Remarks”, note which findings deliberately remain as they are and why.</value>
+  </data>
+  <data name="Rp_SuggestedName" xml:space="preserve">
+    <value>Suggested file name: {0}</value>
+    <comment>{0} = Labels.ReportFileName(scan)</comment>
+  </data>
+  <data name="Rp_Title" xml:space="preserve">
+    <value>Report for the loaded run</value>
   </data>
   <data name="Rule_ZT01_Explanation" xml:space="preserve">
     <value>A group that includes practically everyone (e.g. “Everyone”, “Authenticated Users”, “Domain Users”) can create or change files here. Any signed-in person can thus falsify, delete or – for example through malware – encrypt data.</value>
@@ -1533,6 +2771,21 @@
   </data>
   <data name="Sheet_Shares" xml:space="preserve">
     <value>Shares</value>
+  </data>
+  <data name="Shot_EmptyImage" xml:space="preserve">
+    <value>WPF drew an empty image. This happens in a disconnected session (Remote Desktop closed without signing out) – start again in a signed-in, connected session.</value>
+  </data>
+  <data name="Shot_Start" xml:space="preserve">
+    <value>Zutritt {0} – screenshots to {1}</value>
+    <comment>{0} = AppInfo.Version, {1} = folder</comment>
+  </data>
+  <data name="Shot_Written" xml:space="preserve">
+    <value>{0} images written.</value>
+    <comment>{0} = written</comment>
+  </data>
+  <data name="Shot_WrongSize" xml:space="preserve">
+    <value>The window is {0:0}×{1:0} instead of {2:0}×{3:0} points – the images would be distorted.</value>
+    <comment>{0} = width, {1} = height, {2} = Width, {3} = Height</comment>
   </data>
   <data name="Sid_AccessControlAssistanceOperators" xml:space="preserve">
     <value>Access Control Assistance Operators</value>
@@ -1941,6 +3194,105 @@
   <data name="Time_Seconds" xml:space="preserve">
     <value>{0:0} seconds</value>
     <comment>{0} = limit.TotalSeconds</comment>
+  </data>
+  <data name="Ui_AppSubtitle" xml:space="preserve">
+    <value>Who can access what?</value>
+  </data>
+  <data name="Ui_BrowserFailed" xml:space="preserve">
+    <value>The browser could not be opened: {0}</value>
+    <comment>{0} = ErrorCodes.Describe(ex, ErrorCodes.LinkOpen)</comment>
+  </data>
+  <data name="Ui_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Ui_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Ui_CloseNotice" xml:space="preserve">
+    <value>Close message</value>
+  </data>
+  <data name="Ui_CloseTitle" xml:space="preserve">
+    <value>Close Zutritt</value>
+  </data>
+  <data name="Ui_CloseWhileScanning" xml:space="preserve">
+    <value>A scan is still running. Close Zutritt anyway? The run will not be saved.</value>
+  </data>
+  <data name="Ui_DateTime" xml:space="preserve">
+    <value>{0}, {1}</value>
+    <comment>{0} = short date, {1} = short time</comment>
+  </data>
+  <data name="Ui_Demo" xml:space="preserve">
+    <value>Demo</value>
+  </data>
+  <data name="Ui_DemoTitle" xml:space="preserve">
+    <value>Zutritt – demo</value>
+  </data>
+  <data name="Ui_DurationHours" xml:space="preserve">
+    <value>{0}:{1:00}:{2:00} h</value>
+    <comment>{0} = hours, {1} = minutes, {2} = seconds</comment>
+  </data>
+  <data name="Ui_DurationMinutes" xml:space="preserve">
+    <value>{0}:{1:00} min</value>
+    <comment>{0} = minutes, {1} = seconds</comment>
+  </data>
+  <data name="Ui_FailureWithReason" xml:space="preserve">
+    <value>{0}: {1}</value>
+    <comment>{0} = what failed, {1} = message with error code</comment>
+  </data>
+  <data name="Ui_FileAndMore" xml:space="preserve">
+    <value>-and-{0}-more</value>
+    <comment>Part of a file name; {0} = number of further targets</comment>
+  </data>
+  <data name="Ui_FileRun" xml:space="preserve">
+    <value>Run</value>
+    <comment>Part of a file name</comment>
+  </data>
+  <data name="Ui_LinkBlocked" xml:space="preserve">
+    <value>The link “{0}” was not opened: only addresses with http or https are allowed.</value>
+    <comment>{0} = url</comment>
+  </data>
+  <data name="Ui_LocalShares" xml:space="preserve">
+    <value>Shares of this computer</value>
+    <comment>Shown for the target “.”</comment>
+  </data>
+  <data name="Ui_NoFindings" xml:space="preserve">
+    <value>No findings</value>
+  </data>
+  <data name="Ui_NoRunLoaded" xml:space="preserve">
+    <value>No run loaded</value>
+  </data>
+  <data name="Ui_NoTarget" xml:space="preserve">
+    <value>no target</value>
+  </data>
+  <data name="Ui_Off" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Ui_On" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="Ui_Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Ui_ReportFileName" xml:space="preserve">
+    <value>Zutritt-Report-{0}-{1}</value>
+    <comment>Suggested file name without extension; {0} = target, {1} = date yyyy-MM-dd</comment>
+  </data>
+  <data name="Ui_SortedAscending" xml:space="preserve">
+    <value>{0}, sorted ascending</value>
+  </data>
+  <data name="Ui_SortedDescending" xml:space="preserve">
+    <value>{0}, sorted descending</value>
+  </data>
+  <data name="Ui_StartOrOpen" xml:space="preserve">
+    <value>Start a scan or open a run</value>
+  </data>
+  <data name="Ui_TargetAndMore" xml:space="preserve">
+    <value>{0} and {1} more</value>
+    <comment>{0} = first target, {1} = number of further targets</comment>
+  </data>
+  <data name="Ui_VersionWithBuild" xml:space="preserve">
+    <value>{0} (build {1})</value>
+    <comment>{0} = version, {1} = commit</comment>
   </data>
   <data name="Win_AccessDenied" xml:space="preserve">
     <value>Access denied</value>

@@ -75,6 +75,36 @@
   <data name="Ad_Unreachable" xml:space="preserve">
     <value>Active Directory «{0}» no accesible: {1}. Las cuentas del dominio quedan como «Desconocido» y sus grupos no se resuelven.</value>
   </data>
+  <data name="App_DbNotOpen" xml:space="preserve">
+    <value>No se puede abrir la base de datos ({0}). Los análisis no se guardan en esta sesión.</value>
+  </data>
+  <data name="App_DbNotOpenPath" xml:space="preserve">
+    <value>No se puede abrir la base de datos «{0}» ({1}). Los análisis no se guardan en esta sesión.</value>
+  </data>
+  <data name="App_DemoCompareFailed" xml:space="preserve">
+    <value>Error al comparar los análisis de demostración ({0}).</value>
+  </data>
+  <data name="App_DemoDbFailed" xml:space="preserve">
+    <value>No se pudo crear la base de datos de demostración ({0}). El análisis de demostración se muestra sin almacenamiento y sin comparación.</value>
+  </data>
+  <data name="App_LicenseName" xml:space="preserve">
+    <value>Licencia MIT</value>
+  </data>
+  <data name="App_NoDatabase" xml:space="preserve">
+    <value>No hay ninguna base de datos abierta.</value>
+  </data>
+  <data name="App_NoDataSentence" xml:space="preserve">
+    <value>Este software no envía ningún dato a ICT-Baden.</value>
+  </data>
+  <data name="App_RunGone" xml:space="preserve">
+    <value>El análisis {0} ya no existe.</value>
+  </data>
+  <data name="App_Tagline" xml:space="preserve">
+    <value>Muestra quién puede acceder a qué en los recursos compartidos de archivos, con hallazgos, comparación e informe.</value>
+  </data>
+  <data name="App_UnexpectedError" xml:space="preserve">
+    <value>Error inesperado: {0}</value>
+  </data>
   <data name="AppliesTo_Files" xml:space="preserve">
     <value>Solo archivos</value>
   </data>
@@ -89,6 +119,9 @@
   </data>
   <data name="AppliesTo_OneLevel" xml:space="preserve">
     <value>{0} (solo un nivel)</value>
+  </data>
+  <data name="AppliesTo_OneLevelShort" xml:space="preserve">
+    <value>{0} (un nivel)</value>
   </data>
   <data name="AppliesTo_Subfolders" xml:space="preserve">
     <value>Solo subcarpetas</value>
@@ -147,23 +180,360 @@
   <data name="Change_Resolved" xml:space="preserve">
     <value>Resuelto</value>
   </data>
+  <data name="Cli_AndMore" xml:space="preserve">
+    <value>  … y {0} más (todos en el informe)</value>
+  </data>
+  <data name="Cli_Attention" xml:space="preserve">
+    <value>Atención: {0}</value>
+  </data>
+  <data name="Cli_Cancelled" xml:space="preserve">
+    <value>Cancelado.</value>
+  </data>
+  <data name="Cli_CompareFailed" xml:space="preserve">
+    <value>No se puede comparar: {0}</value>
+  </data>
+  <data name="Cli_DemoAlone" xml:space="preserve">
+    <value>«--demo» va solo: Zutritt.exe --demo</value>
+  </data>
+  <data name="Cli_ErrorLine" xml:space="preserve">
+    <value>Error {1}: {0}</value>
+  </data>
+  <data name="Cli_ExitClean" xml:space="preserve">
+    <value>ningún hallazgo a partir de «Media»</value>
+  </data>
+  <data name="Cli_ExitCode" xml:space="preserve">
+    <value>Código de salida {0}: {1}</value>
+  </data>
+  <data name="Cli_ExitHigh" xml:space="preserve">
+    <value>al menos un hallazgo «Alta»</value>
+  </data>
+  <data name="Cli_ExitMedium" xml:space="preserve">
+    <value>hallazgos «Media», ninguno «Alta»</value>
+  </data>
+  <data name="Cli_Help" xml:space="preserve">
+    <value>Zutritt {0} – ¿quién puede acceder a qué en los recursos compartidos de archivos?
+
+Uso:
+  Zutritt.exe                         abrir la ventana
+  Zutritt.exe scan &lt;destino&gt; [&lt;destino&gt; …] [opciones]
+  Zutritt.exe list [--db &lt;ruta&gt;]
+  Zutritt.exe report &lt;id&gt; --report &lt;archivo&gt; [--compare] [--db &lt;ruta&gt;]
+  Zutritt.exe --demo                  ventana con datos de demostración integrados
+  Zutritt.exe --screenshots &lt;carpeta&gt; [--theme light|dark|both]
+  Zutritt.exe --help
+  Zutritt.exe --version               versión y compilación
+  Zutritt.exe --info                  versión, licencia, enlaces a ayuda, privacidad, aviso legal
+  Zutritt.exe --licenses              texto de la licencia y licencias de terceros
+
+Destinos:
+  \\servidor\recurso[\carpeta]  un recurso compartido o una carpeta dentro de él
+  \\servidor                    todos los recursos compartidos de disco de un servidor
+  D:\Datos                      una carpeta local
+  .                             todos los recursos compartidos de este equipo
+
+Opciones de «scan»:
+  --files                  registrar también archivos con permisos propios (tarda más)
+  --depth N                como máximo N niveles por debajo del destino (predeterminado: sin límite)
+  --deep-from N            informar de la herencia interrumpida a partir del nivel N como
+                           «excepción oculta en profundidad» (predeterminado: 3)
+  --no-groups              no resolver los grupos hasta las personas
+  --include-admin-shares   comprobar también C$, ADMIN$, etc.
+  --report &lt;archivo&gt;       escribir un informe, .xlsx o .pdf (se puede repetir)
+  --compare                determinar los cambios desde el último análisis con los mismos
+                           destinos e incluirlos en los informes
+  --db &lt;ruta&gt;              otra base de datos (predeterminada: %LocalAppData%\Zutritt\zutritt.db,
+                           es decir, por usuario)
+
+«list» muestra los análisis guardados con su id; «report» escribe después informes de uno
+de ellos.
+
+También funcionan las grafías alemanas: liste, bericht, --hilfe, --lizenzen, --dateien,
+--tiefe, --ausnahme-ab, --ohne-gruppen, --mit-admin-freigaben, --bericht, --vergleich.
+Idioma de la salida: como Windows; si no, con la variable de entorno ZUTRITT_LANGUAGE
+(en, de, es, fr, zh-Hans) o en la página Información de la ventana.
+
+Códigos de salida (para tareas programadas):
+  0  ningún hallazgo a partir de «Media»
+  1  hallazgos «Media», pero ninguno «Alta»
+  2  al menos un hallazgo «Alta»
+  3  error o cancelación, también si no se pudo comprobar ningún destino
+
+Ejemplo: todos los lunes a las 6:00 con comparación y un PDF para firmar:
+  schtasks /create /tn "Zutritt informe semanal" /sc weekly /d MO /st 06:00 /tr ^
+    "\"C:\Program Files\Zutritt\Zutritt.exe\" scan \\FS01 --compare --report D:\Informes\Zutritt.pdf"
+
+Zutritt.exe es un programa de ventana; para que el símbolo del sistema espere a que termine:
+  start /wait Zutritt.exe scan …            (cmd)
+  Zutritt.exe scan … | Out-Default          (PowerShell)
+Registro para tareas programadas: redirigir en un archivo .cmd; allí cmd espera al final y
+el archivo se escribe en UTF-8 (con BOM):
+  "C:\Program Files\Zutritt\Zutritt.exe" scan \\FS01 --compare &gt; D:\Informes\zutritt.log 2&gt;&amp;1
+Zutritt solo lee: no cambia permisos ni archivos.
+{1}</value>
+  </data>
+  <data name="Cli_HelpHint" xml:space="preserve">
+    <value>Ayuda: Zutritt.exe --help</value>
+  </data>
+  <data name="Cli_ImportantFindings" xml:space="preserve">
+    <value>Hallazgos más importantes:</value>
+  </data>
+  <data name="Cli_InfoDatabase" xml:space="preserve">
+    <value>Base de datos</value>
+  </data>
+  <data name="Cli_InfoImprint" xml:space="preserve">
+    <value>Aviso legal</value>
+  </data>
+  <data name="Cli_InfoLanguage" xml:space="preserve">
+    <value>Idioma</value>
+  </data>
+  <data name="Cli_InfoLanguageValue" xml:space="preserve">
+    <value>{0}: se cambia con la variable de entorno {1} o en la página Información</value>
+  </data>
+  <data name="Cli_InfoLicense" xml:space="preserve">
+    <value>Texto de la licencia</value>
+  </data>
+  <data name="Cli_InfoLicenseValue" xml:space="preserve">
+    <value>{0} (Zutritt.exe --licenses, {1})</value>
+  </data>
+  <data name="Cli_InfoLog" xml:space="preserve">
+    <value>Registro</value>
+  </data>
+  <data name="Cli_InfoNotices" xml:space="preserve">
+    <value>Licencias de terceros</value>
+  </data>
+  <data name="Cli_InfoNoticesValue" xml:space="preserve">
+    <value>{0} (Zutritt.exe --licenses, también en Información en la aplicación)</value>
+  </data>
+  <data name="Cli_InfoPrivacy" xml:space="preserve">
+    <value>Privacidad</value>
+  </data>
+  <data name="Cli_InfoSource" xml:space="preserve">
+    <value>Código fuente (GitHub)</value>
+  </data>
+  <data name="Cli_InfoSupport" xml:space="preserve">
+    <value>Ayuda y soporte</value>
+  </data>
+  <data name="Cli_InfoWebsite" xml:space="preserve">
+    <value>Sitio web</value>
+  </data>
+  <data name="Cli_LicensesMissing" xml:space="preserve">
+    <value>Faltan los textos de licencia en esta compilación; están disponibles en {0}.</value>
+  </data>
+  <data name="Cli_ListNoArgs" xml:space="preserve">
+    <value>«list» no admite más argumentos («{0}»).</value>
+  </data>
+  <data name="Cli_LockedHint" xml:space="preserve">
+    <value>Nota: {0} El análisis se ejecuta de todos modos; se guarda al final.</value>
+  </data>
+  <data name="Cli_NeedReport" xml:space="preserve">
+    <value>Indique con --report &lt;archivo.xlsx|archivo.pdf&gt; dónde debe guardarse el informe.</value>
+  </data>
+  <data name="Cli_NeedsInteger" xml:space="preserve">
+    <value>«{0}» espera un número entero a partir de {1}, no «{2}».</value>
+  </data>
+  <data name="Cli_NeedsValue" xml:space="preserve">
+    <value>«{0}» necesita un valor.</value>
+  </data>
+  <data name="Cli_NeedTarget" xml:space="preserve">
+    <value>Indique al menos un destino, p. ej. Zutritt.exe scan \\servidor\recurso</value>
+  </data>
+  <data name="Cli_NoArguments" xml:space="preserve">
+    <value>«{0}» no admite más argumentos.</value>
+  </data>
+  <data name="Cli_NoDatabaseYet" xml:space="preserve">
+    <value>Todavía no hay base de datos ({0}).</value>
+  </data>
+  <data name="Cli_NoPreviousRun" xml:space="preserve">
+    <value>Comparación: todavía no hay ningún análisis anterior con los mismos destinos.</value>
+  </data>
+  <data name="Cli_NoRuns" xml:space="preserve">
+    <value>No hay análisis guardados en {0}.</value>
+  </data>
+  <data name="Cli_NoSuchDatabase" xml:space="preserve">
+    <value>La base de datos {0} no existe.</value>
+  </data>
+  <data name="Cli_NoSuchRun" xml:space="preserve">
+    <value>El análisis {0} no existe. «Zutritt.exe list» muestra los análisis guardados.</value>
+  </data>
+  <data name="Cli_NotSavedLost" xml:space="preserve">
+    <value>El análisis no está en la base de datos y se perderá. Con --report &lt;archivo&gt;, Zutritt lo conserva en un informe incluso en ese caso.</value>
+  </data>
+  <data name="Cli_NotSavedReportsFollow" xml:space="preserve">
+    <value>El análisis no está en la base de datos; los informes se escriben de todos modos.</value>
+  </data>
+  <data name="Cli_NotScanned" xml:space="preserve">
+    <value>{0} No se analizó nada.</value>
+  </data>
+  <data name="Cli_NotScannedDb" xml:space="preserve">
+    <value>{0} No se analizó nada. Con --db &lt;ruta&gt; se puede elegir otra base de datos.</value>
+  </data>
+  <data name="Cli_NotScannedDbPath" xml:space="preserve">
+    <value>{0} ({1}) No se analizó nada. Con --db &lt;ruta&gt; se puede elegir otra base de datos.</value>
+  </data>
+  <data name="Cli_ProblemNothingChecked" xml:space="preserve">
+    <value>no se pudo comprobar ningún destino</value>
+  </data>
+  <data name="Cli_ProblemNotSaved" xml:space="preserve">
+    <value>el análisis no se guardó</value>
+  </data>
+  <data name="Cli_ProblemReport" xml:space="preserve">
+    <value>no se pudo escribir al menos un informe</value>
+  </data>
+  <data name="Cli_Progress" xml:space="preserve">
+    <value>{0}: {1} carpetas, {2} con permisos propios, {3} errores</value>
+  </data>
+  <data name="Cli_ReportExtension" xml:space="preserve">
+    <value>Informe «{0}»: indique .xlsx (Excel) o .pdf.</value>
+  </data>
+  <data name="Cli_ReportFailed" xml:space="preserve">
+    <value>No se pudo escribir el informe {0}: {1}</value>
+  </data>
+  <data name="Cli_ReportWritten" xml:space="preserve">
+    <value>Informe escrito: {0}</value>
+  </data>
+  <data name="Cli_RunSaved" xml:space="preserve">
+    <value>Análisis {0} guardado en {1}</value>
+  </data>
+  <data name="Cli_RunsIn" xml:space="preserve">
+    <value>Análisis guardados en {0}:</value>
+  </data>
+  <data name="Cli_ScanStart" xml:space="preserve">
+    <value>Zutritt {0} – análisis de {1}</value>
+  </data>
+  <data name="Cli_SinceRun" xml:space="preserve">
+    <value>Desde el análisis del {0}: {1} hallazgos nuevos, {2} resueltos, {3} cambios de acceso, {4} cambios de ACL, {5} cambios de pertenencia.</value>
+  </data>
+  <data name="Cli_SumDuration" xml:space="preserve">
+    <value>Duración</value>
+  </data>
+  <data name="Cli_SumFoldersValue" xml:space="preserve">
+    <value>{0}, de ellas {1} con permisos propios</value>
+  </data>
+  <data name="Cli_SumUnreadable" xml:space="preserve">
+    <value>No legibles</value>
+  </data>
+  <data name="Cli_UnknownCommand" xml:space="preserve">
+    <value>Comando desconocido «{0}».</value>
+  </data>
+  <data name="Cli_UnknownOption" xml:space="preserve">
+    <value>Opción desconocida «{0}».</value>
+  </data>
+  <data name="Cli_UnreachableTargets" xml:space="preserve">
+    <value>Atención: no se pudieron comprobar {0} de {1} destinos; el resultado está incompleto.</value>
+  </data>
+  <data name="Cli_UsageReport" xml:space="preserve">
+    <value>Uso: Zutritt.exe report &lt;id&gt; --report &lt;archivo.xlsx|archivo.pdf&gt; [--compare] [--db &lt;ruta&gt;]; «Zutritt.exe list» muestra el id.</value>
+  </data>
+  <data name="Cli_UsageScreenshots" xml:space="preserve">
+    <value>Uso: Zutritt.exe --screenshots &lt;carpeta&gt; [--theme light|dark|both]</value>
+  </data>
+  <data name="Cmp_AccessChanges" xml:space="preserve">
+    <value>Cambios de acceso</value>
+  </data>
+  <data name="Cmp_AccessRowText" xml:space="preserve">
+    <value>{0}, {1}, antes {2}, después {3}</value>
+  </data>
+  <data name="Cmp_AclAndFolderChanges" xml:space="preserve">
+    <value>Cambios de ACL y carpetas</value>
+  </data>
+  <data name="Cmp_AclChanges" xml:space="preserve">
+    <value>Cambios de ACL</value>
+  </data>
   <data name="Cmp_ChangedAces" xml:space="preserve">
     <value>Entradas de permisos modificadas</value>
   </data>
   <data name="Cmp_ChangedMemberships" xml:space="preserve">
     <value>Pertenencias a grupos modificadas</value>
   </data>
+  <data name="Cmp_ChangedMembershipsShort" xml:space="preserve">
+    <value>Pertenencias modificadas</value>
+  </data>
+  <data name="Cmp_DaysBefore" xml:space="preserve">
+    <value>{0:0} días antes</value>
+  </data>
+  <data name="Cmp_Direction" xml:space="preserve">
+    <value>Dirección</value>
+  </data>
+  <data name="Cmp_Failed" xml:space="preserve">
+    <value>La comparación ha fallado</value>
+  </data>
+  <data name="Cmp_InheritedSuffix" xml:space="preserve">
+    <value> (heredado)</value>
+  </data>
+  <data name="Cmp_Joined" xml:space="preserve">
+    <value>Incorporado</value>
+  </data>
   <data name="Cmp_LessAccess" xml:space="preserve">
     <value>Accesos de personas restringidos</value>
+  </data>
+  <data name="Cmp_LessRights" xml:space="preserve">
+    <value>menos acceso</value>
+  </data>
+  <data name="Cmp_MemberRowText" xml:space="preserve">
+    <value>{0}: {1} en {2}</value>
+  </data>
+  <data name="Cmp_Memberships" xml:space="preserve">
+    <value>Pertenencias</value>
   </data>
   <data name="Cmp_MoreAccess" xml:space="preserve">
     <value>Accesos de personas ampliados</value>
   </data>
+  <data name="Cmp_MoreRights" xml:space="preserve">
+    <value>más acceso</value>
+  </data>
+  <data name="Cmp_NeedTwoRuns" xml:space="preserve">
+    <value>Para comparar se necesitan al menos dos análisis. Después del próximo análisis de los mismos destinos verá aquí lo que ha cambiado: hallazgos nuevos y resueltos, quién puede hacer más o menos, entradas y pertenencias a grupos modificadas.</value>
+  </data>
   <data name="Cmp_NewFindings" xml:space="preserve">
     <value>Hallazgos nuevos</value>
   </data>
+  <data name="Cmp_NoAccessChanges" xml:space="preserve">
+    <value>Nadie puede hacer más o menos que antes en ningún sitio.</value>
+  </data>
+  <data name="Cmp_NoAceChanges" xml:space="preserve">
+    <value>No ha cambiado ninguna entrada de las listas de control de acceso.</value>
+  </data>
+  <data name="Cmp_NoDatabase" xml:space="preserve">
+    <value>Sin base de datos no hay análisis anteriores con los que comparar.</value>
+  </data>
+  <data name="Cmp_NoEarlierRun" xml:space="preserve">
+    <value>Todavía no hay ningún análisis anterior</value>
+  </data>
+  <data name="Cmp_NoMembershipChanges" xml:space="preserve">
+    <value>No ha cambiado ninguna pertenencia a grupos.</value>
+  </data>
+  <data name="Cmp_NoNewFindings" xml:space="preserve">
+    <value>No hay hallazgos nuevos desde el análisis anterior.</value>
+  </data>
+  <data name="Cmp_NoResolved" xml:space="preserve">
+    <value>Desde el análisis anterior no se ha resuelto ningún hallazgo.</value>
+  </data>
+  <data name="Cmp_NoRunText" xml:space="preserve">
+    <value>Cargue un análisis en Resumen; esta página mostrará entonces lo que ha cambiado desde el análisis anterior.</value>
+  </data>
+  <data name="Cmp_NoSameTargets" xml:space="preserve">
+    <value>No hay ningún análisis anterior con los mismos destinos. Elija arriba un análisis con el que comparar.</value>
+  </data>
+  <data name="Cmp_OneDayBefore" xml:space="preserve">
+    <value>1 día antes</value>
+  </data>
+  <data name="Cmp_OtherTargets" xml:space="preserve">
+    <value>El análisis anterior tenía otros destinos ({0}); las diferencias también pueden deberse a ello.</value>
+  </data>
+  <data name="Cmp_OwnRightsGone" xml:space="preserve">
+    <value>Permisos propios eliminados</value>
+  </data>
+  <data name="Cmp_OwnRightsNew" xml:space="preserve">
+    <value>Permisos propios nuevos</value>
+  </data>
+  <data name="Cmp_Preparing" xml:space="preserve">
+    <value>Preparando los cambios…</value>
+  </data>
   <data name="Cmp_ResolvedFindings" xml:space="preserve">
     <value>Hallazgos resueltos</value>
+  </data>
+  <data name="Cmp_SameDay" xml:space="preserve">
+    <value>el mismo día</value>
   </data>
   <data name="Col_Account" xml:space="preserve">
     <value>Cuenta</value>
@@ -444,6 +814,54 @@
   <data name="Excel_Total" xml:space="preserve">
     <value>Total</value>
   </data>
+  <data name="Fi_AccountGone" xml:space="preserve">
+    <value> · la cuenta ya no existe</value>
+  </data>
+  <data name="Fi_AllRules" xml:space="preserve">
+    <value>Todas las reglas</value>
+  </data>
+  <data name="Fi_DetailPlaceholder" xml:space="preserve">
+    <value>Aquí aparecen la explicación y la recomendación del hallazgo seleccionado.</value>
+  </data>
+  <data name="Fi_Disabled" xml:space="preserve">
+    <value> · deshabilitada</value>
+  </data>
+  <data name="Fi_FilterByRule" xml:space="preserve">
+    <value>Filtrar por regla</value>
+  </data>
+  <data name="Fi_FindingPath" xml:space="preserve">
+    <value>Ruta del hallazgo</value>
+  </data>
+  <data name="Fi_NoDescription" xml:space="preserve">
+    <value>No hay descripción para esta regla.</value>
+  </data>
+  <data name="Fi_NoMatches" xml:space="preserve">
+    <value>Sin coincidencias</value>
+  </data>
+  <data name="Fi_NoMatchesText" xml:space="preserve">
+    <value>Ningún hallazgo coincide con el filtro y la búsqueda.</value>
+  </data>
+  <data name="Fi_NoRunText" xml:space="preserve">
+    <value>Inicie un análisis en Resumen o abra un análisis guardado.</value>
+  </data>
+  <data name="Fi_NothingFound" xml:space="preserve">
+    <value>En este análisis no se detectó nada. La página Carpetas muestra igualmente quién puede acceder a dónde.</value>
+  </data>
+  <data name="Fi_Search" xml:space="preserve">
+    <value>Buscar hallazgos</value>
+  </data>
+  <data name="Fi_SearchHint" xml:space="preserve">
+    <value>Ruta, cuenta o texto</value>
+  </data>
+  <data name="Fi_SelectFinding" xml:space="preserve">
+    <value>Seleccione un hallazgo para ver la explicación y la recomendación.</value>
+  </data>
+  <data name="Fi_ShowFolder" xml:space="preserve">
+    <value>Mostrar carpeta</value>
+  </data>
+  <data name="Fi_WhyImportant" xml:space="preserve">
+    <value>¿Por qué es importante?</value>
+  </data>
   <data name="Finding_BroadRead" xml:space="preserve">
     <value>«{0}» tiene «{1}»{2}: prácticamente cualquier persona que haya iniciado sesión puede leer aquí.</value>
   </data>
@@ -522,6 +940,151 @@
   <data name="Finding_UnreadableFolder" xml:space="preserve">
     <value>Carpeta no legible: {0}; no se han comprobado los permisos aquí ni debajo.</value>
   </data>
+  <data name="Fo_AccountDisabled" xml:space="preserve">
+    <value>La cuenta está deshabilitada</value>
+  </data>
+  <data name="Fo_AclEntries" xml:space="preserve">
+    <value>Entradas de la lista de control de acceso</value>
+  </data>
+  <data name="Fo_AlsoBroad" xml:space="preserve">
+    <value>También tienen permiso: {0}. Así, prácticamente cualquier persona que haya iniciado sesión puede entrar aquí, también quien no aparece abajo individualmente.</value>
+  </data>
+  <data name="Fo_BrokenTip" xml:space="preserve">
+    <value>Aquí no se aplican los permisos de arriba, solo las entradas propias.</value>
+  </data>
+  <data name="Fo_Calculating" xml:space="preserve">
+    <value>Calculando…</value>
+  </data>
+  <data name="Fo_DenyPrefix" xml:space="preserve">
+    <value>Denegar: {0}</value>
+  </data>
+  <data name="Fo_DiffersFactTip" xml:space="preserve">
+    <value>Las entradas heredadas no coinciden con la carpeta superior; probablemente se ha movido. Quizá sigan vigentes aquí permisos de la ubicación anterior (hallazgo ZT14).</value>
+  </data>
+  <data name="Fo_DiffersTip" xml:space="preserve">
+    <value>La herencia difiere; probablemente movida, con permisos de la ubicación anterior</value>
+  </data>
+  <data name="Fo_Entries" xml:space="preserve">
+    <value>Entradas</value>
+  </data>
+  <data name="Fo_EntriesCount" xml:space="preserve">
+    <value>Entradas ({0})</value>
+  </data>
+  <data name="Fo_FindingsCount" xml:space="preserve">
+    <value>Hallazgos ({0})</value>
+  </data>
+  <data name="Fo_FolderFindings" xml:space="preserve">
+    <value>Hallazgos de esta carpeta</value>
+  </data>
+  <data name="Fo_GreyLegend" xml:space="preserve">
+    <value>gris: sin permisos propios</value>
+  </data>
+  <data name="Fo_HasFinding" xml:space="preserve">
+    <value>Tiene un hallazgo</value>
+  </data>
+  <data name="Fo_InheritsFrom" xml:space="preserve">
+    <value>«{0}» no tiene permisos propios; se aplica lo configurado en «{1}». Zutritt solo guarda carpetas con permisos propios.</value>
+  </data>
+  <data name="Fo_InheritsFromParent" xml:space="preserve">
+    <value>Hereda de la carpeta superior</value>
+  </data>
+  <data name="Fo_InheritsRootless" xml:space="preserve">
+    <value>«{0}» no tiene permisos propios. Zutritt solo guarda carpetas con permisos propios y las raíces del análisis.</value>
+  </data>
+  <data name="Fo_Level" xml:space="preserve">
+    <value>Nivel {0}</value>
+  </data>
+  <data name="Fo_Loading" xml:space="preserve">
+    <value>Cargando carpetas…</value>
+  </data>
+  <data name="Fo_NobodyIndividual" xml:space="preserve">
+    <value>Ninguna persona individual tiene acceso aquí.</value>
+  </data>
+  <data name="Fo_NoFindings" xml:space="preserve">
+    <value>No hay hallazgos para esta carpeta.</value>
+  </data>
+  <data name="Fo_NoFolders" xml:space="preserve">
+    <value>En este análisis no hay carpetas guardadas.</value>
+  </data>
+  <data name="Fo_NoOwnPermissions" xml:space="preserve">
+    <value>Sin permisos propios</value>
+  </data>
+  <data name="Fo_NoPersonNoGroups" xml:space="preserve">
+    <value>No se encontró ninguna persona individual; el análisis se hizo sin resolver los grupos.</value>
+  </data>
+  <data name="Fo_NoRun" xml:space="preserve">
+    <value>Ningún análisis cargado. Inicie un análisis en Resumen o abra un análisis guardado.</value>
+  </data>
+  <data name="Fo_NoRunShort" xml:space="preserve">
+    <value>Ningún análisis cargado.</value>
+  </data>
+  <data name="Fo_NoSearchMatch" xml:space="preserve">
+    <value>Ninguna carpeta guardada coincide con «{0}».</value>
+  </data>
+  <data name="Fo_NoShare" xml:space="preserve">
+    <value>sin recurso compartido</value>
+  </data>
+  <data name="Fo_NotReadableCap" xml:space="preserve">
+    <value>No legible</value>
+  </data>
+  <data name="Fo_NotStored" xml:space="preserve">
+    <value>«{0}» no está guardada como carpeta en este análisis.</value>
+  </data>
+  <data name="Fo_Origin" xml:space="preserve">
+    <value>Origen</value>
+  </data>
+  <data name="Fo_OwnerUnknown" xml:space="preserve">
+    <value>Propietario desconocido</value>
+  </data>
+  <data name="Fo_PersonRowText" xml:space="preserve">
+    <value>{0}, recurso compartido {1}, NTFS {2}, {3}</value>
+  </data>
+  <data name="Fo_ReducedByDeny" xml:space="preserve">
+    <value>Restringido por una entrada de denegación</value>
+  </data>
+  <data name="Fo_ScanRoot" xml:space="preserve">
+    <value>Raíz del análisis</value>
+  </data>
+  <data name="Fo_Search" xml:space="preserve">
+    <value>Buscar carpetas</value>
+  </data>
+  <data name="Fo_SearchResults" xml:space="preserve">
+    <value>Resultados de la búsqueda</value>
+  </data>
+  <data name="Fo_SelectFolder" xml:space="preserve">
+    <value>Seleccione una carpeta a la izquierda para ver sus permisos.</value>
+  </data>
+  <data name="Fo_ShareFact" xml:space="preserve">
+    <value>Recurso compartido {0}</value>
+  </data>
+  <data name="Fo_SharePermissionsTip" xml:space="preserve">
+    <value>Permisos del recurso compartido:
+{0}</value>
+  </data>
+  <data name="Fo_ShowFailed" xml:space="preserve">
+    <value>No se pudo mostrar la carpeta</value>
+  </data>
+  <data name="Fo_ShowParent" xml:space="preserve">
+    <value>Mostrar carpeta superior</value>
+  </data>
+  <data name="Fo_Tree" xml:space="preserve">
+    <value>Árbol de carpetas</value>
+  </data>
+  <data name="Fo_TreeFailed" xml:space="preserve">
+    <value>No se pudo crear el árbol de carpetas</value>
+  </data>
+  <data name="Fo_UnreadableWho" xml:space="preserve">
+    <value>La carpeta no es legible; no se puede determinar quién puede entrar.</value>
+  </data>
+  <data name="Fo_WhoCanEnter" xml:space="preserve">
+    <value>Quién puede entrar</value>
+  </data>
+  <data name="Fo_WhoCanEnterCount" xml:space="preserve">
+    <value>Quién puede entrar ({0})</value>
+  </data>
+  <data name="Fo_WhoFailed" xml:space="preserve">
+    <value>No se pudo calcular «Quién puede entrar»</value>
+  </data>
   <data name="Identity_DirectoryErrorAccounts" xml:space="preserve">
     <value>Error del directorio al resolver cuentas: {0}</value>
   </data>
@@ -555,6 +1118,165 @@
   <data name="Identity_UnknownError" xml:space="preserve">
     <value>error desconocido</value>
   </data>
+  <data name="Info_Anonymize" xml:space="preserve">
+    <value>Sin nombres ni direcciones</value>
+  </data>
+  <data name="Info_AnonymizeName" xml:space="preserve">
+    <value>Paquete de diagnóstico sin nombres, rutas ni direcciones</value>
+  </data>
+  <data name="Info_CliExample" xml:space="preserve">
+    <value>"C:\Program Files\Zutritt\Zutritt.exe" scan \\FS01 --compare --report D:\Informes\Zutritt.pdf</value>
+  </data>
+  <data name="Info_CliExampleName" xml:space="preserve">
+    <value>Ejemplo de línea de comandos</value>
+  </data>
+  <data name="Info_CliHeading" xml:space="preserve">
+    <value>Línea de comandos y tareas programadas</value>
+  </data>
+  <data name="Info_CliIntro" xml:space="preserve">
+    <value>El mismo Zutritt.exe también se ejecuta sin ventana; por ejemplo, cada semana como tarea programada con un informe para firmar:</value>
+  </data>
+  <data name="Info_CliMore" xml:space="preserve">
+    <value>Todos los comandos y opciones: Zutritt.exe --help · versión y esta información como texto: Zutritt.exe --info</value>
+  </data>
+  <data name="Info_Create" xml:space="preserve">
+    <value>Crear…</value>
+  </data>
+  <data name="Info_DbNotOpened" xml:space="preserve">
+    <value>{0}: no se pudo abrir; los análisis no se guardan</value>
+  </data>
+  <data name="Info_DemoDb" xml:space="preserve">
+    <value>{0} (demostración, se elimina al salir)</value>
+  </data>
+  <data name="Info_DiagFailed" xml:space="preserve">
+    <value>No se pudo guardar el paquete de diagnóstico: {0}</value>
+  </data>
+  <data name="Info_Diagnostics" xml:space="preserve">
+    <value>Crear paquete de diagnóstico</value>
+  </data>
+  <data name="Info_DiagnosticsDescription" xml:space="preserve">
+    <value>Versión, información del sistema y registro de los últimos 7 días en un ZIP para el soporte.</value>
+  </data>
+  <data name="Info_DiagSavedAnon" xml:space="preserve">
+    <value>Paquete de diagnóstico guardado: {0}; sin nombres, rutas ni direcciones.</value>
+  </data>
+  <data name="Info_DiagSavedFull" xml:space="preserve">
+    <value>Paquete de diagnóstico guardado: {0}; con nombres y rutas, compártalo solo de forma confidencial.</value>
+  </data>
+  <data name="Info_ExitCode0" xml:space="preserve">
+    <value>Código de salida 0</value>
+  </data>
+  <data name="Info_ExitCode1" xml:space="preserve">
+    <value>Código de salida 1</value>
+  </data>
+  <data name="Info_ExitCode2" xml:space="preserve">
+    <value>Código de salida 2</value>
+  </data>
+  <data name="Info_ExitCode3" xml:space="preserve">
+    <value>Código de salida 3</value>
+  </data>
+  <data name="Info_ExitError" xml:space="preserve">
+    <value>Error o cancelación</value>
+  </data>
+  <data name="Info_ExitMediumLong" xml:space="preserve">
+    <value>hallazgos «Media», pero ninguno «Alta»</value>
+  </data>
+  <data name="Info_HelpLinks" xml:space="preserve">
+    <value>Ayuda y enlaces</value>
+  </data>
+  <data name="Info_Keyboard" xml:space="preserve">
+    <value>Teclado</value>
+  </data>
+  <data name="Info_KeyboardText" xml:space="preserve">
+    <value>Ctrl+1 a Ctrl+7 cambian de página · Ctrl+F salta al campo de búsqueda · Entrar abre el análisis seleccionado, Supr lo elimina</value>
+  </data>
+  <data name="Info_LanguageDescription" xml:space="preserve">
+    <value>Sigue a Windows si no se elige otro aquí y se aplica en el próximo inicio. Valor predeterminado para todos los usuarios: %ProgramData%\Zutritt\settings.json; para scripts: variable de entorno ZUTRITT_LANGUAGE.</value>
+  </data>
+  <data name="Info_LanguageForced" xml:space="preserve">
+    <value>Establecido por la variable de entorno {0}; la elección de aquí solo se aplica sin ella.</value>
+  </data>
+  <data name="Info_LanguageNotSaved" xml:space="preserve">
+    <value>No se pudo guardar el idioma: {0}</value>
+  </data>
+  <data name="Info_LanguageRestart" xml:space="preserve">
+    <value>El idioma cambiará la próxima vez que se inicie Zutritt.</value>
+  </data>
+  <data name="Info_LanguageSystem" xml:space="preserve">
+    <value>Como Windows ({0})</value>
+  </data>
+  <data name="Info_License" xml:space="preserve">
+    <value>Licencia</value>
+  </data>
+  <data name="Info_LicenseDescription" xml:space="preserve">
+    <value>Uso, modificación y distribución libres, siempre que se conserven el copyright y el texto de la licencia.</value>
+  </data>
+  <data name="Info_LicenseMissing" xml:space="preserve">
+    <value>Falta el texto de la licencia en esta compilación de Zutritt</value>
+  </data>
+  <data name="Info_MissingAt" xml:space="preserve">
+    <value>{0}; están disponibles en {1}.</value>
+  </data>
+  <data name="Info_NoDb" xml:space="preserve">
+    <value>No hay ninguna base de datos abierta; los análisis no se guardan</value>
+  </data>
+  <data name="Info_NoticesDescription" xml:space="preserve">
+    <value>Bibliotecas incluidas en Zutritt, con versión, origen, copyright y texto de la licencia.</value>
+  </data>
+  <data name="Info_NoticesMissing" xml:space="preserve">
+    <value>Faltan las licencias de terceros en esta compilación de Zutritt</value>
+  </data>
+  <data name="Info_OpenFolder" xml:space="preserve">
+    <value>Abrir carpeta</value>
+  </data>
+  <data name="Info_OpenImprint" xml:space="preserve">
+    <value>Abrir aviso legal</value>
+  </data>
+  <data name="Info_OpenPrivacy" xml:space="preserve">
+    <value>Abrir privacidad</value>
+  </data>
+  <data name="Info_OpenSource" xml:space="preserve">
+    <value>Abrir el código fuente en GitHub</value>
+  </data>
+  <data name="Info_OpenSupport" xml:space="preserve">
+    <value>Abrir ayuda y soporte</value>
+  </data>
+  <data name="Info_OpenWebsite" xml:space="preserve">
+    <value>Abrir sitio web</value>
+  </data>
+  <data name="Info_PrivacyDescription" xml:space="preserve">
+    <value>Qué datos guarda Zutritt y dónde, qué conexiones establece y cómo eliminarlo todo.</value>
+  </data>
+  <data name="Info_ReadOnlyDescription" xml:space="preserve">
+    <value>Zutritt lee recursos compartidos, permisos NTFS y pertenencias a grupos. No cambia permisos, archivos ni cuentas. {0}</value>
+  </data>
+  <data name="Info_ReadOnlyHeader" xml:space="preserve">
+    <value>Solo lectura, los datos se quedan aquí</value>
+  </data>
+  <data name="Info_SaveDiagnostics" xml:space="preserve">
+    <value>Guardar paquete de diagnóstico</value>
+  </data>
+  <data name="Info_Show" xml:space="preserve">
+    <value>Mostrar</value>
+  </data>
+  <data name="Info_ShowLicense" xml:space="preserve">
+    <value>Mostrar texto de la licencia</value>
+  </data>
+  <data name="Info_SupportDescription" xml:space="preserve">
+    <value>Informar de errores y hacer preguntas en GitHub; con garantía mediante un contrato de soporte.</value>
+  </data>
+  <data name="Info_Version" xml:space="preserve">
+    <value>Versión {0} · .NET {1}</value>
+  </data>
+  <data name="Info_VersionBuild" xml:space="preserve">
+    <value>Versión {0} · compilación {1} · .NET {2}</value>
+  </data>
+  <data name="Info_WebsiteDescription" xml:space="preserve">
+    <value>ICT-Baden en GitHub</value>
+  </data>
+  <data name="Info_ZipFilter" xml:space="preserve">
+    <value>Archivo ZIP (*.zip)|*.zip</value>
+  </data>
   <data name="Kind_BuiltIn" xml:space="preserve">
     <value>Integrado</value>
   </data>
@@ -563,6 +1285,9 @@
   </data>
   <data name="Kind_Group" xml:space="preserve">
     <value>Grupo</value>
+  </data>
+  <data name="Kind_KnownAccount" xml:space="preserve">
+    <value>Cuenta conocida</value>
   </data>
   <data name="Kind_Orphaned" xml:space="preserve">
     <value>Huérfano</value>
@@ -578,6 +1303,260 @@
   </data>
   <data name="Local_Unreadable" xml:space="preserve">
     <value>No se pueden leer las cuentas y grupos locales: {0}. Faltan los miembros de los grupos locales y BUILTIN; las cuentas locales quedan como «Desconocido».</value>
+  </data>
+  <data name="Nav_Comparison" xml:space="preserve">
+    <value>Comparación</value>
+  </data>
+  <data name="Nav_Findings" xml:space="preserve">
+    <value>Hallazgos</value>
+  </data>
+  <data name="Nav_Folders" xml:space="preserve">
+    <value>Carpetas</value>
+  </data>
+  <data name="Nav_Info" xml:space="preserve">
+    <value>Información</value>
+  </data>
+  <data name="Nav_Overview" xml:space="preserve">
+    <value>Resumen</value>
+  </data>
+  <data name="Nav_People" xml:space="preserve">
+    <value>Personas</value>
+  </data>
+  <data name="Nav_Report" xml:space="preserve">
+    <value>Informe</value>
+  </data>
+  <data name="Ov_AccessChangesMany" xml:space="preserve">
+    <value>{0} cambios de acceso</value>
+  </data>
+  <data name="Ov_AccessChangesOne" xml:space="preserve">
+    <value>{0} cambio de acceso</value>
+  </data>
+  <data name="Ov_BadDeepFrom" xml:space="preserve">
+    <value>«La excepción se considera profunda desde el nivel»: introduzca un número entero a partir de 1.</value>
+  </data>
+  <data name="Ov_BadDepth" xml:space="preserve">
+    <value>Profundidad máxima: introduzca un número entero a partir de 0 o déjelo vacío.</value>
+  </data>
+  <data name="Ov_Cancelling" xml:space="preserve">
+    <value>Cancelando…</value>
+  </data>
+  <data name="Ov_ChangesSince" xml:space="preserve">
+    <value>Desde el análisis del {0}: {1}, {2} y {3}.</value>
+  </data>
+  <data name="Ov_ChooseFolder" xml:space="preserve">
+    <value>Elegir carpeta…</value>
+  </data>
+  <data name="Ov_ChooseFolderTitle" xml:space="preserve">
+    <value>Elegir una carpeta para el análisis</value>
+  </data>
+  <data name="Ov_CurrentlyLoaded" xml:space="preserve">
+    <value>Cargado actualmente</value>
+  </data>
+  <data name="Ov_DeepFrom" xml:space="preserve">
+    <value>La excepción se considera profunda desde el nivel</value>
+  </data>
+  <data name="Ov_DeepFromHint" xml:space="preserve">
+    <value>para «excepción oculta en profundidad»</value>
+  </data>
+  <data name="Ov_DeleteConfirm" xml:space="preserve">
+    <value>¿Eliminar definitivamente el análisis del {0} ({1})?
+
+Los informes ya guardados se conservan.</value>
+  </data>
+  <data name="Ov_DeleteRun" xml:space="preserve">
+    <value>Eliminar análisis</value>
+  </data>
+  <data name="Ov_DemoDatabase" xml:space="preserve">
+    <value>Base de datos de demostración; se elimina al salir: {0}</value>
+  </data>
+  <data name="Ov_DemoSuffix" xml:space="preserve">
+    <value> · demostración</value>
+  </data>
+  <data name="Ov_Duration" xml:space="preserve">
+    <value> · duración {0}</value>
+  </data>
+  <data name="Ov_Elapsed" xml:space="preserve">
+    <value>Tiempo transcurrido</value>
+  </data>
+  <data name="Ov_FindingsHigh" xml:space="preserve">
+    <value>Hallazgos Alta</value>
+  </data>
+  <data name="Ov_FindingsInfo" xml:space="preserve">
+    <value>Notas (Info)</value>
+  </data>
+  <data name="Ov_FindingsLow" xml:space="preserve">
+    <value>Hallazgos Baja</value>
+  </data>
+  <data name="Ov_FindingsMedium" xml:space="preserve">
+    <value>Hallazgos Media</value>
+  </data>
+  <data name="Ov_FoldersCheckedFiles" xml:space="preserve">
+    <value>Carpetas comprobadas (+ {0} archivos)</value>
+  </data>
+  <data name="Ov_FoldersCounted" xml:space="preserve">
+    <value>Carpetas contadas</value>
+  </data>
+  <data name="Ov_Hero" xml:space="preserve">
+    <value>¿Quién puede acceder a sus recursos compartidos?</value>
+  </data>
+  <data name="Ov_HighCount" xml:space="preserve">
+    <value>{0} Alta</value>
+  </data>
+  <data name="Ov_IncludeFiles" xml:space="preserve">
+    <value>Incluir archivos</value>
+  </data>
+  <data name="Ov_IncludeFilesTip" xml:space="preserve">
+    <value>Registrar también archivos con permisos propios; tarda bastante más.</value>
+  </data>
+  <data name="Ov_Intro" xml:space="preserve">
+    <value>Zutritt lee los recursos compartidos y los permisos NTFS, resuelve los grupos hasta las personas y muestra lo que llama la atención, con comparación con el último análisis e informe para firmar. Introduzca un destino abajo e inicie el análisis.</value>
+  </data>
+  <data name="Ov_MaxDepth" xml:space="preserve">
+    <value>Profundidad máxima</value>
+  </data>
+  <data name="Ov_MaxDepthHint" xml:space="preserve">
+    <value>vacío = sin límite</value>
+  </data>
+  <data name="Ov_NeedTarget" xml:space="preserve">
+    <value>Introduzca al menos un destino, p. ej. \\servidor\recurso o «.» para los recursos compartidos de este equipo.</value>
+  </data>
+  <data name="Ov_NewFindingsMany" xml:space="preserve">
+    <value>{0} hallazgos nuevos</value>
+  </data>
+  <data name="Ov_NewFindingsOne" xml:space="preserve">
+    <value>{0} hallazgo nuevo</value>
+  </data>
+  <data name="Ov_NewScan" xml:space="preserve">
+    <value>Nuevo análisis</value>
+  </data>
+  <data name="Ov_NoDatabase" xml:space="preserve">
+    <value>No hay ninguna base de datos abierta; los análisis no se guardan en esta sesión.</value>
+  </data>
+  <data name="Ov_NoDatabaseNoRuns" xml:space="preserve">
+    <value>Sin base de datos no hay análisis guardados.</value>
+  </data>
+  <data name="Ov_NoRuns" xml:space="preserve">
+    <value>Todavía no hay análisis guardados; después del primer análisis aparecerá aquí.</value>
+  </data>
+  <data name="Ov_NotSaved" xml:space="preserve">
+    <value>Análisis terminado, pero no guardado: {0} El análisis está cargado; cree ahora un informe en «Informe»; de lo contrario, se perderá al cerrar.</value>
+  </data>
+  <data name="Ov_Options" xml:space="preserve">
+    <value>Opciones</value>
+  </data>
+  <data name="Ov_Preparing" xml:space="preserve">
+    <value>Preparando el análisis…</value>
+  </data>
+  <data name="Ov_ReadOnly" xml:space="preserve">
+    <value>Solo se lee: Zutritt no cambia permisos ni archivos.</value>
+  </data>
+  <data name="Ov_RecentRuns" xml:space="preserve">
+    <value>Análisis recientes</value>
+  </data>
+  <data name="Ov_RefreshList" xml:space="preserve">
+    <value>Actualizar lista</value>
+  </data>
+  <data name="Ov_ResolvedMany" xml:space="preserve">
+    <value>{0} resueltos</value>
+  </data>
+  <data name="Ov_ResolvedOne" xml:space="preserve">
+    <value>{0} resuelto</value>
+  </data>
+  <data name="Ov_ResolveGroups" xml:space="preserve">
+    <value>Resolver los grupos hasta las personas</value>
+  </data>
+  <data name="Ov_ResolveGroupsTip" xml:space="preserve">
+    <value>Resolver los grupos locales y, si es posible, los grupos de Active Directory hasta cada cuenta.</value>
+  </data>
+  <data name="Ov_ResultMeta" xml:space="preserve">
+    <value>{0}{1} · {2} en {3}</value>
+  </data>
+  <data name="Ov_RunDeleted" xml:space="preserve">
+    <value>Análisis del {0} eliminado.</value>
+  </data>
+  <data name="Ov_RunLoaded" xml:space="preserve">
+    <value>Análisis del {0} cargado ({1}).</value>
+  </data>
+  <data name="Ov_RunNotDeleted" xml:space="preserve">
+    <value>No se pudo eliminar el análisis</value>
+  </data>
+  <data name="Ov_RunNotOpened" xml:space="preserve">
+    <value>No se pudo abrir el análisis</value>
+  </data>
+  <data name="Ov_RunRowText" xml:space="preserve">
+    <value>{0}, {1}, {2} hallazgos</value>
+  </data>
+  <data name="Ov_RunsUnreadable" xml:space="preserve">
+    <value>No se pudieron leer los análisis guardados</value>
+  </data>
+  <data name="Ov_SavedIn" xml:space="preserve">
+    <value>Guardado en {0}</value>
+  </data>
+  <data name="Ov_SavingComparing" xml:space="preserve">
+    <value>Guardando y comparando…</value>
+  </data>
+  <data name="Ov_ScanCancelled" xml:space="preserve">
+    <value>Análisis cancelado; no se guardó nada.</value>
+  </data>
+  <data name="Ov_ScanDoneMany" xml:space="preserve">
+    <value>Análisis terminado: {0} carpetas comprobadas, {1} hallazgos.</value>
+  </data>
+  <data name="Ov_ScanDoneOne" xml:space="preserve">
+    <value>Análisis terminado: {0} carpetas comprobadas, {1} hallazgo.</value>
+  </data>
+  <data name="Ov_ScanFailed" xml:space="preserve">
+    <value>El análisis ha fallado: {0}</value>
+  </data>
+  <data name="Ov_ScanRunning" xml:space="preserve">
+    <value>Análisis en curso…</value>
+  </data>
+  <data name="Ov_ShowChanges" xml:space="preserve">
+    <value>Ver cambios</value>
+  </data>
+  <data name="Ov_ShowFindings" xml:space="preserve">
+    <value>Ver hallazgos</value>
+  </data>
+  <data name="Ov_SkipAdmin" xml:space="preserve">
+    <value>Omitir recursos compartidos administrativos</value>
+  </data>
+  <data name="Ov_SkipAdminTip" xml:space="preserve">
+    <value>No comprobar C$, ADMIN$, IPC$ ni print$.</value>
+  </data>
+  <data name="Ov_StartScan" xml:space="preserve">
+    <value>Iniciar análisis</value>
+  </data>
+  <data name="Ov_TargetsHint" xml:space="preserve">
+    <value>\\servidor\recurso, D:\Datos o . para todos los recursos compartidos de este equipo</value>
+  </data>
+  <data name="Ov_TargetsLabel" xml:space="preserve">
+    <value>Destinos: uno por línea</value>
+  </data>
+  <data name="Ov_TargetsName" xml:space="preserve">
+    <value>Destinos, uno por línea</value>
+  </data>
+  <data name="Ov_WithOwnPermissions" xml:space="preserve">
+    <value>con permisos propios</value>
+  </data>
+  <data name="Page_ComparisonSubtitle" xml:space="preserve">
+    <value>¿Qué ha cambiado desde el último análisis?</value>
+  </data>
+  <data name="Page_FindingsSubtitle" xml:space="preserve">
+    <value>Lo que llama la atención, ordenado por gravedad, con explicación y recomendación</value>
+  </data>
+  <data name="Page_FoldersSubtitle" xml:space="preserve">
+    <value>¿Quién puede entrar aquí?</value>
+  </data>
+  <data name="Page_InfoSubtitle" xml:space="preserve">
+    <value>Acerca de Zutritt</value>
+  </data>
+  <data name="Page_OverviewSubtitle" xml:space="preserve">
+    <value>Iniciar un análisis nuevo o abrir uno guardado</value>
+  </data>
+  <data name="Page_PeopleSubtitle" xml:space="preserve">
+    <value>¿A dónde puede acceder alguien?</value>
+  </data>
+  <data name="Page_ReportSubtitle" xml:space="preserve">
+    <value>Excel para seguir trabajando, PDF para firmar</value>
   </data>
   <data name="Pdf_AccessChangesIntro" xml:space="preserve">
     <value>Consecuencia de los cambios anteriores: quién puede ahora hacer más o menos de forma efectiva (a través de todos los grupos, descontadas las denegaciones); primero {0}, agrupado por carpeta. Cada persona con su antes y después figura en el informe de Excel (hoja {1}).</value>
@@ -907,6 +1886,90 @@
   <data name="Pdf_UnreadableFolders" xml:space="preserve">
     <value>Carpetas no legibles</value>
   </data>
+  <data name="Pe_AccessList" xml:space="preserve">
+    <value>Carpetas a las que la persona puede acceder</value>
+  </data>
+  <data name="Pe_AccessNote" xml:space="preserve">
+    <value>Carpetas con permisos propios; las subcarpetas sin permisos propios heredan de ellas.</value>
+  </data>
+  <data name="Pe_AccessToMany" xml:space="preserve">
+    <value>Acceso a {0} carpetas</value>
+  </data>
+  <data name="Pe_AccessToOne" xml:space="preserve">
+    <value>Acceso a {0} carpeta</value>
+  </data>
+  <data name="Pe_AccountDisabled" xml:space="preserve">
+    <value>Cuenta deshabilitada</value>
+  </data>
+  <data name="Pe_CountFailed" xml:space="preserve">
+    <value>No se pudo calcular el número de carpetas por persona</value>
+  </data>
+  <data name="Pe_CountMany" xml:space="preserve">
+    <value>{0} personas</value>
+  </data>
+  <data name="Pe_CountOne" xml:space="preserve">
+    <value>{0} persona</value>
+  </data>
+  <data name="Pe_DisabledSuffix" xml:space="preserve">
+    <value>, deshabilitada</value>
+  </data>
+  <data name="Pe_DomainAccount" xml:space="preserve">
+    <value>Cuenta de dominio</value>
+  </data>
+  <data name="Pe_FolderCountMany" xml:space="preserve">
+    <value>{0} carpetas</value>
+  </data>
+  <data name="Pe_FolderCountOne" xml:space="preserve">
+    <value>{0} carpeta</value>
+  </data>
+  <data name="Pe_LocalAccount" xml:space="preserve">
+    <value>Cuenta local</value>
+  </data>
+  <data name="Pe_MemberOf" xml:space="preserve">
+    <value>Miembro de</value>
+  </data>
+  <data name="Pe_MemberOfCount" xml:space="preserve">
+    <value>Miembro de ({0}, también a través de grupos anidados)</value>
+  </data>
+  <data name="Pe_NoAccess" xml:space="preserve">
+    <value>Esta persona no tiene acceso a ninguna de las carpetas guardadas.</value>
+  </data>
+  <data name="Pe_NoGroup" xml:space="preserve">
+    <value>No es miembro de ningún grupo de este análisis</value>
+  </data>
+  <data name="Pe_NoMatch" xml:space="preserve">
+    <value>Nadie coincide con «{0}».</value>
+  </data>
+  <data name="Pe_NoUsers" xml:space="preserve">
+    <value>En este análisis no hay cuentas de usuario.</value>
+  </data>
+  <data name="Pe_NoUsersNoGroups" xml:space="preserve">
+    <value>No hay cuentas de usuario; el análisis se hizo sin resolver los grupos.</value>
+  </data>
+  <data name="Pe_NtfsNoShare" xml:space="preserve">
+    <value>NTFS: {0} · sin permisos de recurso compartido</value>
+  </data>
+  <data name="Pe_NtfsViaShare" xml:space="preserve">
+    <value>NTFS: {0} · a través del recurso compartido: {1}</value>
+  </data>
+  <data name="Pe_OfWhichDisabled" xml:space="preserve">
+    <value>, de ellas {0} deshabilitadas</value>
+  </data>
+  <data name="Pe_RightsFailed" xml:space="preserve">
+    <value>No se pudieron calcular los permisos de la persona</value>
+  </data>
+  <data name="Pe_Search" xml:space="preserve">
+    <value>Buscar personas</value>
+  </data>
+  <data name="Pe_SearchHint" xml:space="preserve">
+    <value>Buscar nombre o cuenta</value>
+  </data>
+  <data name="Pe_SelectPerson" xml:space="preserve">
+    <value>Seleccione una persona a la izquierda para ver a dónde puede acceder.</value>
+  </data>
+  <data name="Pe_ShareCaps" xml:space="preserve">
+    <value>El permiso del recurso compartido limita el permiso NTFS</value>
+  </data>
   <data name="Phase_Accounts" xml:space="preserve">
     <value>Cuentas</value>
   </data>
@@ -1116,6 +2179,114 @@
   </data>
   <data name="Rights_WriteAttributes" xml:space="preserve">
     <value>Escribir atributos</value>
+  </data>
+  <data name="Rp_After" xml:space="preserve">
+    <value> tras {0}</value>
+  </data>
+  <data name="Rp_ComparisonWith" xml:space="preserve">
+    <value>Comparación con el análisis del {0}: hallazgos nuevos y resueltos, permisos y pertenencias modificados en una sección propia.</value>
+  </data>
+  <data name="Rp_Creating" xml:space="preserve">
+    <value>Creando el informe…</value>
+  </data>
+  <data name="Rp_Excel" xml:space="preserve">
+    <value>Informe de Excel</value>
+  </data>
+  <data name="Rp_ExcelDescription" xml:space="preserve">
+    <value>Para seguir trabajando: resumen, hallazgos, carpetas y permisos, personas, grupos, recursos compartidos y, con comparación, cambios, cada uno con filtros.</value>
+  </data>
+  <data name="Rp_ExcelFilter" xml:space="preserve">
+    <value>Libro de Excel (*.xlsx)|*.xlsx</value>
+  </data>
+  <data name="Rp_ExcelSaved" xml:space="preserve">
+    <value>Informe de Excel guardado</value>
+  </data>
+  <data name="Rp_FolderOpenFailed" xml:space="preserve">
+    <value>No se pudo abrir la carpeta: {0}</value>
+  </data>
+  <data name="Rp_IncludeChanges" xml:space="preserve">
+    <value>Incluir los cambios desde el último análisis</value>
+  </data>
+  <data name="Rp_IncludeChangesDescription" xml:space="preserve">
+    <value>Hallazgos nuevos y resueltos, permisos y pertenencias modificados en una sección propia.</value>
+  </data>
+  <data name="Rp_NoEarlier" xml:space="preserve">
+    <value>No hay ningún análisis anterior con el que comparar; el informe no tendrá la sección «Cambios».</value>
+  </data>
+  <data name="Rp_NoRunText" xml:space="preserve">
+    <value>Cargue un análisis en Resumen o inicie uno; después podrá guardar aquí el informe.</value>
+  </data>
+  <data name="Rp_OpenFailed" xml:space="preserve">
+    <value>No se pudo abrir el archivo: {0}</value>
+  </data>
+  <data name="Rp_Pdf" xml:space="preserve">
+    <value>Informe PDF</value>
+  </data>
+  <data name="Rp_PdfDescription" xml:space="preserve">
+    <value>Para archivar y firmar: portada, resumen, hallazgos, recursos compartidos, carpetas con permisos propios, personas y bloque de firma.</value>
+  </data>
+  <data name="Rp_PdfFilter" xml:space="preserve">
+    <value>Documento PDF (*.pdf)|*.pdf</value>
+  </data>
+  <data name="Rp_PdfSaved" xml:space="preserve">
+    <value>Informe PDF guardado</value>
+  </data>
+  <data name="Rp_Preparing" xml:space="preserve">
+    <value>Preparando…</value>
+  </data>
+  <data name="Rp_ReportFor" xml:space="preserve">
+    <value>Informe de {0}</value>
+  </data>
+  <data name="Rp_RunSummaryHighMany" xml:space="preserve">
+    <value>Análisis del {0}: {1} carpetas comprobadas, {2} hallazgos, de ellos {3} «Alta».</value>
+  </data>
+  <data name="Rp_RunSummaryHighOne" xml:space="preserve">
+    <value>Análisis del {0}: {1} carpetas comprobadas, {2} hallazgo, de ellos {3} «Alta».</value>
+  </data>
+  <data name="Rp_RunSummaryMany" xml:space="preserve">
+    <value>Análisis del {0}: {1} carpetas comprobadas, {2} hallazgos.</value>
+  </data>
+  <data name="Rp_RunSummaryOne" xml:space="preserve">
+    <value>Análisis del {0}: {1} carpetas comprobadas, {2} hallazgo.</value>
+  </data>
+  <data name="Rp_Save" xml:space="preserve">
+    <value>Guardar informe</value>
+  </data>
+  <data name="Rp_SaveExcel" xml:space="preserve">
+    <value>Guardar informe de Excel…</value>
+  </data>
+  <data name="Rp_SaveExcelTitle" xml:space="preserve">
+    <value>Guardar informe de Excel</value>
+  </data>
+  <data name="Rp_SaveFailed" xml:space="preserve">
+    <value>No se pudo guardar el informe: {0}</value>
+  </data>
+  <data name="Rp_SavePdf" xml:space="preserve">
+    <value>Guardar informe PDF…</value>
+  </data>
+  <data name="Rp_SavePdfTitle" xml:space="preserve">
+    <value>Guardar informe PDF</value>
+  </data>
+  <data name="Rp_Scheduled" xml:space="preserve">
+    <value>De forma periódica y sin clics: como tarea programada con «Zutritt.exe scan … ‑‑compare ‑‑report …» (ver Información).</value>
+  </data>
+  <data name="Rp_ShowInFolder" xml:space="preserve">
+    <value>Mostrar en la carpeta</value>
+  </data>
+  <data name="Rp_SignOff" xml:space="preserve">
+    <value>Firma</value>
+  </data>
+  <data name="Rp_SignOffBlock" xml:space="preserve">
+    <value>Al final del informe PDF hay un bloque de firma con «Revisado por», «Fecha», «Firma» y «Observaciones».</value>
+  </data>
+  <data name="Rp_SignOffWhy" xml:space="preserve">
+    <value>Impreso y firmado, o con firma electrónica en el PDF, documenta la revisión periódica de los derechos de acceso que esperan las auditorías según GMP (Anexo 11), ISO 27001 (A.5.18) o NIS2. En «Observaciones» se indica qué hallazgos se mantienen conscientemente y por qué.</value>
+  </data>
+  <data name="Rp_SuggestedName" xml:space="preserve">
+    <value>Nombre de archivo sugerido: {0}</value>
+  </data>
+  <data name="Rp_Title" xml:space="preserve">
+    <value>Informe del análisis cargado</value>
   </data>
   <data name="Rule_ZT01_Explanation" xml:space="preserve">
     <value>Un grupo que incluye prácticamente a todas las personas (p. ej., «Todos», «Usuarios autenticados», «Usuarios del dominio») puede crear o modificar archivos aquí. Así, cualquier persona que haya iniciado sesión puede falsificar, eliminar o —por ejemplo, mediante software malicioso— cifrar datos.</value>
@@ -1410,6 +2581,18 @@
   </data>
   <data name="Sheet_Shares" xml:space="preserve">
     <value>Recursos compartidos</value>
+  </data>
+  <data name="Shot_EmptyImage" xml:space="preserve">
+    <value>WPF ha dibujado una imagen vacía. Esto ocurre en una sesión desconectada (Escritorio remoto cerrado sin cerrar sesión); vuelva a iniciar en una sesión iniciada y conectada.</value>
+  </data>
+  <data name="Shot_Start" xml:space="preserve">
+    <value>Zutritt {0} – capturas de pantalla en {1}</value>
+  </data>
+  <data name="Shot_Written" xml:space="preserve">
+    <value>{0} imágenes escritas.</value>
+  </data>
+  <data name="Shot_WrongSize" xml:space="preserve">
+    <value>La ventana mide {0:0}×{1:0} en lugar de {2:0}×{3:0} puntos; las imágenes quedarían distorsionadas.</value>
   </data>
   <data name="Sid_AccessControlAssistanceOperators" xml:space="preserve">
     <value>Access Control Assistance Operators</value>
@@ -1788,6 +2971,93 @@
   </data>
   <data name="Time_Seconds" xml:space="preserve">
     <value>{0:0} segundos</value>
+  </data>
+  <data name="Ui_AppSubtitle" xml:space="preserve">
+    <value>¿Quién puede acceder a qué?</value>
+  </data>
+  <data name="Ui_BrowserFailed" xml:space="preserve">
+    <value>No se pudo abrir el navegador: {0}</value>
+  </data>
+  <data name="Ui_Cancel" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="Ui_Close" xml:space="preserve">
+    <value>Cerrar</value>
+  </data>
+  <data name="Ui_CloseNotice" xml:space="preserve">
+    <value>Cerrar mensaje</value>
+  </data>
+  <data name="Ui_CloseTitle" xml:space="preserve">
+    <value>Cerrar Zutritt</value>
+  </data>
+  <data name="Ui_CloseWhileScanning" xml:space="preserve">
+    <value>Todavía hay un análisis en curso. ¿Cerrar Zutritt de todos modos? El análisis no se guardará.</value>
+  </data>
+  <data name="Ui_DateTime" xml:space="preserve">
+    <value>{0}, {1}</value>
+  </data>
+  <data name="Ui_Demo" xml:space="preserve">
+    <value>Demostración</value>
+  </data>
+  <data name="Ui_DemoTitle" xml:space="preserve">
+    <value>Zutritt – demostración</value>
+  </data>
+  <data name="Ui_DurationHours" xml:space="preserve">
+    <value>{0}:{1:00}:{2:00} h</value>
+  </data>
+  <data name="Ui_DurationMinutes" xml:space="preserve">
+    <value>{0}:{1:00} min</value>
+  </data>
+  <data name="Ui_FailureWithReason" xml:space="preserve">
+    <value>{0}: {1}</value>
+  </data>
+  <data name="Ui_FileAndMore" xml:space="preserve">
+    <value>-y-{0}-mas</value>
+  </data>
+  <data name="Ui_FileRun" xml:space="preserve">
+    <value>Analisis</value>
+  </data>
+  <data name="Ui_LinkBlocked" xml:space="preserve">
+    <value>No se abrió el vínculo «{0}»: solo se permiten direcciones con http o https.</value>
+  </data>
+  <data name="Ui_LocalShares" xml:space="preserve">
+    <value>Recursos compartidos de este equipo</value>
+  </data>
+  <data name="Ui_NoFindings" xml:space="preserve">
+    <value>Sin hallazgos</value>
+  </data>
+  <data name="Ui_NoRunLoaded" xml:space="preserve">
+    <value>Ningún análisis cargado</value>
+  </data>
+  <data name="Ui_NoTarget" xml:space="preserve">
+    <value>sin destino</value>
+  </data>
+  <data name="Ui_Off" xml:space="preserve">
+    <value>Desactivado</value>
+  </data>
+  <data name="Ui_On" xml:space="preserve">
+    <value>Activado</value>
+  </data>
+  <data name="Ui_Open" xml:space="preserve">
+    <value>Abrir</value>
+  </data>
+  <data name="Ui_ReportFileName" xml:space="preserve">
+    <value>Zutritt-Informe-{0}-{1}</value>
+  </data>
+  <data name="Ui_SortedAscending" xml:space="preserve">
+    <value>{0}, orden ascendente</value>
+  </data>
+  <data name="Ui_SortedDescending" xml:space="preserve">
+    <value>{0}, orden descendente</value>
+  </data>
+  <data name="Ui_StartOrOpen" xml:space="preserve">
+    <value>Iniciar un análisis o abrir uno</value>
+  </data>
+  <data name="Ui_TargetAndMore" xml:space="preserve">
+    <value>{0} y {1} más</value>
+  </data>
+  <data name="Ui_VersionWithBuild" xml:space="preserve">
+    <value>{0} (compilación {1})</value>
   </data>
   <data name="Win_AccessDenied" xml:space="preserve">
     <value>Acceso denegado</value>

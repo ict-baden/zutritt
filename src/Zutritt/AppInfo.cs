@@ -1,4 +1,5 @@
 using System.Reflection;
+using Zutritt.Core.Resources;
 
 namespace Zutritt;
 
@@ -24,10 +25,10 @@ public static class AppInfo
     /// <summary>Webseite – ⚠ noch offen (OFFEN.md); bis dahin die Organisation auf GitHub.</summary>
     public const string WebsiteUrl = "https://github.com/ict-baden";
 
-    public const string LicenseName = "MIT-Lizenz";
+    public static string LicenseName => Strings.App_LicenseName;
 
     /// <summary>Stimmt: Zutritt hat keine Telemetrie, keinen Update-Check und baut keine Verbindungen nach außen auf.</summary>
-    public const string NoDataSentence = "Diese Software sendet keine Daten an ICT-Baden.";
+    public static string NoDataSentence => Strings.App_NoDataSentence;
 
     private const string FallbackPublisher = "ICT-Baden";
 
@@ -43,7 +44,7 @@ public static class AppInfo
     public static string? Commit { get; } = ParseCommit(Informational);
 
     /// <summary>„0.1.0-ci.12 (Build abc1234)“ bzw. nur die Version.</summary>
-    public static string VersionWithBuild => Commit is null ? Version : $"{Version} (Build {Commit})";
+    public static string VersionWithBuild => Commit is null ? Version : Texts.Format(Strings.Ui_VersionWithBuild, Version, Commit);
 
     /// <summary>Herausgeber (AssemblyCompany), solange die Firmierung offen ist „ICT-Baden“.</summary>
     public static string Publisher { get; } =
@@ -56,7 +57,7 @@ public static class AppInfo
     internal static string ParseVersion(string informational)
     {
         var version = informational.Split('+')[0].Trim();
-        return version.Length > 0 ? version : "unbekannt";
+        return version.Length > 0 ? version : Strings.Pdf_Unknown;
     }
 
     internal static string? ParseCommit(string informational)

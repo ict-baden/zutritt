@@ -4,6 +4,7 @@ using System.Windows.Data;
 using System.Windows.Media;
 using Zutritt.Core.Analysis;
 using Zutritt.Core.Model;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.UI.Pages;
 
@@ -19,7 +20,7 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
     public sealed record PersonRow(string Person, string Account, string ViaShare, AccessLevel EffectiveLevel, string Ntfs, AccessLevel NtfsLevel,
         string Via, string ViaFull, string Note)
     {
-        public override string ToString() => $"{Person}, Freigabe {ViaShare}, NTFS {Ntfs}, {Via}";
+        public override string ToString() => Texts.Format(Strings.Fo_PersonRowText, Person, ViaShare, Ntfs, Via);
     }
     public sealed record FindingRow(Severity Severity, string RuleId, string Message)
     {
@@ -131,14 +132,14 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
 
         if (_shown is not { } scan)
         {
-            ShowTreeMessage("Kein Lauf geladen. Starten Sie auf der Übersicht einen Scan oder öffnen Sie einen gespeicherten Lauf.");
+            ShowTreeMessage(Strings.Fo_NoRun);
             _treeTask = Task.CompletedTask;
             return;
         }
-        ShowTreeMessage("Ordner werden geladen …");
+        ShowTreeMessage(Strings.Fo_Loading);
         var task = BuildTreeAsync(scan);
         _treeTask = task;
-        Ui.Run(_state, () => task, "Der Ordnerbaum ließ sich nicht aufbauen");
+        Ui.Run(_state, () => task, Strings.Fo_TreeFailed);
     }
 
     private async Task BuildTreeAsync(ScanResult scan)
@@ -150,7 +151,7 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
         // Wenige Freigaben: gleich aufgeklappt, damit die erste Ebene zu sehen ist
         if (tree.Roots.Count <= 6)
             foreach (var root in tree.Roots) root.IsExpanded = true;
-        if (tree.Roots.Count == 0) ShowTreeMessage("In diesem Lauf sind keine Ordner gespeichert.");
+        if (tree.Roots.Count == 0) ShowTreeMessage(Strings.Fo_NoFolders);
         else TreeEmpty.Visibility = Visibility.Collapsed;
         if (SearchBox.Text.Trim().Length > 0) ApplySearch();
     }
@@ -164,7 +165,7 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
     // ================= Auswahl =================
 
     /// <summary>Ordner anzeigen (z. B. aus den Befunden): Baum bis dorthin aufklappen und auswählen.</summary>
-    public void SelectPath(string path) => Ui.Run(_state, () => SelectPathAsync(path), "Der Ordner ließ sich nicht anzeigen");
+    public void SelectPath(string path) => Ui.Run(_state, () => SelectPathAsync(path), Strings.Fo_ShowFailed);
 
     internal async Task SelectPathAsync(string path)
     {
@@ -175,7 +176,7 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
         var node = _tree.FindNearest(path);
         if (node is null)
         {
-            _state.Report(NoticeKind.Info, $"„{path}“ ist in diesem Lauf nicht als Ordner gespeichert.");
+            _state.Report(NoticeKind.Info, Texts.Format(Strings.Fo_NotStored, path));
             return;
         }
         Select(node);
@@ -241,7 +242,7 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
     {
         if (_current?.NearestStoredAncestor() is not { } ancestor) return;
         Select(ancestor);
-        Ui.Run(_state, () => RevealAsync(ancestor), "Der Ordner ließ sich nicht anzeigen");
+        Ui.Run(_state, () => RevealAsync(ancestor), Strings.Fo_ShowFailed);
     }
 
     // ================= Suche =================
@@ -258,7 +259,7 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
             SearchResults.Visibility = Visibility.Collapsed;
             Tree.Visibility = Visibility.Visible;
             if (_tree is not null && _tree.Roots.Count > 0) TreeEmpty.Visibility = Visibility.Collapsed;
-            if (wasSearching && _current is { } current) Ui.Run(_state, () => RevealAsync(current), "Der Ordner ließ sich nicht anzeigen");
+            if (wasSearching && _current is { } current) Ui.Run(_state, () => RevealAsync(current), Strings.Fo_ShowFailed);
             return;
         }
 
@@ -270,7 +271,7 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
         SearchResults.ItemsSource = matches;
         SearchResults.Visibility = Visibility.Visible;
         Tree.Visibility = Visibility.Collapsed;
-        if (matches.Count == 0) ShowTreeMessage($"Kein gespeicherter Ordner passt zu „{query}“.");
+        if (matches.Count == 0) ShowTreeMessage(Texts.Format(Strings.Fo_NoSearchMatch, query));
         else TreeEmpty.Visibility = Visibility.Collapsed;
     }
 
@@ -303,7 +304,7 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
         {
             DetailRoot.Visibility = Visibility.Collapsed;
             DetailEmpty.Visibility = Visibility.Visible;
-            DetailEmpty.Text = _shown is null ? "Kein Lauf geladen." : "Ordner links auswählen, um seine Berechtigungen zu sehen.";
+            DetailEmpty.Text = _shown is null ? Strings.Fo_NoRunShort : Strings.Fo_SelectFolder;
             return;
         }
         DetailRoot.Visibility = Visibility.Visible;
@@ -317,10 +318,10 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
             Tabs.Visibility = Visibility.Collapsed;
             InheritedPanel.Visibility = Visibility.Visible;
             var ancestor = node.NearestStoredAncestor();
-            AddFact("\uE8B7", "Ohne eigene Rechte");
+            AddFact("\uE8B7", Strings.Fo_NoOwnPermissions);
             InheritedText.Text = ancestor is null
-                ? $"„{node.Name}“ hat keine eigenen Berechtigungen. Zutritt speichert nur Ordner mit eigenen Rechten und die Scan-Wurzeln."
-                : $"„{node.Name}“ hat keine eigenen Berechtigungen – es gilt, was an „{ancestor.Path}“ eingestellt ist. Zutritt speichert nur Ordner mit eigenen Rechten.";
+                ? Texts.Format(Strings.Fo_InheritsRootless, node.Name)
+                : Texts.Format(Strings.Fo_InheritsFrom, node.Name, ancestor.Path);
             ParentButton.Visibility = ancestor is null ? Visibility.Collapsed : Visibility.Visible;
             return;
         }
@@ -333,27 +334,26 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
         {
             var share = scan.Shares.FirstOrDefault(s => s.UncPath.Equals(unc, StringComparison.OrdinalIgnoreCase));
             var tip = share is null ? null
-                : !share.PermissionsReadable ? "Freigabe-Berechtigungen nicht lesbar"
-                : "Freigabe-Berechtigungen:\n" + string.Join("\n", share.Permissions.Select(p =>
-                    $"{_state.NameOf(p.Sid)}: {Rights.Label(p)}"));
-            AddFact("\uE8CE", $"Freigabe {unc}", tip);
+                : !share.PermissionsReadable ? Strings.Scan_SharePermissionsUnreadable
+                : Texts.Format(Strings.Fo_SharePermissionsTip, string.Join("\n", share.Permissions.Select(p =>
+                    $"{_state.NameOf(p.Sid)}: {Rights.Label(p)}")));
+            AddFact("\uE8CE", Texts.Format(Strings.Fo_ShareFact, unc), tip);
         }
-        AddFact("\uE77B", folder.OwnerSid.Length > 0 ? $"Besitzer: {_state.NameOf(folder.OwnerSid)}" : "Besitzer unbekannt");
-        if (folder.InheritanceBroken) AddFact("\uE72E", "Vererbung unterbrochen", "Rechte von oben gelten hier nicht – nur die eigenen Einträge.");
+        AddFact("\uE77B", folder.OwnerSid.Length > 0 ? Texts.Format(Strings.Pdf_Owner, _state.NameOf(folder.OwnerSid)) : Strings.Fo_OwnerUnknown);
+        if (folder.InheritanceBroken) AddFact("\uE72E", Strings.Pdf_InheritanceBroken, Strings.Fo_BrokenTip);
         else if (folder.InheritanceDiffers)
-            AddFact("\uE8DE", "Vererbung weicht ab", "Die geerbten Einträge passen nicht zum übergeordneten Ordner – vermutlich verschoben. "
-                + "Hier gelten womöglich noch Rechte vom früheren Ort (Befund ZT14).", caution: true);
-        else AddFact("\uE71B", "Erbt vom übergeordneten Ordner");
-        AddFact("\uE81E", folder.IsRoot ? "Scan-Wurzel" : $"Ebene {folder.Depth}");
-        if (folder.IsFile) AddFact("\uE7C3", "Datei");
-        if (folder.Error is { } error) AddFact("\uE783", $"Nicht lesbar: {error}", critical: true);
+            AddFact("\uE8DE", Strings.Excel_ColInheritanceDiffers, Strings.Fo_DiffersFactTip, caution: true);
+        else AddFact("\uE71B", Strings.Fo_InheritsFromParent);
+        AddFact("\uE81E", folder.IsRoot ? Strings.Fo_ScanRoot : Texts.Format(Strings.Fo_Level, folder.Depth));
+        if (folder.IsFile) AddFact("\uE7C3", Strings.Pdf_File);
+        if (folder.Error is { } error) AddFact("\uE783", Texts.Format(Strings.Pdf_NotReadable, error), critical: true);
 
         AcesGrid.ItemsSource = folder.Aces.Select(a =>
         {
             var p = _state.PrincipalOf(a.Sid);
-            return new AceRow(_state.NameOf(a.Sid), _state.ShortNameOf(a.Sid), p is null ? "Unbekannt" : Labels.Of(p.Kind),
-                (a.IsDeny ? "Verweigern: " : "") + Labels.RightsText(a), a.Level, a.IsDeny,
-                a.IsInherited ? "geerbt" : "explizit", Labels.AppliesTo(a, folder.IsFile));
+            return new AceRow(_state.NameOf(a.Sid), _state.ShortNameOf(a.Sid), p is null ? Strings.Kind_Unknown : Labels.Of(p.Kind),
+                a.IsDeny ? Texts.Format(Strings.Fo_DenyPrefix, Labels.RightsText(a)) : Labels.RightsText(a), a.Level, a.IsDeny,
+                a.IsInherited ? Strings.Ace_Inherited : Strings.Ace_Explicit, Labels.AppliesTo(a, folder.IsFile));
         }).ToList();
 
         var findings = scan.Findings.Where(f => FolderTree.Key(f.Path).Equals(FolderTree.Key(folder.Path), StringComparison.OrdinalIgnoreCase))
@@ -362,8 +362,8 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
         FindingsGrid.ItemsSource = findings;
         FindingsGrid.Visibility = findings.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         FindingsEmpty.Visibility = findings.Count > 0 ? Visibility.Collapsed : Visibility.Visible;
-        TabFindings.Header = findings.Count > 0 ? $"Befunde ({Labels.Number(findings.Count)})" : "Befunde";
-        TabAces.Header = $"Einträge ({Labels.Number(folder.Aces.Count)})";
+        TabFindings.Header = findings.Count > 0 ? Texts.Format(Strings.Fo_FindingsCount, Labels.Number(findings.Count)) : Strings.Col_Findings;
+        TabAces.Header = Texts.Format(Strings.Fo_EntriesCount, Labels.Number(folder.Aces.Count));
 
         LoadPeople(scan, folder);
     }
@@ -390,18 +390,18 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
         int version = ++_peopleVersion;
         PeopleTable.ItemsSource = null;
         BroadNotice.Visibility = Visibility.Collapsed;
-        TabPeople.Header = "Wer darf hier rein";
+        TabPeople.Header = Strings.Fo_WhoCanEnter;
         PeopleStatus.Visibility = Visibility.Visible;
         if (folder.Error is not null)
         {
-            PeopleStatus.Text = "Der Ordner ist nicht lesbar – wer hinein darf, lässt sich nicht bestimmen.";
+            PeopleStatus.Text = Strings.Fo_UnreadableWho;
             _peopleTask = Task.CompletedTask;
             return;
         }
-        PeopleStatus.Text = "Wird berechnet …";
+        PeopleStatus.Text = Strings.Fo_Calculating;
         var task = ShowPeopleAsync(scan, folder, version);
         _peopleTask = task;
-        Ui.Run(_state, () => task, "„Wer darf hier rein“ ließ sich nicht berechnen");
+        Ui.Run(_state, () => task, Strings.Fo_WhoFailed);
     }
 
     private async Task ShowPeopleAsync(ScanResult scan, FolderNode folder, int version)
@@ -416,23 +416,23 @@ public partial class FoldersPage : UserControl, IPage, ISearchPage
             {
                 var p = P(g.Sid);
                 var person = p is null ? g.Sid : p.DisplayName.Length > 0 ? p.DisplayName : p.Label;
-                var share = g.ViaShare is { } v ? Labels.Of(v) : folder.ShareUnc is null ? "keine Freigabe" : "nicht lesbar";
-                var note = g.ReducedByDeny ? "Durch einen Verweigern-Eintrag eingeschränkt" : p?.IsDisabled == true ? "Das Konto ist deaktiviert" : "";
+                var share = g.ViaShare is { } v ? Labels.Of(v) : folder.ShareUnc is null ? Strings.Fo_NoShare : Strings.Report_NotReadable;
+                var note = g.ReducedByDeny ? Strings.Fo_ReducedByDeny : p?.IsDisabled == true ? Strings.Fo_AccountDisabled : "";
                 return new PersonRow(person, p?.Label ?? g.Sid, share, g.Effective, Labels.Of(g.Ntfs), g.Ntfs,
-                    Labels.ViaChain(g.Via), g.Via.Count == 0 ? "direkt berechtigt" : string.Join(" › ", g.Via), note);
+                    Labels.ViaChain(g.Via), g.Via.Count == 0 ? Strings.Pdf_DirectlyGranted : string.Join(" › ", g.Via), note);
             }).ToList();
 
         if (broad.Count > 0)
         {
-            var list = string.Join(", ", broad.Select(g => $"„{AppState.NameIn(scan, g.Sid)}“ ({Labels.Of(g.Effective)})"));
-            BroadText.Text = $"Außerdem berechtigt: {list}. Damit darf hier praktisch jede angemeldete Person hinein – auch wer unten nicht einzeln steht.";
+            var list = string.Join(Strings.Text_ListSeparator, broad.Select(g => $"{Texts.Quote(AppState.NameIn(scan, g.Sid))} ({Labels.Of(g.Effective)})"));
+            BroadText.Text = Texts.Format(Strings.Fo_AlsoBroad, list);
             BroadNotice.Visibility = Visibility.Visible;
         }
         PeopleTable.ItemsSource = people;
-        TabPeople.Header = $"Wer darf hier rein ({Labels.Number(people.Count)})";
+        TabPeople.Header = Texts.Format(Strings.Fo_WhoCanEnterCount, Labels.Number(people.Count));
         PeopleStatus.Visibility = people.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         PeopleStatus.Text = scan.Request.ResolveGroups
-            ? "Keine einzelne Person hat hier Zugriff."
-            : "Keine einzelne Person gefunden – der Lauf wurde ohne Auflösung der Gruppen erstellt.";
+            ? Strings.Fo_NobodyIndividual
+            : Strings.Fo_NoPersonNoGroups;
     }
 }

@@ -75,6 +75,36 @@
   <data name="Ad_Unreachable" xml:space="preserve">
     <value>Active Directory „{0}“ nicht erreichbar: {1}. Domänenkonten bleiben „Unbekannt“, ihre Gruppen werden nicht aufgelöst.</value>
   </data>
+  <data name="App_DbNotOpen" xml:space="preserve">
+    <value>Die Datenbank lässt sich nicht öffnen ({0}). Läufe werden in dieser Sitzung nicht gespeichert.</value>
+  </data>
+  <data name="App_DbNotOpenPath" xml:space="preserve">
+    <value>Die Datenbank „{0}“ lässt sich nicht öffnen ({1}). Läufe werden in dieser Sitzung nicht gespeichert.</value>
+  </data>
+  <data name="App_DemoCompareFailed" xml:space="preserve">
+    <value>Der Vergleich der Demo-Läufe ist fehlgeschlagen ({0}).</value>
+  </data>
+  <data name="App_DemoDbFailed" xml:space="preserve">
+    <value>Die Demo-Datenbank ließ sich nicht anlegen ({0}). Der Demo-Lauf wird ohne Speicher und ohne Vergleich gezeigt.</value>
+  </data>
+  <data name="App_LicenseName" xml:space="preserve">
+    <value>MIT-Lizenz</value>
+  </data>
+  <data name="App_NoDatabase" xml:space="preserve">
+    <value>Es ist keine Datenbank geöffnet.</value>
+  </data>
+  <data name="App_NoDataSentence" xml:space="preserve">
+    <value>Diese Software sendet keine Daten an ICT-Baden.</value>
+  </data>
+  <data name="App_RunGone" xml:space="preserve">
+    <value>Lauf {0} gibt es nicht mehr.</value>
+  </data>
+  <data name="App_Tagline" xml:space="preserve">
+    <value>Zeigt, wer auf Dateifreigaben worauf zugreifen darf – mit Befunden, Vergleich und Bericht.</value>
+  </data>
+  <data name="App_UnexpectedError" xml:space="preserve">
+    <value>Unerwarteter Fehler: {0}</value>
+  </data>
   <data name="AppliesTo_Files" xml:space="preserve">
     <value>Nur Dateien</value>
   </data>
@@ -89,6 +119,9 @@
   </data>
   <data name="AppliesTo_OneLevel" xml:space="preserve">
     <value>{0} (nur eine Ebene)</value>
+  </data>
+  <data name="AppliesTo_OneLevelShort" xml:space="preserve">
+    <value>{0} (eine Ebene)</value>
   </data>
   <data name="AppliesTo_Subfolders" xml:space="preserve">
     <value>Nur Unterordner</value>
@@ -147,23 +180,360 @@
   <data name="Change_Resolved" xml:space="preserve">
     <value>Behoben</value>
   </data>
+  <data name="Cli_AndMore" xml:space="preserve">
+    <value>  … und {0} weitere (alle im Bericht)</value>
+  </data>
+  <data name="Cli_Attention" xml:space="preserve">
+    <value>Achtung: {0}</value>
+  </data>
+  <data name="Cli_Cancelled" xml:space="preserve">
+    <value>Abgebrochen.</value>
+  </data>
+  <data name="Cli_CompareFailed" xml:space="preserve">
+    <value>Vergleich nicht möglich: {0}</value>
+  </data>
+  <data name="Cli_DemoAlone" xml:space="preserve">
+    <value>„--demo“ steht allein: Zutritt.exe --demo</value>
+  </data>
+  <data name="Cli_ErrorLine" xml:space="preserve">
+    <value>Fehler {1}: {0}</value>
+  </data>
+  <data name="Cli_ExitClean" xml:space="preserve">
+    <value>keine Befunde ab „Mittel“</value>
+  </data>
+  <data name="Cli_ExitCode" xml:space="preserve">
+    <value>Exitcode {0}: {1}</value>
+  </data>
+  <data name="Cli_ExitHigh" xml:space="preserve">
+    <value>mindestens ein Befund „Hoch“</value>
+  </data>
+  <data name="Cli_ExitMedium" xml:space="preserve">
+    <value>Befunde „Mittel“, keine „Hoch“</value>
+  </data>
+  <data name="Cli_Help" xml:space="preserve">
+    <value>Zutritt {0} – wer darf auf Dateifreigaben wohin?
+
+Aufruf:
+  Zutritt.exe                         Oberfläche starten
+  Zutritt.exe scan &lt;ziel&gt; [&lt;ziel&gt; …] [Optionen]
+  Zutritt.exe liste [--db &lt;pfad&gt;]
+  Zutritt.exe bericht &lt;id&gt; --bericht &lt;datei&gt; [--vergleich] [--db &lt;pfad&gt;]
+  Zutritt.exe --demo                  Oberfläche mit eingebauten Demo-Daten
+  Zutritt.exe --screenshots &lt;ordner&gt; [--theme hell|dunkel|beide]
+  Zutritt.exe --hilfe
+  Zutritt.exe --version               Version und Build
+  Zutritt.exe --info                  Version, Lizenz, Links zu Hilfe, Datenschutz, Impressum
+  Zutritt.exe --lizenzen              Lizenztext und Drittanbieter-Lizenzen
+
+Ziele:
+  \\server\freigabe[\ordner]    eine Freigabe oder ein Ordner darin
+  \\server                      alle Datenträger-Freigaben eines Servers
+  D:\Daten                      ein lokaler Ordner
+  .                             alle Freigaben dieses Rechners
+
+Optionen für „scan“:
+  --dateien                auch Dateien mit eigenen Rechten erfassen (dauert länger)
+  --tiefe N                höchstens N Ebenen unter dem Ziel (Standard: unbegrenzt)
+  --ausnahme-ab N          unterbrochene Vererbung ab Ebene N als „tief versteckte
+                           Ausnahme“ melden (Standard: 3)
+  --ohne-gruppen           Gruppen nicht bis zur Person auflösen
+  --mit-admin-freigaben    auch C$, ADMIN$ usw. prüfen
+  --bericht &lt;datei&gt;        Bericht schreiben, .xlsx oder .pdf (mehrfach möglich)
+  --vergleich              Änderungen seit dem letzten Lauf mit denselben Zielen
+                           ermitteln und in die Berichte aufnehmen
+  --db &lt;pfad&gt;              andere Datenbank (Standard: %LocalAppData%\Zutritt\zutritt.db,
+                           also pro Benutzer)
+
+„liste“ zeigt die gespeicherten Läufe mit ihrer Id, „bericht“ schreibt für einen davon
+nachträglich Berichte.
+
+Englische Schreibweisen gehen ebenso: list, report, --help, --licenses, --files, --depth,
+--deep-from, --no-groups, --include-admin-shares, --report, --compare.
+Sprache der Ausgabe: wie Windows, sonst mit der Umgebungsvariable ZUTRITT_LANGUAGE
+(en, de, es, fr, zh-Hans) oder auf der Seite Info der Oberfläche.
+
+Exitcodes (für geplante Aufgaben):
+  0  keine Befunde ab „Mittel“
+  1  Befunde „Mittel“, aber keine „Hoch“
+  2  mindestens ein Befund „Hoch“
+  3  Fehler oder Abbruch – auch, wenn kein Ziel geprüft werden konnte
+
+Beispiel – jeden Montag um 6 Uhr mit Vergleich und PDF zum Abzeichnen:
+  schtasks /create /tn "Zutritt Wochenbericht" /sc weekly /d MO /st 06:00 /tr ^
+    "\"C:\Program Files\Zutritt\Zutritt.exe\" scan \\FS01 --vergleich --bericht D:\Berichte\Zutritt.pdf"
+
+Zutritt.exe ist ein Fensterprogramm; damit die Eingabeaufforderung auf das Ende wartet:
+  start /wait Zutritt.exe scan …            (cmd)
+  Zutritt.exe scan … | Out-Default          (PowerShell)
+Protokoll für geplante Aufgaben: in einer .cmd-Datei umleiten – dort wartet cmd auf das
+Ende, und die Datei wird UTF-8 (mit BOM):
+  "C:\Program Files\Zutritt\Zutritt.exe" scan \\FS01 --vergleich &gt; D:\Berichte\zutritt.log 2&gt;&amp;1
+Es wird nur gelesen – an Rechten und Dateien ändert Zutritt nichts.
+{1}</value>
+  </data>
+  <data name="Cli_HelpHint" xml:space="preserve">
+    <value>Hilfe: Zutritt.exe --hilfe</value>
+  </data>
+  <data name="Cli_ImportantFindings" xml:space="preserve">
+    <value>Wichtigste Befunde:</value>
+  </data>
+  <data name="Cli_InfoDatabase" xml:space="preserve">
+    <value>Datenbank</value>
+  </data>
+  <data name="Cli_InfoImprint" xml:space="preserve">
+    <value>Impressum</value>
+  </data>
+  <data name="Cli_InfoLanguage" xml:space="preserve">
+    <value>Sprache</value>
+  </data>
+  <data name="Cli_InfoLanguageValue" xml:space="preserve">
+    <value>{0} – ändern mit der Umgebungsvariable {1} oder auf der Seite Info</value>
+  </data>
+  <data name="Cli_InfoLicense" xml:space="preserve">
+    <value>Lizenztext</value>
+  </data>
+  <data name="Cli_InfoLicenseValue" xml:space="preserve">
+    <value>{0} (Zutritt.exe --lizenzen, {1})</value>
+  </data>
+  <data name="Cli_InfoLog" xml:space="preserve">
+    <value>Protokoll</value>
+  </data>
+  <data name="Cli_InfoNotices" xml:space="preserve">
+    <value>Drittanbieter-Lizenzen</value>
+  </data>
+  <data name="Cli_InfoNoticesValue" xml:space="preserve">
+    <value>{0} (Zutritt.exe --lizenzen, auch unter Info in der App)</value>
+  </data>
+  <data name="Cli_InfoPrivacy" xml:space="preserve">
+    <value>Datenschutz</value>
+  </data>
+  <data name="Cli_InfoSource" xml:space="preserve">
+    <value>Quellcode (GitHub)</value>
+  </data>
+  <data name="Cli_InfoSupport" xml:space="preserve">
+    <value>Hilfe &amp; Support</value>
+  </data>
+  <data name="Cli_InfoWebsite" xml:space="preserve">
+    <value>Webseite</value>
+  </data>
+  <data name="Cli_LicensesMissing" xml:space="preserve">
+    <value>Die Lizenztexte fehlen in dieser Ausgabe – sie stehen unter {0}.</value>
+  </data>
+  <data name="Cli_ListNoArgs" xml:space="preserve">
+    <value>„liste“ erwartet keine weiteren Angaben („{0}“).</value>
+  </data>
+  <data name="Cli_LockedHint" xml:space="preserve">
+    <value>Hinweis: {0} Der Scan läuft trotzdem; gespeichert wird am Ende.</value>
+  </data>
+  <data name="Cli_NeedReport" xml:space="preserve">
+    <value>Bitte mit --bericht &lt;datei.xlsx|datei.pdf&gt; angeben, wohin der Bericht soll.</value>
+  </data>
+  <data name="Cli_NeedsInteger" xml:space="preserve">
+    <value>„{0}“ erwartet eine ganze Zahl ab {1}, nicht „{2}“.</value>
+  </data>
+  <data name="Cli_NeedsValue" xml:space="preserve">
+    <value>„{0}“ braucht einen Wert.</value>
+  </data>
+  <data name="Cli_NeedTarget" xml:space="preserve">
+    <value>Bitte mindestens ein Ziel angeben, z. B. Zutritt.exe scan \\server\freigabe</value>
+  </data>
+  <data name="Cli_NoArguments" xml:space="preserve">
+    <value>„{0}“ erwartet keine weiteren Angaben.</value>
+  </data>
+  <data name="Cli_NoDatabaseYet" xml:space="preserve">
+    <value>Noch keine Datenbank vorhanden ({0}).</value>
+  </data>
+  <data name="Cli_NoPreviousRun" xml:space="preserve">
+    <value>Vergleich: Es gibt noch keinen früheren Lauf mit denselben Zielen.</value>
+  </data>
+  <data name="Cli_NoRuns" xml:space="preserve">
+    <value>Keine gespeicherten Läufe in {0}.</value>
+  </data>
+  <data name="Cli_NoSuchDatabase" xml:space="preserve">
+    <value>Die Datenbank {0} gibt es nicht.</value>
+  </data>
+  <data name="Cli_NoSuchRun" xml:space="preserve">
+    <value>Lauf {0} gibt es nicht. „Zutritt.exe liste“ zeigt die gespeicherten Läufe.</value>
+  </data>
+  <data name="Cli_NotSavedLost" xml:space="preserve">
+    <value>Der Lauf ist nicht in der Datenbank und geht verloren. Mit --bericht &lt;datei&gt; hält Zutritt ihn auch dann in einem Bericht fest.</value>
+  </data>
+  <data name="Cli_NotSavedReportsFollow" xml:space="preserve">
+    <value>Der Lauf ist nicht in der Datenbank – die Berichte werden trotzdem geschrieben.</value>
+  </data>
+  <data name="Cli_NotScanned" xml:space="preserve">
+    <value>{0} Es wurde nicht gescannt.</value>
+  </data>
+  <data name="Cli_NotScannedDb" xml:space="preserve">
+    <value>{0} Es wurde nicht gescannt. Mit --db &lt;pfad&gt; lässt sich eine andere Datenbank wählen.</value>
+  </data>
+  <data name="Cli_NotScannedDbPath" xml:space="preserve">
+    <value>{0} ({1}) Es wurde nicht gescannt. Mit --db &lt;pfad&gt; lässt sich eine andere Datenbank wählen.</value>
+  </data>
+  <data name="Cli_ProblemNothingChecked" xml:space="preserve">
+    <value>kein Ziel konnte geprüft werden</value>
+  </data>
+  <data name="Cli_ProblemNotSaved" xml:space="preserve">
+    <value>der Lauf wurde nicht gespeichert</value>
+  </data>
+  <data name="Cli_ProblemReport" xml:space="preserve">
+    <value>mindestens ein Bericht ließ sich nicht schreiben</value>
+  </data>
+  <data name="Cli_Progress" xml:space="preserve">
+    <value>{0}: {1} Ordner, {2} mit eigenen Rechten, {3} Fehler</value>
+  </data>
+  <data name="Cli_ReportExtension" xml:space="preserve">
+    <value>Bericht „{0}“: Bitte .xlsx (Excel) oder .pdf angeben.</value>
+  </data>
+  <data name="Cli_ReportFailed" xml:space="preserve">
+    <value>Bericht {0} konnte nicht geschrieben werden: {1}</value>
+  </data>
+  <data name="Cli_ReportWritten" xml:space="preserve">
+    <value>Bericht geschrieben: {0}</value>
+  </data>
+  <data name="Cli_RunSaved" xml:space="preserve">
+    <value>Lauf {0} gespeichert in {1}</value>
+  </data>
+  <data name="Cli_RunsIn" xml:space="preserve">
+    <value>Gespeicherte Läufe in {0}:</value>
+  </data>
+  <data name="Cli_ScanStart" xml:space="preserve">
+    <value>Zutritt {0} – Scan von {1}</value>
+  </data>
+  <data name="Cli_SinceRun" xml:space="preserve">
+    <value>Seit dem Lauf vom {0}: {1} neue, {2} behobene Befunde, {3} Zugriffsänderungen, {4} ACL-Änderungen, {5} Mitgliedschaftsänderungen.</value>
+  </data>
+  <data name="Cli_SumDuration" xml:space="preserve">
+    <value>Dauer</value>
+  </data>
+  <data name="Cli_SumFoldersValue" xml:space="preserve">
+    <value>{0}, davon {1} mit eigenen Rechten</value>
+  </data>
+  <data name="Cli_SumUnreadable" xml:space="preserve">
+    <value>Nicht lesbar</value>
+  </data>
+  <data name="Cli_UnknownCommand" xml:space="preserve">
+    <value>Unbekannter Befehl „{0}“.</value>
+  </data>
+  <data name="Cli_UnknownOption" xml:space="preserve">
+    <value>Unbekannte Option „{0}“.</value>
+  </data>
+  <data name="Cli_UnreachableTargets" xml:space="preserve">
+    <value>Achtung: {0} von {1} Zielen konnten nicht geprüft werden – das Ergebnis ist unvollständig.</value>
+  </data>
+  <data name="Cli_UsageReport" xml:space="preserve">
+    <value>Aufruf: Zutritt.exe bericht &lt;id&gt; --bericht &lt;datei.xlsx|datei.pdf&gt; [--vergleich] [--db &lt;pfad&gt;] – die Id zeigt „Zutritt.exe liste“.</value>
+  </data>
+  <data name="Cli_UsageScreenshots" xml:space="preserve">
+    <value>Aufruf: Zutritt.exe --screenshots &lt;ordner&gt; [--theme hell|dunkel|beide]</value>
+  </data>
+  <data name="Cmp_AccessChanges" xml:space="preserve">
+    <value>Zugriffsänderungen</value>
+  </data>
+  <data name="Cmp_AccessRowText" xml:space="preserve">
+    <value>{0}, {1}, vorher {2}, nachher {3}</value>
+  </data>
+  <data name="Cmp_AclAndFolderChanges" xml:space="preserve">
+    <value>ACL- und Ordneränderungen</value>
+  </data>
+  <data name="Cmp_AclChanges" xml:space="preserve">
+    <value>ACL-Änderungen</value>
+  </data>
   <data name="Cmp_ChangedAces" xml:space="preserve">
     <value>Geänderte Berechtigungseinträge</value>
   </data>
   <data name="Cmp_ChangedMemberships" xml:space="preserve">
     <value>Geänderte Gruppenmitgliedschaften</value>
   </data>
+  <data name="Cmp_ChangedMembershipsShort" xml:space="preserve">
+    <value>Geänderte Mitgliedschaften</value>
+  </data>
+  <data name="Cmp_DaysBefore" xml:space="preserve">
+    <value>{0:0} Tage vorher</value>
+  </data>
+  <data name="Cmp_Direction" xml:space="preserve">
+    <value>Richtung</value>
+  </data>
+  <data name="Cmp_Failed" xml:space="preserve">
+    <value>Der Vergleich ist fehlgeschlagen</value>
+  </data>
+  <data name="Cmp_InheritedSuffix" xml:space="preserve">
+    <value> (geerbt)</value>
+  </data>
+  <data name="Cmp_Joined" xml:space="preserve">
+    <value>Hinzugekommen</value>
+  </data>
   <data name="Cmp_LessAccess" xml:space="preserve">
     <value>Personen-Zugriffe eingeschränkt</value>
+  </data>
+  <data name="Cmp_LessRights" xml:space="preserve">
+    <value>weniger Rechte</value>
+  </data>
+  <data name="Cmp_MemberRowText" xml:space="preserve">
+    <value>{0}: {1} in {2}</value>
+  </data>
+  <data name="Cmp_Memberships" xml:space="preserve">
+    <value>Mitgliedschaften</value>
   </data>
   <data name="Cmp_MoreAccess" xml:space="preserve">
     <value>Personen-Zugriffe erweitert</value>
   </data>
+  <data name="Cmp_MoreRights" xml:space="preserve">
+    <value>mehr Rechte</value>
+  </data>
+  <data name="Cmp_NeedTwoRuns" xml:space="preserve">
+    <value>Für einen Vergleich braucht es mindestens zwei Läufe. Nach dem nächsten Scan derselben Ziele sehen Sie hier, was sich geändert hat: neue und behobene Befunde, wer mehr oder weniger darf, geänderte Einträge und Gruppenmitgliedschaften.</value>
+  </data>
   <data name="Cmp_NewFindings" xml:space="preserve">
     <value>Neue Befunde</value>
   </data>
+  <data name="Cmp_NoAccessChanges" xml:space="preserve">
+    <value>Niemand darf irgendwo mehr oder weniger als vorher.</value>
+  </data>
+  <data name="Cmp_NoAceChanges" xml:space="preserve">
+    <value>Keine Einträge in den Zugriffssteuerungslisten geändert.</value>
+  </data>
+  <data name="Cmp_NoDatabase" xml:space="preserve">
+    <value>Ohne Datenbank gibt es keine früheren Läufe zum Vergleichen.</value>
+  </data>
+  <data name="Cmp_NoEarlierRun" xml:space="preserve">
+    <value>Noch kein früherer Lauf</value>
+  </data>
+  <data name="Cmp_NoMembershipChanges" xml:space="preserve">
+    <value>Keine Gruppenmitgliedschaft hat sich geändert.</value>
+  </data>
+  <data name="Cmp_NoNewFindings" xml:space="preserve">
+    <value>Keine neuen Befunde seit dem älteren Lauf.</value>
+  </data>
+  <data name="Cmp_NoResolved" xml:space="preserve">
+    <value>Seit dem älteren Lauf wurde kein Befund behoben.</value>
+  </data>
+  <data name="Cmp_NoRunText" xml:space="preserve">
+    <value>Laden Sie auf der Übersicht einen Lauf – dann zeigt diese Seite, was sich seit dem Lauf davor geändert hat.</value>
+  </data>
+  <data name="Cmp_NoSameTargets" xml:space="preserve">
+    <value>Es gibt keinen früheren Lauf mit denselben Zielen. Wählen Sie oben einen Lauf, mit dem verglichen werden soll.</value>
+  </data>
+  <data name="Cmp_OneDayBefore" xml:space="preserve">
+    <value>1 Tag vorher</value>
+  </data>
+  <data name="Cmp_OtherTargets" xml:space="preserve">
+    <value>Der ältere Lauf hatte andere Ziele ({0}) – Unterschiede können auch daher kommen.</value>
+  </data>
+  <data name="Cmp_OwnRightsGone" xml:space="preserve">
+    <value>Eigene Rechte entfallen</value>
+  </data>
+  <data name="Cmp_OwnRightsNew" xml:space="preserve">
+    <value>Eigene Rechte neu</value>
+  </data>
+  <data name="Cmp_Preparing" xml:space="preserve">
+    <value>Änderungen werden aufbereitet …</value>
+  </data>
   <data name="Cmp_ResolvedFindings" xml:space="preserve">
     <value>Behobene Befunde</value>
+  </data>
+  <data name="Cmp_SameDay" xml:space="preserve">
+    <value>am selben Tag</value>
   </data>
   <data name="Col_Account" xml:space="preserve">
     <value>Konto</value>
@@ -444,6 +814,54 @@
   <data name="Excel_Total" xml:space="preserve">
     <value>Gesamt</value>
   </data>
+  <data name="Fi_AccountGone" xml:space="preserve">
+    <value> · Konto existiert nicht mehr</value>
+  </data>
+  <data name="Fi_AllRules" xml:space="preserve">
+    <value>Alle Regeln</value>
+  </data>
+  <data name="Fi_DetailPlaceholder" xml:space="preserve">
+    <value>Hier erscheinen Erklärung und Empfehlung zum ausgewählten Befund.</value>
+  </data>
+  <data name="Fi_Disabled" xml:space="preserve">
+    <value> · deaktiviert</value>
+  </data>
+  <data name="Fi_FilterByRule" xml:space="preserve">
+    <value>Nach Regel filtern</value>
+  </data>
+  <data name="Fi_FindingPath" xml:space="preserve">
+    <value>Pfad des Befunds</value>
+  </data>
+  <data name="Fi_NoDescription" xml:space="preserve">
+    <value>Für diese Regel liegt keine Beschreibung vor.</value>
+  </data>
+  <data name="Fi_NoMatches" xml:space="preserve">
+    <value>Keine Treffer</value>
+  </data>
+  <data name="Fi_NoMatchesText" xml:space="preserve">
+    <value>Kein Befund passt zu Filter und Suche.</value>
+  </data>
+  <data name="Fi_NoRunText" xml:space="preserve">
+    <value>Starten Sie auf der Übersicht einen Scan oder öffnen Sie einen gespeicherten Lauf.</value>
+  </data>
+  <data name="Fi_NothingFound" xml:space="preserve">
+    <value>In diesem Lauf ist nichts aufgefallen. Die Ordner-Seite zeigt trotzdem, wer wohin darf.</value>
+  </data>
+  <data name="Fi_Search" xml:space="preserve">
+    <value>Befunde durchsuchen</value>
+  </data>
+  <data name="Fi_SearchHint" xml:space="preserve">
+    <value>Pfad, Konto oder Text</value>
+  </data>
+  <data name="Fi_SelectFinding" xml:space="preserve">
+    <value>Befund auswählen, um Erklärung und Empfehlung zu sehen.</value>
+  </data>
+  <data name="Fi_ShowFolder" xml:space="preserve">
+    <value>Ordner anzeigen</value>
+  </data>
+  <data name="Fi_WhyImportant" xml:space="preserve">
+    <value>Warum ist das wichtig?</value>
+  </data>
   <data name="Finding_BroadRead" xml:space="preserve">
     <value>„{0}“ hat „{1}“{2} – praktisch jede angemeldete Person darf hier lesen.</value>
   </data>
@@ -522,6 +940,151 @@
   <data name="Finding_UnreadableFolder" xml:space="preserve">
     <value>Ordner nicht lesbar: {0} – Berechtigungen hier und darunter nicht geprüft.</value>
   </data>
+  <data name="Fo_AccountDisabled" xml:space="preserve">
+    <value>Das Konto ist deaktiviert</value>
+  </data>
+  <data name="Fo_AclEntries" xml:space="preserve">
+    <value>Einträge der Zugriffssteuerungsliste</value>
+  </data>
+  <data name="Fo_AlsoBroad" xml:space="preserve">
+    <value>Außerdem berechtigt: {0}. Damit darf hier praktisch jede angemeldete Person hinein – auch wer unten nicht einzeln steht.</value>
+  </data>
+  <data name="Fo_BrokenTip" xml:space="preserve">
+    <value>Rechte von oben gelten hier nicht – nur die eigenen Einträge.</value>
+  </data>
+  <data name="Fo_Calculating" xml:space="preserve">
+    <value>Wird berechnet …</value>
+  </data>
+  <data name="Fo_DenyPrefix" xml:space="preserve">
+    <value>Verweigern: {0}</value>
+  </data>
+  <data name="Fo_DiffersFactTip" xml:space="preserve">
+    <value>Die geerbten Einträge passen nicht zum übergeordneten Ordner – vermutlich verschoben. Hier gelten womöglich noch Rechte vom früheren Ort (Befund ZT14).</value>
+  </data>
+  <data name="Fo_DiffersTip" xml:space="preserve">
+    <value>Vererbung weicht ab – vermutlich verschoben, mit Rechten vom früheren Ort</value>
+  </data>
+  <data name="Fo_Entries" xml:space="preserve">
+    <value>Einträge</value>
+  </data>
+  <data name="Fo_EntriesCount" xml:space="preserve">
+    <value>Einträge ({0})</value>
+  </data>
+  <data name="Fo_FindingsCount" xml:space="preserve">
+    <value>Befunde ({0})</value>
+  </data>
+  <data name="Fo_FolderFindings" xml:space="preserve">
+    <value>Befunde dieses Ordners</value>
+  </data>
+  <data name="Fo_GreyLegend" xml:space="preserve">
+    <value>grau: ohne eigene Rechte</value>
+  </data>
+  <data name="Fo_HasFinding" xml:space="preserve">
+    <value>Befund vorhanden</value>
+  </data>
+  <data name="Fo_InheritsFrom" xml:space="preserve">
+    <value>„{0}“ hat keine eigenen Berechtigungen – es gilt, was an „{1}“ eingestellt ist. Zutritt speichert nur Ordner mit eigenen Rechten.</value>
+  </data>
+  <data name="Fo_InheritsFromParent" xml:space="preserve">
+    <value>Erbt vom übergeordneten Ordner</value>
+  </data>
+  <data name="Fo_InheritsRootless" xml:space="preserve">
+    <value>„{0}“ hat keine eigenen Berechtigungen. Zutritt speichert nur Ordner mit eigenen Rechten und die Scan-Wurzeln.</value>
+  </data>
+  <data name="Fo_Level" xml:space="preserve">
+    <value>Ebene {0}</value>
+  </data>
+  <data name="Fo_Loading" xml:space="preserve">
+    <value>Ordner werden geladen …</value>
+  </data>
+  <data name="Fo_NobodyIndividual" xml:space="preserve">
+    <value>Keine einzelne Person hat hier Zugriff.</value>
+  </data>
+  <data name="Fo_NoFindings" xml:space="preserve">
+    <value>Für diesen Ordner gibt es keine Befunde.</value>
+  </data>
+  <data name="Fo_NoFolders" xml:space="preserve">
+    <value>In diesem Lauf sind keine Ordner gespeichert.</value>
+  </data>
+  <data name="Fo_NoOwnPermissions" xml:space="preserve">
+    <value>Ohne eigene Rechte</value>
+  </data>
+  <data name="Fo_NoPersonNoGroups" xml:space="preserve">
+    <value>Keine einzelne Person gefunden – der Lauf wurde ohne Auflösung der Gruppen erstellt.</value>
+  </data>
+  <data name="Fo_NoRun" xml:space="preserve">
+    <value>Kein Lauf geladen. Starten Sie auf der Übersicht einen Scan oder öffnen Sie einen gespeicherten Lauf.</value>
+  </data>
+  <data name="Fo_NoRunShort" xml:space="preserve">
+    <value>Kein Lauf geladen.</value>
+  </data>
+  <data name="Fo_NoSearchMatch" xml:space="preserve">
+    <value>Kein gespeicherter Ordner passt zu „{0}“.</value>
+  </data>
+  <data name="Fo_NoShare" xml:space="preserve">
+    <value>keine Freigabe</value>
+  </data>
+  <data name="Fo_NotReadableCap" xml:space="preserve">
+    <value>Nicht lesbar</value>
+  </data>
+  <data name="Fo_NotStored" xml:space="preserve">
+    <value>„{0}“ ist in diesem Lauf nicht als Ordner gespeichert.</value>
+  </data>
+  <data name="Fo_Origin" xml:space="preserve">
+    <value>Herkunft</value>
+  </data>
+  <data name="Fo_OwnerUnknown" xml:space="preserve">
+    <value>Besitzer unbekannt</value>
+  </data>
+  <data name="Fo_PersonRowText" xml:space="preserve">
+    <value>{0}, Freigabe {1}, NTFS {2}, {3}</value>
+  </data>
+  <data name="Fo_ReducedByDeny" xml:space="preserve">
+    <value>Durch einen Verweigern-Eintrag eingeschränkt</value>
+  </data>
+  <data name="Fo_ScanRoot" xml:space="preserve">
+    <value>Scan-Wurzel</value>
+  </data>
+  <data name="Fo_Search" xml:space="preserve">
+    <value>Ordner suchen</value>
+  </data>
+  <data name="Fo_SearchResults" xml:space="preserve">
+    <value>Suchergebnisse</value>
+  </data>
+  <data name="Fo_SelectFolder" xml:space="preserve">
+    <value>Ordner links auswählen, um seine Berechtigungen zu sehen.</value>
+  </data>
+  <data name="Fo_ShareFact" xml:space="preserve">
+    <value>Freigabe {0}</value>
+  </data>
+  <data name="Fo_SharePermissionsTip" xml:space="preserve">
+    <value>Freigabe-Berechtigungen:
+{0}</value>
+  </data>
+  <data name="Fo_ShowFailed" xml:space="preserve">
+    <value>Der Ordner ließ sich nicht anzeigen</value>
+  </data>
+  <data name="Fo_ShowParent" xml:space="preserve">
+    <value>Übergeordneten Ordner anzeigen</value>
+  </data>
+  <data name="Fo_Tree" xml:space="preserve">
+    <value>Ordnerbaum</value>
+  </data>
+  <data name="Fo_TreeFailed" xml:space="preserve">
+    <value>Der Ordnerbaum ließ sich nicht aufbauen</value>
+  </data>
+  <data name="Fo_UnreadableWho" xml:space="preserve">
+    <value>Der Ordner ist nicht lesbar – wer hinein darf, lässt sich nicht bestimmen.</value>
+  </data>
+  <data name="Fo_WhoCanEnter" xml:space="preserve">
+    <value>Wer darf hier rein</value>
+  </data>
+  <data name="Fo_WhoCanEnterCount" xml:space="preserve">
+    <value>Wer darf hier rein ({0})</value>
+  </data>
+  <data name="Fo_WhoFailed" xml:space="preserve">
+    <value>„Wer darf hier rein“ ließ sich nicht berechnen</value>
+  </data>
   <data name="Identity_DirectoryErrorAccounts" xml:space="preserve">
     <value>Verzeichnisfehler beim Auflösen von Konten: {0}</value>
   </data>
@@ -555,6 +1118,165 @@
   <data name="Identity_UnknownError" xml:space="preserve">
     <value>unbekannter Fehler</value>
   </data>
+  <data name="Info_Anonymize" xml:space="preserve">
+    <value>Ohne Namen und Adressen</value>
+  </data>
+  <data name="Info_AnonymizeName" xml:space="preserve">
+    <value>Diagnosepaket ohne Namen, Pfade und Adressen</value>
+  </data>
+  <data name="Info_CliExample" xml:space="preserve">
+    <value>"C:\Program Files\Zutritt\Zutritt.exe" scan \\FS01 --vergleich --bericht D:\Berichte\Zutritt.pdf</value>
+  </data>
+  <data name="Info_CliExampleName" xml:space="preserve">
+    <value>Beispiel für die Befehlszeile</value>
+  </data>
+  <data name="Info_CliHeading" xml:space="preserve">
+    <value>Befehlszeile und geplante Aufgaben</value>
+  </data>
+  <data name="Info_CliIntro" xml:space="preserve">
+    <value>Dieselbe Zutritt.exe läuft auch ohne Fenster – zum Beispiel jede Woche als geplante Aufgabe mit Bericht zum Abzeichnen:</value>
+  </data>
+  <data name="Info_CliMore" xml:space="preserve">
+    <value>Alle Befehle und Optionen: Zutritt.exe --hilfe · Version und diese Angaben als Text: Zutritt.exe --info</value>
+  </data>
+  <data name="Info_Create" xml:space="preserve">
+    <value>Erstellen …</value>
+  </data>
+  <data name="Info_DbNotOpened" xml:space="preserve">
+    <value>{0} – konnte nicht geöffnet werden, Läufe werden nicht gespeichert</value>
+  </data>
+  <data name="Info_DemoDb" xml:space="preserve">
+    <value>{0} (Demo, wird beim Beenden gelöscht)</value>
+  </data>
+  <data name="Info_DiagFailed" xml:space="preserve">
+    <value>Das Diagnosepaket ließ sich nicht speichern: {0}</value>
+  </data>
+  <data name="Info_Diagnostics" xml:space="preserve">
+    <value>Diagnosepaket erstellen</value>
+  </data>
+  <data name="Info_DiagnosticsDescription" xml:space="preserve">
+    <value>Version, Systemangaben und Protokoll der letzten 7 Tage als ZIP für den Support.</value>
+  </data>
+  <data name="Info_DiagSavedAnon" xml:space="preserve">
+    <value>Diagnosepaket gespeichert: {0} – ohne Namen, Pfade und Adressen.</value>
+  </data>
+  <data name="Info_DiagSavedFull" xml:space="preserve">
+    <value>Diagnosepaket gespeichert: {0} – mit Namen und Pfaden, bitte nur vertraulich weitergeben.</value>
+  </data>
+  <data name="Info_ExitCode0" xml:space="preserve">
+    <value>Exitcode 0</value>
+  </data>
+  <data name="Info_ExitCode1" xml:space="preserve">
+    <value>Exitcode 1</value>
+  </data>
+  <data name="Info_ExitCode2" xml:space="preserve">
+    <value>Exitcode 2</value>
+  </data>
+  <data name="Info_ExitCode3" xml:space="preserve">
+    <value>Exitcode 3</value>
+  </data>
+  <data name="Info_ExitError" xml:space="preserve">
+    <value>Fehler oder Abbruch</value>
+  </data>
+  <data name="Info_ExitMediumLong" xml:space="preserve">
+    <value>Befunde „Mittel“, aber keine „Hoch“</value>
+  </data>
+  <data name="Info_HelpLinks" xml:space="preserve">
+    <value>Hilfe und Links</value>
+  </data>
+  <data name="Info_Keyboard" xml:space="preserve">
+    <value>Tastatur</value>
+  </data>
+  <data name="Info_KeyboardText" xml:space="preserve">
+    <value>Strg+1 bis Strg+7 wechselt zwischen den Seiten · Strg+F springt ins Suchfeld · Eingabe öffnet den gewählten Lauf, Entf löscht ihn</value>
+  </data>
+  <data name="Info_LanguageDescription" xml:space="preserve">
+    <value>Folgt Windows, wenn hier nichts gewählt ist, und gilt ab dem nächsten Start. Vorgabe für alle Benutzer: %ProgramData%\Zutritt\settings.json, für Skripte: Umgebungsvariable ZUTRITT_LANGUAGE.</value>
+  </data>
+  <data name="Info_LanguageForced" xml:space="preserve">
+    <value>Vorgegeben durch die Umgebungsvariable {0} – die Wahl hier gilt erst ohne sie.</value>
+  </data>
+  <data name="Info_LanguageNotSaved" xml:space="preserve">
+    <value>Die Sprache ließ sich nicht speichern: {0}</value>
+  </data>
+  <data name="Info_LanguageRestart" xml:space="preserve">
+    <value>Die Sprache wechselt beim nächsten Start von Zutritt.</value>
+  </data>
+  <data name="Info_LanguageSystem" xml:space="preserve">
+    <value>Wie Windows ({0})</value>
+  </data>
+  <data name="Info_License" xml:space="preserve">
+    <value>Lizenz</value>
+  </data>
+  <data name="Info_LicenseDescription" xml:space="preserve">
+    <value>Freie Nutzung, Änderung und Weitergabe, solange Copyright und Lizenztext erhalten bleiben.</value>
+  </data>
+  <data name="Info_LicenseMissing" xml:space="preserve">
+    <value>Der Lizenztext fehlt in dieser Ausgabe von Zutritt</value>
+  </data>
+  <data name="Info_MissingAt" xml:space="preserve">
+    <value>{0} – sie stehen unter {1}.</value>
+  </data>
+  <data name="Info_NoDb" xml:space="preserve">
+    <value>Keine Datenbank geöffnet – Läufe werden nicht gespeichert</value>
+  </data>
+  <data name="Info_NoticesDescription" xml:space="preserve">
+    <value>Bibliotheken, die Zutritt mitbringt – mit Version, Quelle, Copyright und Lizenztext.</value>
+  </data>
+  <data name="Info_NoticesMissing" xml:space="preserve">
+    <value>Die Drittanbieter-Lizenzen fehlen in dieser Ausgabe von Zutritt</value>
+  </data>
+  <data name="Info_OpenFolder" xml:space="preserve">
+    <value>Ordner öffnen</value>
+  </data>
+  <data name="Info_OpenImprint" xml:space="preserve">
+    <value>Impressum öffnen</value>
+  </data>
+  <data name="Info_OpenPrivacy" xml:space="preserve">
+    <value>Datenschutz öffnen</value>
+  </data>
+  <data name="Info_OpenSource" xml:space="preserve">
+    <value>Quellcode auf GitHub öffnen</value>
+  </data>
+  <data name="Info_OpenSupport" xml:space="preserve">
+    <value>Hilfe und Support öffnen</value>
+  </data>
+  <data name="Info_OpenWebsite" xml:space="preserve">
+    <value>Webseite öffnen</value>
+  </data>
+  <data name="Info_PrivacyDescription" xml:space="preserve">
+    <value>Welche Daten Zutritt wo speichert, welche Verbindungen es aufbaut und wie man alles löscht.</value>
+  </data>
+  <data name="Info_ReadOnlyDescription" xml:space="preserve">
+    <value>Zutritt liest Freigaben, NTFS-Rechte und Gruppenmitgliedschaften. An Rechten, Dateien und Konten ändert es nichts. {0}</value>
+  </data>
+  <data name="Info_ReadOnlyHeader" xml:space="preserve">
+    <value>Nur lesend, Daten bleiben hier</value>
+  </data>
+  <data name="Info_SaveDiagnostics" xml:space="preserve">
+    <value>Diagnosepaket speichern</value>
+  </data>
+  <data name="Info_Show" xml:space="preserve">
+    <value>Anzeigen</value>
+  </data>
+  <data name="Info_ShowLicense" xml:space="preserve">
+    <value>Lizenztext anzeigen</value>
+  </data>
+  <data name="Info_SupportDescription" xml:space="preserve">
+    <value>Fehler melden und Fragen stellen über GitHub – verbindlich mit einem Supportvertrag.</value>
+  </data>
+  <data name="Info_Version" xml:space="preserve">
+    <value>Version {0} · .NET {1}</value>
+  </data>
+  <data name="Info_VersionBuild" xml:space="preserve">
+    <value>Version {0} · Build {1} · .NET {2}</value>
+  </data>
+  <data name="Info_WebsiteDescription" xml:space="preserve">
+    <value>ICT-Baden auf GitHub</value>
+  </data>
+  <data name="Info_ZipFilter" xml:space="preserve">
+    <value>ZIP-Archiv (*.zip)|*.zip</value>
+  </data>
   <data name="Kind_BuiltIn" xml:space="preserve">
     <value>Integriert</value>
   </data>
@@ -563,6 +1285,9 @@
   </data>
   <data name="Kind_Group" xml:space="preserve">
     <value>Gruppe</value>
+  </data>
+  <data name="Kind_KnownAccount" xml:space="preserve">
+    <value>Bekanntes Konto</value>
   </data>
   <data name="Kind_Orphaned" xml:space="preserve">
     <value>Verwaist</value>
@@ -578,6 +1303,260 @@
   </data>
   <data name="Local_Unreadable" xml:space="preserve">
     <value>Lokale Konten und Gruppen nicht lesbar: {0}. Mitglieder lokaler und VORDEFINIERT-Gruppen fehlen, lokale Konten bleiben „Unbekannt“.</value>
+  </data>
+  <data name="Nav_Comparison" xml:space="preserve">
+    <value>Vergleich</value>
+  </data>
+  <data name="Nav_Findings" xml:space="preserve">
+    <value>Befunde</value>
+  </data>
+  <data name="Nav_Folders" xml:space="preserve">
+    <value>Ordner</value>
+  </data>
+  <data name="Nav_Info" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="Nav_Overview" xml:space="preserve">
+    <value>Übersicht</value>
+  </data>
+  <data name="Nav_People" xml:space="preserve">
+    <value>Personen</value>
+  </data>
+  <data name="Nav_Report" xml:space="preserve">
+    <value>Bericht</value>
+  </data>
+  <data name="Ov_AccessChangesMany" xml:space="preserve">
+    <value>{0} Zugriffsänderungen</value>
+  </data>
+  <data name="Ov_AccessChangesOne" xml:space="preserve">
+    <value>{0} Zugriffsänderung</value>
+  </data>
+  <data name="Ov_BadDeepFrom" xml:space="preserve">
+    <value>„Ausnahme gilt als tief ab Ebene“: bitte eine ganze Zahl ab 1 eintragen.</value>
+  </data>
+  <data name="Ov_BadDepth" xml:space="preserve">
+    <value>Maximale Tiefe: bitte eine ganze Zahl ab 0 eintragen oder leer lassen.</value>
+  </data>
+  <data name="Ov_Cancelling" xml:space="preserve">
+    <value>Wird abgebrochen …</value>
+  </data>
+  <data name="Ov_ChangesSince" xml:space="preserve">
+    <value>Seit dem Lauf vom {0}: {1}, {2} und {3}.</value>
+  </data>
+  <data name="Ov_ChooseFolder" xml:space="preserve">
+    <value>Ordner wählen …</value>
+  </data>
+  <data name="Ov_ChooseFolderTitle" xml:space="preserve">
+    <value>Ordner für den Scan wählen</value>
+  </data>
+  <data name="Ov_CurrentlyLoaded" xml:space="preserve">
+    <value>Gerade geladen</value>
+  </data>
+  <data name="Ov_DeepFrom" xml:space="preserve">
+    <value>Ausnahme gilt als tief ab Ebene</value>
+  </data>
+  <data name="Ov_DeepFromHint" xml:space="preserve">
+    <value>für „tief versteckte Ausnahme“</value>
+  </data>
+  <data name="Ov_DeleteConfirm" xml:space="preserve">
+    <value>Den Lauf vom {0} ({1}) endgültig löschen?
+
+Berichte, die schon gespeichert sind, bleiben erhalten.</value>
+  </data>
+  <data name="Ov_DeleteRun" xml:space="preserve">
+    <value>Lauf löschen</value>
+  </data>
+  <data name="Ov_DemoDatabase" xml:space="preserve">
+    <value>Demo-Datenbank, wird beim Beenden gelöscht: {0}</value>
+  </data>
+  <data name="Ov_DemoSuffix" xml:space="preserve">
+    <value> · Demo</value>
+  </data>
+  <data name="Ov_Duration" xml:space="preserve">
+    <value> · Dauer {0}</value>
+  </data>
+  <data name="Ov_Elapsed" xml:space="preserve">
+    <value>Laufzeit</value>
+  </data>
+  <data name="Ov_FindingsHigh" xml:space="preserve">
+    <value>Befunde Hoch</value>
+  </data>
+  <data name="Ov_FindingsInfo" xml:space="preserve">
+    <value>Hinweise (Info)</value>
+  </data>
+  <data name="Ov_FindingsLow" xml:space="preserve">
+    <value>Befunde Niedrig</value>
+  </data>
+  <data name="Ov_FindingsMedium" xml:space="preserve">
+    <value>Befunde Mittel</value>
+  </data>
+  <data name="Ov_FoldersCheckedFiles" xml:space="preserve">
+    <value>Ordner geprüft (+ {0} Dateien)</value>
+  </data>
+  <data name="Ov_FoldersCounted" xml:space="preserve">
+    <value>Ordner gezählt</value>
+  </data>
+  <data name="Ov_Hero" xml:space="preserve">
+    <value>Wer darf auf Ihre Freigaben zugreifen?</value>
+  </data>
+  <data name="Ov_HighCount" xml:space="preserve">
+    <value>{0} Hoch</value>
+  </data>
+  <data name="Ov_IncludeFiles" xml:space="preserve">
+    <value>Dateien einbeziehen</value>
+  </data>
+  <data name="Ov_IncludeFilesTip" xml:space="preserve">
+    <value>Auch Dateien mit eigenen Rechten erfassen – dauert deutlich länger.</value>
+  </data>
+  <data name="Ov_Intro" xml:space="preserve">
+    <value>Zutritt liest Freigaben und NTFS-Rechte, löst Gruppen bis zur Person auf und zeigt, was auffällt – mit Vergleich zum letzten Lauf und Bericht zum Abzeichnen. Tragen Sie unten ein Ziel ein und starten Sie den Scan.</value>
+  </data>
+  <data name="Ov_MaxDepth" xml:space="preserve">
+    <value>Maximale Tiefe</value>
+  </data>
+  <data name="Ov_MaxDepthHint" xml:space="preserve">
+    <value>leer = unbegrenzt</value>
+  </data>
+  <data name="Ov_NeedTarget" xml:space="preserve">
+    <value>Bitte mindestens ein Ziel eintragen – z. B. \\server\freigabe oder „.“ für die Freigaben dieses Rechners.</value>
+  </data>
+  <data name="Ov_NewFindingsMany" xml:space="preserve">
+    <value>{0} neue Befunde</value>
+  </data>
+  <data name="Ov_NewFindingsOne" xml:space="preserve">
+    <value>{0} neuer Befund</value>
+  </data>
+  <data name="Ov_NewScan" xml:space="preserve">
+    <value>Neuer Scan</value>
+  </data>
+  <data name="Ov_NoDatabase" xml:space="preserve">
+    <value>Keine Datenbank geöffnet – Läufe werden in dieser Sitzung nicht gespeichert.</value>
+  </data>
+  <data name="Ov_NoDatabaseNoRuns" xml:space="preserve">
+    <value>Ohne Datenbank gibt es keine gespeicherten Läufe.</value>
+  </data>
+  <data name="Ov_NoRuns" xml:space="preserve">
+    <value>Noch keine gespeicherten Läufe – nach dem ersten Scan erscheint er hier.</value>
+  </data>
+  <data name="Ov_NotSaved" xml:space="preserve">
+    <value>Scan abgeschlossen, aber nicht gespeichert: {0} Der Lauf ist geladen – bitte jetzt unter „Bericht“ einen Bericht erstellen, sonst ist er nach dem Schließen verloren.</value>
+  </data>
+  <data name="Ov_Options" xml:space="preserve">
+    <value>Optionen</value>
+  </data>
+  <data name="Ov_Preparing" xml:space="preserve">
+    <value>Scan wird vorbereitet …</value>
+  </data>
+  <data name="Ov_ReadOnly" xml:space="preserve">
+    <value>Es wird nur gelesen – an Rechten und Dateien ändert Zutritt nichts.</value>
+  </data>
+  <data name="Ov_RecentRuns" xml:space="preserve">
+    <value>Letzte Läufe</value>
+  </data>
+  <data name="Ov_RefreshList" xml:space="preserve">
+    <value>Liste aktualisieren</value>
+  </data>
+  <data name="Ov_ResolvedMany" xml:space="preserve">
+    <value>{0} behobene</value>
+  </data>
+  <data name="Ov_ResolvedOne" xml:space="preserve">
+    <value>{0} behobener</value>
+  </data>
+  <data name="Ov_ResolveGroups" xml:space="preserve">
+    <value>Gruppen bis zur Person auflösen</value>
+  </data>
+  <data name="Ov_ResolveGroupsTip" xml:space="preserve">
+    <value>Lokale Gruppen und – falls erreichbar – Active-Directory-Gruppen bis zum einzelnen Konto auflösen.</value>
+  </data>
+  <data name="Ov_ResultMeta" xml:space="preserve">
+    <value>{0}{1} · {2} auf {3}</value>
+  </data>
+  <data name="Ov_RunDeleted" xml:space="preserve">
+    <value>Lauf vom {0} gelöscht.</value>
+  </data>
+  <data name="Ov_RunLoaded" xml:space="preserve">
+    <value>Lauf vom {0} geladen ({1}).</value>
+  </data>
+  <data name="Ov_RunNotDeleted" xml:space="preserve">
+    <value>Der Lauf ließ sich nicht löschen</value>
+  </data>
+  <data name="Ov_RunNotOpened" xml:space="preserve">
+    <value>Der Lauf ließ sich nicht öffnen</value>
+  </data>
+  <data name="Ov_RunRowText" xml:space="preserve">
+    <value>{0}, {1}, {2} Befunde</value>
+  </data>
+  <data name="Ov_RunsUnreadable" xml:space="preserve">
+    <value>Die gespeicherten Läufe ließen sich nicht lesen</value>
+  </data>
+  <data name="Ov_SavedIn" xml:space="preserve">
+    <value>Gespeichert in {0}</value>
+  </data>
+  <data name="Ov_SavingComparing" xml:space="preserve">
+    <value>Speichern und vergleichen …</value>
+  </data>
+  <data name="Ov_ScanCancelled" xml:space="preserve">
+    <value>Scan abgebrochen – es wurde nichts gespeichert.</value>
+  </data>
+  <data name="Ov_ScanDoneMany" xml:space="preserve">
+    <value>Scan abgeschlossen: {0} Ordner geprüft, {1} Befunde.</value>
+  </data>
+  <data name="Ov_ScanDoneOne" xml:space="preserve">
+    <value>Scan abgeschlossen: {0} Ordner geprüft, {1} Befund.</value>
+  </data>
+  <data name="Ov_ScanFailed" xml:space="preserve">
+    <value>Der Scan ist fehlgeschlagen: {0}</value>
+  </data>
+  <data name="Ov_ScanRunning" xml:space="preserve">
+    <value>Scan läuft …</value>
+  </data>
+  <data name="Ov_ShowChanges" xml:space="preserve">
+    <value>Änderungen ansehen</value>
+  </data>
+  <data name="Ov_ShowFindings" xml:space="preserve">
+    <value>Befunde ansehen</value>
+  </data>
+  <data name="Ov_SkipAdmin" xml:space="preserve">
+    <value>Admin-Freigaben überspringen</value>
+  </data>
+  <data name="Ov_SkipAdminTip" xml:space="preserve">
+    <value>C$, ADMIN$, IPC$ und print$ nicht prüfen.</value>
+  </data>
+  <data name="Ov_StartScan" xml:space="preserve">
+    <value>Scan starten</value>
+  </data>
+  <data name="Ov_TargetsHint" xml:space="preserve">
+    <value>\\server\freigabe, D:\Daten oder . für alle Freigaben dieses Rechners</value>
+  </data>
+  <data name="Ov_TargetsLabel" xml:space="preserve">
+    <value>Ziele – eines pro Zeile</value>
+  </data>
+  <data name="Ov_TargetsName" xml:space="preserve">
+    <value>Ziele, eines pro Zeile</value>
+  </data>
+  <data name="Ov_WithOwnPermissions" xml:space="preserve">
+    <value>mit eigenen Rechten</value>
+  </data>
+  <data name="Page_ComparisonSubtitle" xml:space="preserve">
+    <value>Was hat sich seit dem letzten Lauf geändert?</value>
+  </data>
+  <data name="Page_FindingsSubtitle" xml:space="preserve">
+    <value>Was auffällt – nach Schwere geordnet, mit Erklärung und Empfehlung</value>
+  </data>
+  <data name="Page_FoldersSubtitle" xml:space="preserve">
+    <value>Wer darf hier rein?</value>
+  </data>
+  <data name="Page_InfoSubtitle" xml:space="preserve">
+    <value>Über Zutritt</value>
+  </data>
+  <data name="Page_OverviewSubtitle" xml:space="preserve">
+    <value>Neuen Scan starten oder einen gespeicherten Lauf öffnen</value>
+  </data>
+  <data name="Page_PeopleSubtitle" xml:space="preserve">
+    <value>Wo darf jemand überall hin?</value>
+  </data>
+  <data name="Page_ReportSubtitle" xml:space="preserve">
+    <value>Excel zum Weiterarbeiten, PDF zum Abzeichnen</value>
   </data>
   <data name="Pdf_AccessChangesIntro" xml:space="preserve">
     <value>Folge der Änderungen oben: wer jetzt effektiv mehr oder weniger darf (über alle Gruppen, nach Abzug von Verweigerungen) – {0} zuerst, je Ordner zusammengefasst. Jede einzelne Person mit Vorher und Nachher steht im Excel-Bericht (Blatt {1}).</value>
@@ -907,6 +1886,90 @@
   <data name="Pdf_UnreadableFolders" xml:space="preserve">
     <value>Nicht lesbare Ordner</value>
   </data>
+  <data name="Pe_AccessList" xml:space="preserve">
+    <value>Ordner, auf die die Person zugreifen darf</value>
+  </data>
+  <data name="Pe_AccessNote" xml:space="preserve">
+    <value>Ordner mit eigenen Rechten – Unterordner ohne eigene Rechte erben davon.</value>
+  </data>
+  <data name="Pe_AccessToMany" xml:space="preserve">
+    <value>Zugriff auf {0} Ordner</value>
+  </data>
+  <data name="Pe_AccessToOne" xml:space="preserve">
+    <value>Zugriff auf {0} Ordner</value>
+  </data>
+  <data name="Pe_AccountDisabled" xml:space="preserve">
+    <value>Konto deaktiviert</value>
+  </data>
+  <data name="Pe_CountFailed" xml:space="preserve">
+    <value>Die Zahl der Ordner je Person ließ sich nicht berechnen</value>
+  </data>
+  <data name="Pe_CountMany" xml:space="preserve">
+    <value>{0} Personen</value>
+  </data>
+  <data name="Pe_CountOne" xml:space="preserve">
+    <value>{0} Person</value>
+  </data>
+  <data name="Pe_DisabledSuffix" xml:space="preserve">
+    <value>, deaktiviert</value>
+  </data>
+  <data name="Pe_DomainAccount" xml:space="preserve">
+    <value>Domänenkonto</value>
+  </data>
+  <data name="Pe_FolderCountMany" xml:space="preserve">
+    <value>{0} Ordner</value>
+  </data>
+  <data name="Pe_FolderCountOne" xml:space="preserve">
+    <value>{0} Ordner</value>
+  </data>
+  <data name="Pe_LocalAccount" xml:space="preserve">
+    <value>Lokales Konto</value>
+  </data>
+  <data name="Pe_MemberOf" xml:space="preserve">
+    <value>Mitglied in</value>
+  </data>
+  <data name="Pe_MemberOfCount" xml:space="preserve">
+    <value>Mitglied in ({0}, auch über verschachtelte Gruppen)</value>
+  </data>
+  <data name="Pe_NoAccess" xml:space="preserve">
+    <value>Diese Person hat auf keinen der gespeicherten Ordner Zugriff.</value>
+  </data>
+  <data name="Pe_NoGroup" xml:space="preserve">
+    <value>Mitglied in keiner Gruppe dieses Laufs</value>
+  </data>
+  <data name="Pe_NoMatch" xml:space="preserve">
+    <value>Niemand passt zu „{0}“.</value>
+  </data>
+  <data name="Pe_NoUsers" xml:space="preserve">
+    <value>In diesem Lauf kommen keine Benutzerkonten vor.</value>
+  </data>
+  <data name="Pe_NoUsersNoGroups" xml:space="preserve">
+    <value>Keine Benutzerkonten – der Lauf wurde ohne Auflösung der Gruppen erstellt.</value>
+  </data>
+  <data name="Pe_NtfsNoShare" xml:space="preserve">
+    <value>NTFS: {0} · ohne Freigabe-Rechte</value>
+  </data>
+  <data name="Pe_NtfsViaShare" xml:space="preserve">
+    <value>NTFS: {0} · über die Freigabe: {1}</value>
+  </data>
+  <data name="Pe_OfWhichDisabled" xml:space="preserve">
+    <value>, davon {0} deaktiviert</value>
+  </data>
+  <data name="Pe_RightsFailed" xml:space="preserve">
+    <value>Die Rechte der Person ließen sich nicht berechnen</value>
+  </data>
+  <data name="Pe_Search" xml:space="preserve">
+    <value>Personen suchen</value>
+  </data>
+  <data name="Pe_SearchHint" xml:space="preserve">
+    <value>Name oder Konto suchen</value>
+  </data>
+  <data name="Pe_SelectPerson" xml:space="preserve">
+    <value>Person links auswählen, um zu sehen, wo sie überall hin darf.</value>
+  </data>
+  <data name="Pe_ShareCaps" xml:space="preserve">
+    <value>Die Freigabe-Berechtigung begrenzt das NTFS-Recht</value>
+  </data>
   <data name="Phase_Accounts" xml:space="preserve">
     <value>Konten</value>
   </data>
@@ -1116,6 +2179,114 @@
   </data>
   <data name="Rights_WriteAttributes" xml:space="preserve">
     <value>Attribute schreiben</value>
+  </data>
+  <data name="Rp_After" xml:space="preserve">
+    <value> nach {0}</value>
+  </data>
+  <data name="Rp_ComparisonWith" xml:space="preserve">
+    <value>Vergleich mit dem Lauf vom {0}: neue und behobene Befunde, geänderte Rechte und Mitgliedschaften als eigener Abschnitt.</value>
+  </data>
+  <data name="Rp_Creating" xml:space="preserve">
+    <value>Bericht wird erstellt …</value>
+  </data>
+  <data name="Rp_Excel" xml:space="preserve">
+    <value>Excel-Bericht</value>
+  </data>
+  <data name="Rp_ExcelDescription" xml:space="preserve">
+    <value>Zum Weiterarbeiten: Übersicht, Befunde, Ordner &amp; Rechte, Personen, Gruppen, Freigaben und – mit Vergleich – Änderungen, jeweils mit Filtern.</value>
+  </data>
+  <data name="Rp_ExcelFilter" xml:space="preserve">
+    <value>Excel-Arbeitsmappe (*.xlsx)|*.xlsx</value>
+  </data>
+  <data name="Rp_ExcelSaved" xml:space="preserve">
+    <value>Excel-Bericht gespeichert</value>
+  </data>
+  <data name="Rp_FolderOpenFailed" xml:space="preserve">
+    <value>Der Ordner ließ sich nicht öffnen: {0}</value>
+  </data>
+  <data name="Rp_IncludeChanges" xml:space="preserve">
+    <value>Änderungen seit dem letzten Lauf aufnehmen</value>
+  </data>
+  <data name="Rp_IncludeChangesDescription" xml:space="preserve">
+    <value>Neue und behobene Befunde, geänderte Rechte und Mitgliedschaften als eigener Abschnitt.</value>
+  </data>
+  <data name="Rp_NoEarlier" xml:space="preserve">
+    <value>Es gibt keinen früheren Lauf zum Vergleichen – der Bericht enthält dann keinen Abschnitt „Änderungen“.</value>
+  </data>
+  <data name="Rp_NoRunText" xml:space="preserve">
+    <value>Laden Sie auf der Übersicht einen Lauf oder starten Sie einen Scan – dann lässt sich hier der Bericht speichern.</value>
+  </data>
+  <data name="Rp_OpenFailed" xml:space="preserve">
+    <value>Die Datei ließ sich nicht öffnen: {0}</value>
+  </data>
+  <data name="Rp_Pdf" xml:space="preserve">
+    <value>PDF-Bericht</value>
+  </data>
+  <data name="Rp_PdfDescription" xml:space="preserve">
+    <value>Zum Ablegen und Abzeichnen: Deckblatt, Zusammenfassung, Befunde, Freigaben, Ordner mit eigenen Rechten, Personen und Abzeichnen-Block.</value>
+  </data>
+  <data name="Rp_PdfFilter" xml:space="preserve">
+    <value>PDF-Dokument (*.pdf)|*.pdf</value>
+  </data>
+  <data name="Rp_PdfSaved" xml:space="preserve">
+    <value>PDF-Bericht gespeichert</value>
+  </data>
+  <data name="Rp_Preparing" xml:space="preserve">
+    <value>Wird vorbereitet …</value>
+  </data>
+  <data name="Rp_ReportFor" xml:space="preserve">
+    <value>Bericht für {0}</value>
+  </data>
+  <data name="Rp_RunSummaryHighMany" xml:space="preserve">
+    <value>Lauf vom {0}: {1} Ordner geprüft, {2} Befunde, davon {3} „Hoch“.</value>
+  </data>
+  <data name="Rp_RunSummaryHighOne" xml:space="preserve">
+    <value>Lauf vom {0}: {1} Ordner geprüft, {2} Befund, davon {3} „Hoch“.</value>
+  </data>
+  <data name="Rp_RunSummaryMany" xml:space="preserve">
+    <value>Lauf vom {0}: {1} Ordner geprüft, {2} Befunde.</value>
+  </data>
+  <data name="Rp_RunSummaryOne" xml:space="preserve">
+    <value>Lauf vom {0}: {1} Ordner geprüft, {2} Befund.</value>
+  </data>
+  <data name="Rp_Save" xml:space="preserve">
+    <value>Bericht speichern</value>
+  </data>
+  <data name="Rp_SaveExcel" xml:space="preserve">
+    <value>Excel-Bericht speichern …</value>
+  </data>
+  <data name="Rp_SaveExcelTitle" xml:space="preserve">
+    <value>Excel-Bericht speichern</value>
+  </data>
+  <data name="Rp_SaveFailed" xml:space="preserve">
+    <value>Der Bericht ließ sich nicht speichern: {0}</value>
+  </data>
+  <data name="Rp_SavePdf" xml:space="preserve">
+    <value>PDF-Bericht speichern …</value>
+  </data>
+  <data name="Rp_SavePdfTitle" xml:space="preserve">
+    <value>PDF-Bericht speichern</value>
+  </data>
+  <data name="Rp_Scheduled" xml:space="preserve">
+    <value>Regelmäßig und ohne Klicken: als geplante Aufgabe mit „Zutritt.exe scan … ‑‑vergleich ‑‑bericht …“ (siehe Info).</value>
+  </data>
+  <data name="Rp_ShowInFolder" xml:space="preserve">
+    <value>Im Ordner zeigen</value>
+  </data>
+  <data name="Rp_SignOff" xml:space="preserve">
+    <value>Abzeichnen</value>
+  </data>
+  <data name="Rp_SignOffBlock" xml:space="preserve">
+    <value>Am Ende des PDF-Berichts steht ein Abzeichnen-Block mit „Geprüft von“, „Datum“, „Unterschrift“ und „Bemerkungen“.</value>
+  </data>
+  <data name="Rp_SignOffWhy" xml:space="preserve">
+    <value>Ausgedruckt und unterschrieben – oder mit elektronischer Unterschrift im PDF – belegt er die regelmäßige Überprüfung der Zugriffsrechte, wie sie Audits nach GMP (Annex 11), ISO 27001 (A.5.18) oder NIS2 erwarten. Unter „Bemerkungen“ gehört, welche Befunde bewusst so bleiben und warum.</value>
+  </data>
+  <data name="Rp_SuggestedName" xml:space="preserve">
+    <value>Vorschlag für den Dateinamen: {0}</value>
+  </data>
+  <data name="Rp_Title" xml:space="preserve">
+    <value>Bericht zum geladenen Lauf</value>
   </data>
   <data name="Rule_ZT01_Explanation" xml:space="preserve">
     <value>Eine Gruppe, die praktisch alle Personen umfasst (z. B. „Jeder“, „Authentifizierte Benutzer“, „Domänen-Benutzer“), darf hier Dateien anlegen oder ändern. Damit kann jede angemeldete Person Daten verfälschen, löschen oder – etwa durch Schadsoftware – verschlüsseln.</value>
@@ -1410,6 +2581,18 @@
   </data>
   <data name="Sheet_Shares" xml:space="preserve">
     <value>Freigaben</value>
+  </data>
+  <data name="Shot_EmptyImage" xml:space="preserve">
+    <value>WPF hat ein leeres Bild gezeichnet. Das passiert in einer getrennten Sitzung (Remotedesktop geschlossen, ohne abzumelden) – in einer angemeldeten, verbundenen Sitzung erneut starten.</value>
+  </data>
+  <data name="Shot_Start" xml:space="preserve">
+    <value>Zutritt {0} – Screenshots nach {1}</value>
+  </data>
+  <data name="Shot_Written" xml:space="preserve">
+    <value>{0} Bilder geschrieben.</value>
+  </data>
+  <data name="Shot_WrongSize" xml:space="preserve">
+    <value>Das Fenster hat {0:0}×{1:0} statt {2:0}×{3:0} Punkte – die Bilder wären verzerrt.</value>
   </data>
   <data name="Sid_AccessControlAssistanceOperators" xml:space="preserve">
     <value>Zugriffssteuerungs-Unterstützungsoperatoren</value>
@@ -1728,6 +2911,93 @@
   </data>
   <data name="Time_Seconds" xml:space="preserve">
     <value>{0:0} Sekunden</value>
+  </data>
+  <data name="Ui_AppSubtitle" xml:space="preserve">
+    <value>Wer darf wohin?</value>
+  </data>
+  <data name="Ui_BrowserFailed" xml:space="preserve">
+    <value>Der Browser ließ sich nicht öffnen: {0}</value>
+  </data>
+  <data name="Ui_Cancel" xml:space="preserve">
+    <value>Abbrechen</value>
+  </data>
+  <data name="Ui_Close" xml:space="preserve">
+    <value>Schließen</value>
+  </data>
+  <data name="Ui_CloseNotice" xml:space="preserve">
+    <value>Meldung schließen</value>
+  </data>
+  <data name="Ui_CloseTitle" xml:space="preserve">
+    <value>Zutritt beenden</value>
+  </data>
+  <data name="Ui_CloseWhileScanning" xml:space="preserve">
+    <value>Ein Scan läuft noch. Zutritt trotzdem beenden? Der Lauf wird dann nicht gespeichert.</value>
+  </data>
+  <data name="Ui_DateTime" xml:space="preserve">
+    <value>{0}, {1}</value>
+  </data>
+  <data name="Ui_Demo" xml:space="preserve">
+    <value>Demo</value>
+  </data>
+  <data name="Ui_DemoTitle" xml:space="preserve">
+    <value>Zutritt – Demo</value>
+  </data>
+  <data name="Ui_DurationHours" xml:space="preserve">
+    <value>{0}:{1:00}:{2:00} h</value>
+  </data>
+  <data name="Ui_DurationMinutes" xml:space="preserve">
+    <value>{0}:{1:00} min</value>
+  </data>
+  <data name="Ui_FailureWithReason" xml:space="preserve">
+    <value>{0}: {1}</value>
+  </data>
+  <data name="Ui_FileAndMore" xml:space="preserve">
+    <value>-und-{0}-weitere</value>
+  </data>
+  <data name="Ui_FileRun" xml:space="preserve">
+    <value>Lauf</value>
+  </data>
+  <data name="Ui_LinkBlocked" xml:space="preserve">
+    <value>Der Link „{0}“ wurde nicht geöffnet: Erlaubt sind nur Adressen mit http oder https.</value>
+  </data>
+  <data name="Ui_LocalShares" xml:space="preserve">
+    <value>Freigaben dieses Rechners</value>
+  </data>
+  <data name="Ui_NoFindings" xml:space="preserve">
+    <value>Keine Befunde</value>
+  </data>
+  <data name="Ui_NoRunLoaded" xml:space="preserve">
+    <value>Kein Lauf geladen</value>
+  </data>
+  <data name="Ui_NoTarget" xml:space="preserve">
+    <value>ohne Ziel</value>
+  </data>
+  <data name="Ui_Off" xml:space="preserve">
+    <value>Aus</value>
+  </data>
+  <data name="Ui_On" xml:space="preserve">
+    <value>Ein</value>
+  </data>
+  <data name="Ui_Open" xml:space="preserve">
+    <value>Öffnen</value>
+  </data>
+  <data name="Ui_ReportFileName" xml:space="preserve">
+    <value>Zutritt-Bericht-{0}-{1}</value>
+  </data>
+  <data name="Ui_SortedAscending" xml:space="preserve">
+    <value>{0}, aufsteigend sortiert</value>
+  </data>
+  <data name="Ui_SortedDescending" xml:space="preserve">
+    <value>{0}, absteigend sortiert</value>
+  </data>
+  <data name="Ui_StartOrOpen" xml:space="preserve">
+    <value>Scan starten oder Lauf öffnen</value>
+  </data>
+  <data name="Ui_TargetAndMore" xml:space="preserve">
+    <value>{0} und {1} weitere</value>
+  </data>
+  <data name="Ui_VersionWithBuild" xml:space="preserve">
+    <value>{0} (Build {1})</value>
   </data>
   <data name="Win_AccessDenied" xml:space="preserve">
     <value>Zugriff verweigert</value>

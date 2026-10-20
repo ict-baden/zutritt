@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Zutritt.Core.Analysis;
 using Zutritt.Core.Model;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.UI.Pages;
 
@@ -23,7 +24,7 @@ public partial class PeoplePage : UserControl, IPage, ISearchPage
         public string Initials { get; } = Ui.Initials(principal.DisplayName, principal.Label);
         public bool IsDisabled => Principal.IsDisabled;
         internal string SearchText { get; } = $"{principal.DisplayName}\n{principal.Label}";
-        public override string ToString() => $"{DisplayName}, {Account}" + (IsDisabled ? ", deaktiviert" : "");
+        public override string ToString() => $"{DisplayName}, {Account}" + (IsDisabled ? Strings.Pe_DisabledSuffix : "");
 
         public int? FolderCount
         {
@@ -39,8 +40,7 @@ public partial class PeoplePage : UserControl, IPage, ISearchPage
         public string FolderCountText => _count switch
         {
             null => "…",
-            1 => "1 Ordner",
-            { } n => $"{Labels.Number(n)} Ordner",
+            { } n => Texts.Format(Texts.Plural(n, Strings.Pe_FolderCountOne, Strings.Pe_FolderCountMany), Labels.Number(n)),
         };
     }
 
@@ -157,7 +157,7 @@ public partial class PeoplePage : UserControl, IPage, ISearchPage
         if (_waiting.Count == 0 || !_countTask.IsCompleted) return;
         var task = CountWaitingAsync(scan, cts.Token);
         _countTask = task;
-        Ui.Run(_state, () => task, "Die Zahl der Ordner je Person ließ sich nicht berechnen");
+        Ui.Run(_state, () => task, Strings.Pe_CountFailed);
     }
 
     /// <summary>Angelegte Listeneinträge – die sichtbaren plus den kleinen Vorrat der Virtualisierung.</summary>
@@ -212,13 +212,14 @@ public partial class PeoplePage : UserControl, IPage, ISearchPage
 
         int disabled = _all.Count(p => p.IsDisabled);
         ListCaption.Text = _shown is null ? ""
-            : $"{Labels.Number(_all.Count)} {(_all.Count == 1 ? "Person" : "Personen")}" + (disabled > 0 ? $", davon {Labels.Number(disabled)} deaktiviert" : "");
-        if (_shown is null) ShowListMessage("Kein Lauf geladen.");
+            : Texts.Format(Texts.Plural(_all.Count, Strings.Pe_CountOne, Strings.Pe_CountMany), Labels.Number(_all.Count))
+              + (disabled > 0 ? Texts.Format(Strings.Pe_OfWhichDisabled, Labels.Number(disabled)) : "");
+        if (_shown is null) ShowListMessage(Strings.Fo_NoRunShort);
         else if (_all.Count == 0)
             ShowListMessage(_shown.Request.ResolveGroups
-                ? "In diesem Lauf kommen keine Benutzerkonten vor."
-                : "Keine Benutzerkonten – der Lauf wurde ohne Auflösung der Gruppen erstellt.");
-        else if (items.Count == 0) ShowListMessage($"Niemand passt zu „{query}“.");
+                ? Strings.Pe_NoUsers
+                : Strings.Pe_NoUsersNoGroups);
+        else if (items.Count == 0) ShowListMessage(Texts.Format(Strings.Pe_NoMatch, query));
         else ListEmpty.Visibility = Visibility.Collapsed;
     }
 
@@ -239,7 +240,7 @@ public partial class PeoplePage : UserControl, IPage, ISearchPage
         {
             DetailRoot.Visibility = Visibility.Collapsed;
             DetailEmpty.Visibility = Visibility.Visible;
-            DetailEmpty.Text = _shown is null ? "Kein Lauf geladen." : "Person links auswählen, um zu sehen, wo sie überall hin darf.";
+            DetailEmpty.Text = _shown is null ? Strings.Fo_NoRunShort : Strings.Pe_SelectPerson;
             _detailTask = Task.CompletedTask;
             return;
         }
@@ -251,21 +252,21 @@ public partial class PeoplePage : UserControl, IPage, ISearchPage
         DetailName.Text = item.DisplayName;
         DetailAccount.Text = p.Label;
         Facts.Children.Clear();
-        if (p.IsDisabled) AddTag(Facts, "\uE7BA", "Konto deaktiviert", "SevMedium", "SevMediumBg");
-        AddTag(Facts, p.IsLocal ? "\uE770" : "\uE774", p.IsLocal ? "Lokales Konto" : "Domänenkonto");
+        if (p.IsDisabled) AddTag(Facts, "\uE7BA", Strings.Pe_AccountDisabled, "SevMedium", "SevMediumBg");
+        AddTag(Facts, p.IsLocal ? "\uE770" : "\uE774", p.IsLocal ? Strings.Pe_LocalAccount : Strings.Pe_DomainAccount);
         AddTag(Facts, "\uE8EC", p.Sid);
 
         Groups.Children.Clear();
         AccessTable.ItemsSource = null;
-        AccessTitle.Text = "Zugriff";
-        GroupsTitle.Text = "Mitglied in";
-        AccessStatus.Text = "Wird berechnet …";
+        AccessTitle.Text = Strings.Area_Access;
+        GroupsTitle.Text = Strings.Pe_MemberOf;
+        AccessStatus.Text = Strings.Fo_Calculating;
         AccessStatus.Visibility = Visibility.Visible;
 
         var scan = _shown;
         var task = ShowAccessAsync(scan, item, version);
         _detailTask = task;
-        Ui.Run(_state, () => task, "Die Rechte der Person ließen sich nicht berechnen");
+        Ui.Run(_state, () => task, Strings.Pe_RightsFailed);
     }
 
     private async Task ShowAccessAsync(ScanResult scan, PersonItem item, int version)
@@ -281,18 +282,18 @@ public partial class PeoplePage : UserControl, IPage, ISearchPage
             .ToList();
         foreach (var g in memberOf)
             AddTag(Groups, g.Known ? "\uE716" : "\uE902", g.Name, g.Known ? "TextFillColorTertiaryBrush" : null);
-        GroupsTitle.Text = memberOf.Count == 0 ? "Mitglied in keiner Gruppe dieses Laufs" : $"Mitglied in ({memberOf.Count}, auch über verschachtelte Gruppen)";
+        GroupsTitle.Text = memberOf.Count == 0 ? Strings.Pe_NoGroup : Texts.Format(Strings.Pe_MemberOfCount, memberOf.Count);
 
         var rows = grants.Select(g => new AccessRow(
             g.Path, Labels.Of(g.Effective), g.Effective,
-            g.ViaShare is { } share ? $"NTFS: {Labels.Of(g.Ntfs)} · über die Freigabe: {Labels.Of(share)}" : $"NTFS: {Labels.Of(g.Ntfs)} · ohne Freigabe-Rechte",
-            Labels.ViaChain(g.Via), g.Via.Count == 0 ? "direkt berechtigt" : string.Join(" › ", g.Via),
-            g.ReducedByDeny ? "Durch einen Verweigern-Eintrag eingeschränkt"
-                : g.ViaShare is { } capped && capped < g.Ntfs ? "Die Freigabe-Berechtigung begrenzt das NTFS-Recht" : "")).ToList();
+            g.ViaShare is { } share ? Texts.Format(Strings.Pe_NtfsViaShare, Labels.Of(g.Ntfs), Labels.Of(share)) : Texts.Format(Strings.Pe_NtfsNoShare, Labels.Of(g.Ntfs)),
+            Labels.ViaChain(g.Via), g.Via.Count == 0 ? Strings.Pdf_DirectlyGranted : string.Join(" › ", g.Via),
+            g.ReducedByDeny ? Strings.Fo_ReducedByDeny
+                : g.ViaShare is { } capped && capped < g.Ntfs ? Strings.Pe_ShareCaps : "")).ToList();
         AccessTable.ItemsSource = rows;
-        AccessTitle.Text = rows.Count == 1 ? "Zugriff auf 1 Ordner" : $"Zugriff auf {Labels.Number(rows.Count)} Ordner";
+        AccessTitle.Text = Texts.Format(Texts.Plural(rows.Count, Strings.Pe_AccessToOne, Strings.Pe_AccessToMany), Labels.Number(rows.Count));
         AccessStatus.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        AccessStatus.Text = "Diese Person hat auf keinen der gespeicherten Ordner Zugriff.";
+        AccessStatus.Text = Strings.Pe_NoAccess;
         item.FolderCount = rows.Count;
     }
 
