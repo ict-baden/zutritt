@@ -137,6 +137,18 @@ public sealed partial class LocalizationTests
 
         File.WriteAllText(path, "kein JSON");
         Assert.Equal("", UiLanguage.Read(path));                       // kaputt: Start nie verhindern
+
+        // Doppelter Schlüssel (von Hand oder per GPO verteilt): JsonObject wirft dabei ArgumentException
+        File.WriteAllText(path, """{ "language": "de", "language": "en" }""");
+        Assert.Equal("", UiLanguage.Read(path));
+        UiLanguage.Write(path, "es");
+        Assert.Equal("es", UiLanguage.Read(path));
+
+        File.WriteAllText(path, """{ "language": 42 }""");
+        Assert.Equal("", UiLanguage.Read(path));
+        File.WriteAllText(path, "[1, 2]");
+        UiLanguage.Write(path, "fr");
+        Assert.Equal("fr", UiLanguage.Read(path));
     }
 
     [Fact]

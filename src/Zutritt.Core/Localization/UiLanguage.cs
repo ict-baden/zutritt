@@ -83,7 +83,17 @@ public static class UiLanguage
     /// </summary>
     public static CultureInfo Apply()
     {
-        var culture = CultureInfo.GetCultureInfo(Resolve(Configured(), System));
+        string code;
+        try
+        {
+            code = Resolve(Configured(), System);
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            // Die Sprache darf den Start nie verhindern (GUI und geplante Befehlszeile): dann wie das System
+            code = Resolve(null, System);
+        }
+        var culture = CultureInfo.GetCultureInfo(code);
         CultureInfo.DefaultThreadCurrentUICulture = culture;
         CultureInfo.CurrentUICulture = culture;
         return culture;
@@ -117,17 +127,20 @@ public static class UiLanguage
         return name.Length == 0 ? code : char.ToUpper(name[0], culture) + name[1..];
     }
 
+    private static readonly JsonDocumentOptions ReadOptions = new() { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip };
+
     internal static string Read(string path)
     {
         try
         {
             if (!File.Exists(path)) return "";
-            var node = JsonNode.Parse(File.ReadAllText(path), documentOptions: new JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip });
+            var node = JsonNode.Parse(File.ReadAllText(path), documentOptions: ReadOptions);
             return Normalize(node?[LanguageProperty]?.GetValue<string>());
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException or FormatException)
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
-            // Kaputte oder fremde Datei: wie das System – die Sprache darf den Start nie verhindern
+            // Kaputte oder fremde Datei (auch ein doppelter Schlüssel – JsonObject wirft dann ArgumentException), keine
+            // Rechte: wie das System. Die Sprache darf den Start nie verhindern, auch nicht über eine verteilte Vorgabe.
             return "";
         }
     }
@@ -135,15 +148,18 @@ public static class UiLanguage
     internal static void Write(string path, string code)
     {
         JsonObject root;
+        var text = File.Exists(path) ? File.ReadAllText(path) : "";
         try
         {
-            root = File.Exists(path) ? JsonNode.Parse(File.ReadAllText(path)) as JsonObject ?? [] : [];
+            root = text.Length > 0 ? JsonNode.Parse(text, documentOptions: ReadOptions) as JsonObject ?? [] : [];
+            // JsonObject liest erst hier: ein doppelter Schlüssel wirft ArgumentException
+            root[LanguageProperty] = code;
         }
-        catch (JsonException)
+        catch (Exception ex) when (ex is JsonException or ArgumentException or InvalidOperationException)
         {
-            root = [];
+            // Kaputte Datei: neu, nur mit der Sprache
+            root = new JsonObject { [LanguageProperty] = code };
         }
-        root[LanguageProperty] = code;
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, root.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
     }
