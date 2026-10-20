@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: MIT
+using Zutritt.Core.Analysis;
+using Zutritt.Core.Identity;
 using Zutritt.Core.Model;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.Demo;
 
 /// <summary>
 /// Eingebauter Demo-Lauf: erfundener Fileserver \\FS01 eines Pharma-Mittelständlers mit den Freigaben Labor, QM
 /// und Produktion, Rollenkonten statt Personennamen und allen Befund-Arten (ZT01–ZT14), dazu ein Lauf eine Woche früher für den
-/// Vergleich. Keine echten Kundendaten. Die Befunde sind hier von Hand gesetzt (passend zu den Regeln), damit die
-/// Demo ohne Auswertung auskommt und immer gleich aussieht.
+/// Vergleich. Keine echten Kundendaten. Die Befunde kommen aus den echten Regeln (<see cref="FindingRules.Evaluate"/>),
+/// ihre Texte und die Namen der Windows-eigenen Konten (Jeder, VORDEFINIERT\Administratoren …) also in der Sprache der
+/// Oberfläche – wie bei einem echten Scan. Ordner, Domäne MUSTER und ihre Gruppen sind Daten einer deutschen Firma.
 /// </summary>
 public static class DemoData
 {
@@ -87,6 +91,7 @@ public static class DemoData
         b.Labor();
         b.Qm();
         b.Produktion();
+        b.Scan.Findings.AddRange(FindingRules.Evaluate(b.Scan));
         return b.Scan;
     }
 
@@ -108,14 +113,15 @@ public static class DemoData
 
         public void Principals()
         {
-            Known(Everyone, "Jeder");
-            Known(AuthUsers, @"NT-AUTORITÄT\Authentifizierte Benutzer");
-            Known(Interactive, @"NT-AUTORITÄT\INTERAKTIV");
-            Known(System, @"NT-AUTORITÄT\SYSTEM");
-            Known(CreatorOwner, "ERSTELLER-BESITZER");
+            // Windows-eigene Konten heißen wie in einem Windows in der Sprache der Oberfläche
+            Known(Everyone);
+            Known(AuthUsers);
+            Known(Interactive);
+            Known(System);
+            Known(CreatorOwner);
 
-            Group(Administrators, @"VORDEFINIERT\Administratoren", local: true, DomainAdmins, FileserverAdmins);
-            Group(BuiltinUsers, @"VORDEFINIERT\Benutzer", local: true, Interactive, AuthUsers, DomainUsers);
+            Group(Administrators, WellKnownName(Administrators), local: true, DomainAdmins, FileserverAdmins);
+            Group(BuiltinUsers, WellKnownName(BuiltinUsers), local: true, Interactive, AuthUsers, DomainUsers);
 
             User(QcLeitungKonto, "qc.leitung", "QC-Leitung");
             User(Labor01, "labor.ma01", "Labor Mitarbeitende 01");
@@ -162,8 +168,14 @@ public static class DemoData
             Group(AltProjekt, @"MUSTER\Alt-Projekt-2019", local: false);
         }
 
-        private void Known(string sid, string name) =>
+        private void Known(string sid)
+        {
+            var name = WellKnownName(sid);
             Scan.Principals[sid] = new Principal { Sid = sid, Name = name, DisplayName = AccountName.LastPart(name), Kind = PrincipalKind.Bekannt };
+        }
+
+        private static string WellKnownName(string sid) =>
+            WellKnownSids.TryGet(sid, out var name, out _) ? name : throw new InvalidOperationException(sid);
 
         private void User(string sid, string account, string display, bool disabled = false) =>
             Scan.Principals[sid] = new Principal
@@ -208,18 +220,14 @@ public static class DemoData
             const string S = @"\\FS01\Labor";
             Folder(S, "", 0, broken: true, Administrators,
                 A(System, Full), A(Administrators, Full), A(CreatorOwner, Full, inheritOnly: true), A(LaborAlle, Modify));
-            Finding("ZT08", Severity.Info, S, Everyone, "Freigabe-Berechtigung: „Jeder“ hat Vollzugriff – der Schutz liegt allein bei den NTFS-Rechten.");
 
             Folder(S, @"\QC", 1, broken: true, Administrators,
                 A(System, Full), A(Administrators, Full), A(QcTeam, Modify), A(QcLeitungKonto, Full));
-            Finding("ZT03", Severity.Mittel, S + @"\QC", QcLeitungKonto, "„MUSTER\\qc.leitung“ ist direkt berechtigt (Vollzugriff) statt über eine Gruppe.");
-            Finding("ZT05", Severity.Hoch, S + @"\QC", QcLeitungKonto, "„MUSTER\\qc.leitung“ hat Vollzugriff und darf damit auch Berechtigungen ändern.");
 
             if (older)
             {
                 Folder(S, @"\QC\Methoden", 2, broken: false, Administrators,
                     A(Everyone, Read), I(System, Full), I(Administrators, Full), I(QcTeam, Modify), I(QcLeitungKonto, Full));
-                Finding("ZT02", Severity.Mittel, S + @"\QC\Methoden", Everyone, "„Jeder“ darf hier lesen.");
             }
             else
             {
@@ -229,11 +237,9 @@ public static class DemoData
 
             Folder(S, @"\QC\Rohdaten", 2, broken: true, Administrators,
                 A(System, Full), A(Administrators, Full), A(QcTeam, Write), A(SvcHplc, Modify));
-            Finding("ZT03", Severity.Mittel, S + @"\QC\Rohdaten", SvcHplc, "„MUSTER\\svc-hplc“ ist direkt berechtigt (Ändern) statt über eine Gruppe.");
 
             Folder(S, @"\QC\Rohdaten\HPLC-03", 3, broken: false, Administrators,
                 A(QcTeam, DeleteOnly, deny: true), I(System, Full), I(Administrators, Full), I(QcTeam, Write), I(SvcHplc, Modify));
-            Finding("ZT07", Severity.Info, S + @"\QC\Rohdaten\HPLC-03", QcTeam, "Verweigern-Eintrag für „MUSTER\\QC-Team“ (Löschen).");
 
             Folder(S, @"\QC\Prüfpläne", 2, broken: false, Administrators,
                 A(ProduktionLeitung, Read), I(System, Full), I(Administrators, Full), I(QcTeam, Modify), I(QcLeitungKonto, Full));
@@ -243,26 +249,16 @@ public static class DemoData
                 // Neu seit dem letzten Lauf: Austausch-Ordner, in dem „Jeder“ ändern darf
                 Folder(S, @"\Austausch", 1, broken: false, Labor01,
                     A(Everyone, Modify), I(System, Full), I(Administrators, Full), I(LaborAlle, Modify));
-                Finding("ZT01", Severity.Hoch, S + @"\Austausch", Everyone, "„Jeder“ darf hier ändern.");
-                Finding("ZT10", Severity.Niedrig, S + @"\Austausch", Labor01, "Besitzer ist das Benutzerkonto „MUSTER\\labor.ma01“.");
             }
 
             Folder(S, @"\Archiv", 1, broken: false, Administrators,
                 A(AuthUsers, Read), A(Labor02, Modify, deny: true), I(System, Full), I(Administrators, Full), I(LaborAlle, Modify));
-            Finding("ZT02", Severity.Mittel, S + @"\Archiv", AuthUsers, "„NT-AUTORITÄT\\Authentifizierte Benutzer“ darf hier lesen.");
-            Finding("ZT07", Severity.Info, S + @"\Archiv", Labor02, "Verweigern-Eintrag für „MUSTER\\labor.ma02“ (Ändern).");
 
             Folder(S, @"\Projekte", 1, broken: false, Administrators,
                 A(Geschaeftsleitung, Read), I(System, Full), I(Administrators, Full), I(LaborAlle, Modify));
 
             Folder(S, @"\Projekte\2019\Alt\Rohdaten", 4, broken: true, Administrators,
                 A(Administrators, Full), A(Orphan, Modify), A(Labor03, Read), A(AltProjekt, Read));
-            const string Alt = S + @"\Projekte\2019\Alt\Rohdaten";
-            Finding("ZT06", Severity.Niedrig, Alt, null, "Vererbung ist in Ebene 4 unterbrochen – eine leicht übersehene Ausnahme.");
-            Finding("ZT04", Severity.Mittel, Alt, Orphan, $"Die verwaiste SID {Orphan} ist berechtigt (Ändern).");
-            Finding("ZT03", Severity.Mittel, Alt, Labor03, "„MUSTER\\labor.ma03“ ist direkt berechtigt (Lesen) statt über eine Gruppe.");
-            Finding("ZT12", Severity.Mittel, Alt, Labor03, "Das deaktivierte Konto „MUSTER\\labor.ma03“ ist noch berechtigt (Lesen).");
-            Finding("ZT11", Severity.Niedrig, Alt, AltProjekt, "Die Gruppe „MUSTER\\Alt-Projekt-2019“ hat keine Mitglieder, ist aber berechtigt (Lesen).");
 
             Folder(S, @"\Projekte\2026-Stabilität", 2, broken: false, Administrators,
                 A(QaTeam, Modify), I(System, Full), I(Administrators, Full), I(LaborAlle, Modify), I(Geschaeftsleitung, Read));
@@ -276,12 +272,10 @@ public static class DemoData
 
             Folder(S, @"\Geräte", 1, broken: false, Administrators,
                 A(DomainUsers, Read), I(System, Full), I(Administrators, Full), I(LaborAlle, Modify));
-            Finding("ZT02", Severity.Mittel, S + @"\Geräte", DomainUsers, "„MUSTER\\Domänen-Benutzer“ darf hier lesen.");
             Folder(S, @"\Geräte\Logbücher", 2, broken: false, Administrators,
                 A(Instandhaltung, Modify), I(System, Full), I(Administrators, Full), I(LaborAlle, Modify), I(DomainUsers, Read));
 
-            Unreadable(S, @"\Personal", 1, "Zugriff verweigert");
-            Finding("ZT09", Severity.Info, S + @"\Personal", null, "Ordner nicht lesbar: Zugriff verweigert. Der Inhalt ist nicht geprüft.");
+            Unreadable(S, @"\Personal", 1, Strings.Win_AccessDenied);
 
             Folder(S, @"\Vorlagen", 1, broken: true, Administrators,
                 A(System, Full), A(Administrators, Full), A(LaborAlle, Read), A(QmTeam, Modify));
@@ -294,19 +288,15 @@ public static class DemoData
             const string S = @"\\FS01\QM";
             Folder(S, "", 0, broken: true, Administrators,
                 A(System, Full), A(Administrators, Full), A(CreatorOwner, Full, inheritOnly: true), A(QmTeam, Modify), A(QmLeser, Read));
-            Finding("ZT08", Severity.Info, S, AuthUsers, "Freigabe-Berechtigung: „Authentifizierte Benutzer“ dürfen ändern – der Schutz liegt allein bei den NTFS-Rechten.");
 
             Folder(S, @"\SOPs", 1, broken: true, Administrators,
                 A(System, Full), A(Administrators, Full), A(QmTeam, Modify), A(QmLeser, Read));
             Folder(S, @"\SOPs\Entwürfe", 2, broken: true, Administrators,
                 A(System, Full), A(Administrators, Full), A(QmTeam, Modify), A(Qm01, Modify));
-            Finding("ZT03", Severity.Mittel, S + @"\SOPs\Entwürfe", Qm01, "„MUSTER\\qm.ma01“ ist direkt berechtigt (Ändern) statt über eine Gruppe.");
             Folder(S, @"\SOPs\Freigegeben", 2, broken: false, Administrators,
                 A(AuthUsers, Read), I(System, Full), I(Administrators, Full), I(QmTeam, Modify), I(QmLeser, Read));
-            Finding("ZT02", Severity.Mittel, S + @"\SOPs\Freigegeben", AuthUsers, "„NT-AUTORITÄT\\Authentifizierte Benutzer“ darf hier lesen.");
             Folder(S, @"\SOPs\Archiv", 2, broken: false, Administrators,
                 A(ProduktionAlle, Read, deny: true), I(System, Full), I(Administrators, Full), I(QmTeam, Modify), I(QmLeser, Read));
-            Finding("ZT07", Severity.Info, S + @"\SOPs\Archiv", ProduktionAlle, "Verweigern-Eintrag für „MUSTER\\Produktion-Alle“ (Lesen).");
 
             if (!older)
             {
@@ -316,26 +306,20 @@ public static class DemoData
                 var moved = Folder(S, @"\SOPs\Labormethoden", 2, broken: false, Administrators,
                     I(System, Full), I(Administrators, Full), I(LaborAlle, Modify));
                 moved.InheritanceDiffers = true;
-                Finding("ZT14", Severity.Niedrig, S + @"\SOPs\Labormethoden", null,
-                    "Geerbte Einträge passen nicht zum übergeordneten Ordner – vermutlich verschoben. „MUSTER\\Labor-Alle“ kommt nicht von dort, sondern vom früheren Ort.");
             }
 
             Folder(S, @"\Audits", 1, broken: true, Administrators,
                 A(System, Full), A(Administrators, Full), A(QmLeitung, Modify), A(Geschaeftsleitung, Read));
+            // Das Konto des externen Audits ist seit dem letzten Lauf deaktiviert, aber noch berechtigt (ZT12 nur im neuen Lauf)
             Folder(S, @"\Audits\2026", 2, broken: false, Administrators,
                 A(ExtAuditor, Read), I(System, Full), I(Administrators, Full), I(QmLeitung, Modify), I(Geschaeftsleitung, Read));
-            Finding("ZT03", Severity.Mittel, S + @"\Audits\2026", ExtAuditor, "„MUSTER\\ext.auditor“ ist direkt berechtigt (Lesen) statt über eine Gruppe.");
-            if (!older)
-                Finding("ZT12", Severity.Mittel, S + @"\Audits\2026", ExtAuditor, "Das deaktivierte Konto „MUSTER\\ext.auditor“ ist noch berechtigt (Lesen).");
 
             Folder(S, @"\Abweichungen", 1, broken: true, Administrators,
                 A(System, Full), A(Administrators, Full), A(QmTeam, Modify), A(QcTeam, Modify), A(ProduktionLeitung, Modify));
             Folder(S, @"\CAPA", 1, broken: false, Administrators,
                 A(QaTeam, Full), I(System, Full), I(Administrators, Full), I(QmTeam, Modify), I(QmLeser, Read));
-            Finding("ZT05", Severity.Hoch, S + @"\CAPA", QaTeam, "„MUSTER\\QA-Team“ hat Vollzugriff und darf damit auch Berechtigungen ändern.");
             Folder(S, @"\Schulungen", 1, broken: false, Administrators,
                 A(DomainUsers, Modify), I(System, Full), I(Administrators, Full), I(QmTeam, Modify), I(QmLeser, Read));
-            Finding("ZT01", Severity.Hoch, S + @"\Schulungen", DomainUsers, "„MUSTER\\Domänen-Benutzer“ darf hier ändern.");
             Folder(S, @"\Lieferanten", 1, broken: false, Administrators,
                 A(Einkauf, Modify), I(System, Full), I(Administrators, Full), I(QmTeam, Modify), I(QmLeser, Read));
 
@@ -344,21 +328,15 @@ public static class DemoData
                 // Im letzten Lauf noch vorhanden, inzwischen aufgeräumt
                 Folder(S, @"\Temp", 1, broken: false, Qm01,
                     A(Everyone, Modify), I(System, Full), I(Administrators, Full), I(QmTeam, Modify), I(QmLeser, Read));
-                Finding("ZT01", Severity.Hoch, S + @"\Temp", Everyone, "„Jeder“ darf hier ändern.");
-                Finding("ZT10", Severity.Niedrig, S + @"\Temp", Qm01, "Besitzer ist das Benutzerkonto „MUSTER\\qm.ma01“.");
             }
 
             Folder(S, @"\Validierung", 1, broken: true, Administrators,
                 A(System, Full), A(Administrators, Full), A(QmTeam, Modify), A(QaTeam, Modify));
-            const string Alt = S + @"\Validierung\Computersysteme\2020\Altsystem";
             Folder(S, @"\Validierung\Computersysteme\2020\Altsystem", 4, broken: true, Qm02,
                 A(Administrators, Full), A(QaTeam, Read));
-            Finding("ZT06", Severity.Niedrig, Alt, null, "Vererbung ist in Ebene 4 unterbrochen – eine leicht übersehene Ausnahme.");
-            Finding("ZT10", Severity.Niedrig, Alt, Qm02, "Besitzer ist das Benutzerkonto „MUSTER\\qm.ma02“.");
 
             Folder(S, @"\Management-Review", 1, broken: true, Orphan,
                 A(System, Full), A(Administrators, Full), A(Geschaeftsleitung, Modify), A(QmLeitung, Modify));
-            Finding("ZT04", Severity.Mittel, S + @"\Management-Review", Orphan, $"Besitzer ist die verwaiste SID {Orphan}.");
         }
 
         // ================= Produktion =================
@@ -368,14 +346,12 @@ public static class DemoData
             const string S = @"\\FS01\Produktion";
             Folder(S, "", 0, broken: true, Administrators,
                 A(System, Full), A(Administrators, Full), A(CreatorOwner, Full, inheritOnly: true), A(ProduktionAlle, Modify));
-            Finding("ZT13", Severity.Info, S, null, "Die Freigabe-Berechtigungen von \\\\FS01\\Produktion ließen sich nicht lesen – der Zugriff über das Netz ist nur nach NTFS bewertet.");
 
             Folder(S, @"\Chargenprotokolle", 1, broken: true, Administrators,
                 A(System, Full), A(Administrators, Full), A(ProduktionLeitung, Modify), A(SchichtA, Write), A(SchichtB, Write), A(QaTeam, Read));
             Folder(S, @"\Chargenprotokolle\2026", 2, broken: false, Administrators,
                 A(SchichtB, DeleteOnly, deny: true), I(System, Full), I(Administrators, Full), I(ProduktionLeitung, Modify),
                 I(SchichtA, Write), I(SchichtB, Write), I(QaTeam, Read));
-            Finding("ZT07", Severity.Info, S + @"\Chargenprotokolle\2026", SchichtB, "Verweigern-Eintrag für „MUSTER\\Produktion-Schicht-B“ (Löschen).");
 
             Folder(S, @"\Rezepturen", 1, broken: true, Administrators,
                 A(System, Full), A(Administrators, Full), A(ProduktionLeitung, Modify), A(ProduktionAlle, Read));
@@ -384,24 +360,17 @@ public static class DemoData
 
             Folder(S, @"\Wartung", 1, broken: true, Administrators,
                 A(System, Full), A(Administrators, Full), A(Instandhaltung, Modify), A(SvcBackup, Read));
-            Finding("ZT03", Severity.Mittel, S + @"\Wartung", SvcBackup, "„MUSTER\\svc-backup“ ist direkt berechtigt (Lesen) statt über eine Gruppe.");
             // Seit dem letzten Lauf von Lesen auf Ändern erweitert
             Folder(S, @"\Wartung\Anlage-3", 2, broken: false, Administrators,
                 A(Instandhaltung01, older ? Read : Modify), I(System, Full), I(Administrators, Full), I(Instandhaltung, Modify), I(SvcBackup, Read));
-            Finding("ZT03", Severity.Mittel, S + @"\Wartung\Anlage-3", Instandhaltung01,
-                $"„MUSTER\\ih.ma01“ ist direkt berechtigt ({(older ? "Lesen" : "Ändern")}) statt über eine Gruppe.");
 
             Folder(S, @"\Linie-1\SPS\Backup", 3, broken: true, Administrators,
                 A(Administrators, Full), A(Instandhaltung, Full));
-            Finding("ZT06", Severity.Niedrig, S + @"\Linie-1\SPS\Backup", null, "Vererbung ist in Ebene 3 unterbrochen – eine leicht übersehene Ausnahme.");
-            Finding("ZT05", Severity.Hoch, S + @"\Linie-1\SPS\Backup", Instandhaltung, "„MUSTER\\Instandhaltung“ hat Vollzugriff und darf damit auch Berechtigungen ändern.");
 
-            Unreadable(S, @"\Linie-2\Messdaten\Export", 3, "Der Pfad ist zu lang.");
-            Finding("ZT09", Severity.Info, S + @"\Linie-2\Messdaten\Export", null, "Ordner nicht lesbar: Der Pfad ist zu lang. Der Inhalt ist nicht geprüft.");
+            Unreadable(S, @"\Linie-2\Messdaten\Export", 3, Strings.Win_PathTooLong);
 
             Folder(S, @"\Kantine", 1, broken: false, Administrators,
                 A(Everyone, Read), I(System, Full), I(Administrators, Full), I(ProduktionAlle, Modify));
-            Finding("ZT02", Severity.Mittel, S + @"\Kantine", Everyone, "„Jeder“ darf hier lesen.");
         }
 
         // ================= Bausteine =================
@@ -419,9 +388,6 @@ public static class DemoData
             Scan.Errors.Add(new ScanError(share + relative, error));
             Scan.Folders.Add(new FolderNode { Path = share + relative, Depth = depth, ShareUnc = share, Error = error });
         }
-
-        private void Finding(string rule, Severity severity, string path, string? sid, string message) =>
-            Scan.Findings.Add(new Finding { RuleId = rule, Severity = severity, Path = path, Sid = sid, Message = message });
 
         /// <summary>Expliziter Eintrag (gilt für diesen Ordner, Unterordner und Dateien).</summary>
         private static AceEntry A(string sid, FileRights rights, bool deny = false, bool inheritOnly = false) => new()
