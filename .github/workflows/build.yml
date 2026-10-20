@@ -238,50 +238,78 @@ jobs:
           timestamp-rfc3161: http://timestamp.acs.microsoft.com
           timestamp-digest: SHA256
 
-      - name: MSI-Probe (installieren, starten, deinstallieren)
+      # ---- MSI-Probe: CHECKLISTE-RELEASE „MSI installiert, gestartet, deinstalliert“ auf dem sauberen Runner ----
+      # Drei Schritte mit eigener Zeitgrenze, damit ein hängendes msiexec oder Zutritt den Lauf nicht stundenlang blockiert
+      # und das Protokoll zeigt, wo es hängt.
+      - name: MSI-Probe – installieren
+        id: msi-install
+        timeout-minutes: 10
         shell: pwsh
         run: |
-          # CHECKLISTE-RELEASE „MSI installiert, gestartet, deinstalliert“ – auf dem sauberen Runner bei jedem Build einmal
           $msi = (Resolve-Path "dist/$env:APP${{ steps.version.outputs.suffix }}-x64.msi").Path
-          $logs = New-Item -ItemType Directory -Force msi-logs
-          function Msiexec([string] $mode, [string] $log) {
-            $p = Start-Process msiexec.exe -ArgumentList @($mode, "`"$msi`"", '/qn', '/norestart', '/l*v', "`"$log`"") -Wait -PassThru
-            if ($p.ExitCode -notin 0, 3010) { throw "msiexec $mode endete mit $($p.ExitCode) (Protokoll: $log)" }
-          }
-          Msiexec '/i' "$logs/install.log"
+          $logs = (New-Item -ItemType Directory -Force msi-logs).FullName
+          $p = Start-Process msiexec.exe -ArgumentList @('/i', "`"$msi`"", '/qn', '/norestart', '/l*v', "`"$logs\install.log`"") -PassThru
+          $null = $p.Handle
+          if (-not $p.WaitForExit(480000)) { $p.Kill($true); throw "msiexec /i hängt seit 8 Minuten (Protokoll: msi-logs/install.log)" }
+          if ($p.ExitCode -notin 0, 3010) { throw "msiexec /i endete mit $($p.ExitCode) (Protokoll: msi-logs/install.log)" }
           $dir = Join-Path $env:ProgramFiles $env:APP
-          $exe = Join-Path $dir "$env:APP.exe"
-          if (-not (Test-Path $exe)) { throw "$exe fehlt nach der Installation" }
-          foreach ($file in 'LICENSE', 'THIRD-PARTY-NOTICES.txt') { if (-not (Test-Path (Join-Path $dir $file))) { throw "$file fehlt in $dir" } }
+          foreach ($file in "$env:APP.exe", 'LICENSE', 'THIRD-PARTY-NOTICES.txt') {
+            if (-not (Test-Path (Join-Path $dir $file))) { throw "$file fehlt in $dir nach der Installation" }
+          }
           $lnk = Join-Path $env:ProgramData "Microsoft\Windows\Start Menu\Programs\$env:APP.lnk"
           if (-not (Test-Path $lnk)) { throw "Startmenü-Eintrag $lnk fehlt" }
+          Write-Host "Installiert nach $dir"
 
-          # Starten: --info und ein kleiner Scan mit Bericht (SQLite, Berichte, Sprachdateien der installierten Exe)
-          function Run([string[]] $arguments, [int[]] $ok) {
-            $out = Join-Path $logs 'out.txt'; $err = Join-Path $logs 'err.txt'
-            $p = Start-Process $exe -ArgumentList $arguments -Wait -PassThru -NoNewWindow -RedirectStandardOutput $out -RedirectStandardError $err
-            $text = (Get-Content $out -Raw) + (Get-Content $err -Raw)
+      - name: MSI-Probe – installierte App starten
+        timeout-minutes: 10
+        shell: pwsh
+        run: |
+          # --info auf Englisch (Sprache des Runners) und Deutsch (Sprachdateien in der Exe), dann ein kleiner Scan mit
+          # Excel-Bericht: SQLite, Berichte und Kontenauflösung der installierten Exe
+          $exe = Join-Path $env:ProgramFiles "$env:APP\$env:APP.exe"
+          function Run([string[]] $arguments, [int[]] $ok, [string] $language = '') {
+            $psi = [Diagnostics.ProcessStartInfo]::new($exe)
+            foreach ($a in $arguments) { $psi.ArgumentList.Add($a) }
+            $psi.UseShellExecute = $false
+            $psi.RedirectStandardOutput = $true
+            $psi.RedirectStandardError = $true
+            if ($language) { $psi.Environment['ZUTRITT_LANGUAGE'] = $language }
+            Write-Host "> $env:APP.exe $($arguments -join ' ') $(if ($language) { "(ZUTRITT_LANGUAGE=$language)" })"
+            $p = [Diagnostics.Process]::Start($psi)
+            $out = $p.StandardOutput.ReadToEndAsync()
+            $err = $p.StandardError.ReadToEndAsync()
+            if (-not $p.WaitForExit(240000)) {
+              $p.Kill($true); $null = $p.WaitForExit(10000)
+              Write-Host ($out.Result + $err.Result)
+              throw "$env:APP $($arguments -join ' ') hängt seit 4 Minuten"
+            }
+            $text = $out.Result + $err.Result
             Write-Host $text
             if ($p.ExitCode -notin $ok) { throw "$env:APP $($arguments -join ' ') endete mit $($p.ExitCode)" }
             return $text
           }
           $info = Run @('--info') @(0)
           if ($info -notmatch [regex]::Escape('${{ steps.version.outputs.version }}')) { throw "--info nennt die Version nicht" }
-          # Die Sprachdateien stecken in der installierten Exe: einmal auf Deutsch
-          $env:ZUTRITT_LANGUAGE = 'de'
-          $infoDe = Run @('--info') @(0)
-          Remove-Item Env:ZUTRITT_LANGUAGE
+          $infoDe = Run @('--info') @(0) 'de'
           if ($infoDe -notmatch 'Datenbank:' -or $infoDe -notmatch 'Protokoll:') { throw "--info kommt mit ZUTRITT_LANGUAGE=de nicht auf Deutsch" }
           $target = New-Item -ItemType Directory -Force (Join-Path $env:RUNNER_TEMP 'zutritt-probe\Daten\Projekt')
-          $env:ZUTRITT_LANGUAGE = 'en'
-          $scan = Run @('scan', (Split-Path $target), '--db', (Join-Path $env:RUNNER_TEMP 'zutritt-probe.db'),
-                        '--report', (Join-Path $env:RUNNER_TEMP 'zutritt-probe.xlsx')) @(0, 1, 2)
-          Remove-Item Env:ZUTRITT_LANGUAGE
+          $scan = Run @('scan', $target.Parent.FullName, '--db', (Join-Path $env:RUNNER_TEMP 'zutritt-probe.db'),
+                        '--report', (Join-Path $env:RUNNER_TEMP 'zutritt-probe.xlsx')) @(0, 1, 2) 'en'
           if ($scan -notmatch 'Report written') { throw "Der Scan hat keinen Bericht geschrieben (oder nicht auf Englisch)" }
 
-          # Deinstallieren und Reste suchen
-          Msiexec '/x' "$logs/uninstall.log"
-          $left = @($dir, $lnk, 'HKLM:\SOFTWARE\ICT-Baden\Zutritt') | Where-Object { Test-Path $_ }
+      - name: MSI-Probe – deinstallieren und Reste suchen
+        if: always() && steps.msi-install.outcome != 'skipped'
+        timeout-minutes: 10
+        shell: pwsh
+        run: |
+          $msi = (Resolve-Path "dist/$env:APP${{ steps.version.outputs.suffix }}-x64.msi").Path
+          $logs = (New-Item -ItemType Directory -Force msi-logs).FullName
+          $p = Start-Process msiexec.exe -ArgumentList @('/x', "`"$msi`"", '/qn', '/norestart', '/l*v', "`"$logs\uninstall.log`"") -PassThru
+          $null = $p.Handle
+          if (-not $p.WaitForExit(480000)) { $p.Kill($true); throw "msiexec /x hängt seit 8 Minuten (Protokoll: msi-logs/uninstall.log)" }
+          if ($p.ExitCode -notin 0, 3010) { throw "msiexec /x endete mit $($p.ExitCode) (Protokoll: msi-logs/uninstall.log)" }
+          $left = @((Join-Path $env:ProgramFiles $env:APP), (Join-Path $env:ProgramData "Microsoft\Windows\Start Menu\Programs\$env:APP.lnk"),
+                    'HKLM:\SOFTWARE\ICT-Baden\Zutritt') | Where-Object { Test-Path $_ }
           if ($left.Count -gt 0) { throw "Reste nach der Deinstallation: $($left -join ', ')" }
           Write-Host "MSI-Probe bestanden: installiert, gestartet, deinstalliert, keine Reste."
 
