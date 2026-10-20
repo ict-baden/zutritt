@@ -66,7 +66,7 @@ These decisions are deliberate:
 - **Renamed or moved folders** are matched by path, so they appear as one removed and one new folder.
 - **Different targets.** By default only runs with the same targets are compared. If you choose another run on *Vergleich*, differences may come from the targets – the app warns about that.
 - **Runs without group resolution** are compared without memberships on both sides.
-- **Different options** (files, depth, administrative shares, ZT06 level): only the scope both runs covered is compared, with the note *Umfang weicht ab*. A folder exactly at the smaller depth was listed only by the deeper run, so an error while listing its contents can appear as a ZT09 change.
+- **Different options** (files, depth, administrative shares, group resolution, ZT06 level): only the scope both runs covered is compared, with the note *Umfang weicht ab*. A folder exactly at the smaller depth was listed only by the deeper run, so an error while listing its contents can appear as a ZT09 change.
 
 ## Reports
 

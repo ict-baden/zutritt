@@ -85,7 +85,8 @@ public static class ScanScope
     /// <summary>
     /// Beide Läufe auf den gemeinsamen Umfang zugeschnitten (flache Kopien, die Originale bleiben unverändert):
     /// Dateien nur, wenn beide sie erfasst haben; Ordner nur bis zur kleineren Tiefe; administrative Freigaben nur,
-    /// wenn beide sie einbezogen haben (ausdrücklich als Ziel genannte bleiben); ZT06 erst ab der höheren Ebene.
+    /// wenn beide sie einbezogen haben (ausdrücklich als Ziel genannte bleiben); ZT06 erst ab der höheren Ebene; ZT11
+    /// (leere Gruppe) nur, wenn beide Läufe Gruppen aufgelöst haben – ohne Auflösung kennt ein Lauf keine Mitglieder.
     /// Befunde und Fehler außerhalb des gemeinsamen Umfangs entfallen.
     /// </summary>
     /// <remarks>
@@ -101,6 +102,7 @@ public static class ScanScope
         bool adminShares = !a.SkipAdminShares && !b.SkipAdminShares;
         bool deepDiffers = DeepBreak(a) != DeepBreak(b);
         int deepBreak = Math.Max(DeepBreak(a), DeepBreak(b));
+        bool groupsDiffer = a.ResolveGroups != b.ResolveGroups;
 
         // Ausdrücklich genannte Ziele gehören immer zum Umfang, auch wenn sie eine administrative Freigabe sind (\\srv\C$)
         var targets = new HashSet<string>(a.Targets.Concat(b.Targets).Select(t => Key(WindowsPath.WithBackslashes(t.Trim()))),
@@ -164,6 +166,7 @@ public static class ScanScope
                 var path = Key(finding.Path);
                 if (outside.Contains(path) || adminUnc.Contains(path)) continue;
                 if (deepDiffers && finding.RuleId == FindingRules.DeepBreak && depthOf.TryGetValue(path, out var d) && d < deepBreak) continue;
+                if (groupsDiffer && finding.RuleId == FindingRules.EmptyGroup) continue;
                 copy.Findings.Add(finding);
             }
             foreach (var error in scan.Errors)

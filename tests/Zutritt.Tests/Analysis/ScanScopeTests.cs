@@ -206,11 +206,27 @@ public sealed class ScanScopeTests
     [Fact]
     public void Nur_Gruppen_verschieden_wird_genannt_und_wie_bisher_ausgeglichen()
     {
-        var result = ScanComparer.Compare(Run(T0, r => r), Run(T1, r => r with { ResolveGroups = false }));
+        var withGroups = Run(T0, r => r);
+        Assert.Contains(withGroups.Findings, f => f.RuleId == "ZT11");   // nur mit aufgelösten Gruppen zu finden
+
+        var result = ScanComparer.Compare(withGroups, Run(T1, r => r with { ResolveGroups = false }));
         Assert.Equal([ScopeDifference.Groups], result.ScopeDifferences);
         Assert.Empty(result.MembershipChanges);
-        Assert.Empty(result.AccessChanges);
+        AssertNoChanges(result);
         Assert.Contains("Gruppen", ScanScope.Describe(result));
+
+        // Und umgekehrt: ZT11 erscheint nicht als neu, nur weil der neue Lauf wieder Gruppen auflöst
+        var back = ScanComparer.Compare(Run(T0, r => r with { ResolveGroups = false }), Run(T1, r => r));
+        AssertNoChanges(back);
+    }
+
+    [Fact]
+    public void Gruppen_und_Dateien_verschieden_meldet_ZT11_nicht_als_behoben()
+    {
+        var result = ScanComparer.Compare(Run(T0, r => r with { IncludeFiles = true }), Run(T1, r => r with { ResolveGroups = false }));
+        Assert.Equal([ScopeDifference.Files, ScopeDifference.Groups], result.ScopeDifferences);
+        Assert.DoesNotContain(result.ResolvedFindings, f => f.RuleId == "ZT11");
+        Assert.DoesNotContain(result.NewFindings, f => f.RuleId == "ZT11");
     }
 
     [Fact]
