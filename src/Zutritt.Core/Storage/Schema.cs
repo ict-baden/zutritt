@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.Data.Sqlite;
 
+using Zutritt.Core.Resources;
 namespace Zutritt.Core.Storage;
 
 /// <summary>Wo die Datenbank liegt – davon hängt das Journal ab.</summary>
@@ -173,15 +174,15 @@ internal static class Schema
         }
         catch (SqliteException ex) when (walOverNetwork && (ex.SqliteErrorCode & 0xFF) is 5 or 6)
         {
-            throw new ScanStoreException($"Die Datenbank „{path}“ ist gerade im WAL-Modus geöffnet – meist von Zutritt auf dem Rechner, auf dem sie liegt. Über eine Freigabe lässt sie sich erst öffnen, wenn sie dort geschlossen ist; Zutritt stellt sie dann dauerhaft auf das für Freigaben geeignete Journal um.", ex);
+            throw new ScanStoreException(Texts.Format(Strings.Store_WalOverShare, path), ex, ErrorCodes.DatabaseWalOverShare);
         }
         var version = Scalar(db, "PRAGMA user_version;");
         bool isNew = appId == 0 && version == 0 && Scalar(db, "SELECT count(*) FROM sqlite_schema;") == 0;
 
         if (!isNew && appId != ApplicationId)
-            throw new ScanStoreException($"Die Datei „{path}“ ist eine SQLite-Datenbank, aber keine Zutritt-Datenbank. Sie wird nicht verändert.");
+            throw new ScanStoreException(Texts.Format(Strings.Store_Foreign, path), ErrorCodes.DatabaseForeign);
         if (version > CurrentVersion)
-            throw new ScanStoreException($"Die Datenbank „{path}“ stammt von einer neueren Zutritt-Version (Schema {version}, diese Version kennt bis {CurrentVersion}). Bitte Zutritt aktualisieren.");
+            throw new ScanStoreException(Texts.Format(Strings.Store_Newer, path, version, CurrentVersion), ErrorCodes.DatabaseNewer);
 
         // Muss vor der ersten Tabelle stehen; danach gibt Delete freie Seiten per incremental_vacuum zurück
         if (isNew) Execute(db, "PRAGMA auto_vacuum = INCREMENTAL;");

@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.Data.Sqlite;
 using Zutritt.Core.Model;
 
+using Zutritt.Core.Resources;
 namespace Zutritt.Core.Storage;
 
 /// <summary>
@@ -36,7 +37,7 @@ public sealed class ScanStore : IDisposable
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                throw new ScanStoreException($"Der Ordner für die Datenbank „{DatabasePath}“ kann nicht angelegt werden: {ex.Message}", ex);
+                throw new ScanStoreException(Texts.Format(Strings.Store_FolderNotCreated, DatabasePath, ex.Message), ex, ErrorCodes.DatabaseOpen);
             }
         }
 
@@ -59,7 +60,7 @@ public sealed class ScanStore : IDisposable
         {
             _db.Dispose();
             if (ex is SqliteException sx)
-                throw new ScanStoreException($"Die Datenbank „{DatabasePath}“ kann nicht geöffnet werden. {ScanStoreException.Describe(sx)}", sx);
+                throw new ScanStoreException(Texts.Format(Strings.Store_CannotOpen, DatabasePath, ScanStoreException.Describe(sx)), sx, ErrorCodes.DatabaseOpen);
             throw;
         }
     }
@@ -82,7 +83,7 @@ public sealed class ScanStore : IDisposable
     public long Save(ScanResult scan)
     {
         ArgumentNullException.ThrowIfNull(scan);
-        return Run("Der Lauf konnte nicht gespeichert werden.", () =>
+        return Run(Strings.Store_SaveFailed, ErrorCodes.DatabaseSave, () =>
         {
             var (id, folderIds) = ScanWriter.Insert(_db, scan);
             scan.Id = id;
@@ -97,7 +98,7 @@ public sealed class ScanStore : IDisposable
     /// (Journal nicht anlegbar) und eine gerade gesperrte Datei – nicht aber einen später voll werdenden Datenträger.
     /// </summary>
     /// <exception cref="ScanStoreException">Die Datenbank ist nicht beschreibbar.</exception>
-    public void CheckWritable() => Run("In die Datenbank kann nicht geschrieben werden.", () =>
+    public void CheckWritable() => Run(Strings.Store_NotWritable, ErrorCodes.DatabaseNotWritable, () =>
     {
         using var tx = _db.BeginTransaction();
         // Schreibt die Kopfseite (gleicher Wert) – braucht Schreibrecht auf Datei und Journal, ändert aber nichts
@@ -108,14 +109,14 @@ public sealed class ScanStore : IDisposable
 
     /// <summary>Lädt einen Lauf vollständig, null wenn es ihn nicht gibt.</summary>
     public ScanResult? Load(long id) =>
-        Run($"Lauf {id} konnte nicht geladen werden.", () => ScanReader.Load(_db, id));
+        Run(Texts.Format(Strings.Store_LoadFailed, id), ErrorCodes.DatabaseRead, () => ScanReader.Load(_db, id));
 
     /// <summary>
     /// Alle Läufe, neueste zuerst (nach Startzeit). <see cref="ScanSummary.Folders"/> zählt die gespeicherten
     /// Ordner (Wurzeln, eigene Rechte, Fehler), <see cref="ScanSummary.FoldersVisited"/> alle geprüften.
     /// </summary>
     public IReadOnlyList<ScanSummary> List() =>
-        Run("Die Liste der Läufe konnte nicht gelesen werden.", () => ScanReader.List(_db));
+        Run(Strings.Store_ListFailed, ErrorCodes.DatabaseRead, () => ScanReader.List(_db));
 
     /// <summary>
     /// Der letzte Lauf vor <paramref name="scan"/> mit denselben Zielen, für den Vergleich: gleiche Zielmenge
@@ -130,12 +131,12 @@ public sealed class ScanStore : IDisposable
         var targets = scan.Request?.Targets;
         var key = TargetSet.Key(targets);
         var machine = TargetSet.DependsOnMachine(targets) ? scan.Machine ?? "" : null;
-        return Run("Der vorige Lauf konnte nicht gesucht werden.",
+        return Run(Strings.Store_FindPreviousFailed, ErrorCodes.DatabaseRead,
             () => ScanReader.FindPrevious(_db, key, scan.StartedAt.UtcTicks, scan.Id, machine, scan.Request));
     }
 
     /// <summary>Löscht einen Lauf mit allem, was dazugehört. Unbekannte Nummern werden ignoriert.</summary>
-    public void Delete(long id) => Run($"Lauf {id} konnte nicht gelöscht werden.", () =>
+    public void Delete(long id) => Run(Texts.Format(Strings.Store_DeleteFailed, id), ErrorCodes.DatabaseDelete, () =>
     {
         using (var tx = _db.BeginTransaction())
         {
@@ -189,7 +190,7 @@ public sealed class ScanStore : IDisposable
     /// <summary>Nur für Tests: Pragmas und Zeilen direkt prüfen.</summary>
     internal SqliteConnection Connection => _db;
 
-    private T Run<T>(string action, Func<T> work)
+    private T Run<T>(string action, string errorCode, Func<T> work)
     {
         lock (_gate)
         {
@@ -200,12 +201,12 @@ public sealed class ScanStore : IDisposable
             }
             catch (SqliteException ex)
             {
-                throw new ScanStoreException($"{action} {ScanStoreException.Describe(ex)}", ex);
+                throw new ScanStoreException($"{action} {ScanStoreException.Describe(ex)}", ex, errorCode);
             }
             catch (Exception ex) when (ex is JsonException or FormatException or InvalidDataException or InvalidCastException
                                            or OverflowException or KeyNotFoundException or NotSupportedException)
             {
-                throw new ScanStoreException($"{action} Die Datenbank „{DatabasePath}“ enthält ungültige Daten ({ex.Message}).", ex);
+                throw new ScanStoreException(Texts.Format(Strings.Store_InvalidData, action, DatabasePath, ex.Message), ex, ErrorCodes.DatabaseInvalid);
             }
         }
     }

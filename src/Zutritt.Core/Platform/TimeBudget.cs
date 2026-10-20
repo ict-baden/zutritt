@@ -1,5 +1,6 @@
 using System.Runtime.ExceptionServices;
 
+using Zutritt.Core.Resources;
 namespace Zutritt.Core.Platform;
 
 /// <summary>
@@ -17,8 +18,8 @@ internal static class TimeBudget
 
     /// <summary>„60 Sekunden“, „2 Minuten“ – für Hinweise im Lauf.</summary>
     public static string Describe(TimeSpan limit) => limit.TotalSeconds >= 120 && limit.TotalSeconds % 60 == 0
-        ? $"{limit.TotalMinutes:0} Minuten"
-        : limit.TotalSeconds >= 1 ? $"{limit.TotalSeconds:0} Sekunden" : $"{limit.TotalMilliseconds:0} Millisekunden";
+        ? Texts.Format(Strings.Time_Minutes, limit.TotalMinutes)
+        : limit.TotalSeconds >= 1 ? Texts.Format(Strings.Time_Seconds, limit.TotalSeconds) : Texts.Format(Strings.Time_Milliseconds, limit.TotalMilliseconds);
 
     /// <summary>
     /// <paramref name="work"/> mit Zeitlimit ausführen. Ausnahmen der Arbeit kommen unverändert beim Aufrufer an.

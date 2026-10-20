@@ -92,8 +92,8 @@ public sealed class SidCatalogTests
         Assert.True(SidCatalog.IsCreatorPlaceholder("S-1-3-0"));
         Assert.True(SidCatalog.IsCreatorPlaceholder("S-1-3-1"));
         Assert.False(SidCatalog.IsCreatorPlaceholder("S-1-3-4"));
-        Assert.Equal("Jeder", SidCatalog.GermanName("S-1-1-0"));
-        Assert.Null(SidCatalog.GermanName("S-1-5-21-1-2-3-1001"));
+        Assert.Equal("Jeder", SidCatalog.FallbackName("S-1-1-0"));
+        Assert.Null(SidCatalog.FallbackName("S-1-5-21-1-2-3-1001"));
     }
 }
 

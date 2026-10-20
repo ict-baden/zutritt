@@ -1,0 +1,798 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- Zutritt – 简体中文文本。机器翻译，尚未经母语者审校（准则 13），首次公开发布前需审校。标有 “TODO-übersetzen” 的条目仍为英文。 -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Error_WithCode" xml:space="preserve">
+    <value>{0}（错误 {1}）</value>
+  </data>
+  <data name="Finding_BroadRead" xml:space="preserve">
+    <value>“{0}”拥有“{1}”{2}——几乎任何已登录人员都可以在此读取。</value>
+  </data>
+  <data name="Finding_BroadWrite" xml:space="preserve">
+    <value>“{0}”拥有“{1}”{2}——几乎任何已登录人员都可以在此写入。</value>
+  </data>
+  <data name="Finding_DeepBreak" xml:space="preserve">
+    <value>继承在深度 {0} 处中断（从深度 {1} 起，例外被视为隐藏）。</value>
+  </data>
+  <data name="Finding_Deny" xml:space="preserve">
+    <value>“{0}”的拒绝条目（拒绝了{1}）。</value>
+  </data>
+  <data name="Finding_DirectUser" xml:space="preserve">
+    <value>“{0}”以个人身份直接拥有“{1}”，而不是通过组。</value>
+  </data>
+  <data name="Finding_DisabledAccount" xml:space="preserve">
+    <value>已禁用的账户“{0}”在此拥有“{1}”。</value>
+  </data>
+  <data name="Finding_EmptyGroup" xml:space="preserve">
+    <value>组“{0}”没有成员，但拥有权限（“{1}”）。</value>
+  </data>
+  <data name="Finding_ForeignInheritedMany" xml:space="preserve">
+    <value>继承的条目与上级文件夹不一致——可能已被移动。{0}并非来自那里，而是来自原位置。</value>
+  </data>
+  <data name="Finding_ForeignInheritedOne" xml:space="preserve">
+    <value>继承的条目与上级文件夹不一致——可能已被移动。{0}并非来自那里，而是来自原位置。</value>
+  </data>
+  <data name="Finding_FullControl" xml:space="preserve">
+    <value>“{0}”拥有完全控制{1}，因此可以更改权限并取得所有权。</value>
+  </data>
+  <data name="Finding_InheritanceDiffers" xml:space="preserve">
+    <value>继承的条目与上级文件夹不一致——可能已被移动；原位置的权限可能仍然适用。</value>
+  </data>
+  <data name="Finding_InheritsNothing" xml:space="preserve">
+    <value>虽然已启用继承，但未从上级文件夹继承任何内容——通常是某个程序以自己的权限创建了该文件夹。上层的权限要到下一次传播后才会在此生效。</value>
+  </data>
+  <data name="Finding_NotChecked" xml:space="preserve">
+    <value>未检查：{0}。</value>
+  </data>
+  <data name="Finding_OnlyForChildren" xml:space="preserve">
+    <value>（适用于子文件夹或文件）</value>
+  </data>
+  <data name="Finding_OrphanDenyEntry" xml:space="preserve">
+    <value>一个拒绝条目</value>
+  </data>
+  <data name="Finding_OrphanEntry" xml:space="preserve">
+    <value>孤立 SID {0} 拥有{1}——该账户已不存在。</value>
+  </data>
+  <data name="Finding_OrphanEntryLevel" xml:space="preserve">
+    <value>一个“{0}”条目</value>
+  </data>
+  <data name="Finding_OrphanEntryParts" xml:space="preserve">
+    <value>一个{0}条目</value>
+  </data>
+  <data name="Finding_OrphanOwner" xml:space="preserve">
+    <value>所有者是孤立 SID {0}——该账户已不存在。</value>
+  </data>
+  <data name="Finding_OrphanOwnerAndEntry" xml:space="preserve">
+    <value>孤立 SID {0} 是所有者，并拥有{1}——该账户已不存在。</value>
+  </data>
+  <data name="Finding_OwnerIsUser" xml:space="preserve">
+    <value>所有者是用户账户“{0}”。</value>
+  </data>
+  <data name="Finding_ShareEveryone" xml:space="preserve">
+    <value>共享权限“{0}”：“{1}”——保护完全依赖 NTFS。</value>
+  </data>
+  <data name="Finding_ShareOrphan" xml:space="preserve">
+    <value>共享权限中包含孤立 SID {0}——该账户已不存在。</value>
+  </data>
+  <data name="Finding_ShareUnreadable" xml:space="preserve">
+    <value>无法读取 {0} 的共享权限。</value>
+  </data>
+  <data name="Finding_UnreadableFile" xml:space="preserve">
+    <value>文件不可读：{0}——此处及其下的权限未检查。</value>
+  </data>
+  <data name="Finding_UnreadableFolder" xml:space="preserve">
+    <value>文件夹不可读：{0}——此处及其下的权限未检查。</value>
+  </data>
+  <data name="Identity_DirectoryErrorAccounts" xml:space="preserve">
+    <value>解析账户时目录出错：{0}</value>
+  </data>
+  <data name="Identity_DirectoryErrorMembers" xml:space="preserve">
+    <value>读取组成员时目录出错：{0}</value>
+  </data>
+  <data name="Identity_DirectoryTimeout" xml:space="preserve">
+    <value>目录在 {0} 内无响应——来自此来源的账户和组保持为“未知”。</value>
+  </data>
+  <data name="Identity_DirectoryUnreachable" xml:space="preserve">
+    <value>无法访问目录。</value>
+  </data>
+  <data name="Identity_GroupsTooDeep" xml:space="preserve">
+    <value>组的嵌套深度超过 {0} 级——此组的成员未再继续解析。</value>
+  </data>
+  <data name="Identity_LookupTimeout" xml:space="preserve">
+    <value>账户解析在 {0} 内无响应。受影响的账户保持为“未知”。</value>
+  </data>
+  <data name="Identity_MembersMerged" xml:space="preserve">
+    <value>该组在所扫描的服务器上有不同的成员。由于每个 SID 在一次扫描中只出现一次，所有服务器的成员被合并——通过该组的访问可能只适用于其中一台服务器。</value>
+  </data>
+  <data name="Identity_NamesNotResolvable" xml:space="preserve">
+    <value>无法解析账户名称：{0}。受影响的账户保持为“未知”。</value>
+  </data>
+  <data name="Identity_NotAskedServer" xml:space="preserve">
+    <value>未在服务器本身上查找账户。因此，无法解析的账户保持为“未知”而不是“孤立”——只有服务器知道它的本地账户。</value>
+  </data>
+  <data name="Identity_Service" xml:space="preserve">
+    <value>服务 ({0})</value>
+  </data>
+  <data name="Identity_UnknownError" xml:space="preserve">
+    <value>未知错误</value>
+  </data>
+  <data name="Phase_Accounts" xml:space="preserve">
+    <value>账户</value>
+  </data>
+  <data name="Phase_Done" xml:space="preserve">
+    <value>完成</value>
+  </data>
+  <data name="Phase_Findings" xml:space="preserve">
+    <value>发现项</value>
+  </data>
+  <data name="Phase_Folders" xml:space="preserve">
+    <value>文件夹</value>
+  </data>
+  <data name="Phase_Targets" xml:space="preserve">
+    <value>目标</value>
+  </data>
+  <data name="Rights_ChangePermissions" xml:space="preserve">
+    <value>更改权限</value>
+  </data>
+  <data name="Rights_Delete" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="Rights_DeleteChildren" xml:space="preserve">
+    <value>删除子文件夹及文件</value>
+  </data>
+  <data name="Rights_DeniedFromModify" xml:space="preserve">
+    <value>已拒绝：更改和完全控制（从“更改”起）</value>
+  </data>
+  <data name="Rights_DeniedFromRead" xml:space="preserve">
+    <value>已拒绝：全部（从“读取”起）</value>
+  </data>
+  <data name="Rights_DeniedFull" xml:space="preserve">
+    <value>已拒绝：完全控制</value>
+  </data>
+  <data name="Rights_DeniedNothing" xml:space="preserve">
+    <value>已拒绝：无（无效果）</value>
+  </data>
+  <data name="Rights_FullControl" xml:space="preserve">
+    <value>完全控制</value>
+  </data>
+  <data name="Rights_List" xml:space="preserve">
+    <value>列出内容</value>
+  </data>
+  <data name="Rights_Modify" xml:space="preserve">
+    <value>修改</value>
+  </data>
+  <data name="Rights_None" xml:space="preserve">
+    <value>无访问权限</value>
+  </data>
+  <data name="Rights_Read" xml:space="preserve">
+    <value>读取</value>
+  </data>
+  <data name="Rights_ReadAttributes" xml:space="preserve">
+    <value>读取属性</value>
+  </data>
+  <data name="Rights_ReadPermissions" xml:space="preserve">
+    <value>读取权限</value>
+  </data>
+  <data name="Rights_Synchronize" xml:space="preserve">
+    <value>同步</value>
+  </data>
+  <data name="Rights_TakeOwnership" xml:space="preserve">
+    <value>取得所有权</value>
+  </data>
+  <data name="Rights_Traverse" xml:space="preserve">
+    <value>遍历文件夹/执行文件</value>
+  </data>
+  <data name="Rights_Write" xml:space="preserve">
+    <value>写入</value>
+  </data>
+  <data name="Rights_WriteAttributes" xml:space="preserve">
+    <value>写入属性</value>
+  </data>
+  <data name="Rule_ZT01_Explanation" xml:space="preserve">
+    <value>几乎包含所有人员的组（例如“Everyone”、“Authenticated Users”、“Domain Users”）可以在此创建或更改文件。这样，任何已登录的人员都可以篡改、删除数据，或者（例如通过恶意软件）加密数据。</value>
+  </data>
+  <data name="Rule_ZT01_Recommendation" xml:space="preserve">
+    <value>移除该广泛组的写入权限，只授予恰好包含相关负责人员的业务组。</value>
+  </data>
+  <data name="Rule_ZT01_Title" xml:space="preserve">
+    <value>广泛组可写入</value>
+  </data>
+  <data name="Rule_ZT02_Explanation" xml:space="preserve">
+    <value>几乎包含所有人员的组可以在此读取或列出内容。因此，机密数据对任何已登录的人员都可见。</value>
+  </data>
+  <data name="Rule_ZT02_Recommendation" xml:space="preserve">
+    <value>检查这些数据是否确实面向所有人；否则用业务组替换该广泛组。</value>
+  </data>
+  <data name="Rule_ZT02_Title" xml:space="preserve">
+    <value>广泛组可读取</value>
+  </data>
+  <data name="Rule_ZT03_Explanation" xml:space="preserve">
+    <value>权限授予了单个用户账户而不是组。人员调岗或离职时，这类条目很容易被遗忘，也会使权限分配变得混乱。</value>
+  </data>
+  <data name="Rule_ZT03_Recommendation" xml:space="preserve">
+    <value>通过组（角色或部门）授予权限，并删除该人员的条目。</value>
+  </data>
+  <data name="Rule_ZT03_Title" xml:space="preserve">
+    <value>权限直接授予个人</value>
+  </data>
+  <data name="Rule_ZT04_Explanation" xml:space="preserve">
+    <value>某个条目或所有者指向已不存在的账户。该 SID 无法对应到任何名称，没人能轻易说出当初把权限授予了谁。</value>
+  </data>
+  <data name="Rule_ZT04_Recommendation" xml:space="preserve">
+    <value>删除孤立条目；如果该 SID 是所有者，请设置有效的所有者（例如“Administrators”）。</value>
+  </data>
+  <data name="Rule_ZT04_Title" xml:space="preserve">
+    <value>孤立 SID</value>
+  </data>
+  <data name="Rule_ZT05_Explanation" xml:space="preserve">
+    <value>没有管理员角色的账户或组拥有完全控制权限。因此它可以更改权限并取得所有权——也就是绕过任何审查，给自己和他人任意权限。</value>
+  </data>
+  <data name="Rule_ZT05_Recommendation" xml:space="preserve">
+    <value>降为“修改”；只向管理员和 SYSTEM 授予完全控制。</value>
+  </data>
+  <data name="Rule_ZT05_Title" xml:space="preserve">
+    <value>非管理员拥有完全控制</value>
+  </data>
+  <data name="Rule_ZT06_Explanation" xml:space="preserve">
+    <value>继承在文件夹结构的深层被中断。从上层看不到这类例外；对上级文件夹的更改不会传递到这里。</value>
+  </data>
+  <data name="Rule_ZT06_Recommendation" xml:space="preserve">
+    <value>检查该例外是否仍然需要，否则重新启用继承。对必要的例外进行记录，或在结构的更上层实现。</value>
+  </data>
+  <data name="Rule_ZT06_Title" xml:space="preserve">
+    <value>深层隐藏的例外</value>
+  </data>
+  <data name="Rule_ZT07_Explanation" xml:space="preserve">
+    <value>显式拒绝条目优先于所有允许条目。拒绝很难追溯，而且往往会影响比预期更多的人员（例如组的所有成员）。</value>
+  </data>
+  <data name="Rule_ZT07_Recommendation" xml:space="preserve">
+    <value>最好一开始就不授予该权限（相应地调整组）。仅在有正当理由的例外情况下使用拒绝，并加以记录。</value>
+  </data>
+  <data name="Rule_ZT07_Title" xml:space="preserve">
+    <value>拒绝条目</value>
+  </data>
+  <data name="Rule_ZT08_Explanation" xml:space="preserve">
+    <value>共享权限允许所有已登录人员至少拥有“更改”权限。因此，保护完全依赖于 NTFS 权限。这是 Microsoft 推荐的做法，但应当是有意为之。</value>
+  </data>
+  <data name="Rule_ZT08_Recommendation" xml:space="preserve">
+    <value>如果 NTFS 权限没有问题，则无需处理。否则还应限制共享权限。</value>
+  </data>
+  <data name="Rule_ZT08_Title" xml:space="preserve">
+    <value>共享：所有人都可更改</value>
+  </data>
+  <data name="Rule_ZT09_Explanation" xml:space="preserve">
+    <value>无法读取该文件夹（或文件），例如因为访问被拒绝。本次扫描未检查其权限及其下的所有内容。</value>
+  </data>
+  <data name="Rule_ZT09_Recommendation" xml:space="preserve">
+    <value>排除原因，或使用有权读取权限的账户进行扫描，然后重新扫描。</value>
+  </data>
+  <data name="Rule_ZT09_Title" xml:space="preserve">
+    <value>文件夹不可读</value>
+  </data>
+  <data name="Rule_ZT10_Explanation" xml:space="preserve">
+    <value>所有者可以随时更改权限，而不受列表内容的限制。如果某个人是所有者，即使其角色变更后，此人仍保留这种能力。</value>
+  </data>
+  <data name="Rule_ZT10_Recommendation" xml:space="preserve">
+    <value>将所有权转给“Administrators”（或某个管理员组）。</value>
+  </data>
+  <data name="Rule_ZT10_Title" xml:space="preserve">
+    <value>所有者是用户账户</value>
+  </data>
+  <data name="Rule_ZT11_Explanation" xml:space="preserve">
+    <value>一个没有成员的组拥有权限。该条目目前不起作用，但一旦有人被加入该组，就会在不知不觉中生效。</value>
+  </data>
+  <data name="Rule_ZT11_Recommendation" xml:space="preserve">
+    <value>如果不再需要该组，请删除该条目；否则请记录其用途。</value>
+  </data>
+  <data name="Rule_ZT11_Title" xml:space="preserve">
+    <value>空组拥有权限</value>
+  </data>
+  <data name="Rule_ZT12_Explanation" xml:space="preserve">
+    <value>一个已禁用的用户账户在此拥有自己的权限。如果该账户被重新启用，该权限会立即生效。</value>
+  </data>
+  <data name="Rule_ZT12_Recommendation" xml:space="preserve">
+    <value>删除该条目；离职人员的账户在保留期满后予以删除。</value>
+  </data>
+  <data name="Rule_ZT12_Title" xml:space="preserve">
+    <value>已禁用账户拥有权限</value>
+  </data>
+  <data name="Rule_ZT13_Explanation" xml:space="preserve">
+    <value>无法读取共享的权限。因此，网络访问权限仅根据 NTFS 权限计算，实际可能更低。</value>
+  </data>
+  <data name="Rule_ZT13_Recommendation" xml:space="preserve">
+    <value>在服务器上使用管理员权限重新扫描。</value>
+  </data>
+  <data name="Rule_ZT13_Title" xml:space="preserve">
+    <value>共享权限不可读</value>
+  </data>
+  <data name="Rule_ZT14_Explanation" xml:space="preserve">
+    <value>该文件夹（或文件）具有与上级文件夹不一致的继承条目。典型情况是被移动的文件夹：在同一驱动器内移动时，Windows 会保留旧的继承权限，而不是采用新位置的权限。这里可能仍适用原位置的权限——包括对在新位置不应有访问权限的人员——而上级文件夹的更改要等到下一次权限传播后才会生效。</value>
+  </data>
+  <data name="Rule_ZT14_Recommendation" xml:space="preserve">
+    <value>检查这些不一致的权限是否仍然需要。否则重新应用继承：在高级安全设置中禁用继承并删除继承的条目，然后立即重新启用——显式条目会保留。</value>
+  </data>
+  <data name="Rule_ZT14_Title" xml:space="preserve">
+    <value>权限与继承不一致</value>
+  </data>
+  <data name="Scan_AdminShareDefault" xml:space="preserve">
+    <value>共享权限不可读：管理共享没有自己的权限——适用 Windows 内部默认设置（通常仅限管理员）</value>
+  </data>
+  <data name="Scan_InvalidTarget" xml:space="preserve">
+    <value>无效目标：{0}</value>
+  </data>
+  <data name="Scan_ListingFailed" xml:space="preserve">
+    <value>无法列出内容：{0}</value>
+  </data>
+  <data name="Scan_LocalWithoutShares" xml:space="preserve">
+    <value>{0}——本地文件夹未对应到共享</value>
+  </data>
+  <data name="Scan_NoDiskShares" xml:space="preserve">
+    <value>未找到磁盘共享</value>
+  </data>
+  <data name="Scan_NoLocalDiskShares" xml:space="preserve">
+    <value>此计算机上未找到磁盘共享</value>
+  </data>
+  <data name="Scan_NotSupported" xml:space="preserve">
+    <value>只能在 Windows 上扫描（NTFS 权限、共享、Active Directory）。</value>
+  </data>
+  <data name="Scan_ShareLocalPathInvalid" xml:space="preserve">
+    <value>共享的本地路径无效：“{0}”</value>
+  </data>
+  <data name="Scan_ShareLocalPathUnreadable" xml:space="preserve">
+    <value>无法读取共享的本地路径——未检查该共享</value>
+  </data>
+  <data name="Scan_SharePermissionsUnreadable" xml:space="preserve">
+    <value>共享权限不可读</value>
+  </data>
+  <data name="Scan_SharesTimeout" xml:space="preserve">
+    <value>“{0}”的共享：{1} 内无响应</value>
+  </data>
+  <data name="Scan_ShareTimeout" xml:space="preserve">
+    <value>共享“{0}”：{1} 内无响应</value>
+  </data>
+  <data name="Scan_TargetUnreachable" xml:space="preserve">
+    <value>无法访问目标：{0}</value>
+  </data>
+  <data name="Scope_AdminOnlyNewer" xml:space="preserve">
+    <value>只有较新的扫描包含了管理共享</value>
+  </data>
+  <data name="Scope_AdminOnlyOlder" xml:space="preserve">
+    <value>只有较早的扫描包含了管理共享</value>
+  </data>
+  <data name="Scope_AllLevels" xml:space="preserve">
+    <value>所有级别</value>
+  </data>
+  <data name="Scope_DeepBreak" xml:space="preserve">
+    <value>深层隐藏的例外：之前从第 {0} 级起，现在从第 {1} 级起</value>
+  </data>
+  <data name="Scope_Depth" xml:space="preserve">
+    <value>深度：之前{0}，现在{1}</value>
+  </data>
+  <data name="Scope_Differs" xml:space="preserve">
+    <value>范围不同：{0}。仅比较两次扫描都涵盖的内容。</value>
+  </data>
+  <data name="Scope_FilesOnlyNewer" xml:space="preserve">
+    <value>只有较新的扫描包含了文件</value>
+  </data>
+  <data name="Scope_FilesOnlyOlder" xml:space="preserve">
+    <value>只有较早的扫描包含了文件</value>
+  </data>
+  <data name="Scope_GroupsOnlyNewer" xml:space="preserve">
+    <value>只有较新的扫描将组解析到了人员</value>
+  </data>
+  <data name="Scope_GroupsOnlyOlder" xml:space="preserve">
+    <value>只有较早的扫描将组解析到了人员</value>
+  </data>
+  <data name="Scope_UpToLevel" xml:space="preserve">
+    <value>至第 {0} 级</value>
+  </data>
+  <data name="Share_Change" xml:space="preserve">
+    <value>更改</value>
+  </data>
+  <data name="Share_FullControl" xml:space="preserve">
+    <value>完全控制</value>
+  </data>
+  <data name="Share_Read" xml:space="preserve">
+    <value>读取</value>
+  </data>
+  <data name="Sid_AccessControlAssistanceOperators" xml:space="preserve">
+    <value>Access Control Assistance Operators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_AccountOperators" xml:space="preserve">
+    <value>Account Operators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Administrators" xml:space="preserve">
+    <value>Administrators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_AllAppPackages" xml:space="preserve">
+    <value>ALL APPLICATION PACKAGES</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_AllRestrictedAppPackages" xml:space="preserve">
+    <value>ALL RESTRICTED APPLICATION PACKAGES</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_AllServices" xml:space="preserve">
+    <value>ALL SERVICES</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_AnonymousLogon" xml:space="preserve">
+    <value>ANONYMOUS LOGON</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_AppCapability" xml:space="preserve">
+    <value>应用功能 ({0})</value>
+  </data>
+  <data name="Sid_AppPackage" xml:space="preserve">
+    <value>应用包 ({0})</value>
+  </data>
+  <data name="Sid_AuthenticatedUsers" xml:space="preserve">
+    <value>Authenticated Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_BackupOperators" xml:space="preserve">
+    <value>Backup Operators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Batch" xml:space="preserve">
+    <value>BATCH</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_CapabilityGroup" xml:space="preserve">
+    <value>功能组 ({0})</value>
+  </data>
+  <data name="Sid_CertificateServiceDcomAccess" xml:space="preserve">
+    <value>Certificate Service DCOM Access</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_ConsoleLogon" xml:space="preserve">
+    <value>CONSOLE LOGON</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_CreatorGroup" xml:space="preserve">
+    <value>CREATOR GROUP</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_CreatorGroupServer" xml:space="preserve">
+    <value>CREATOR GROUP SERVER</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_CreatorOwner" xml:space="preserve">
+    <value>CREATOR OWNER</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_CreatorOwnerServer" xml:space="preserve">
+    <value>CREATOR OWNER SERVER</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_CryptographicOperators" xml:space="preserve">
+    <value>Cryptographic Operators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_DistributedComUsers" xml:space="preserve">
+    <value>Distributed COM Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_EnterpriseDomainControllers" xml:space="preserve">
+    <value>ENTERPRISE DOMAIN CONTROLLERS</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_EventLogReaders" xml:space="preserve">
+    <value>Event Log Readers</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Everyone" xml:space="preserve">
+    <value>Everyone</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Guests" xml:space="preserve">
+    <value>Guests</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_HyperVAdministrators" xml:space="preserve">
+    <value>Hyper-V Administrators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_IisAppPool" xml:space="preserve">
+    <value>IIS 应用程序池 ({0})</value>
+  </data>
+  <data name="Sid_IncomingForestTrustBuilders" xml:space="preserve">
+    <value>Incoming Forest Trust Builders</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_IntegrityLevel" xml:space="preserve">
+    <value>完整性级别 ({0})</value>
+  </data>
+  <data name="Sid_Interactive" xml:space="preserve">
+    <value>INTERACTIVE</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Local" xml:space="preserve">
+    <value>LOCAL</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_LocalAccount" xml:space="preserve">
+    <value>Local account</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_LocalAdminAccount" xml:space="preserve">
+    <value>Local account and member of Administrators group</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_LocalService" xml:space="preserve">
+    <value>LOCAL SERVICE</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_LogonSession" xml:space="preserve">
+    <value>登录会话 ({0})</value>
+  </data>
+  <data name="Sid_Network" xml:space="preserve">
+    <value>NETWORK</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_NetworkConfigurationOperators" xml:space="preserve">
+    <value>Network Configuration Operators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_NetworkService" xml:space="preserve">
+    <value>NETWORK SERVICE</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_NtlmAuthentication" xml:space="preserve">
+    <value>NTLM Authentication</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_NullSid" xml:space="preserve">
+    <value>NULL SID</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_OtherOrganization" xml:space="preserve">
+    <value>Other Organization</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_OwnerRights" xml:space="preserve">
+    <value>OWNER RIGHTS</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PerformanceLogUsers" xml:space="preserve">
+    <value>Performance Log Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PerformanceMonitorUsers" xml:space="preserve">
+    <value>Performance Monitor Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PowerUsers" xml:space="preserve">
+    <value>Power Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PrefixAppPackages" xml:space="preserve">
+    <value>APPLICATION PACKAGE AUTHORITY\</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PrefixBuiltin" xml:space="preserve">
+    <value>BUILTIN\</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PrefixNt" xml:space="preserve">
+    <value>NT AUTHORITY\</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PreWindows2000" xml:space="preserve">
+    <value>Pre-Windows 2000 Compatible Access</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PrintOperators" xml:space="preserve">
+    <value>Print Operators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_RdsEndpointServers" xml:space="preserve">
+    <value>RDS Endpoint Servers</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_RdsManagementServers" xml:space="preserve">
+    <value>RDS Management Servers</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_RdsRemoteAccessServers" xml:space="preserve">
+    <value>RDS Remote Access Servers</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_RemoteDesktopUsers" xml:space="preserve">
+    <value>Remote Desktop Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_RemoteInteractiveLogon" xml:space="preserve">
+    <value>REMOTE INTERACTIVE LOGON</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_RemoteManagementUsers" xml:space="preserve">
+    <value>Remote Management Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Replicator" xml:space="preserve">
+    <value>Replicator</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Restricted" xml:space="preserve">
+    <value>RESTRICTED</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_ScheduledTask" xml:space="preserve">
+    <value>计划任务 ({0})</value>
+  </data>
+  <data name="Sid_Self" xml:space="preserve">
+    <value>SELF</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_ServerOperators" xml:space="preserve">
+    <value>Server Operators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Service" xml:space="preserve">
+    <value>SERVICE</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_ServiceNotInstalled" xml:space="preserve">
+    <value>未安装的服务 ({0})</value>
+  </data>
+  <data name="Sid_TerminalServerLicenseServers" xml:space="preserve">
+    <value>Terminal Server License Servers</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_TerminalServerUser" xml:space="preserve">
+    <value>TERMINAL SERVER USER</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_ThisOrganization" xml:space="preserve">
+    <value>This Organization</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_UserModeDriver" xml:space="preserve">
+    <value>用户模式驱动程序 ({0})</value>
+  </data>
+  <data name="Sid_Users" xml:space="preserve">
+    <value>Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_VirtualMachine" xml:space="preserve">
+    <value>虚拟机 ({0})</value>
+  </data>
+  <data name="Sid_VirtualSystemAccount" xml:space="preserve">
+    <value>虚拟系统账户 ({0})</value>
+  </data>
+  <data name="Sid_WindowsAuthorizationAccess" xml:space="preserve">
+    <value>Windows Authorization Access Group</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Store_AccessDenied" xml:space="preserve">
+    <value>拒绝访问数据库。</value>
+  </data>
+  <data name="Store_CannotOpen" xml:space="preserve">
+    <value>无法打开数据库“{0}”。{1}</value>
+  </data>
+  <data name="Store_CantOpen" xml:space="preserve">
+    <value>无法访问该文件或其日志：请检查路径和访问权限；可能有其他程序锁定了它。</value>
+  </data>
+  <data name="Store_Constraint" xml:space="preserve">
+    <value>数据违反了数据库的规则（{0}）。</value>
+  </data>
+  <data name="Store_Corrupt" xml:space="preserve">
+    <value>数据库文件已损坏。</value>
+  </data>
+  <data name="Store_DeleteFailed" xml:space="preserve">
+    <value>无法删除扫描 {0}。</value>
+  </data>
+  <data name="Store_DiskFull" xml:space="preserve">
+    <value>驱动器已满。</value>
+  </data>
+  <data name="Store_FindPreviousFailed" xml:space="preserve">
+    <value>无法查找上一次扫描。</value>
+  </data>
+  <data name="Store_FolderNotCreated" xml:space="preserve">
+    <value>无法创建数据库“{0}”所在的文件夹：{1}</value>
+  </data>
+  <data name="Store_Foreign" xml:space="preserve">
+    <value>文件“{0}”是 SQLite 数据库，但不是 Zutritt 数据库。不会对其进行修改。</value>
+  </data>
+  <data name="Store_InvalidData" xml:space="preserve">
+    <value>{0} 数据库“{1}”包含无效数据（{2}）。</value>
+  </data>
+  <data name="Store_IoError" xml:space="preserve">
+    <value>访问数据库文件时发生输入/输出错误。</value>
+  </data>
+  <data name="Store_ListFailed" xml:space="preserve">
+    <value>无法读取扫描列表。</value>
+  </data>
+  <data name="Store_LoadFailed" xml:space="preserve">
+    <value>无法加载扫描 {0}。</value>
+  </data>
+  <data name="Store_Locked" xml:space="preserve">
+    <value>数据库已被其他程序锁定。请稍后重试。</value>
+  </data>
+  <data name="Store_Newer" xml:space="preserve">
+    <value>数据库“{0}”来自较新版本的 Zutritt（架构 {1}，此版本最高支持 {2}）。请更新 Zutritt。</value>
+  </data>
+  <data name="Store_NotSqlite" xml:space="preserve">
+    <value>该文件不是 SQLite 数据库。</value>
+  </data>
+  <data name="Store_NotWritable" xml:space="preserve">
+    <value>无法写入数据库。</value>
+  </data>
+  <data name="Store_ReadOnly" xml:space="preserve">
+    <value>数据库为只读（文件权限或只读驱动器）。</value>
+  </data>
+  <data name="Store_RequestMissing" xml:space="preserve">
+    <value>缺少扫描设置。</value>
+  </data>
+  <data name="Store_SaveFailed" xml:space="preserve">
+    <value>无法保存此次扫描。</value>
+  </data>
+  <data name="Store_SqliteError" xml:space="preserve">
+    <value>SQLite 错误 {0}：{1}</value>
+  </data>
+  <data name="Store_WalOverShare" xml:space="preserve">
+    <value>数据库“{0}”当前以 WAL 模式打开——通常是其所在计算机上的 Zutritt。只有在那里关闭后才能通过共享打开；随后 Zutritt 会将其永久切换为适合共享的日志模式。</value>
+  </data>
+  <data name="Text_ListAnd" xml:space="preserve">
+    <value>{0}和{1}</value>
+  </data>
+  <data name="Text_ListSeparator" xml:space="preserve">
+    <value>、</value>
+  </data>
+  <data name="Text_Quote" xml:space="preserve">
+    <value>“{0}”</value>
+  </data>
+  <data name="Time_Milliseconds" xml:space="preserve">
+    <value>{0:0} 毫秒</value>
+  </data>
+  <data name="Time_Minutes" xml:space="preserve">
+    <value>{0:0} 分钟</value>
+  </data>
+  <data name="Time_Seconds" xml:space="preserve">
+    <value>{0:0} 秒</value>
+  </data>
+</root>

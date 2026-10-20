@@ -1,0 +1,798 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- Zutritt – textes français. TRADUCTION AUTOMATIQUE, non relue par un locuteur natif (directive 13) : à relire avant la première version publique. Les entrées marquées « TODO-übersetzen » sont encore en anglais. -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Error_WithCode" xml:space="preserve">
+    <value>{0} (erreur {1})</value>
+  </data>
+  <data name="Finding_BroadRead" xml:space="preserve">
+    <value>« {0} » a « {1} »{2} – pratiquement toute personne connectée peut lire ici.</value>
+  </data>
+  <data name="Finding_BroadWrite" xml:space="preserve">
+    <value>« {0} » a « {1} »{2} – pratiquement toute personne connectée peut écrire ici.</value>
+  </data>
+  <data name="Finding_DeepBreak" xml:space="preserve">
+    <value>Héritage interrompu au niveau {0} (à partir du niveau {1}, une exception est considérée comme cachée).</value>
+  </data>
+  <data name="Finding_Deny" xml:space="preserve">
+    <value>Entrée de refus pour « {0} » ({1} refusé).</value>
+  </data>
+  <data name="Finding_DirectUser" xml:space="preserve">
+    <value>« {0} » a « {1} » directement en tant que personne au lieu de passer par un groupe.</value>
+  </data>
+  <data name="Finding_DisabledAccount" xml:space="preserve">
+    <value>Le compte désactivé « {0} » a ici « {1} ».</value>
+  </data>
+  <data name="Finding_EmptyGroup" xml:space="preserve">
+    <value>Le groupe « {0} » n’a pas de membres, mais dispose d’autorisations (« {1} »).</value>
+  </data>
+  <data name="Finding_ForeignInheritedMany" xml:space="preserve">
+    <value>Les entrées héritées ne correspondent pas au dossier parent – probablement déplacé. {0} ne viennent pas de là, mais de l’ancien emplacement.</value>
+  </data>
+  <data name="Finding_ForeignInheritedOne" xml:space="preserve">
+    <value>Les entrées héritées ne correspondent pas au dossier parent – probablement déplacé. {0} ne vient pas de là, mais de l’ancien emplacement.</value>
+  </data>
+  <data name="Finding_FullControl" xml:space="preserve">
+    <value>« {0} » a le contrôle total{1} et peut donc modifier les autorisations et s’approprier les éléments.</value>
+  </data>
+  <data name="Finding_InheritanceDiffers" xml:space="preserve">
+    <value>Les entrées héritées ne correspondent pas au dossier parent – probablement déplacé ; des autorisations de l’ancien emplacement s’appliquent peut-être encore.</value>
+  </data>
+  <data name="Finding_InheritsNothing" xml:space="preserve">
+    <value>N’hérite de rien du dossier parent bien que l’héritage soit activé – en général, un programme a créé le dossier avec ses propres autorisations. Les autorisations d’en haut ne s’appliquent ici qu’après la prochaine propagation.</value>
+  </data>
+  <data name="Finding_NotChecked" xml:space="preserve">
+    <value>Non vérifié : {0}.</value>
+  </data>
+  <data name="Finding_OnlyForChildren" xml:space="preserve">
+    <value> (s’applique aux sous-dossiers ou fichiers)</value>
+  </data>
+  <data name="Finding_OrphanDenyEntry" xml:space="preserve">
+    <value>une entrée de refus</value>
+  </data>
+  <data name="Finding_OrphanEntry" xml:space="preserve">
+    <value>Le SID orphelin {0} a {1} – le compte n’existe plus.</value>
+  </data>
+  <data name="Finding_OrphanEntryLevel" xml:space="preserve">
+    <value>une entrée « {0} »</value>
+  </data>
+  <data name="Finding_OrphanEntryParts" xml:space="preserve">
+    <value>une entrée {0}</value>
+  </data>
+  <data name="Finding_OrphanOwner" xml:space="preserve">
+    <value>Le propriétaire est le SID orphelin {0} – le compte n’existe plus.</value>
+  </data>
+  <data name="Finding_OrphanOwnerAndEntry" xml:space="preserve">
+    <value>Le SID orphelin {0} est propriétaire et a {1} – le compte n’existe plus.</value>
+  </data>
+  <data name="Finding_OwnerIsUser" xml:space="preserve">
+    <value>Le propriétaire est le compte d’utilisateur « {0} ».</value>
+  </data>
+  <data name="Finding_ShareEveryone" xml:space="preserve">
+    <value>Autorisation du partage « {0} » : « {1} » – la protection repose uniquement sur NTFS.</value>
+  </data>
+  <data name="Finding_ShareOrphan" xml:space="preserve">
+    <value>L’autorisation du partage mentionne le SID orphelin {0} – le compte n’existe plus.</value>
+  </data>
+  <data name="Finding_ShareUnreadable" xml:space="preserve">
+    <value>Les autorisations du partage {0} n’ont pas pu être lues.</value>
+  </data>
+  <data name="Finding_UnreadableFile" xml:space="preserve">
+    <value>Fichier illisible : {0} – autorisations non vérifiées ici et en dessous.</value>
+  </data>
+  <data name="Finding_UnreadableFolder" xml:space="preserve">
+    <value>Dossier illisible : {0} – autorisations non vérifiées ici et en dessous.</value>
+  </data>
+  <data name="Identity_DirectoryErrorAccounts" xml:space="preserve">
+    <value>Erreur d’annuaire lors de la résolution des comptes : {0}</value>
+  </data>
+  <data name="Identity_DirectoryErrorMembers" xml:space="preserve">
+    <value>Erreur d’annuaire lors de la lecture des membres du groupe : {0}</value>
+  </data>
+  <data name="Identity_DirectoryTimeout" xml:space="preserve">
+    <value>L’annuaire ne répond pas dans un délai de {0} – les comptes et groupes de cette source restent « Inconnu ».</value>
+  </data>
+  <data name="Identity_DirectoryUnreachable" xml:space="preserve">
+    <value>Annuaire inaccessible.</value>
+  </data>
+  <data name="Identity_GroupsTooDeep" xml:space="preserve">
+    <value>Les groupes sont imbriqués sur plus de {0} niveaux – les membres de ce groupe n’ont plus été résolus.</value>
+  </data>
+  <data name="Identity_LookupTimeout" xml:space="preserve">
+    <value>La résolution des comptes ne répond pas dans un délai de {0}. Les comptes concernés restent « Inconnu ».</value>
+  </data>
+  <data name="Identity_MembersMerged" xml:space="preserve">
+    <value>Le groupe a des membres différents sur les serveurs analysés. Comme chaque SID n’apparaît qu’une fois dans une analyse, les membres de tous les serveurs sont regroupés – un accès via ce groupe ne s’applique peut-être qu’à l’un des serveurs.</value>
+  </data>
+  <data name="Identity_NamesNotResolvable" xml:space="preserve">
+    <value>Impossible de résoudre les noms de compte : {0}. Les comptes concernés restent « Inconnu ».</value>
+  </data>
+  <data name="Identity_NotAskedServer" xml:space="preserve">
+    <value>Les comptes n’ont pas été recherchés sur le serveur lui-même. Les comptes non résolus restent donc « Inconnu » au lieu de « Orphelin » – seul le serveur connaît ses comptes locaux.</value>
+  </data>
+  <data name="Identity_Service" xml:space="preserve">
+    <value>Service ({0})</value>
+  </data>
+  <data name="Identity_UnknownError" xml:space="preserve">
+    <value>erreur inconnue</value>
+  </data>
+  <data name="Phase_Accounts" xml:space="preserve">
+    <value>Comptes</value>
+  </data>
+  <data name="Phase_Done" xml:space="preserve">
+    <value>Terminé</value>
+  </data>
+  <data name="Phase_Findings" xml:space="preserve">
+    <value>Constats</value>
+  </data>
+  <data name="Phase_Folders" xml:space="preserve">
+    <value>Dossiers</value>
+  </data>
+  <data name="Phase_Targets" xml:space="preserve">
+    <value>Cibles</value>
+  </data>
+  <data name="Rights_ChangePermissions" xml:space="preserve">
+    <value>Modifier les autorisations</value>
+  </data>
+  <data name="Rights_Delete" xml:space="preserve">
+    <value>Suppression</value>
+  </data>
+  <data name="Rights_DeleteChildren" xml:space="preserve">
+    <value>Suppression de sous-dossiers et de fichiers</value>
+  </data>
+  <data name="Rights_DeniedFromModify" xml:space="preserve">
+    <value>Refusé : Modifier et Contrôle total (à partir de Modifier)</value>
+  </data>
+  <data name="Rights_DeniedFromRead" xml:space="preserve">
+    <value>Refusé : tout (à partir de Lecture)</value>
+  </data>
+  <data name="Rights_DeniedFull" xml:space="preserve">
+    <value>Refusé : Contrôle total</value>
+  </data>
+  <data name="Rights_DeniedNothing" xml:space="preserve">
+    <value>Refusé : rien (sans effet)</value>
+  </data>
+  <data name="Rights_FullControl" xml:space="preserve">
+    <value>Contrôle total</value>
+  </data>
+  <data name="Rights_List" xml:space="preserve">
+    <value>Afficher le contenu</value>
+  </data>
+  <data name="Rights_Modify" xml:space="preserve">
+    <value>Modification</value>
+  </data>
+  <data name="Rights_None" xml:space="preserve">
+    <value>Aucun accès</value>
+  </data>
+  <data name="Rights_Read" xml:space="preserve">
+    <value>Lecture</value>
+  </data>
+  <data name="Rights_ReadAttributes" xml:space="preserve">
+    <value>Lire les attributs</value>
+  </data>
+  <data name="Rights_ReadPermissions" xml:space="preserve">
+    <value>Lire les autorisations</value>
+  </data>
+  <data name="Rights_Synchronize" xml:space="preserve">
+    <value>Synchroniser</value>
+  </data>
+  <data name="Rights_TakeOwnership" xml:space="preserve">
+    <value>Appropriation</value>
+  </data>
+  <data name="Rights_Traverse" xml:space="preserve">
+    <value>Parcours du dossier / exécuter le fichier</value>
+  </data>
+  <data name="Rights_Write" xml:space="preserve">
+    <value>Écriture</value>
+  </data>
+  <data name="Rights_WriteAttributes" xml:space="preserve">
+    <value>Écrire les attributs</value>
+  </data>
+  <data name="Rule_ZT01_Explanation" xml:space="preserve">
+    <value>Un groupe qui inclut pratiquement tout le monde (par ex. « Tout le monde », « Utilisateurs authentifiés », « Utilisateurs du domaine ») peut créer ou modifier des fichiers ici. Toute personne connectée peut ainsi falsifier, supprimer ou – par exemple via un logiciel malveillant – chiffrer des données.</value>
+  </data>
+  <data name="Rule_ZT01_Recommendation" xml:space="preserve">
+    <value>Retirer le droit d’écriture du groupe large et ne l’accorder qu’à un groupe métier contenant exactement les personnes responsables.</value>
+  </data>
+  <data name="Rule_ZT01_Title" xml:space="preserve">
+    <value>Un groupe large peut écrire</value>
+  </data>
+  <data name="Rule_ZT02_Explanation" xml:space="preserve">
+    <value>Un groupe qui inclut pratiquement tout le monde peut lire ou afficher le contenu ici. Les données confidentielles sont ainsi visibles par toute personne connectée.</value>
+  </data>
+  <data name="Rule_ZT02_Recommendation" xml:space="preserve">
+    <value>Vérifier si les données sont vraiment destinées à tous ; sinon, remplacer le groupe large par un groupe métier.</value>
+  </data>
+  <data name="Rule_ZT02_Title" xml:space="preserve">
+    <value>Un groupe large peut lire</value>
+  </data>
+  <data name="Rule_ZT03_Explanation" xml:space="preserve">
+    <value>L’autorisation est accordée à un compte d’utilisateur individuel au lieu d’un groupe. Ces entrées sont facilement oubliées lors d’un changement de service ou d’un départ et rendent l’attribution des droits difficile à suivre.</value>
+  </data>
+  <data name="Rule_ZT03_Recommendation" xml:space="preserve">
+    <value>Accorder l’autorisation via un groupe (rôle ou service) et supprimer l’entrée de la personne.</value>
+  </data>
+  <data name="Rule_ZT03_Title" xml:space="preserve">
+    <value>Autorisation accordée directement à une personne</value>
+  </data>
+  <data name="Rule_ZT04_Explanation" xml:space="preserve">
+    <value>Une entrée ou le propriétaire renvoie à un compte qui n’existe plus. Le SID ne correspond à aucun nom ; personne ne peut dire facilement à qui l’autorisation a été accordée.</value>
+  </data>
+  <data name="Rule_ZT04_Recommendation" xml:space="preserve">
+    <value>Supprimer l’entrée orpheline ; si le SID est propriétaire, définir un propriétaire valide (par ex. « Administrateurs »).</value>
+  </data>
+  <data name="Rule_ZT04_Title" xml:space="preserve">
+    <value>SID orphelin</value>
+  </data>
+  <data name="Rule_ZT05_Explanation" xml:space="preserve">
+    <value>Un compte ou un groupe sans rôle d’administrateur dispose du contrôle total. Il peut donc modifier les autorisations et s’approprier les éléments – c’est-à-dire s’accorder, ainsi qu’à d’autres, n’importe quels droits en contournant tout contrôle.</value>
+  </data>
+  <data name="Rule_ZT05_Recommendation" xml:space="preserve">
+    <value>Réduire à « Modification » ; n’accorder le contrôle total qu’aux administrateurs et à SYSTEM.</value>
+  </data>
+  <data name="Rule_ZT05_Title" xml:space="preserve">
+    <value>Contrôle total pour des non-administrateurs</value>
+  </data>
+  <data name="Rule_ZT06_Explanation" xml:space="preserve">
+    <value>L’héritage est interrompu profondément dans l’arborescence. Ces exceptions ne se voient pas d’en haut ; les modifications des dossiers parents n’arrivent pas jusqu’ici.</value>
+  </data>
+  <data name="Rule_ZT06_Recommendation" xml:space="preserve">
+    <value>Vérifier si l’exception est encore nécessaire et sinon réactiver l’héritage. Documenter les exceptions nécessaires ou les reproduire plus haut dans l’arborescence.</value>
+  </data>
+  <data name="Rule_ZT06_Title" xml:space="preserve">
+    <value>Exception profondément cachée</value>
+  </data>
+  <data name="Rule_ZT07_Explanation" xml:space="preserve">
+    <value>Une entrée de refus explicite l’emporte sur toutes les entrées d’autorisation. Les refus sont difficiles à suivre et touchent souvent plus de personnes que prévu (par ex. tous les membres d’un groupe).</value>
+  </data>
+  <data name="Rule_ZT07_Recommendation" xml:space="preserve">
+    <value>Mieux vaut ne pas accorder le droit du tout (adapter les groupes en conséquence). N’utiliser les refus que pour des exceptions justifiées et les documenter.</value>
+  </data>
+  <data name="Rule_ZT07_Title" xml:space="preserve">
+    <value>Entrée de refus</value>
+  </data>
+  <data name="Rule_ZT08_Explanation" xml:space="preserve">
+    <value>L’autorisation du partage accorde à toutes les personnes connectées au moins « Modifier ». La protection repose donc uniquement sur les autorisations NTFS. C’est une pratique recommandée par Microsoft, mais elle doit être choisie en connaissance de cause.</value>
+  </data>
+  <data name="Rule_ZT08_Recommendation" xml:space="preserve">
+    <value>Rien à faire si les autorisations NTFS sont propres. Sinon, restreindre aussi l’autorisation du partage.</value>
+  </data>
+  <data name="Rule_ZT08_Title" xml:space="preserve">
+    <value>Partage : tout le monde peut modifier</value>
+  </data>
+  <data name="Rule_ZT09_Explanation" xml:space="preserve">
+    <value>Le dossier (ou le fichier) n’a pas pu être lu, par exemple parce que l’accès a été refusé. Ses autorisations et tout ce qui se trouve en dessous n’ont pas été vérifiés lors de cette analyse.</value>
+  </data>
+  <data name="Rule_ZT09_Recommendation" xml:space="preserve">
+    <value>Corriger la cause ou analyser avec un compte autorisé à lire les autorisations, puis relancer l’analyse.</value>
+  </data>
+  <data name="Rule_ZT09_Title" xml:space="preserve">
+    <value>Dossier illisible</value>
+  </data>
+  <data name="Rule_ZT10_Explanation" xml:space="preserve">
+    <value>Le propriétaire peut modifier les autorisations à tout moment, quel que soit le contenu de la liste. Si une personne est propriétaire, elle conserve cette possibilité même après un changement de rôle.</value>
+  </data>
+  <data name="Rule_ZT10_Recommendation" xml:space="preserve">
+    <value>Transférer la propriété à « Administrateurs » (ou à un groupe d’administration).</value>
+  </data>
+  <data name="Rule_ZT10_Title" xml:space="preserve">
+    <value>Le propriétaire est un compte d’utilisateur</value>
+  </data>
+  <data name="Rule_ZT11_Explanation" xml:space="preserve">
+    <value>Un groupe sans membres dispose d’autorisations. L’entrée est sans effet aujourd’hui, mais devient effective sans qu’on le remarque dès que quelqu’un est ajouté au groupe.</value>
+  </data>
+  <data name="Rule_ZT11_Recommendation" xml:space="preserve">
+    <value>Supprimer l’entrée si le groupe n’est plus nécessaire ; sinon, documenter son objectif.</value>
+  </data>
+  <data name="Rule_ZT11_Title" xml:space="preserve">
+    <value>Groupe vide autorisé</value>
+  </data>
+  <data name="Rule_ZT12_Explanation" xml:space="preserve">
+    <value>Un compte d’utilisateur désactivé dispose ici d’une autorisation propre. Si le compte est réactivé, l’autorisation s’applique immédiatement.</value>
+  </data>
+  <data name="Rule_ZT12_Recommendation" xml:space="preserve">
+    <value>Supprimer l’entrée ; supprimer les comptes des personnes parties une fois le délai écoulé.</value>
+  </data>
+  <data name="Rule_ZT12_Title" xml:space="preserve">
+    <value>Compte désactivé autorisé</value>
+  </data>
+  <data name="Rule_ZT13_Explanation" xml:space="preserve">
+    <value>Les autorisations du partage n’ont pas pu être lues. L’accès réseau a donc été calculé uniquement à partir des autorisations NTFS et peut être plus faible en réalité.</value>
+  </data>
+  <data name="Rule_ZT13_Recommendation" xml:space="preserve">
+    <value>Relancer l’analyse avec des droits d’administrateur sur le serveur.</value>
+  </data>
+  <data name="Rule_ZT13_Title" xml:space="preserve">
+    <value>Autorisations du partage illisibles</value>
+  </data>
+  <data name="Rule_ZT14_Explanation" xml:space="preserve">
+    <value>Le dossier (ou le fichier) possède des entrées héritées qui ne correspondent pas au dossier parent. Il s’agit typiquement de dossiers déplacés : lors d’un déplacement sur le même lecteur, Windows conserve les anciennes autorisations héritées au lieu de reprendre celles du nouvel emplacement. Des autorisations de l’ancien emplacement peuvent alors encore s’appliquer ici – y compris pour des personnes qui ne devraient pas avoir accès au nouvel emplacement – et les modifications du dossier parent n’arrivent qu’après la prochaine propagation des autorisations.</value>
+  </data>
+  <data name="Rule_ZT14_Recommendation" xml:space="preserve">
+    <value>Vérifier si les autorisations divergentes sont encore nécessaires. Sinon, réappliquer l’héritage : dans les paramètres de sécurité avancés, désactiver l’héritage en supprimant les entrées héritées, puis le réactiver aussitôt – les entrées propres sont conservées.</value>
+  </data>
+  <data name="Rule_ZT14_Title" xml:space="preserve">
+    <value>Les autorisations diffèrent de l’héritage</value>
+  </data>
+  <data name="Scan_AdminShareDefault" xml:space="preserve">
+    <value>Autorisations du partage illisibles : partage administratif sans autorisations propres – la valeur interne de Windows s’applique (en général, administrateurs uniquement)</value>
+  </data>
+  <data name="Scan_InvalidTarget" xml:space="preserve">
+    <value>Cible non valide : {0}</value>
+  </data>
+  <data name="Scan_ListingFailed" xml:space="preserve">
+    <value>Impossible d’afficher le contenu : {0}</value>
+  </data>
+  <data name="Scan_LocalWithoutShares" xml:space="preserve">
+    <value>{0} – dossiers locaux sans attribution à des partages</value>
+  </data>
+  <data name="Scan_NoDiskShares" xml:space="preserve">
+    <value>Aucun partage de disque trouvé</value>
+  </data>
+  <data name="Scan_NoLocalDiskShares" xml:space="preserve">
+    <value>Aucun partage de disque trouvé sur cet ordinateur</value>
+  </data>
+  <data name="Scan_NotSupported" xml:space="preserve">
+    <value>L’analyse n’est possible que sous Windows (autorisations NTFS, partages, Active Directory).</value>
+  </data>
+  <data name="Scan_ShareLocalPathInvalid" xml:space="preserve">
+    <value>Chemin local du partage non valide : « {0} »</value>
+  </data>
+  <data name="Scan_ShareLocalPathUnreadable" xml:space="preserve">
+    <value>Chemin local du partage illisible – partage non vérifié</value>
+  </data>
+  <data name="Scan_SharePermissionsUnreadable" xml:space="preserve">
+    <value>Autorisations du partage illisibles</value>
+  </data>
+  <data name="Scan_SharesTimeout" xml:space="preserve">
+    <value>Partages de « {0} » : pas de réponse dans un délai de {1}</value>
+  </data>
+  <data name="Scan_ShareTimeout" xml:space="preserve">
+    <value>Partage « {0} » : pas de réponse dans un délai de {1}</value>
+  </data>
+  <data name="Scan_TargetUnreachable" xml:space="preserve">
+    <value>Cible inaccessible : {0}</value>
+  </data>
+  <data name="Scope_AdminOnlyNewer" xml:space="preserve">
+    <value>seule l’analyse la plus récente a inclus les partages administratifs</value>
+  </data>
+  <data name="Scope_AdminOnlyOlder" xml:space="preserve">
+    <value>seule l’analyse précédente a inclus les partages administratifs</value>
+  </data>
+  <data name="Scope_AllLevels" xml:space="preserve">
+    <value>tous les niveaux</value>
+  </data>
+  <data name="Scope_DeepBreak" xml:space="preserve">
+    <value>exception profondément cachée avant à partir du niveau {0}, maintenant à partir du niveau {1}</value>
+  </data>
+  <data name="Scope_Depth" xml:space="preserve">
+    <value>profondeur avant {0}, maintenant {1}</value>
+  </data>
+  <data name="Scope_Differs" xml:space="preserve">
+    <value>Le périmètre diffère : {0}. Seul ce que les deux analyses ont couvert est comparé.</value>
+  </data>
+  <data name="Scope_FilesOnlyNewer" xml:space="preserve">
+    <value>seule l’analyse la plus récente a inclus les fichiers</value>
+  </data>
+  <data name="Scope_FilesOnlyOlder" xml:space="preserve">
+    <value>seule l’analyse précédente a inclus les fichiers</value>
+  </data>
+  <data name="Scope_GroupsOnlyNewer" xml:space="preserve">
+    <value>seule l’analyse la plus récente a résolu les groupes jusqu’aux personnes</value>
+  </data>
+  <data name="Scope_GroupsOnlyOlder" xml:space="preserve">
+    <value>seule l’analyse précédente a résolu les groupes jusqu’aux personnes</value>
+  </data>
+  <data name="Scope_UpToLevel" xml:space="preserve">
+    <value>jusqu’au niveau {0}</value>
+  </data>
+  <data name="Share_Change" xml:space="preserve">
+    <value>Modifier</value>
+  </data>
+  <data name="Share_FullControl" xml:space="preserve">
+    <value>Contrôle total</value>
+  </data>
+  <data name="Share_Read" xml:space="preserve">
+    <value>Lecture</value>
+  </data>
+  <data name="Sid_AccessControlAssistanceOperators" xml:space="preserve">
+    <value>Access Control Assistance Operators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_AccountOperators" xml:space="preserve">
+    <value>Account Operators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Administrators" xml:space="preserve">
+    <value>Administrators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_AllAppPackages" xml:space="preserve">
+    <value>ALL APPLICATION PACKAGES</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_AllRestrictedAppPackages" xml:space="preserve">
+    <value>ALL RESTRICTED APPLICATION PACKAGES</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_AllServices" xml:space="preserve">
+    <value>ALL SERVICES</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_AnonymousLogon" xml:space="preserve">
+    <value>ANONYMOUS LOGON</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_AppCapability" xml:space="preserve">
+    <value>Fonctionnalité d’application ({0})</value>
+  </data>
+  <data name="Sid_AppPackage" xml:space="preserve">
+    <value>Package d’application ({0})</value>
+  </data>
+  <data name="Sid_AuthenticatedUsers" xml:space="preserve">
+    <value>Authenticated Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_BackupOperators" xml:space="preserve">
+    <value>Backup Operators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Batch" xml:space="preserve">
+    <value>BATCH</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_CapabilityGroup" xml:space="preserve">
+    <value>Groupe de fonctionnalités ({0})</value>
+  </data>
+  <data name="Sid_CertificateServiceDcomAccess" xml:space="preserve">
+    <value>Certificate Service DCOM Access</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_ConsoleLogon" xml:space="preserve">
+    <value>CONSOLE LOGON</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_CreatorGroup" xml:space="preserve">
+    <value>CREATOR GROUP</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_CreatorGroupServer" xml:space="preserve">
+    <value>CREATOR GROUP SERVER</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_CreatorOwner" xml:space="preserve">
+    <value>CREATOR OWNER</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_CreatorOwnerServer" xml:space="preserve">
+    <value>CREATOR OWNER SERVER</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_CryptographicOperators" xml:space="preserve">
+    <value>Cryptographic Operators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_DistributedComUsers" xml:space="preserve">
+    <value>Distributed COM Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_EnterpriseDomainControllers" xml:space="preserve">
+    <value>ENTERPRISE DOMAIN CONTROLLERS</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_EventLogReaders" xml:space="preserve">
+    <value>Event Log Readers</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Everyone" xml:space="preserve">
+    <value>Everyone</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Guests" xml:space="preserve">
+    <value>Guests</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_HyperVAdministrators" xml:space="preserve">
+    <value>Hyper-V Administrators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_IisAppPool" xml:space="preserve">
+    <value>Pool d’applications IIS ({0})</value>
+  </data>
+  <data name="Sid_IncomingForestTrustBuilders" xml:space="preserve">
+    <value>Incoming Forest Trust Builders</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_IntegrityLevel" xml:space="preserve">
+    <value>Niveau d’intégrité ({0})</value>
+  </data>
+  <data name="Sid_Interactive" xml:space="preserve">
+    <value>INTERACTIVE</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Local" xml:space="preserve">
+    <value>LOCAL</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_LocalAccount" xml:space="preserve">
+    <value>Local account</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_LocalAdminAccount" xml:space="preserve">
+    <value>Local account and member of Administrators group</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_LocalService" xml:space="preserve">
+    <value>LOCAL SERVICE</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_LogonSession" xml:space="preserve">
+    <value>Session d’ouverture ({0})</value>
+  </data>
+  <data name="Sid_Network" xml:space="preserve">
+    <value>NETWORK</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_NetworkConfigurationOperators" xml:space="preserve">
+    <value>Network Configuration Operators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_NetworkService" xml:space="preserve">
+    <value>NETWORK SERVICE</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_NtlmAuthentication" xml:space="preserve">
+    <value>NTLM Authentication</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_NullSid" xml:space="preserve">
+    <value>NULL SID</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_OtherOrganization" xml:space="preserve">
+    <value>Other Organization</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_OwnerRights" xml:space="preserve">
+    <value>OWNER RIGHTS</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PerformanceLogUsers" xml:space="preserve">
+    <value>Performance Log Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PerformanceMonitorUsers" xml:space="preserve">
+    <value>Performance Monitor Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PowerUsers" xml:space="preserve">
+    <value>Power Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PrefixAppPackages" xml:space="preserve">
+    <value>APPLICATION PACKAGE AUTHORITY\</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PrefixBuiltin" xml:space="preserve">
+    <value>BUILTIN\</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PrefixNt" xml:space="preserve">
+    <value>NT AUTHORITY\</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PreWindows2000" xml:space="preserve">
+    <value>Pre-Windows 2000 Compatible Access</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PrintOperators" xml:space="preserve">
+    <value>Print Operators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_RdsEndpointServers" xml:space="preserve">
+    <value>RDS Endpoint Servers</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_RdsManagementServers" xml:space="preserve">
+    <value>RDS Management Servers</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_RdsRemoteAccessServers" xml:space="preserve">
+    <value>RDS Remote Access Servers</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_RemoteDesktopUsers" xml:space="preserve">
+    <value>Remote Desktop Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_RemoteInteractiveLogon" xml:space="preserve">
+    <value>REMOTE INTERACTIVE LOGON</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_RemoteManagementUsers" xml:space="preserve">
+    <value>Remote Management Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Replicator" xml:space="preserve">
+    <value>Replicator</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Restricted" xml:space="preserve">
+    <value>RESTRICTED</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_ScheduledTask" xml:space="preserve">
+    <value>Tâche planifiée ({0})</value>
+  </data>
+  <data name="Sid_Self" xml:space="preserve">
+    <value>SELF</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_ServerOperators" xml:space="preserve">
+    <value>Server Operators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Service" xml:space="preserve">
+    <value>SERVICE</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_ServiceNotInstalled" xml:space="preserve">
+    <value>Service non installé ({0})</value>
+  </data>
+  <data name="Sid_TerminalServerLicenseServers" xml:space="preserve">
+    <value>Terminal Server License Servers</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_TerminalServerUser" xml:space="preserve">
+    <value>TERMINAL SERVER USER</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_ThisOrganization" xml:space="preserve">
+    <value>This Organization</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_UserModeDriver" xml:space="preserve">
+    <value>Pilote en mode utilisateur ({0})</value>
+  </data>
+  <data name="Sid_Users" xml:space="preserve">
+    <value>Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_VirtualMachine" xml:space="preserve">
+    <value>Machine virtuelle ({0})</value>
+  </data>
+  <data name="Sid_VirtualSystemAccount" xml:space="preserve">
+    <value>Compte système virtuel ({0})</value>
+  </data>
+  <data name="Sid_WindowsAuthorizationAccess" xml:space="preserve">
+    <value>Windows Authorization Access Group</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Store_AccessDenied" xml:space="preserve">
+    <value>Accès à la base de données refusé.</value>
+  </data>
+  <data name="Store_CannotOpen" xml:space="preserve">
+    <value>Impossible d’ouvrir la base de données « {0} ». {1}</value>
+  </data>
+  <data name="Store_CantOpen" xml:space="preserve">
+    <value>Le fichier ou son journal n’est pas accessible : vérifiez le chemin et les droits d’accès ; un autre programme le verrouille peut-être.</value>
+  </data>
+  <data name="Store_Constraint" xml:space="preserve">
+    <value>Les données enfreignent une règle de la base de données ({0}).</value>
+  </data>
+  <data name="Store_Corrupt" xml:space="preserve">
+    <value>Le fichier de la base de données est endommagé.</value>
+  </data>
+  <data name="Store_DeleteFailed" xml:space="preserve">
+    <value>L’analyse {0} n’a pas pu être supprimée.</value>
+  </data>
+  <data name="Store_DiskFull" xml:space="preserve">
+    <value>Le lecteur est plein.</value>
+  </data>
+  <data name="Store_FindPreviousFailed" xml:space="preserve">
+    <value>L’analyse précédente n’a pas pu être recherchée.</value>
+  </data>
+  <data name="Store_FolderNotCreated" xml:space="preserve">
+    <value>Impossible de créer le dossier de la base de données « {0} » : {1}</value>
+  </data>
+  <data name="Store_Foreign" xml:space="preserve">
+    <value>Le fichier « {0} » est une base de données SQLite, mais pas une base de données Zutritt. Il n’est pas modifié.</value>
+  </data>
+  <data name="Store_InvalidData" xml:space="preserve">
+    <value>{0} La base de données « {1} » contient des données non valides ({2}).</value>
+  </data>
+  <data name="Store_IoError" xml:space="preserve">
+    <value>Erreur d’entrée/sortie lors de l’accès au fichier de la base de données.</value>
+  </data>
+  <data name="Store_ListFailed" xml:space="preserve">
+    <value>La liste des analyses n’a pas pu être lue.</value>
+  </data>
+  <data name="Store_LoadFailed" xml:space="preserve">
+    <value>L’analyse {0} n’a pas pu être chargée.</value>
+  </data>
+  <data name="Store_Locked" xml:space="preserve">
+    <value>La base de données est verrouillée par un autre programme. Veuillez réessayer plus tard.</value>
+  </data>
+  <data name="Store_Newer" xml:space="preserve">
+    <value>La base de données « {0} » provient d’une version plus récente de Zutritt (schéma {1}, cette version connaît jusqu’au {2}). Veuillez mettre à jour Zutritt.</value>
+  </data>
+  <data name="Store_NotSqlite" xml:space="preserve">
+    <value>Le fichier n’est pas une base de données SQLite.</value>
+  </data>
+  <data name="Store_NotWritable" xml:space="preserve">
+    <value>Impossible d’écrire dans la base de données.</value>
+  </data>
+  <data name="Store_ReadOnly" xml:space="preserve">
+    <value>La base de données est en lecture seule (autorisations du fichier ou lecteur en lecture seule).</value>
+  </data>
+  <data name="Store_RequestMissing" xml:space="preserve">
+    <value>Les paramètres de l’analyse sont manquants.</value>
+  </data>
+  <data name="Store_SaveFailed" xml:space="preserve">
+    <value>L’analyse n’a pas pu être enregistrée.</value>
+  </data>
+  <data name="Store_SqliteError" xml:space="preserve">
+    <value>Erreur SQLite {0} : {1}</value>
+  </data>
+  <data name="Store_WalOverShare" xml:space="preserve">
+    <value>La base de données « {0} » est actuellement ouverte en mode WAL, généralement par Zutritt sur l’ordinateur où elle se trouve. Elle ne peut être ouverte via un partage qu’une fois fermée là-bas ; Zutritt la passe alors définitivement au mode de journal adapté aux partages.</value>
+  </data>
+  <data name="Text_ListAnd" xml:space="preserve">
+    <value>{0} et {1}</value>
+  </data>
+  <data name="Text_ListSeparator" xml:space="preserve">
+    <value>, </value>
+  </data>
+  <data name="Text_Quote" xml:space="preserve">
+    <value>« {0} »</value>
+  </data>
+  <data name="Time_Milliseconds" xml:space="preserve">
+    <value>{0:0} millisecondes</value>
+  </data>
+  <data name="Time_Minutes" xml:space="preserve">
+    <value>{0:0} minutes</value>
+  </data>
+  <data name="Time_Seconds" xml:space="preserve">
+    <value>{0:0} secondes</value>
+  </data>
+</root>

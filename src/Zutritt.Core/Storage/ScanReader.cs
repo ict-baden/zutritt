@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.Data.Sqlite;
 using Zutritt.Core.Model;
 
+using Zutritt.Core.Resources;
 namespace Zutritt.Core.Storage;
 
 /// <summary>Baut gespeicherte Läufe wieder auf. Beschädigte Daten führen zu einem Fehler, nie zu stillen Ersatzwerten.</summary>
@@ -281,7 +282,7 @@ internal static class ScanReader
 
     private static ScanRequest ParseRequest(string json) =>
         JsonSerializer.Deserialize<ScanRequest>(json, ScanWriter.Json)
-        ?? throw new InvalidDataException("Die Scan-Einstellungen fehlen.");
+        ?? throw new InvalidDataException(Strings.Store_RequestMissing);
 
     // Eine spätere Version kann neue Kontoarten speichern; für diese Version sind sie „unbekannt“, nicht falsch
     private static PrincipalKind ParseKind(string s) =>

@@ -6,6 +6,7 @@ using Zutritt.Core.Identity;
 using Zutritt.Core.Model;
 using Zutritt.Core.Platform;
 
+using Zutritt.Core.Resources;
 namespace Zutritt.Core.Scanning;
 
 /// <summary>
@@ -34,7 +35,7 @@ namespace Zutritt.Core.Scanning;
 public sealed class Scanner
 {
     /// <summary>Meldung, wenn es keine Systemanbindung gibt.</summary>
-    public const string NotSupportedMessage = "Scannen ist nur unter Windows möglich (NTFS-Rechte, Freigaben, Active Directory).";
+    public static string NotSupportedMessage => Strings.Scan_NotSupported;
 
     private readonly IScanPlatform? _platform;
     private readonly Action<ScanResult, CancellationToken>? _resolve;

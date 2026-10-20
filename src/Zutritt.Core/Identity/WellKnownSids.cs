@@ -1,11 +1,12 @@
+using System.Globalization;
 using Zutritt.Core.Model;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.Core.Identity;
 
 /// <summary>
-/// Bekannte Sicherheitsprinzipale mit festen deutschen Namen (so, wie ein deutsches Windows sie anzeigt).
-/// Damit sehen Berichte auf deutschen und englischen Installationen gleich aus und hängen für diese SIDs
-/// nicht von der Namensauflösung ab.
+/// Bekannte Sicherheitsprinzipale mit festen Namen in der Sprache der Oberfläche (so, wie ein Windows dieser Sprache sie
+/// anzeigt). Damit hängen Berichte für diese SIDs nicht von der Sprache des scannenden Windows und der Namensauflösung ab.
 /// </summary>
 public static class WellKnownSids
 {
@@ -30,46 +31,46 @@ public static class WellKnownSids
     /// <summary>Präfix der VORDEFINIERT-Gruppen (Aliase der lokalen Kontendatenbank jedes Rechners).</summary>
     public const string BuiltinPrefix = "S-1-5-32-";
 
-    private const string Nt = @"NT-AUTORITÄT\";
-    private const string Builtin = @"VORDEFINIERT\";
-    private const string AppPackages = @"ZERTIFIZIERUNGSSTELLE FÜR ANWENDUNGSPAKETE\";
+    // Namen aus Strings.resx (Schlüssel Sid_…): so, wie Windows sie in der Sprache der Oberfläche anzeigt. Vorangestellt
+    // wird die Quelle („NT-AUTORITÄT\“, „VORDEFINIERT\“ …), ebenfalls übersetzt.
+    private enum Source { None, Nt, Builtin, AppPackages, NtService }
 
     // Pseudo-Konten ohne Mitgliederliste: Windows bestimmt die Zugehörigkeit erst bei der Anmeldung.
-    private static readonly Dictionary<string, string> Pseudo = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, (Source Source, string Key)> Pseudo = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["S-1-0-0"] = "NULL-SID",
-        [Everyone] = "Jeder",
-        ["S-1-2-0"] = "LOKAL",
-        ["S-1-2-1"] = "KONSOLENANMELDUNG",
-        [CreatorOwner] = "ERSTELLER-BESITZER",
-        [CreatorGroup] = "ERSTELLERGRUPPE",
-        ["S-1-3-2"] = "ERSTELLER-BESITZER-SERVER",
-        ["S-1-3-3"] = "ERSTELLERGRUPPE-SERVER",
-        [OwnerRights] = "BESITZERRECHTE",
-        [Network] = Nt + "NETZWERK",
-        ["S-1-5-3"] = Nt + "BATCH",
-        [Interactive] = Nt + "INTERAKTIV",
-        ["S-1-5-6"] = Nt + "DIENST",
-        ["S-1-5-7"] = Nt + "ANONYMOUS-ANMELDUNG",
-        ["S-1-5-9"] = Nt + "DOMÄNENCONTROLLER DER ORGANISATION",
-        ["S-1-5-10"] = Nt + "SELBST",
-        [AuthenticatedUsers] = Nt + "Authentifizierte Benutzer",
-        ["S-1-5-12"] = Nt + "EINGESCHRÄNKT",
-        ["S-1-5-13"] = Nt + "TERMINALSERVERBENUTZER",
-        ["S-1-5-14"] = Nt + "REMOTE INTERAKTIVE ANMELDUNG",
-        ["S-1-5-15"] = Nt + "Diese Organisation",
-        ["S-1-5-17"] = Nt + "IUSR",
-        [LocalSystem] = Nt + "SYSTEM",
-        [LocalService] = Nt + "LOKALER DIENST",
-        [NetworkService] = Nt + "NETZWERKDIENST",
-        ["S-1-5-64-10"] = Nt + "NTLM-Authentifizierung",
-        ["S-1-5-113"] = Nt + "Lokales Konto",
-        ["S-1-5-114"] = Nt + "Lokales Konto und Mitglied der Gruppe „Administratoren“",
-        ["S-1-5-1000"] = Nt + "Andere Organisation",
-        ["S-1-5-80-0"] = @"NT SERVICE\ALLE DIENSTE",
-        [TrustedInstaller] = @"NT SERVICE\TrustedInstaller",
-        ["S-1-15-2-1"] = AppPackages + "ALLE ANWENDUNGSPAKETE",
-        ["S-1-15-2-2"] = AppPackages + "ALLE EINGESCHRÄNKTEN ANWENDUNGSPAKETE",
+        ["S-1-0-0"] = (Source.None, nameof(Strings.Sid_NullSid)),
+        [Everyone] = (Source.None, nameof(Strings.Sid_Everyone)),
+        ["S-1-2-0"] = (Source.None, nameof(Strings.Sid_Local)),
+        ["S-1-2-1"] = (Source.None, nameof(Strings.Sid_ConsoleLogon)),
+        [CreatorOwner] = (Source.None, nameof(Strings.Sid_CreatorOwner)),
+        [CreatorGroup] = (Source.None, nameof(Strings.Sid_CreatorGroup)),
+        ["S-1-3-2"] = (Source.None, nameof(Strings.Sid_CreatorOwnerServer)),
+        ["S-1-3-3"] = (Source.None, nameof(Strings.Sid_CreatorGroupServer)),
+        [OwnerRights] = (Source.None, nameof(Strings.Sid_OwnerRights)),
+        [Network] = (Source.Nt, nameof(Strings.Sid_Network)),
+        ["S-1-5-3"] = (Source.Nt, nameof(Strings.Sid_Batch)),
+        [Interactive] = (Source.Nt, nameof(Strings.Sid_Interactive)),
+        ["S-1-5-6"] = (Source.Nt, nameof(Strings.Sid_Service)),
+        ["S-1-5-7"] = (Source.Nt, nameof(Strings.Sid_AnonymousLogon)),
+        ["S-1-5-9"] = (Source.Nt, nameof(Strings.Sid_EnterpriseDomainControllers)),
+        ["S-1-5-10"] = (Source.Nt, nameof(Strings.Sid_Self)),
+        [AuthenticatedUsers] = (Source.Nt, nameof(Strings.Sid_AuthenticatedUsers)),
+        ["S-1-5-12"] = (Source.Nt, nameof(Strings.Sid_Restricted)),
+        ["S-1-5-13"] = (Source.Nt, nameof(Strings.Sid_TerminalServerUser)),
+        ["S-1-5-14"] = (Source.Nt, nameof(Strings.Sid_RemoteInteractiveLogon)),
+        ["S-1-5-15"] = (Source.Nt, nameof(Strings.Sid_ThisOrganization)),
+        ["S-1-5-17"] = (Source.Nt, "IUSR"),
+        [LocalSystem] = (Source.Nt, "SYSTEM"),
+        [LocalService] = (Source.Nt, nameof(Strings.Sid_LocalService)),
+        [NetworkService] = (Source.Nt, nameof(Strings.Sid_NetworkService)),
+        ["S-1-5-64-10"] = (Source.Nt, nameof(Strings.Sid_NtlmAuthentication)),
+        ["S-1-5-113"] = (Source.Nt, nameof(Strings.Sid_LocalAccount)),
+        ["S-1-5-114"] = (Source.Nt, nameof(Strings.Sid_LocalAdminAccount)),
+        ["S-1-5-1000"] = (Source.Nt, nameof(Strings.Sid_OtherOrganization)),
+        ["S-1-5-80-0"] = (Source.NtService, nameof(Strings.Sid_AllServices)),
+        [TrustedInstaller] = (Source.NtService, "TrustedInstaller"),
+        ["S-1-15-2-1"] = (Source.AppPackages, nameof(Strings.Sid_AllAppPackages)),
+        ["S-1-15-2-2"] = (Source.AppPackages, nameof(Strings.Sid_AllRestrictedAppPackages)),
     };
 
     // VORDEFINIERT-Gruppen sind echte Gruppen der lokalen Kontendatenbank mit Mitgliedern (Kind = Gruppe).
@@ -77,50 +78,65 @@ public static class WellKnownSids
     // von Systemordnern auch auf Arbeitsplatzrechnern ein – deshalb stehen sie hier, statt als „verwaist“ aufzufallen.
     private static readonly Dictionary<string, string> BuiltinGroups = new(StringComparer.OrdinalIgnoreCase)
     {
-        [BuiltinAdministrators] = Builtin + "Administratoren",
-        [BuiltinUsers] = Builtin + "Benutzer",
-        [BuiltinGuests] = Builtin + "Gäste",
-        [BuiltinPowerUsers] = Builtin + "Hauptbenutzer",
-        ["S-1-5-32-548"] = Builtin + "Konten-Operatoren",
-        ["S-1-5-32-549"] = Builtin + "Server-Operatoren",
-        ["S-1-5-32-550"] = Builtin + "Druck-Operatoren",
-        [BuiltinBackupOperators] = Builtin + "Sicherungs-Operatoren",
-        ["S-1-5-32-552"] = Builtin + "Replikations-Operator",
-        ["S-1-5-32-554"] = Builtin + "Prä-Windows 2000 kompatibler Zugriff",
-        ["S-1-5-32-555"] = Builtin + "Remotedesktopbenutzer",
-        ["S-1-5-32-556"] = Builtin + "Netzwerkkonfigurations-Operatoren",
-        ["S-1-5-32-557"] = Builtin + "Erstellungen eingehender Gesamtstrukturvertrauensstellung",
-        ["S-1-5-32-558"] = Builtin + "Leistungsüberwachungsbenutzer",
-        ["S-1-5-32-559"] = Builtin + "Leistungsprotokollbenutzer",
-        ["S-1-5-32-560"] = Builtin + "Windows-Autorisierungszugriffsgruppe",
-        ["S-1-5-32-561"] = Builtin + "Terminalserver-Lizenzserver",
-        ["S-1-5-32-562"] = Builtin + "Distributed COM-Benutzer",
-        ["S-1-5-32-568"] = Builtin + "IIS_IUSRS",
-        ["S-1-5-32-569"] = Builtin + "Kryptografie-Operatoren",
-        ["S-1-5-32-573"] = Builtin + "Ereignisprotokollleser",
-        ["S-1-5-32-574"] = Builtin + "Zertifikatdienst-DCOM-Zugriff",
-        ["S-1-5-32-575"] = Builtin + "RDS-Remotezugriffsserver",
-        ["S-1-5-32-576"] = Builtin + "RDS-Endpunktserver",
-        ["S-1-5-32-577"] = Builtin + "RDS-Verwaltungsserver",
-        ["S-1-5-32-578"] = Builtin + "Hyper-V-Administratoren",
-        ["S-1-5-32-579"] = Builtin + "Zugriffssteuerungs-Unterstützungsoperatoren",
-        ["S-1-5-32-580"] = Builtin + "Remoteverwaltungsbenutzer",
+        [BuiltinAdministrators] = nameof(Strings.Sid_Administrators),
+        [BuiltinUsers] = nameof(Strings.Sid_Users),
+        [BuiltinGuests] = nameof(Strings.Sid_Guests),
+        [BuiltinPowerUsers] = nameof(Strings.Sid_PowerUsers),
+        ["S-1-5-32-548"] = nameof(Strings.Sid_AccountOperators),
+        ["S-1-5-32-549"] = nameof(Strings.Sid_ServerOperators),
+        ["S-1-5-32-550"] = nameof(Strings.Sid_PrintOperators),
+        [BuiltinBackupOperators] = nameof(Strings.Sid_BackupOperators),
+        ["S-1-5-32-552"] = nameof(Strings.Sid_Replicator),
+        ["S-1-5-32-554"] = nameof(Strings.Sid_PreWindows2000),
+        ["S-1-5-32-555"] = nameof(Strings.Sid_RemoteDesktopUsers),
+        ["S-1-5-32-556"] = nameof(Strings.Sid_NetworkConfigurationOperators),
+        ["S-1-5-32-557"] = nameof(Strings.Sid_IncomingForestTrustBuilders),
+        ["S-1-5-32-558"] = nameof(Strings.Sid_PerformanceMonitorUsers),
+        ["S-1-5-32-559"] = nameof(Strings.Sid_PerformanceLogUsers),
+        ["S-1-5-32-560"] = nameof(Strings.Sid_WindowsAuthorizationAccess),
+        ["S-1-5-32-561"] = nameof(Strings.Sid_TerminalServerLicenseServers),
+        ["S-1-5-32-562"] = nameof(Strings.Sid_DistributedComUsers),
+        ["S-1-5-32-568"] = "IIS_IUSRS",
+        ["S-1-5-32-569"] = nameof(Strings.Sid_CryptographicOperators),
+        ["S-1-5-32-573"] = nameof(Strings.Sid_EventLogReaders),
+        ["S-1-5-32-574"] = nameof(Strings.Sid_CertificateServiceDcomAccess),
+        ["S-1-5-32-575"] = nameof(Strings.Sid_RdsRemoteAccessServers),
+        ["S-1-5-32-576"] = nameof(Strings.Sid_RdsEndpointServers),
+        ["S-1-5-32-577"] = nameof(Strings.Sid_RdsManagementServers),
+        ["S-1-5-32-578"] = nameof(Strings.Sid_HyperVAdministrators),
+        ["S-1-5-32-579"] = nameof(Strings.Sid_AccessControlAssistanceOperators),
+        ["S-1-5-32-580"] = nameof(Strings.Sid_RemoteManagementUsers),
     };
 
+    /// <summary>Text zu einem Schlüssel aus Strings.resx; Namen, die in jeder Sprache gleich sind (SYSTEM, IUSR), stehen direkt da.</summary>
+    private static string Text(string keyOrName) =>
+        keyOrName.StartsWith("Sid_", StringComparison.Ordinal)
+            ? Strings.ResourceManager.GetString(keyOrName, CultureInfo.CurrentUICulture) ?? keyOrName
+            : keyOrName;
+
+    private static string Name(Source source, string key) => source switch
+    {
+        Source.Nt => Strings.Sid_PrefixNt,
+        Source.Builtin => Strings.Sid_PrefixBuiltin,
+        Source.AppPackages => Strings.Sid_PrefixAppPackages,
+        Source.NtService => @"NT SERVICE\",
+        _ => "",
+    } + Text(key);
+
     /// <summary>
-    /// Fester deutscher Name und Art einer bekannten SID. Pseudo-Konten (Jeder, SYSTEM …) sind
-    /// <see cref="PrincipalKind.Bekannt"/>, VORDEFINIERT-Gruppen <see cref="PrincipalKind.Gruppe"/>.
+    /// Fester Name (in der Sprache der Oberfläche, wie Windows ihn dort zeigt) und Art einer bekannten SID. Pseudo-Konten
+    /// (Jeder, SYSTEM …) sind <see cref="PrincipalKind.Bekannt"/>, VORDEFINIERT-Gruppen <see cref="PrincipalKind.Gruppe"/>.
     /// </summary>
     public static bool TryGet(string sid, out string name, out PrincipalKind kind)
     {
-        if (Pseudo.TryGetValue(sid, out var n))
+        if (Pseudo.TryGetValue(sid, out var p))
         {
-            (name, kind) = (n, PrincipalKind.Bekannt);
+            (name, kind) = (Name(p.Source, p.Key), PrincipalKind.Bekannt);
             return true;
         }
-        if (BuiltinGroups.TryGetValue(sid, out n))
+        if (BuiltinGroups.TryGetValue(sid, out var key))
         {
-            (name, kind) = (n, PrincipalKind.Gruppe);
+            (name, kind) = (Name(Source.Builtin, key), PrincipalKind.Gruppe);
             return true;
         }
         (name, kind) = ("", PrincipalKind.Unbekannt);
@@ -179,17 +195,17 @@ public static class WellKnownSids
     public static string? NonAccountName(string sid)
     {
         static bool Has(string s, string prefix) => s.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
-        if (Has(sid, "S-1-15-3-")) return $"Anwendungsfähigkeit ({sid})";
-        if (Has(sid, "S-1-15-2-")) return $"Anwendungspaket ({sid})";
-        if (IsCapabilityGroup(sid)) return $"Fähigkeitsgruppe ({sid})";
-        if (Has(sid, "S-1-16-")) return $"Verbindlichkeitsstufe ({sid})";
-        if (Has(sid, "S-1-5-5-")) return $"Anmeldesitzung ({sid})";
-        if (Has(sid, "S-1-5-80-")) return $"Nicht installierter Dienst ({sid})";
-        if (Has(sid, "S-1-5-82-")) return $"IIS-Anwendungspool ({sid})";
-        if (Has(sid, "S-1-5-83-")) return $"Virtueller Computer ({sid})";
-        if (Has(sid, "S-1-5-84-")) return $"Treiber im Benutzermodus ({sid})";
-        if (Has(sid, "S-1-5-87-")) return $"Geplante Aufgabe ({sid})";
-        if (Has(sid, "S-1-5-90-") || Has(sid, "S-1-5-96-")) return $"Virtuelles Systemkonto ({sid})";
+        if (Has(sid, "S-1-15-3-")) return Texts.Format(Strings.Sid_AppCapability, sid);
+        if (Has(sid, "S-1-15-2-")) return Texts.Format(Strings.Sid_AppPackage, sid);
+        if (IsCapabilityGroup(sid)) return Texts.Format(Strings.Sid_CapabilityGroup, sid);
+        if (Has(sid, "S-1-16-")) return Texts.Format(Strings.Sid_IntegrityLevel, sid);
+        if (Has(sid, "S-1-5-5-")) return Texts.Format(Strings.Sid_LogonSession, sid);
+        if (Has(sid, "S-1-5-80-")) return Texts.Format(Strings.Sid_ServiceNotInstalled, sid);
+        if (Has(sid, "S-1-5-82-")) return Texts.Format(Strings.Sid_IisAppPool, sid);
+        if (Has(sid, "S-1-5-83-")) return Texts.Format(Strings.Sid_VirtualMachine, sid);
+        if (Has(sid, "S-1-5-84-")) return Texts.Format(Strings.Sid_UserModeDriver, sid);
+        if (Has(sid, "S-1-5-87-")) return Texts.Format(Strings.Sid_ScheduledTask, sid);
+        if (Has(sid, "S-1-5-90-") || Has(sid, "S-1-5-96-")) return Texts.Format(Strings.Sid_VirtualSystemAccount, sid);
         return null;
     }
 

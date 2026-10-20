@@ -1,5 +1,6 @@
 using Zutritt.Core.Model;
 
+using Zutritt.Core.Resources;
 namespace Zutritt.Core.Scanning;
 
 /// <summary>Ergebnis der Auswertung einer Freigabe-Sicherheitsbeschreibung.</summary>
@@ -25,7 +26,7 @@ internal static class ShareSecurity
     /// die je nach Windows-Version abweichen kann: Die gilt als nicht lesbar, statt geraten zu werden.
     /// </summary>
     public static ShareSecurityResult ForMissingDescriptor(bool isSpecial) => isSpecial
-        ? ShareSecurityResult.NotReadable("Freigabe-Berechtigungen nicht lesbar: Administrative Freigabe ohne eigene Berechtigungen – es gilt die interne Windows-Vorgabe (in der Regel nur Administratoren)")
+        ? ShareSecurityResult.NotReadable(Strings.Scan_AdminShareDefault)
         : new([new ShareAce(Everyone, ShareAccess.Vollzugriff, false)], true, null);
 
     /// <summary>

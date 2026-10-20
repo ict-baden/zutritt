@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Zutritt.Core.Model;
 using Zutritt.Core.Platform;
 
+using Zutritt.Core.Resources;
 namespace Zutritt.Core.Scanning;
 
 /// <summary>
@@ -10,11 +11,11 @@ namespace Zutritt.Core.Scanning;
 /// </summary>
 internal sealed class ScanRun
 {
-    public const string PhaseTargets = "Ziele";
-    public const string PhaseFolders = "Ordner";
-    public const string PhaseAccounts = "Konten";
-    public const string PhaseFindings = "Befunde";
-    public const string PhaseDone = "Fertig";
+    public static string PhaseTargets => Strings.Phase_Targets;
+    public static string PhaseFolders => Strings.Phase_Folders;
+    public static string PhaseAccounts => Strings.Phase_Accounts;
+    public static string PhaseFindings => Strings.Phase_Findings;
+    public static string PhaseDone => Strings.Phase_Done;
 
     private sealed record Root(string Path, bool IsLocal, ScanTarget? Unc, ShareLookup? Lookup);
 
@@ -110,7 +111,7 @@ internal sealed class ScanRun
         var target = _platform.ParseTarget(raw, out var error);
         if (target is null)
         {
-            AddError(raw ?? "", "Ungültiges Ziel: " + error);
+            AddError(raw ?? "", Texts.Format(Strings.Scan_InvalidTarget, error));
             return;
         }
 
@@ -130,7 +131,7 @@ internal sealed class ScanRun
                 var listing = EnumerateShares(target.Server!);
                 if (listing.Error is not null) { AddError(target.Path, listing.Error); break; }
                 var shares = listing.Shares.Where(s => !(_request.SkipAdminShares && s.Share.IsAdminShare)).ToList();
-                if (shares.Count == 0) { AddError(target.Path, "Keine Datenträger-Freigaben gefunden"); break; }
+                if (shares.Count == 0) { AddError(target.Path, Strings.Scan_NoDiskShares); break; }
                 foreach (var read in shares)
                 {
                     AddShare(read);
@@ -152,7 +153,7 @@ internal sealed class ScanRun
         var shares = listing.Shares.Where(s => !(_request.SkipAdminShares && s.Share.IsAdminShare)).ToList();
         if (shares.Count == 0)
         {
-            AddError(".", "Keine Datenträger-Freigaben auf diesem Rechner gefunden");
+            AddError(".", Strings.Scan_NoLocalDiskShares);
             return;
         }
         foreach (var read in shares)
@@ -163,13 +164,13 @@ internal sealed class ScanRun
             if (read.Share.LocalPath.Length == 0)
             {
                 // Ohne lokalen Pfad (Rechte fehlen) lässt sich die Freigabe hier nicht prüfen – wenigstens nennen.
-                AddError(read.Share.UncPath, "Lokaler Pfad der Freigabe nicht lesbar – Freigabe nicht geprüft");
+                AddError(read.Share.UncPath, Strings.Scan_ShareLocalPathUnreadable);
                 continue;
             }
             if (_platform.FullLocalPath(read.Share.LocalPath) is { } full)
                 AddRoot(new Root(WindowsPath.TrimEnd(full), IsLocal: true, null, null));
             else
-                AddError(read.Share.UncPath, $"Ungültiger lokaler Pfad der Freigabe: „{read.Share.LocalPath}“");
+                AddError(read.Share.UncPath, Texts.Format(Strings.Scan_ShareLocalPathInvalid, read.Share.LocalPath));
         }
     }
 
@@ -189,7 +190,7 @@ internal sealed class ScanRun
         {
             _lookups[key] = lookup = TimeBudget.TryRun(() => _platform.LookupShare(server, share), ShareTimeout, out var read)
                 ? read
-                : new ShareLookup(null, $"Freigabe „{key}“: keine Antwort innerhalb von {TimeBudget.Describe(ShareTimeout)}", NotFound: false);
+                : new ShareLookup(null, Texts.Format(Strings.Scan_ShareTimeout, key, TimeBudget.Describe(ShareTimeout)), NotFound: false);
         }
         return lookup;
     }
@@ -198,7 +199,7 @@ internal sealed class ScanRun
     private ShareListing EnumerateShares(string server)
         => TimeBudget.TryRun(() => _platform.EnumerateShares(server), ShareTimeout, out var listing)
             ? listing
-            : new ShareListing([], $"Freigaben von „{server}“: keine Antwort innerhalb von {TimeBudget.Describe(ShareTimeout)}");
+            : new ShareListing([], Texts.Format(Strings.Scan_SharesTimeout, server, TimeBudget.Describe(ShareTimeout)));
 
     private void AddRoot(Root root)
     {
@@ -226,13 +227,13 @@ internal sealed class ScanRun
             var listing = LocalListing();
             // Ohne Serverdienst gibt es keine Freigaben – das ist kein Fehler, sondern das Ergebnis.
             if (listing.Error is not null && !listing.ServerServiceStopped)
-                AddError(Environment.MachineName, listing.Error + " – lokale Ordner ohne Zuordnung zu Freigaben");
+                AddError(Environment.MachineName, Texts.Format(Strings.Scan_LocalWithoutShares, listing.Error));
         }
 
         var probe = _platform.Probe(root.Path);
         if (probe.Error is not null)
         {
-            var failed = new FolderNode { Path = root.Path, Depth = 0, Error = "Ziel nicht erreichbar: " + probe.Error };
+            var failed = new FolderNode { Path = root.Path, Depth = 0, Error = Texts.Format(Strings.Scan_TargetUnreachable, probe.Error) };
             failed.ShareUnc = root.IsLocal ? RootShareUnc(root) : root.Lookup?.Read?.Share.UncPath;
             _result.FoldersVisited++;
             _result.Folders.Add(failed);
@@ -246,7 +247,7 @@ internal sealed class ScanRun
         if (root is { IsLocal: false, Unc: not null, Lookup: { Read: null } lookup })
         {
             var placeholder = new ShareInfo { Server = root.Unc.Server!, Name = root.Unc.Share!, PermissionsReadable = false };
-            AddShare(new ShareRead(placeholder, lookup.Error ?? "Freigabe-Berechtigungen nicht lesbar"));
+            AddShare(new ShareRead(placeholder, lookup.Error ?? Strings.Scan_SharePermissionsUnreadable));
         }
 
         var shareUnc = RootShareUnc(root);
@@ -310,7 +311,7 @@ internal sealed class ScanRun
             var error = _platform.ListDirectory(item.Path, _entries);
             if (error is not null)
             {
-                node.Error = Join(node.Error, "Inhalt nicht auflistbar: " + error);
+                node.Error = Join(node.Error, Texts.Format(Strings.Scan_ListingFailed, error));
                 if (!store) { _result.Folders.Add(node); store = true; }
             }
 

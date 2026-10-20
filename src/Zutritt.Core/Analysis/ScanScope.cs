@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 using Zutritt.Core.Model;
 
+using Zutritt.Core.Resources;
 namespace Zutritt.Core.Analysis;
 
 /// <summary>Eine Einstellung, in der sich zwei Läufe über dieselben Ziele unterscheiden und die bestimmt, was sie erfassen.</summary>
@@ -63,21 +64,21 @@ public static class ScanScope
         var newer = comparison.Newer.Request;
         var parts = comparison.ScopeDifferences.Select(d => d switch
         {
-            ScopeDifference.Files => older.IncludeFiles ? "nur der ältere Lauf hat Dateien erfasst" : "nur der neuere Lauf hat Dateien erfasst",
-            ScopeDifference.Depth => $"Tiefe vorher {DepthText(older.MaxDepth)}, jetzt {DepthText(newer.MaxDepth)}",
+            ScopeDifference.Files => older.IncludeFiles ? Strings.Scope_FilesOnlyOlder : Strings.Scope_FilesOnlyNewer,
+            ScopeDifference.Depth => Texts.Format(Strings.Scope_Depth, DepthText(older.MaxDepth), DepthText(newer.MaxDepth)),
             ScopeDifference.AdminShares => older.SkipAdminShares
-                ? "nur der neuere Lauf hat administrative Freigaben einbezogen"
-                : "nur der ältere Lauf hat administrative Freigaben einbezogen",
+                ? Strings.Scope_AdminOnlyNewer
+                : Strings.Scope_AdminOnlyOlder,
             ScopeDifference.Groups => older.ResolveGroups
-                ? "nur der ältere Lauf hat Gruppen bis zur Person aufgelöst"
-                : "nur der neuere Lauf hat Gruppen bis zur Person aufgelöst",
-            ScopeDifference.DeepBreakLevel => $"tief versteckte Ausnahme vorher ab Ebene {DeepBreak(older)}, jetzt ab Ebene {DeepBreak(newer)}",
+                ? Strings.Scope_GroupsOnlyOlder
+                : Strings.Scope_GroupsOnlyNewer,
+            ScopeDifference.DeepBreakLevel => Texts.Format(Strings.Scope_DeepBreak, DeepBreak(older), DeepBreak(newer)),
             _ => d.ToString(),
         });
-        return $"Umfang weicht ab: {string.Join("; ", parts)}. Verglichen ist nur, was beide Läufe erfasst haben.";
+        return Texts.Format(Strings.Scope_Differs, string.Join("; ", parts));
     }
 
-    private static string DepthText(int? depth) => depth is { } d ? $"bis Ebene {d}" : "alle Ebenen";
+    private static string DepthText(int? depth) => depth is { } d ? Texts.Format(Strings.Scope_UpToLevel, d) : Strings.Scope_AllLevels;
 
     private static int DeepBreak(ScanRequest request) => Math.Max(1, request.DeepInheritanceBreakDepth);
 

@@ -1,0 +1,869 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- Zutritt – English texts (fallback language, guideline 13). Placeholders {0}, {1} … as described in the comments. -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Error_WithCode" xml:space="preserve">
+    <value>{0} (error {1})</value>
+    <comment>{0} = message, {1} = error code such as ZUT-0203</comment>
+  </data>
+  <data name="Finding_BroadRead" xml:space="preserve">
+    <value>“{0}” has “{1}”{2} – practically every signed-in person can read here.</value>
+    <comment>{0} = who, {1} = Rights.Label(scopes.Net), {2} = suffix</comment>
+  </data>
+  <data name="Finding_BroadWrite" xml:space="preserve">
+    <value>“{0}” has “{1}”{2} – practically every signed-in person can write here.</value>
+    <comment>{0} = who, {1} = Rights.Label(scopes.Net), {2} = suffix</comment>
+  </data>
+  <data name="Finding_DeepBreak" xml:space="preserve">
+    <value>Inheritance broken at depth {0} (from depth {1} an exception counts as hidden).</value>
+    <comment>{0} = folder.Depth, {1} = threshold</comment>
+  </data>
+  <data name="Finding_Deny" xml:space="preserve">
+    <value>Deny entry for “{0}” ({1} denied).</value>
+    <comment>{0} = who, {1} = Describe(scopes.DeniedMask)</comment>
+  </data>
+  <data name="Finding_DirectUser" xml:space="preserve">
+    <value>“{0}” has “{1}” directly as a person instead of through a group.</value>
+    <comment>{0} = who, {1} = Rights.Label(scopes.Raw)</comment>
+  </data>
+  <data name="Finding_DisabledAccount" xml:space="preserve">
+    <value>The disabled account “{0}” has “{1}” here.</value>
+    <comment>{0} = who, {1} = Rights.Label(scopes.Raw)</comment>
+  </data>
+  <data name="Finding_EmptyGroup" xml:space="preserve">
+    <value>The group “{0}” has no members but has permissions (“{1}”).</value>
+    <comment>{0} = who, {1} = Rights.Label(scopes.Raw)</comment>
+  </data>
+  <data name="Finding_ForeignInheritedMany" xml:space="preserve">
+    <value>Inherited entries do not match the parent folder – probably moved. {0} do not come from there but from the previous location.</value>
+    <comment>{0} = several quoted account names, e.g. “A”, “B” and “C”</comment>
+  </data>
+  <data name="Finding_ForeignInheritedOne" xml:space="preserve">
+    <value>Inherited entries do not match the parent folder – probably moved. {0} does not come from there but from the previous location.</value>
+    <comment>{0} = one quoted account name</comment>
+  </data>
+  <data name="Finding_FullControl" xml:space="preserve">
+    <value>“{0}” has full control{1} and can therefore change permissions and take ownership.</value>
+    <comment>{0} = who, {1} = suffix</comment>
+  </data>
+  <data name="Finding_InheritanceDiffers" xml:space="preserve">
+    <value>Inherited entries do not match the parent folder – probably moved; permissions from the previous location may still apply.</value>
+  </data>
+  <data name="Finding_InheritsNothing" xml:space="preserve">
+    <value>Inherits nothing from the parent folder although inheritance is enabled – usually a program created the folder with its own permissions. The permissions from above only apply here after the next propagation.</value>
+  </data>
+  <data name="Finding_NotChecked" xml:space="preserve">
+    <value>Not checked: {0}.</value>
+    <comment>{0} = error.Message.TrimEnd('.')</comment>
+  </data>
+  <data name="Finding_OnlyForChildren" xml:space="preserve">
+    <value> (applies to subfolders or files)</value>
+  </data>
+  <data name="Finding_OrphanDenyEntry" xml:space="preserve">
+    <value>a deny entry</value>
+  </data>
+  <data name="Finding_OrphanEntry" xml:space="preserve">
+    <value>The orphaned SID {0} has {1} – the account no longer exists.</value>
+    <comment>{0} = sid, {1} = entry</comment>
+  </data>
+  <data name="Finding_OrphanEntryLevel" xml:space="preserve">
+    <value>an entry “{0}”</value>
+    <comment>{0} = Rights.Label(scopes.Raw)</comment>
+  </data>
+  <data name="Finding_OrphanEntryParts" xml:space="preserve">
+    <value>an entry {0}</value>
+    <comment>{0} = Describe(scopes.AllowMask)</comment>
+  </data>
+  <data name="Finding_OrphanOwner" xml:space="preserve">
+    <value>The owner is the orphaned SID {0} – the account no longer exists.</value>
+    <comment>{0} = owner</comment>
+  </data>
+  <data name="Finding_OrphanOwnerAndEntry" xml:space="preserve">
+    <value>The orphaned SID {0} is the owner and has {1} – the account no longer exists.</value>
+    <comment>{0} = sid, {1} = entry</comment>
+  </data>
+  <data name="Finding_OwnerIsUser" xml:space="preserve">
+    <value>The owner is the user account “{0}”.</value>
+    <comment>{0} = ctx.Label(owner)</comment>
+  </data>
+  <data name="Finding_ShareEveryone" xml:space="preserve">
+    <value>Share permission “{0}”: “{1}” – protection relies on NTFS alone.</value>
+    <comment>{0} = ctx.Label(ace.Sid), {1} = Rights.Label(ace.Access)</comment>
+  </data>
+  <data name="Finding_ShareOrphan" xml:space="preserve">
+    <value>The share permission names the orphaned SID {0} – the account no longer exists.</value>
+    <comment>{0} = ace.Sid</comment>
+  </data>
+  <data name="Finding_ShareUnreadable" xml:space="preserve">
+    <value>The share permissions of {0} could not be read.</value>
+    <comment>{0} = share.UncPath</comment>
+  </data>
+  <data name="Finding_UnreadableFile" xml:space="preserve">
+    <value>File not readable: {0} – permissions here and below not checked.</value>
+    <comment>{0} = error message</comment>
+  </data>
+  <data name="Finding_UnreadableFolder" xml:space="preserve">
+    <value>Folder not readable: {0} – permissions here and below not checked.</value>
+    <comment>{0} = error message</comment>
+  </data>
+  <data name="Identity_DirectoryErrorAccounts" xml:space="preserve">
+    <value>Directory error while resolving accounts: {0}</value>
+    <comment>{0} = ex.Message</comment>
+  </data>
+  <data name="Identity_DirectoryErrorMembers" xml:space="preserve">
+    <value>Directory error while reading group members: {0}</value>
+    <comment>{0} = ex.Message</comment>
+  </data>
+  <data name="Identity_DirectoryTimeout" xml:space="preserve">
+    <value>Directory does not respond within {0} – accounts and groups from this source remain “Unknown”.</value>
+    <comment>{0} = TimeBudget.Describe(CallTimeout)</comment>
+  </data>
+  <data name="Identity_DirectoryUnreachable" xml:space="preserve">
+    <value>Directory not reachable.</value>
+  </data>
+  <data name="Identity_GroupsTooDeep" xml:space="preserve">
+    <value>Groups are nested deeper than {0} levels – the members of this group were not resolved any further.</value>
+    <comment>{0} = MaxGroupDepth</comment>
+  </data>
+  <data name="Identity_LookupTimeout" xml:space="preserve">
+    <value>Account resolution does not respond within {0}. The affected accounts remain “Unknown”.</value>
+    <comment>{0} = TimeBudget.Describe(CallTimeout)</comment>
+  </data>
+  <data name="Identity_MembersMerged" xml:space="preserve">
+    <value>The group has different members on the scanned servers. Because each SID occurs only once in a run, the members of all servers are combined – access through this group may apply on only one of the servers.</value>
+  </data>
+  <data name="Identity_NamesNotResolvable" xml:space="preserve">
+    <value>Account names cannot be resolved: {0}. The affected accounts remain “Unknown”.</value>
+    <comment>{0} = r.Error ?? Strings.Identity_UnknownError</comment>
+  </data>
+  <data name="Identity_NotAskedServer" xml:space="preserve">
+    <value>Accounts were not looked up on the server itself. Accounts that cannot be resolved therefore remain “Unknown” instead of “Orphaned” – only the server knows its local accounts.</value>
+  </data>
+  <data name="Identity_Service" xml:space="preserve">
+    <value>Service ({0})</value>
+    <comment>{0} = sid</comment>
+  </data>
+  <data name="Identity_UnknownError" xml:space="preserve">
+    <value>unknown error</value>
+  </data>
+  <data name="Phase_Accounts" xml:space="preserve">
+    <value>Accounts</value>
+  </data>
+  <data name="Phase_Done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="Phase_Findings" xml:space="preserve">
+    <value>Findings</value>
+  </data>
+  <data name="Phase_Folders" xml:space="preserve">
+    <value>Folders</value>
+  </data>
+  <data name="Phase_Targets" xml:space="preserve">
+    <value>Targets</value>
+  </data>
+  <data name="Rights_ChangePermissions" xml:space="preserve">
+    <value>Change permissions</value>
+  </data>
+  <data name="Rights_Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Rights_DeleteChildren" xml:space="preserve">
+    <value>Delete subfolders and files</value>
+  </data>
+  <data name="Rights_DeniedFromModify" xml:space="preserve">
+    <value>Denied: Change and Full Control (from Change)</value>
+  </data>
+  <data name="Rights_DeniedFromRead" xml:space="preserve">
+    <value>Denied: everything (from Read)</value>
+  </data>
+  <data name="Rights_DeniedFull" xml:space="preserve">
+    <value>Denied: Full Control</value>
+  </data>
+  <data name="Rights_DeniedNothing" xml:space="preserve">
+    <value>Denied: nothing (no effect)</value>
+  </data>
+  <data name="Rights_FullControl" xml:space="preserve">
+    <value>Full control</value>
+  </data>
+  <data name="Rights_List" xml:space="preserve">
+    <value>List contents</value>
+  </data>
+  <data name="Rights_Modify" xml:space="preserve">
+    <value>Modify</value>
+  </data>
+  <data name="Rights_None" xml:space="preserve">
+    <value>No access</value>
+  </data>
+  <data name="Rights_Read" xml:space="preserve">
+    <value>Read</value>
+  </data>
+  <data name="Rights_ReadAttributes" xml:space="preserve">
+    <value>Read attributes</value>
+  </data>
+  <data name="Rights_ReadPermissions" xml:space="preserve">
+    <value>Read permissions</value>
+  </data>
+  <data name="Rights_Synchronize" xml:space="preserve">
+    <value>Synchronize</value>
+  </data>
+  <data name="Rights_TakeOwnership" xml:space="preserve">
+    <value>Take ownership</value>
+  </data>
+  <data name="Rights_Traverse" xml:space="preserve">
+    <value>Traverse folder / execute file</value>
+  </data>
+  <data name="Rights_Write" xml:space="preserve">
+    <value>Write</value>
+  </data>
+  <data name="Rights_WriteAttributes" xml:space="preserve">
+    <value>Write attributes</value>
+  </data>
+  <data name="Rule_ZT01_Explanation" xml:space="preserve">
+    <value>A group that includes practically everyone (e.g. “Everyone”, “Authenticated Users”, “Domain Users”) can create or change files here. Any signed-in person can thus falsify, delete or – for example through malware – encrypt data.</value>
+  </data>
+  <data name="Rule_ZT01_Recommendation" xml:space="preserve">
+    <value>Remove the broad group’s write permission and grant it only to a business group that contains exactly the responsible people.</value>
+  </data>
+  <data name="Rule_ZT01_Title" xml:space="preserve">
+    <value>Broad group can write</value>
+  </data>
+  <data name="Rule_ZT02_Explanation" xml:space="preserve">
+    <value>A group that includes practically everyone can read or list the contents here. Confidential data is thus visible to every signed-in person.</value>
+  </data>
+  <data name="Rule_ZT02_Recommendation" xml:space="preserve">
+    <value>Check whether the data is really meant for everyone; otherwise replace the broad group with a business group.</value>
+  </data>
+  <data name="Rule_ZT02_Title" xml:space="preserve">
+    <value>Broad group can read</value>
+  </data>
+  <data name="Rule_ZT03_Explanation" xml:space="preserve">
+    <value>The permission is granted to a single user account instead of a group. Such entries are easily forgotten when someone changes department or leaves, and they make the permission structure hard to follow.</value>
+  </data>
+  <data name="Rule_ZT03_Recommendation" xml:space="preserve">
+    <value>Grant the permission through a group (role or department) and remove the entry for the person.</value>
+  </data>
+  <data name="Rule_ZT03_Title" xml:space="preserve">
+    <value>Permission granted directly to a person</value>
+  </data>
+  <data name="Rule_ZT04_Explanation" xml:space="preserve">
+    <value>An entry or the owner refers to an account that no longer exists. The SID cannot be matched to a name; nobody can easily tell to whom the permission was once granted.</value>
+  </data>
+  <data name="Rule_ZT04_Recommendation" xml:space="preserve">
+    <value>Remove the orphaned entry; if the SID is the owner, set a valid owner (e.g. “Administrators”).</value>
+  </data>
+  <data name="Rule_ZT04_Title" xml:space="preserve">
+    <value>Orphaned SID</value>
+  </data>
+  <data name="Rule_ZT05_Explanation" xml:space="preserve">
+    <value>An account or group without an administrator role has full control. It can therefore change permissions and take ownership – i.e. give itself and others any rights, bypassing every review.</value>
+  </data>
+  <data name="Rule_ZT05_Recommendation" xml:space="preserve">
+    <value>Reduce to “Modify”; grant full control only to administrators and SYSTEM.</value>
+  </data>
+  <data name="Rule_ZT05_Title" xml:space="preserve">
+    <value>Full control for non-admins</value>
+  </data>
+  <data name="Rule_ZT06_Explanation" xml:space="preserve">
+    <value>Inheritance is broken deep in the folder structure. Such exceptions cannot be seen from above; changes to parent folders do not arrive here.</value>
+  </data>
+  <data name="Rule_ZT06_Recommendation" xml:space="preserve">
+    <value>Check whether the exception is still needed, and otherwise turn inheritance back on. Document necessary exceptions or model them higher up in the structure.</value>
+  </data>
+  <data name="Rule_ZT06_Title" xml:space="preserve">
+    <value>Deeply hidden exception</value>
+  </data>
+  <data name="Rule_ZT07_Explanation" xml:space="preserve">
+    <value>An explicit deny entry takes precedence over all allow entries. Denials are hard to follow and often affect more people than intended (e.g. all members of a group).</value>
+  </data>
+  <data name="Rule_ZT07_Recommendation" xml:space="preserve">
+    <value>Rather do not grant the permission in the first place (tailor groups accordingly). Use denials only for justified exceptions and document them.</value>
+  </data>
+  <data name="Rule_ZT07_Title" xml:space="preserve">
+    <value>Deny entry</value>
+  </data>
+  <data name="Rule_ZT08_Explanation" xml:space="preserve">
+    <value>The share permission allows all signed-in people at least “Change”. Protection therefore relies on the NTFS permissions alone. This is practice recommended by Microsoft, but it should be a deliberate choice.</value>
+  </data>
+  <data name="Rule_ZT08_Recommendation" xml:space="preserve">
+    <value>Nothing to do if the NTFS permissions are clean. Otherwise also restrict the share permission.</value>
+  </data>
+  <data name="Rule_ZT08_Title" xml:space="preserve">
+    <value>Share: everyone can change</value>
+  </data>
+  <data name="Rule_ZT09_Explanation" xml:space="preserve">
+    <value>The folder (or file) could not be read, for example because access was denied. Its permissions and everything below it have not been checked in this run.</value>
+  </data>
+  <data name="Rule_ZT09_Recommendation" xml:space="preserve">
+    <value>Fix the cause or scan with an account that may read the permissions, and repeat the run.</value>
+  </data>
+  <data name="Rule_ZT09_Title" xml:space="preserve">
+    <value>Folder not readable</value>
+  </data>
+  <data name="Rule_ZT10_Explanation" xml:space="preserve">
+    <value>The owner can change the permissions at any time – regardless of what the list says. If a single person is the owner, they keep this ability even after a change of role.</value>
+  </data>
+  <data name="Rule_ZT10_Recommendation" xml:space="preserve">
+    <value>Transfer ownership to “Administrators” (or an admin group).</value>
+  </data>
+  <data name="Rule_ZT10_Title" xml:space="preserve">
+    <value>Owner is a user account</value>
+  </data>
+  <data name="Rule_ZT11_Explanation" xml:space="preserve">
+    <value>A group without members has permissions. The entry has no effect today, but becomes effective unnoticed as soon as someone is added to the group.</value>
+  </data>
+  <data name="Rule_ZT11_Recommendation" xml:space="preserve">
+    <value>Remove the entry if the group is no longer needed; otherwise document its purpose.</value>
+  </data>
+  <data name="Rule_ZT11_Title" xml:space="preserve">
+    <value>Empty group has permissions</value>
+  </data>
+  <data name="Rule_ZT12_Explanation" xml:space="preserve">
+    <value>A disabled user account has its own permission here. If the account is enabled again, the permission applies immediately.</value>
+  </data>
+  <data name="Rule_ZT12_Recommendation" xml:space="preserve">
+    <value>Remove the entry; delete accounts of people who have left once the retention period has expired.</value>
+  </data>
+  <data name="Rule_ZT12_Title" xml:space="preserve">
+    <value>Disabled account has permissions</value>
+  </data>
+  <data name="Rule_ZT13_Explanation" xml:space="preserve">
+    <value>The share’s permissions could not be read. Network access has therefore been calculated from the NTFS permissions alone and may in reality be lower.</value>
+  </data>
+  <data name="Rule_ZT13_Recommendation" xml:space="preserve">
+    <value>Scan again with administrator rights on the server.</value>
+  </data>
+  <data name="Rule_ZT13_Title" xml:space="preserve">
+    <value>Share permissions not readable</value>
+  </data>
+  <data name="Rule_ZT14_Explanation" xml:space="preserve">
+    <value>The folder (or file) has inherited entries that do not match the parent folder. Typically these are moved folders: when moving within a drive, Windows keeps the old inherited permissions instead of taking over those of the new location. Permissions from the previous location may then still apply here – also for people who should not have access at the new location – and changes to the parent folder only arrive after the permissions are next propagated.</value>
+  </data>
+  <data name="Rule_ZT14_Recommendation" xml:space="preserve">
+    <value>Check whether the differing permissions are still needed. Otherwise reapply inheritance: in the advanced security settings, disable inheritance, removing the inherited entries, and enable it again right away – explicit entries are kept.</value>
+  </data>
+  <data name="Rule_ZT14_Title" xml:space="preserve">
+    <value>Permissions differ from inheritance</value>
+  </data>
+  <data name="Scan_AdminShareDefault" xml:space="preserve">
+    <value>Share permissions not readable: administrative share without its own permissions – the internal Windows default applies (usually administrators only)</value>
+  </data>
+  <data name="Scan_InvalidTarget" xml:space="preserve">
+    <value>Invalid target: {0}</value>
+    <comment>{0} = reason</comment>
+  </data>
+  <data name="Scan_ListingFailed" xml:space="preserve">
+    <value>Contents cannot be listed: {0}</value>
+    <comment>{0} = reason</comment>
+  </data>
+  <data name="Scan_LocalWithoutShares" xml:space="preserve">
+    <value>{0} – local folders without assignment to shares</value>
+    <comment>{0} = error while listing the shares</comment>
+  </data>
+  <data name="Scan_NoDiskShares" xml:space="preserve">
+    <value>No disk shares found</value>
+  </data>
+  <data name="Scan_NoLocalDiskShares" xml:space="preserve">
+    <value>No disk shares found on this computer</value>
+  </data>
+  <data name="Scan_NotSupported" xml:space="preserve">
+    <value>Scanning is only possible on Windows (NTFS permissions, shares, Active Directory).</value>
+  </data>
+  <data name="Scan_ShareLocalPathInvalid" xml:space="preserve">
+    <value>Invalid local path of the share: “{0}”</value>
+    <comment>{0} = read.Share.LocalPath</comment>
+  </data>
+  <data name="Scan_ShareLocalPathUnreadable" xml:space="preserve">
+    <value>Local path of the share not readable – share not checked</value>
+  </data>
+  <data name="Scan_SharePermissionsUnreadable" xml:space="preserve">
+    <value>Share permissions not readable</value>
+  </data>
+  <data name="Scan_SharesTimeout" xml:space="preserve">
+    <value>Shares of “{0}”: no response within {1}</value>
+    <comment>{0} = server, {1} = TimeBudget.Describe(ShareTimeout)</comment>
+  </data>
+  <data name="Scan_ShareTimeout" xml:space="preserve">
+    <value>Share “{0}”: no response within {1}</value>
+    <comment>{0} = key, {1} = TimeBudget.Describe(ShareTimeout)</comment>
+  </data>
+  <data name="Scan_TargetUnreachable" xml:space="preserve">
+    <value>Target not reachable: {0}</value>
+    <comment>{0} = reason</comment>
+  </data>
+  <data name="Scope_AdminOnlyNewer" xml:space="preserve">
+    <value>only the newer run included administrative shares</value>
+  </data>
+  <data name="Scope_AdminOnlyOlder" xml:space="preserve">
+    <value>only the older run included administrative shares</value>
+  </data>
+  <data name="Scope_AllLevels" xml:space="preserve">
+    <value>all levels</value>
+  </data>
+  <data name="Scope_DeepBreak" xml:space="preserve">
+    <value>deeply hidden exception before from level {0}, now from level {1}</value>
+    <comment>{0} = DeepBreak(older), {1} = DeepBreak(newer)</comment>
+  </data>
+  <data name="Scope_Depth" xml:space="preserve">
+    <value>depth before {0}, now {1}</value>
+    <comment>{0} = DepthText(older.MaxDepth), {1} = DepthText(newer.MaxDepth)</comment>
+  </data>
+  <data name="Scope_Differs" xml:space="preserve">
+    <value>Scope differs: {0}. Only what both runs covered is compared.</value>
+    <comment>{0} = string.Join("; ", parts)</comment>
+  </data>
+  <data name="Scope_FilesOnlyNewer" xml:space="preserve">
+    <value>only the newer run included files</value>
+  </data>
+  <data name="Scope_FilesOnlyOlder" xml:space="preserve">
+    <value>only the older run included files</value>
+  </data>
+  <data name="Scope_GroupsOnlyNewer" xml:space="preserve">
+    <value>only the newer run resolved groups down to people</value>
+  </data>
+  <data name="Scope_GroupsOnlyOlder" xml:space="preserve">
+    <value>only the older run resolved groups down to people</value>
+  </data>
+  <data name="Scope_UpToLevel" xml:space="preserve">
+    <value>down to level {0}</value>
+    <comment>{0} = d</comment>
+  </data>
+  <data name="Share_Change" xml:space="preserve">
+    <value>Change</value>
+    <comment>Share permission level as in the Windows dialog</comment>
+  </data>
+  <data name="Share_FullControl" xml:space="preserve">
+    <value>Full Control</value>
+    <comment>Share permission level as in the Windows dialog</comment>
+  </data>
+  <data name="Share_Read" xml:space="preserve">
+    <value>Read</value>
+    <comment>Share permission level as in the Windows dialog</comment>
+  </data>
+  <data name="Sid_AccessControlAssistanceOperators" xml:space="preserve">
+    <value>Access Control Assistance Operators</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_AccountOperators" xml:space="preserve">
+    <value>Account Operators</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_Administrators" xml:space="preserve">
+    <value>Administrators</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_AllAppPackages" xml:space="preserve">
+    <value>ALL APPLICATION PACKAGES</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_AllRestrictedAppPackages" xml:space="preserve">
+    <value>ALL RESTRICTED APPLICATION PACKAGES</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_AllServices" xml:space="preserve">
+    <value>ALL SERVICES</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_AnonymousLogon" xml:space="preserve">
+    <value>ANONYMOUS LOGON</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_AppCapability" xml:space="preserve">
+    <value>App capability ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_AppPackage" xml:space="preserve">
+    <value>App package ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_AuthenticatedUsers" xml:space="preserve">
+    <value>Authenticated Users</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_BackupOperators" xml:space="preserve">
+    <value>Backup Operators</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_Batch" xml:space="preserve">
+    <value>BATCH</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_CapabilityGroup" xml:space="preserve">
+    <value>Capability group ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_CertificateServiceDcomAccess" xml:space="preserve">
+    <value>Certificate Service DCOM Access</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_ConsoleLogon" xml:space="preserve">
+    <value>CONSOLE LOGON</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_CreatorGroup" xml:space="preserve">
+    <value>CREATOR GROUP</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_CreatorGroupServer" xml:space="preserve">
+    <value>CREATOR GROUP SERVER</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_CreatorOwner" xml:space="preserve">
+    <value>CREATOR OWNER</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_CreatorOwnerServer" xml:space="preserve">
+    <value>CREATOR OWNER SERVER</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_CryptographicOperators" xml:space="preserve">
+    <value>Cryptographic Operators</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_DistributedComUsers" xml:space="preserve">
+    <value>Distributed COM Users</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_EnterpriseDomainControllers" xml:space="preserve">
+    <value>ENTERPRISE DOMAIN CONTROLLERS</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_EventLogReaders" xml:space="preserve">
+    <value>Event Log Readers</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_Everyone" xml:space="preserve">
+    <value>Everyone</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_Guests" xml:space="preserve">
+    <value>Guests</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_HyperVAdministrators" xml:space="preserve">
+    <value>Hyper-V Administrators</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_IisAppPool" xml:space="preserve">
+    <value>IIS application pool ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_IncomingForestTrustBuilders" xml:space="preserve">
+    <value>Incoming Forest Trust Builders</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_IntegrityLevel" xml:space="preserve">
+    <value>Integrity level ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_Interactive" xml:space="preserve">
+    <value>INTERACTIVE</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_Local" xml:space="preserve">
+    <value>LOCAL</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_LocalAccount" xml:space="preserve">
+    <value>Local account</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_LocalAdminAccount" xml:space="preserve">
+    <value>Local account and member of Administrators group</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_LocalService" xml:space="preserve">
+    <value>LOCAL SERVICE</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_LogonSession" xml:space="preserve">
+    <value>Logon session ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_Network" xml:space="preserve">
+    <value>NETWORK</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_NetworkConfigurationOperators" xml:space="preserve">
+    <value>Network Configuration Operators</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_NetworkService" xml:space="preserve">
+    <value>NETWORK SERVICE</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_NtlmAuthentication" xml:space="preserve">
+    <value>NTLM Authentication</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_NullSid" xml:space="preserve">
+    <value>NULL SID</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_OtherOrganization" xml:space="preserve">
+    <value>Other Organization</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_OwnerRights" xml:space="preserve">
+    <value>OWNER RIGHTS</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_PerformanceLogUsers" xml:space="preserve">
+    <value>Performance Log Users</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_PerformanceMonitorUsers" xml:space="preserve">
+    <value>Performance Monitor Users</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_PowerUsers" xml:space="preserve">
+    <value>Power Users</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_PrefixAppPackages" xml:space="preserve">
+    <value>APPLICATION PACKAGE AUTHORITY\</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_PrefixBuiltin" xml:space="preserve">
+    <value>BUILTIN\</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_PrefixNt" xml:space="preserve">
+    <value>NT AUTHORITY\</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_PreWindows2000" xml:space="preserve">
+    <value>Pre-Windows 2000 Compatible Access</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_PrintOperators" xml:space="preserve">
+    <value>Print Operators</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_RdsEndpointServers" xml:space="preserve">
+    <value>RDS Endpoint Servers</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_RdsManagementServers" xml:space="preserve">
+    <value>RDS Management Servers</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_RdsRemoteAccessServers" xml:space="preserve">
+    <value>RDS Remote Access Servers</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_RemoteDesktopUsers" xml:space="preserve">
+    <value>Remote Desktop Users</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_RemoteInteractiveLogon" xml:space="preserve">
+    <value>REMOTE INTERACTIVE LOGON</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_RemoteManagementUsers" xml:space="preserve">
+    <value>Remote Management Users</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_Replicator" xml:space="preserve">
+    <value>Replicator</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_Restricted" xml:space="preserve">
+    <value>RESTRICTED</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_ScheduledTask" xml:space="preserve">
+    <value>Scheduled task ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_Self" xml:space="preserve">
+    <value>SELF</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_ServerOperators" xml:space="preserve">
+    <value>Server Operators</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_Service" xml:space="preserve">
+    <value>SERVICE</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_ServiceNotInstalled" xml:space="preserve">
+    <value>Service not installed ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_TerminalServerLicenseServers" xml:space="preserve">
+    <value>Terminal Server License Servers</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_TerminalServerUser" xml:space="preserve">
+    <value>TERMINAL SERVER USER</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_ThisOrganization" xml:space="preserve">
+    <value>This Organization</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_UserModeDriver" xml:space="preserve">
+    <value>User-mode driver ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_Users" xml:space="preserve">
+    <value>Users</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_VirtualMachine" xml:space="preserve">
+    <value>Virtual machine ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_VirtualSystemAccount" xml:space="preserve">
+    <value>Virtual system account ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_WindowsAuthorizationAccess" xml:space="preserve">
+    <value>Windows Authorization Access Group</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Store_AccessDenied" xml:space="preserve">
+    <value>Access to the database denied.</value>
+  </data>
+  <data name="Store_CannotOpen" xml:space="preserve">
+    <value>The database “{0}” cannot be opened. {1}</value>
+    <comment>{0} = DatabasePath, {1} = ScanStoreException.Describe(sx)</comment>
+  </data>
+  <data name="Store_CantOpen" xml:space="preserve">
+    <value>The file or its journal is not accessible: check the path and access rights; another program may be holding it locked.</value>
+  </data>
+  <data name="Store_Constraint" xml:space="preserve">
+    <value>The data violates a rule of the database ({0}).</value>
+    <comment>{0} = ex.Message</comment>
+  </data>
+  <data name="Store_Corrupt" xml:space="preserve">
+    <value>The database file is damaged.</value>
+  </data>
+  <data name="Store_DeleteFailed" xml:space="preserve">
+    <value>Run {0} could not be deleted.</value>
+    <comment>{0} = id</comment>
+  </data>
+  <data name="Store_DiskFull" xml:space="preserve">
+    <value>The drive is full.</value>
+  </data>
+  <data name="Store_FindPreviousFailed" xml:space="preserve">
+    <value>The previous run could not be looked up.</value>
+  </data>
+  <data name="Store_FolderNotCreated" xml:space="preserve">
+    <value>The folder for the database “{0}” cannot be created: {1}</value>
+    <comment>{0} = DatabasePath, {1} = ex.Message</comment>
+  </data>
+  <data name="Store_Foreign" xml:space="preserve">
+    <value>The file “{0}” is an SQLite database, but not a Zutritt database. It is left unchanged.</value>
+    <comment>{0} = path</comment>
+  </data>
+  <data name="Store_InvalidData" xml:space="preserve">
+    <value>{0} The database “{1}” contains invalid data ({2}).</value>
+    <comment>{0} = action, {1} = DatabasePath, {2} = ex.Message</comment>
+  </data>
+  <data name="Store_IoError" xml:space="preserve">
+    <value>Input/output error while accessing the database file.</value>
+  </data>
+  <data name="Store_ListFailed" xml:space="preserve">
+    <value>The list of runs could not be read.</value>
+  </data>
+  <data name="Store_LoadFailed" xml:space="preserve">
+    <value>Run {0} could not be loaded.</value>
+    <comment>{0} = id</comment>
+  </data>
+  <data name="Store_Locked" xml:space="preserve">
+    <value>The database is locked by another program. Please try again later.</value>
+  </data>
+  <data name="Store_Newer" xml:space="preserve">
+    <value>The database “{0}” comes from a newer version of Zutritt (schema {1}, this version knows up to {2}). Please update Zutritt.</value>
+    <comment>{0} = path, {1} = version, {2} = CurrentVersion</comment>
+  </data>
+  <data name="Store_NotSqlite" xml:space="preserve">
+    <value>The file is not an SQLite database.</value>
+  </data>
+  <data name="Store_NotWritable" xml:space="preserve">
+    <value>Cannot write to the database.</value>
+  </data>
+  <data name="Store_ReadOnly" xml:space="preserve">
+    <value>The database is read-only (file permissions or read-only drive).</value>
+  </data>
+  <data name="Store_RequestMissing" xml:space="preserve">
+    <value>The scan settings are missing.</value>
+  </data>
+  <data name="Store_SaveFailed" xml:space="preserve">
+    <value>The run could not be saved.</value>
+  </data>
+  <data name="Store_SqliteError" xml:space="preserve">
+    <value>SQLite error {0}: {1}</value>
+    <comment>{0} = ex.SqliteErrorCode, {1} = ex.Message</comment>
+  </data>
+  <data name="Store_WalOverShare" xml:space="preserve">
+    <value>The database “{0}” is currently open in WAL mode – usually by Zutritt on the computer where it is stored. It can only be opened over a share once it has been closed there; Zutritt then switches it permanently to the journal mode suitable for shares.</value>
+    <comment>{0} = path</comment>
+  </data>
+  <data name="Text_ListAnd" xml:space="preserve">
+    <value>{0} and {1}</value>
+    <comment>Last two items of a list</comment>
+  </data>
+  <data name="Text_ListSeparator" xml:space="preserve">
+    <value>, </value>
+    <comment>Between list items except the last two</comment>
+  </data>
+  <data name="Text_Quote" xml:space="preserve">
+    <value>“{0}”</value>
+    <comment>Quotation marks around a name or term</comment>
+  </data>
+  <data name="Time_Milliseconds" xml:space="preserve">
+    <value>{0:0} milliseconds</value>
+    <comment>{0} = limit.TotalMilliseconds</comment>
+  </data>
+  <data name="Time_Minutes" xml:space="preserve">
+    <value>{0:0} minutes</value>
+    <comment>{0} = limit.TotalMinutes</comment>
+  </data>
+  <data name="Time_Seconds" xml:space="preserve">
+    <value>{0:0} seconds</value>
+    <comment>{0} = limit.TotalSeconds</comment>
+  </data>
+</root>

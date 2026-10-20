@@ -1,3 +1,5 @@
+using Zutritt.Core.Identity;
+
 namespace Zutritt.Core.Analysis;
 
 /// <summary>
@@ -44,30 +46,6 @@ public static class SidCatalog
         LocalSystem, Administrators, TrustedInstaller, CreatorOwner, BackupOperators,
     };
 
-    // Fallback, falls ein Prinzipal nicht in ScanResult.Principals steht (z. B. implizites „Jeder“).
-    private static readonly Dictionary<string, string> GermanNames = new(StringComparer.OrdinalIgnoreCase)
-    {
-        [Everyone] = "Jeder",
-        [NullSid] = "NULL SID",
-        [CreatorOwner] = "ERSTELLER-BESITZER",
-        [CreatorGroup] = "ERSTELLERGRUPPE",
-        [CreatorOwnerServer] = "ERSTELLER-BESITZER-SERVER",
-        [CreatorGroupServer] = "ERSTELLERGRUPPE-SERVER",
-        [OwnerRights] = "BESITZERRECHTE",
-        [Network] = @"NT-AUTORITÄT\NETZWERK",
-        [Interactive] = @"NT-AUTORITÄT\INTERAKTIV",
-        [AnonymousLogon] = @"NT-AUTORITÄT\ANONYMOUS-ANMELDUNG",
-        [AuthenticatedUsers] = @"NT-AUTORITÄT\Authentifizierte Benutzer",
-        [LocalSystem] = @"NT-AUTORITÄT\SYSTEM",
-        [LocalService] = @"NT-AUTORITÄT\LOKALER DIENST",
-        [NetworkService] = @"NT-AUTORITÄT\NETZWERKDIENST",
-        [Administrators] = @"VORDEFINIERT\Administratoren",
-        [Users] = @"VORDEFINIERT\Benutzer",
-        [Guests] = @"VORDEFINIERT\Gäste",
-        [PowerUsers] = @"VORDEFINIERT\Hauptbenutzer",
-        [BackupOperators] = @"VORDEFINIERT\Sicherungs-Operatoren",
-        [TrustedInstaller] = @"NT SERVICE\TrustedInstaller",
-    };
 
     /// <summary>
     /// „Breite Gruppe“: umfasst praktisch alle Personen (Jeder, Authentifizierte Benutzer, VORDEFINIERT\Benutzer
@@ -163,8 +141,8 @@ public static class SidCatalog
         NullSid, OwnerRights, LocalSystem, LocalService, NetworkService, "S-1-5-6", Restricted, WriteRestricted,
     };
 
-    /// <summary>Deutscher Anzeigename für bekannte SIDs, sonst null.</summary>
-    public static string? GermanName(string sid) => GermanNames.GetValueOrDefault(sid);
+    /// <summary>Anzeigename bekannter SIDs in der Sprache der Oberfläche (siehe WellKnownSids), sonst null.</summary>
+    public static string? FallbackName(string sid) => WellKnownSids.TryGet(sid, out var name, out _) ? name : null;
 
     /// <summary>RID einer Konto-SID der Form S-1-5-21-a-b-c-RID (Domäne oder Rechner), sonst null.</summary>
     public static int? DomainRid(string sid)

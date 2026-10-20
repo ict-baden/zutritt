@@ -27,6 +27,12 @@
     <ProjectReference Include="..\..\src\Zutritt.Core\Zutritt.Core.csproj" />
   </ItemGroup>
 
+  <!-- Sprachdateien als Kopie neben der Test-DLL: In der CI schreibt ContinuousIntegrationBuild die Quellpfade um,
+       ein Weg über [CallerFilePath] fände sie dort nicht -->
+  <ItemGroup>
+    <None Include="..\..\src\Zutritt.Core\Resources\Strings*.resx" Link="Resources\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <!-- Nur unter Windows: Windows-Anbindung (NTFS, Freigaben, Konten) und die WPF-App (Info, Befehlszeile, Demo-Daten) -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'">
     <ProjectReference Include="..\..\src\Zutritt.Platform.Windows\Zutritt.Platform.Windows.csproj" />

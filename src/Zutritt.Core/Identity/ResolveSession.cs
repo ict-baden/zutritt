@@ -1,6 +1,7 @@
 using Zutritt.Core.Model;
 using Zutritt.Core.Platform;
 
+using Zutritt.Core.Resources;
 namespace Zutritt.Core.Identity;
 
 /// <summary>Direkte Mitglieder einer Gruppe; null = nicht lesbar. <c>Incomplete</c>: nur ein Teil ließ sich lesen.</summary>
@@ -120,7 +121,7 @@ internal sealed class ResolveSession
             // erreichbar oder nicht gefragt, kann der Dienst dort sehr wohl installiert sein.
             if (sid.StartsWith("S-1-5-80-", StringComparison.OrdinalIgnoreCase)
                 && (lsa.Status != LookupStatus.NichtZugeordnet || _unaskedServers.Count > 0))
-                nonAccount = $"Dienst ({sid})";
+                nonAccount = Texts.Format(Strings.Identity_Service, sid);
             return Make(sid, nonAccount, PrincipalKind.Bekannt);
         }
         // VORDEFINIERT-Gruppe, die es auf diesem Rechner nicht gibt (z. B. nur auf Servern): von Windows vergeben,
@@ -136,8 +137,7 @@ internal sealed class ResolveSession
         {
             // Lokale Konten und Dienste eines Servers kennt nur dessen eigene LSA, nicht die dieses Rechners.
             foreach (var unasked in _unaskedServers)
-                Note(WindowsPath.Server(unasked), "Konten wurden nicht beim Server selbst nachgeschlagen. Nicht auflösbare Konten bleiben "
-                    + "deshalb „Unbekannt“ statt „Verwaist“ – lokale Konten des Servers kennt nur der Server.");
+                Note(WindowsPath.Server(unasked), Strings.Identity_NotAskedServer);
             return Make(sid, sid, PrincipalKind.Unbekannt);
         }
         return Make(sid, sid, PrincipalKind.Verwaist);
@@ -151,7 +151,7 @@ internal sealed class ResolveSession
             if (directory is IAuthoritativeDirectory authoritative)
             {
                 if (!TimeBudget.TryRun(() => authoritative.Find(sid), CallTimeout, out var outcome)) return GaveUp(directory, LookupOutcome.Unreachable);
-                if (outcome.State == LookupState.NichtErreichbar) Note(authoritative.SourceName, outcome.Error ?? "Verzeichnis nicht erreichbar.");
+                if (outcome.State == LookupState.NichtErreichbar) Note(authoritative.SourceName, outcome.Error ?? Strings.Identity_DirectoryUnreachable);
                 if (outcome.State == LookupState.Gefunden && outcome.Principal is null) return LookupOutcome.NotResponsible;
                 return outcome;
             }
@@ -161,7 +161,7 @@ internal sealed class ResolveSession
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             // Ein fehlerhaftes Verzeichnis darf den Lauf nicht abbrechen; das Konto bleibt dann „unbekannt“.
-            Note(SourceOf(directory), $"Verzeichnisfehler beim Auflösen von Konten: {ex.Message}");
+            Note(SourceOf(directory), Texts.Format(Strings.Identity_DirectoryErrorAccounts, ex.Message));
             return LookupOutcome.Unreachable(ex.Message);
         }
     }
@@ -174,7 +174,7 @@ internal sealed class ResolveSession
             if (directory is IAuthoritativeDirectory authoritative)
             {
                 if (!TimeBudget.TryRun(() => authoritative.FindMembers(groupSid), CallTimeout, out var outcome)) return GaveUp(directory, MembersOutcome.Unreachable);
-                if (outcome.State == LookupState.NichtErreichbar) Note(authoritative.SourceName, outcome.Error ?? "Verzeichnis nicht erreichbar.");
+                if (outcome.State == LookupState.NichtErreichbar) Note(authoritative.SourceName, outcome.Error ?? Strings.Identity_DirectoryUnreachable);
                 if (outcome.State == LookupState.Gefunden && outcome.Members is null) return MembersOutcome.NotResponsible;
                 return outcome;
             }
@@ -183,7 +183,7 @@ internal sealed class ResolveSession
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            Note(SourceOf(directory), $"Verzeichnisfehler beim Lesen von Gruppenmitgliedern: {ex.Message}");
+            Note(SourceOf(directory), Texts.Format(Strings.Identity_DirectoryErrorMembers, ex.Message));
             return MembersOutcome.Unreachable(ex.Message);
         }
     }
@@ -226,8 +226,7 @@ internal sealed class ResolveSession
         if (perServer.Count > 1 && perServer.Skip(1).Any(s => !s.SetEquals(perServer[0])))
         {
             var label = Resolve(groupSid).Label;
-            Note(label, "Die Gruppe hat auf den gescannten Servern verschiedene Mitglieder. Weil jede SID im Lauf nur einmal vorkommt, "
-                + "sind die Mitglieder aller Server zusammengefasst – ein Zugriff über diese Gruppe gilt womöglich nur auf einem der Server.");
+            Note(label, Strings.Identity_MembersMerged);
         }
         return new MembersAnswer(Sorted(all), incomplete);
     }
@@ -248,8 +247,7 @@ internal sealed class ResolveSession
             {
                 if (!TimeBudget.TryRun(() => lookup.Lookup(sid), CallTimeout, out r))
                 {
-                    Note(LsaSource(lookup.Server), $"Kontenauflösung antwortet nicht innerhalb von {TimeBudget.Describe(CallTimeout)}. "
-                        + "Betroffene Konten bleiben „Unbekannt“.");
+                    Note(LsaSource(lookup.Server), Texts.Format(Strings.Identity_LookupTimeout, TimeBudget.Describe(CallTimeout)));
                     _deadLookups.Add(lookup);
                     error = true;
                     continue;
@@ -257,7 +255,7 @@ internal sealed class ResolveSession
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                Note(LsaSource(lookup.Server), $"Kontennamen nicht auflösbar: {ex.Message}. Betroffene Konten bleiben „Unbekannt“.");
+                Note(LsaSource(lookup.Server), Texts.Format(Strings.Identity_NamesNotResolvable, ex.Message));
                 _deadLookups.Add(lookup);
                 error = true;
                 continue;
@@ -266,7 +264,7 @@ internal sealed class ResolveSession
             if (r.Status == LookupStatus.Fehler)
             {
                 error = true;
-                Note(LsaSource(lookup.Server), $"Kontennamen nicht auflösbar: {r.Error ?? "unbekannter Fehler"}. Betroffene Konten bleiben „Unbekannt“.");
+                Note(LsaSource(lookup.Server), Texts.Format(Strings.Identity_NamesNotResolvable, r.Error ?? Strings.Identity_UnknownError));
                 // Fehler, die den ganzen Server betreffen: weitere Anfragen dort liefen nur jeweils in die Zeitüberschreitung.
                 if (r.SourceDown) _deadLookups.Add(lookup);
             }
@@ -338,7 +336,7 @@ internal sealed class ResolveSession
     }
 
     private string NoAnswer(IDirectory directory) =>
-        $"Verzeichnis antwortet nicht innerhalb von {TimeBudget.Describe(CallTimeout)} – Konten und Gruppen aus dieser Quelle bleiben „Unbekannt“.";
+        Texts.Format(Strings.Identity_DirectoryTimeout, TimeBudget.Describe(CallTimeout));
 
     private static string LsaSource(string? server) => WindowsPath.Server(server ?? Environment.MachineName);
 

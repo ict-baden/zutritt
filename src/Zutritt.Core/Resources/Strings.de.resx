@@ -1,0 +1,738 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- Zutritt – deutsche Texte (Richtlinie 13). Platzhalter {0}, {1} … wie in Strings.resx beschrieben. -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Error_WithCode" xml:space="preserve">
+    <value>{0} (Fehler {1})</value>
+  </data>
+  <data name="Finding_BroadRead" xml:space="preserve">
+    <value>„{0}“ hat „{1}“{2} – praktisch jede angemeldete Person darf hier lesen.</value>
+  </data>
+  <data name="Finding_BroadWrite" xml:space="preserve">
+    <value>„{0}“ hat „{1}“{2} – praktisch jede angemeldete Person darf hier schreiben.</value>
+  </data>
+  <data name="Finding_DeepBreak" xml:space="preserve">
+    <value>Vererbung in Tiefe {0} unterbrochen (ab Tiefe {1} gilt eine Ausnahme als versteckt).</value>
+  </data>
+  <data name="Finding_Deny" xml:space="preserve">
+    <value>Verweigern-Eintrag für „{0}“ ({1} verweigert).</value>
+  </data>
+  <data name="Finding_DirectUser" xml:space="preserve">
+    <value>„{0}“ hat „{1}“ direkt als Person statt über eine Gruppe.</value>
+  </data>
+  <data name="Finding_DisabledAccount" xml:space="preserve">
+    <value>Das deaktivierte Konto „{0}“ hat hier „{1}“.</value>
+  </data>
+  <data name="Finding_EmptyGroup" xml:space="preserve">
+    <value>Die Gruppe „{0}“ hat keine Mitglieder, ist aber berechtigt („{1}“).</value>
+  </data>
+  <data name="Finding_ForeignInheritedMany" xml:space="preserve">
+    <value>Geerbte Einträge passen nicht zum übergeordneten Ordner – vermutlich verschoben. {0} kommen nicht von dort, sondern vom früheren Ort.</value>
+  </data>
+  <data name="Finding_ForeignInheritedOne" xml:space="preserve">
+    <value>Geerbte Einträge passen nicht zum übergeordneten Ordner – vermutlich verschoben. {0} kommt nicht von dort, sondern vom früheren Ort.</value>
+  </data>
+  <data name="Finding_FullControl" xml:space="preserve">
+    <value>„{0}“ hat Vollzugriff{1} und darf damit Berechtigungen ändern und den Besitz übernehmen.</value>
+  </data>
+  <data name="Finding_InheritanceDiffers" xml:space="preserve">
+    <value>Geerbte Einträge passen nicht zum übergeordneten Ordner – vermutlich verschoben; es gelten womöglich noch Rechte vom früheren Ort.</value>
+  </data>
+  <data name="Finding_InheritsNothing" xml:space="preserve">
+    <value>Erbt nichts vom übergeordneten Ordner, obwohl die Vererbung eingeschaltet ist – meist hat ein Programm den Ordner mit eigenen Rechten angelegt. Die Rechte von oben gelten hier erst nach der nächsten Weitergabe.</value>
+  </data>
+  <data name="Finding_NotChecked" xml:space="preserve">
+    <value>Nicht geprüft: {0}.</value>
+  </data>
+  <data name="Finding_OnlyForChildren" xml:space="preserve">
+    <value> (gilt für Unterordner bzw. Dateien)</value>
+  </data>
+  <data name="Finding_OrphanDenyEntry" xml:space="preserve">
+    <value>einen Verweigern-Eintrag</value>
+  </data>
+  <data name="Finding_OrphanEntry" xml:space="preserve">
+    <value>Die verwaiste SID {0} hat {1} – das Konto gibt es nicht mehr.</value>
+  </data>
+  <data name="Finding_OrphanEntryLevel" xml:space="preserve">
+    <value>einen Eintrag „{0}“</value>
+  </data>
+  <data name="Finding_OrphanEntryParts" xml:space="preserve">
+    <value>einen Eintrag {0}</value>
+  </data>
+  <data name="Finding_OrphanOwner" xml:space="preserve">
+    <value>Besitzer ist die verwaiste SID {0} – das Konto gibt es nicht mehr.</value>
+  </data>
+  <data name="Finding_OrphanOwnerAndEntry" xml:space="preserve">
+    <value>Die verwaiste SID {0} ist Besitzer und hat {1} – das Konto gibt es nicht mehr.</value>
+  </data>
+  <data name="Finding_OwnerIsUser" xml:space="preserve">
+    <value>Besitzer ist das Benutzerkonto „{0}“.</value>
+  </data>
+  <data name="Finding_ShareEveryone" xml:space="preserve">
+    <value>Freigabe-Berechtigung „{0}“: „{1}“ – der Schutz liegt allein bei NTFS.</value>
+  </data>
+  <data name="Finding_ShareOrphan" xml:space="preserve">
+    <value>Die Freigabe-Berechtigung nennt die verwaiste SID {0} – das Konto gibt es nicht mehr.</value>
+  </data>
+  <data name="Finding_ShareUnreadable" xml:space="preserve">
+    <value>Die Freigabe-Berechtigungen von {0} konnten nicht gelesen werden.</value>
+  </data>
+  <data name="Finding_UnreadableFile" xml:space="preserve">
+    <value>Datei nicht lesbar: {0} – Berechtigungen hier und darunter nicht geprüft.</value>
+  </data>
+  <data name="Finding_UnreadableFolder" xml:space="preserve">
+    <value>Ordner nicht lesbar: {0} – Berechtigungen hier und darunter nicht geprüft.</value>
+  </data>
+  <data name="Identity_DirectoryErrorAccounts" xml:space="preserve">
+    <value>Verzeichnisfehler beim Auflösen von Konten: {0}</value>
+  </data>
+  <data name="Identity_DirectoryErrorMembers" xml:space="preserve">
+    <value>Verzeichnisfehler beim Lesen von Gruppenmitgliedern: {0}</value>
+  </data>
+  <data name="Identity_DirectoryTimeout" xml:space="preserve">
+    <value>Verzeichnis antwortet nicht innerhalb von {0} – Konten und Gruppen aus dieser Quelle bleiben „Unbekannt“.</value>
+  </data>
+  <data name="Identity_DirectoryUnreachable" xml:space="preserve">
+    <value>Verzeichnis nicht erreichbar.</value>
+  </data>
+  <data name="Identity_GroupsTooDeep" xml:space="preserve">
+    <value>Gruppen sind tiefer als {0} Ebenen verschachtelt – die Mitglieder dieser Gruppe wurden nicht mehr aufgelöst.</value>
+  </data>
+  <data name="Identity_LookupTimeout" xml:space="preserve">
+    <value>Kontenauflösung antwortet nicht innerhalb von {0}. Betroffene Konten bleiben „Unbekannt“.</value>
+  </data>
+  <data name="Identity_MembersMerged" xml:space="preserve">
+    <value>Die Gruppe hat auf den gescannten Servern verschiedene Mitglieder. Weil jede SID im Lauf nur einmal vorkommt, sind die Mitglieder aller Server zusammengefasst – ein Zugriff über diese Gruppe gilt womöglich nur auf einem der Server.</value>
+  </data>
+  <data name="Identity_NamesNotResolvable" xml:space="preserve">
+    <value>Kontennamen nicht auflösbar: {0}. Betroffene Konten bleiben „Unbekannt“.</value>
+  </data>
+  <data name="Identity_NotAskedServer" xml:space="preserve">
+    <value>Konten wurden nicht beim Server selbst nachgeschlagen. Nicht auflösbare Konten bleiben deshalb „Unbekannt“ statt „Verwaist“ – lokale Konten des Servers kennt nur der Server.</value>
+  </data>
+  <data name="Identity_Service" xml:space="preserve">
+    <value>Dienst ({0})</value>
+  </data>
+  <data name="Identity_UnknownError" xml:space="preserve">
+    <value>unbekannter Fehler</value>
+  </data>
+  <data name="Phase_Accounts" xml:space="preserve">
+    <value>Konten</value>
+  </data>
+  <data name="Phase_Done" xml:space="preserve">
+    <value>Fertig</value>
+  </data>
+  <data name="Phase_Findings" xml:space="preserve">
+    <value>Befunde</value>
+  </data>
+  <data name="Phase_Folders" xml:space="preserve">
+    <value>Ordner</value>
+  </data>
+  <data name="Phase_Targets" xml:space="preserve">
+    <value>Ziele</value>
+  </data>
+  <data name="Rights_ChangePermissions" xml:space="preserve">
+    <value>Berechtigungen ändern</value>
+  </data>
+  <data name="Rights_Delete" xml:space="preserve">
+    <value>Löschen</value>
+  </data>
+  <data name="Rights_DeleteChildren" xml:space="preserve">
+    <value>Unterordner und Dateien löschen</value>
+  </data>
+  <data name="Rights_DeniedFromModify" xml:space="preserve">
+    <value>Verweigert: Ändern und Vollzugriff (ab Ändern)</value>
+  </data>
+  <data name="Rights_DeniedFromRead" xml:space="preserve">
+    <value>Verweigert: alles (ab Lesen)</value>
+  </data>
+  <data name="Rights_DeniedFull" xml:space="preserve">
+    <value>Verweigert: Vollzugriff</value>
+  </data>
+  <data name="Rights_DeniedNothing" xml:space="preserve">
+    <value>Verweigert: nichts (ohne Wirkung)</value>
+  </data>
+  <data name="Rights_FullControl" xml:space="preserve">
+    <value>Vollzugriff</value>
+  </data>
+  <data name="Rights_List" xml:space="preserve">
+    <value>Auflisten</value>
+  </data>
+  <data name="Rights_Modify" xml:space="preserve">
+    <value>Ändern</value>
+  </data>
+  <data name="Rights_None" xml:space="preserve">
+    <value>Kein Zugriff</value>
+  </data>
+  <data name="Rights_Read" xml:space="preserve">
+    <value>Lesen</value>
+  </data>
+  <data name="Rights_ReadAttributes" xml:space="preserve">
+    <value>Attribute lesen</value>
+  </data>
+  <data name="Rights_ReadPermissions" xml:space="preserve">
+    <value>Berechtigungen lesen</value>
+  </data>
+  <data name="Rights_Synchronize" xml:space="preserve">
+    <value>Synchronisieren</value>
+  </data>
+  <data name="Rights_TakeOwnership" xml:space="preserve">
+    <value>Besitz übernehmen</value>
+  </data>
+  <data name="Rights_Traverse" xml:space="preserve">
+    <value>Ordner durchsuchen bzw. Datei ausführen</value>
+  </data>
+  <data name="Rights_Write" xml:space="preserve">
+    <value>Schreiben</value>
+  </data>
+  <data name="Rights_WriteAttributes" xml:space="preserve">
+    <value>Attribute schreiben</value>
+  </data>
+  <data name="Rule_ZT01_Explanation" xml:space="preserve">
+    <value>Eine Gruppe, die praktisch alle Personen umfasst (z. B. „Jeder“, „Authentifizierte Benutzer“, „Domänen-Benutzer“), darf hier Dateien anlegen oder ändern. Damit kann jede angemeldete Person Daten verfälschen, löschen oder – etwa durch Schadsoftware – verschlüsseln.</value>
+  </data>
+  <data name="Rule_ZT01_Recommendation" xml:space="preserve">
+    <value>Schreibrecht der breiten Gruppe entfernen und nur einer fachlichen Gruppe geben, die genau die zuständigen Personen enthält.</value>
+  </data>
+  <data name="Rule_ZT01_Title" xml:space="preserve">
+    <value>Breite Gruppe darf schreiben</value>
+  </data>
+  <data name="Rule_ZT02_Explanation" xml:space="preserve">
+    <value>Eine Gruppe, die praktisch alle Personen umfasst, darf hier lesen oder den Inhalt auflisten. Vertrauliche Daten sind damit für jede angemeldete Person sichtbar.</value>
+  </data>
+  <data name="Rule_ZT02_Recommendation" xml:space="preserve">
+    <value>Prüfen, ob die Daten wirklich für alle bestimmt sind; sonst die breite Gruppe durch eine fachliche Gruppe ersetzen.</value>
+  </data>
+  <data name="Rule_ZT02_Title" xml:space="preserve">
+    <value>Breite Gruppe darf lesen</value>
+  </data>
+  <data name="Rule_ZT03_Explanation" xml:space="preserve">
+    <value>Das Recht ist einem einzelnen Benutzerkonto statt einer Gruppe gegeben. Solche Einträge werden bei Wechsel der Abteilung oder beim Austritt leicht vergessen und machen die Rechtevergabe unübersichtlich.</value>
+  </data>
+  <data name="Rule_ZT03_Recommendation" xml:space="preserve">
+    <value>Recht über eine Gruppe (Rolle bzw. Abteilung) vergeben und den Eintrag für die Person entfernen.</value>
+  </data>
+  <data name="Rule_ZT03_Title" xml:space="preserve">
+    <value>Recht direkt an Person vergeben</value>
+  </data>
+  <data name="Rule_ZT04_Explanation" xml:space="preserve">
+    <value>Ein Eintrag oder der Besitzer verweist auf ein Konto, das es nicht mehr gibt. Die SID lässt sich keinem Namen zuordnen; niemand kann ohne Weiteres sagen, wem das Recht einmal gegeben wurde.</value>
+  </data>
+  <data name="Rule_ZT04_Recommendation" xml:space="preserve">
+    <value>Verwaisten Eintrag entfernen; ist die SID Besitzer, einen gültigen Besitzer (z. B. „Administratoren“) eintragen.</value>
+  </data>
+  <data name="Rule_ZT04_Title" xml:space="preserve">
+    <value>Verwaiste SID</value>
+  </data>
+  <data name="Rule_ZT05_Explanation" xml:space="preserve">
+    <value>Ein Konto oder eine Gruppe ohne Administratorrolle hat Vollzugriff. Damit darf es Berechtigungen ändern und den Besitz übernehmen – also sich und anderen beliebige Rechte geben, an jeder Prüfung vorbei.</value>
+  </data>
+  <data name="Rule_ZT05_Recommendation" xml:space="preserve">
+    <value>Auf „Ändern“ reduzieren; Vollzugriff nur Administratoren und SYSTEM geben.</value>
+  </data>
+  <data name="Rule_ZT05_Title" xml:space="preserve">
+    <value>Vollzugriff für Nicht-Admins</value>
+  </data>
+  <data name="Rule_ZT06_Explanation" xml:space="preserve">
+    <value>Tief in der Ordnerstruktur ist die Vererbung unterbrochen. Solche Ausnahmen sieht man von oben nicht; Änderungen an übergeordneten Ordnern kommen hier nicht an.</value>
+  </data>
+  <data name="Rule_ZT06_Recommendation" xml:space="preserve">
+    <value>Prüfen, ob die Ausnahme noch nötig ist, und sonst die Vererbung wieder einschalten. Nötige Ausnahmen dokumentieren oder weiter oben in der Struktur abbilden.</value>
+  </data>
+  <data name="Rule_ZT06_Title" xml:space="preserve">
+    <value>Tief versteckte Ausnahme</value>
+  </data>
+  <data name="Rule_ZT07_Explanation" xml:space="preserve">
+    <value>Ein expliziter Verweigern-Eintrag geht allen Erlauben-Einträgen vor. Verweigerungen sind schwer nachzuvollziehen und treffen oft mehr Personen als beabsichtigt (z. B. alle Mitglieder einer Gruppe).</value>
+  </data>
+  <data name="Rule_ZT07_Recommendation" xml:space="preserve">
+    <value>Recht lieber gar nicht erst vergeben (Gruppen passend zuschneiden). Verweigerungen nur in begründeten Ausnahmen nutzen und dokumentieren.</value>
+  </data>
+  <data name="Rule_ZT07_Title" xml:space="preserve">
+    <value>Verweigern-Eintrag</value>
+  </data>
+  <data name="Rule_ZT08_Explanation" xml:space="preserve">
+    <value>Die Freigabe-Berechtigung erlaubt allen angemeldeten Personen mindestens „Ändern“. Der Schutz liegt damit allein bei den NTFS-Rechten. Das ist von Microsoft empfohlene Praxis, sollte aber bewusst so gewählt sein.</value>
+  </data>
+  <data name="Rule_ZT08_Recommendation" xml:space="preserve">
+    <value>Nichts zu tun, wenn die NTFS-Rechte sauber sind. Sonst die Freigabe-Berechtigung zusätzlich einschränken.</value>
+  </data>
+  <data name="Rule_ZT08_Title" xml:space="preserve">
+    <value>Freigabe: alle dürfen ändern</value>
+  </data>
+  <data name="Rule_ZT09_Explanation" xml:space="preserve">
+    <value>Der Ordner (oder die Datei) konnte nicht gelesen werden, z. B. weil der Zugriff verweigert wurde. Seine Berechtigungen und alles darunter sind in diesem Lauf nicht geprüft.</value>
+  </data>
+  <data name="Rule_ZT09_Recommendation" xml:space="preserve">
+    <value>Ursache beheben oder mit einem Konto scannen, das die Berechtigungen lesen darf, und den Lauf wiederholen.</value>
+  </data>
+  <data name="Rule_ZT09_Title" xml:space="preserve">
+    <value>Ordner nicht lesbar</value>
+  </data>
+  <data name="Rule_ZT10_Explanation" xml:space="preserve">
+    <value>Der Besitzer darf die Berechtigungen jederzeit ändern – unabhängig davon, was in der Liste steht. Ist eine einzelne Person Besitzer, behält sie diese Möglichkeit auch nach einem Rollenwechsel.</value>
+  </data>
+  <data name="Rule_ZT10_Recommendation" xml:space="preserve">
+    <value>Besitz auf „Administratoren“ (bzw. eine Admin-Gruppe) übertragen.</value>
+  </data>
+  <data name="Rule_ZT10_Title" xml:space="preserve">
+    <value>Besitzer ist ein Benutzerkonto</value>
+  </data>
+  <data name="Rule_ZT11_Explanation" xml:space="preserve">
+    <value>Eine Gruppe ohne Mitglieder ist berechtigt. Der Eintrag wirkt heute nicht, wird aber unbemerkt wirksam, sobald jemand in die Gruppe aufgenommen wird.</value>
+  </data>
+  <data name="Rule_ZT11_Recommendation" xml:space="preserve">
+    <value>Eintrag entfernen, wenn die Gruppe nicht mehr gebraucht wird; sonst den Zweck dokumentieren.</value>
+  </data>
+  <data name="Rule_ZT11_Title" xml:space="preserve">
+    <value>Leere Gruppe berechtigt</value>
+  </data>
+  <data name="Rule_ZT12_Explanation" xml:space="preserve">
+    <value>Ein deaktiviertes Benutzerkonto hat hier ein eigenes Recht. Wird das Konto wieder aktiviert, gilt das Recht sofort.</value>
+  </data>
+  <data name="Rule_ZT12_Recommendation" xml:space="preserve">
+    <value>Eintrag entfernen; ausgeschiedene Konten nach Ablauf der Frist löschen.</value>
+  </data>
+  <data name="Rule_ZT12_Title" xml:space="preserve">
+    <value>Deaktiviertes Konto berechtigt</value>
+  </data>
+  <data name="Rule_ZT13_Explanation" xml:space="preserve">
+    <value>Die Berechtigungen der Freigabe konnten nicht gelesen werden. Die Rechte über das Netz sind deshalb allein aus den NTFS-Rechten berechnet und können in Wirklichkeit geringer sein.</value>
+  </data>
+  <data name="Rule_ZT13_Recommendation" xml:space="preserve">
+    <value>Mit Administratorrechten auf dem Server erneut scannen.</value>
+  </data>
+  <data name="Rule_ZT13_Title" xml:space="preserve">
+    <value>Freigabe-Berechtigungen nicht lesbar</value>
+  </data>
+  <data name="Rule_ZT14_Explanation" xml:space="preserve">
+    <value>Der Ordner (oder die Datei) hat geerbte Einträge, die nicht zum übergeordneten Ordner passen. Typisch sind verschobene Ordner: Beim Verschieben innerhalb eines Laufwerks nimmt Windows die alten geerbten Rechte mit, statt die des neuen Ortes zu übernehmen. Hier gelten dann womöglich noch Rechte vom früheren Ort – auch für Personen, die am neuen Ort keinen Zugriff haben sollen –, und Änderungen am übergeordneten Ordner kommen erst nach der nächsten Weitergabe der Rechte an.</value>
+  </data>
+  <data name="Rule_ZT14_Recommendation" xml:space="preserve">
+    <value>Prüfen, ob die abweichenden Rechte noch gebraucht werden. Sonst die Vererbung neu anwenden: in den erweiterten Sicherheitseinstellungen die Vererbung deaktivieren, dabei die geerbten Einträge entfernen und sie gleich wieder aktivieren – eigene Einträge bleiben erhalten.</value>
+  </data>
+  <data name="Rule_ZT14_Title" xml:space="preserve">
+    <value>Rechte weichen von der Vererbung ab</value>
+  </data>
+  <data name="Scan_AdminShareDefault" xml:space="preserve">
+    <value>Freigabe-Berechtigungen nicht lesbar: Administrative Freigabe ohne eigene Berechtigungen – es gilt die interne Windows-Vorgabe (in der Regel nur Administratoren)</value>
+  </data>
+  <data name="Scan_InvalidTarget" xml:space="preserve">
+    <value>Ungültiges Ziel: {0}</value>
+  </data>
+  <data name="Scan_ListingFailed" xml:space="preserve">
+    <value>Inhalt nicht auflistbar: {0}</value>
+  </data>
+  <data name="Scan_LocalWithoutShares" xml:space="preserve">
+    <value>{0} – lokale Ordner ohne Zuordnung zu Freigaben</value>
+  </data>
+  <data name="Scan_NoDiskShares" xml:space="preserve">
+    <value>Keine Datenträger-Freigaben gefunden</value>
+  </data>
+  <data name="Scan_NoLocalDiskShares" xml:space="preserve">
+    <value>Keine Datenträger-Freigaben auf diesem Rechner gefunden</value>
+  </data>
+  <data name="Scan_NotSupported" xml:space="preserve">
+    <value>Scannen ist nur unter Windows möglich (NTFS-Rechte, Freigaben, Active Directory).</value>
+  </data>
+  <data name="Scan_ShareLocalPathInvalid" xml:space="preserve">
+    <value>Ungültiger lokaler Pfad der Freigabe: „{0}“</value>
+  </data>
+  <data name="Scan_ShareLocalPathUnreadable" xml:space="preserve">
+    <value>Lokaler Pfad der Freigabe nicht lesbar – Freigabe nicht geprüft</value>
+  </data>
+  <data name="Scan_SharePermissionsUnreadable" xml:space="preserve">
+    <value>Freigabe-Berechtigungen nicht lesbar</value>
+  </data>
+  <data name="Scan_SharesTimeout" xml:space="preserve">
+    <value>Freigaben von „{0}“: keine Antwort innerhalb von {1}</value>
+  </data>
+  <data name="Scan_ShareTimeout" xml:space="preserve">
+    <value>Freigabe „{0}“: keine Antwort innerhalb von {1}</value>
+  </data>
+  <data name="Scan_TargetUnreachable" xml:space="preserve">
+    <value>Ziel nicht erreichbar: {0}</value>
+  </data>
+  <data name="Scope_AdminOnlyNewer" xml:space="preserve">
+    <value>nur der neuere Lauf hat administrative Freigaben einbezogen</value>
+  </data>
+  <data name="Scope_AdminOnlyOlder" xml:space="preserve">
+    <value>nur der ältere Lauf hat administrative Freigaben einbezogen</value>
+  </data>
+  <data name="Scope_AllLevels" xml:space="preserve">
+    <value>alle Ebenen</value>
+  </data>
+  <data name="Scope_DeepBreak" xml:space="preserve">
+    <value>tief versteckte Ausnahme vorher ab Ebene {0}, jetzt ab Ebene {1}</value>
+  </data>
+  <data name="Scope_Depth" xml:space="preserve">
+    <value>Tiefe vorher {0}, jetzt {1}</value>
+  </data>
+  <data name="Scope_Differs" xml:space="preserve">
+    <value>Umfang weicht ab: {0}. Verglichen ist nur, was beide Läufe erfasst haben.</value>
+  </data>
+  <data name="Scope_FilesOnlyNewer" xml:space="preserve">
+    <value>nur der neuere Lauf hat Dateien erfasst</value>
+  </data>
+  <data name="Scope_FilesOnlyOlder" xml:space="preserve">
+    <value>nur der ältere Lauf hat Dateien erfasst</value>
+  </data>
+  <data name="Scope_GroupsOnlyNewer" xml:space="preserve">
+    <value>nur der neuere Lauf hat Gruppen bis zur Person aufgelöst</value>
+  </data>
+  <data name="Scope_GroupsOnlyOlder" xml:space="preserve">
+    <value>nur der ältere Lauf hat Gruppen bis zur Person aufgelöst</value>
+  </data>
+  <data name="Scope_UpToLevel" xml:space="preserve">
+    <value>bis Ebene {0}</value>
+  </data>
+  <data name="Share_Change" xml:space="preserve">
+    <value>Ändern</value>
+  </data>
+  <data name="Share_FullControl" xml:space="preserve">
+    <value>Vollzugriff</value>
+  </data>
+  <data name="Share_Read" xml:space="preserve">
+    <value>Lesen</value>
+  </data>
+  <data name="Sid_AccessControlAssistanceOperators" xml:space="preserve">
+    <value>Zugriffssteuerungs-Unterstützungsoperatoren</value>
+  </data>
+  <data name="Sid_AccountOperators" xml:space="preserve">
+    <value>Konten-Operatoren</value>
+  </data>
+  <data name="Sid_Administrators" xml:space="preserve">
+    <value>Administratoren</value>
+  </data>
+  <data name="Sid_AllAppPackages" xml:space="preserve">
+    <value>ALLE ANWENDUNGSPAKETE</value>
+  </data>
+  <data name="Sid_AllRestrictedAppPackages" xml:space="preserve">
+    <value>ALLE EINGESCHRÄNKTEN ANWENDUNGSPAKETE</value>
+  </data>
+  <data name="Sid_AllServices" xml:space="preserve">
+    <value>ALLE DIENSTE</value>
+  </data>
+  <data name="Sid_AnonymousLogon" xml:space="preserve">
+    <value>ANONYMOUS-ANMELDUNG</value>
+  </data>
+  <data name="Sid_AppCapability" xml:space="preserve">
+    <value>Anwendungsfähigkeit ({0})</value>
+  </data>
+  <data name="Sid_AppPackage" xml:space="preserve">
+    <value>Anwendungspaket ({0})</value>
+  </data>
+  <data name="Sid_AuthenticatedUsers" xml:space="preserve">
+    <value>Authentifizierte Benutzer</value>
+  </data>
+  <data name="Sid_BackupOperators" xml:space="preserve">
+    <value>Sicherungs-Operatoren</value>
+  </data>
+  <data name="Sid_Batch" xml:space="preserve">
+    <value>BATCH</value>
+  </data>
+  <data name="Sid_CapabilityGroup" xml:space="preserve">
+    <value>Fähigkeitsgruppe ({0})</value>
+  </data>
+  <data name="Sid_CertificateServiceDcomAccess" xml:space="preserve">
+    <value>Zertifikatdienst-DCOM-Zugriff</value>
+  </data>
+  <data name="Sid_ConsoleLogon" xml:space="preserve">
+    <value>KONSOLENANMELDUNG</value>
+  </data>
+  <data name="Sid_CreatorGroup" xml:space="preserve">
+    <value>ERSTELLERGRUPPE</value>
+  </data>
+  <data name="Sid_CreatorGroupServer" xml:space="preserve">
+    <value>ERSTELLERGRUPPE-SERVER</value>
+  </data>
+  <data name="Sid_CreatorOwner" xml:space="preserve">
+    <value>ERSTELLER-BESITZER</value>
+  </data>
+  <data name="Sid_CreatorOwnerServer" xml:space="preserve">
+    <value>ERSTELLER-BESITZER-SERVER</value>
+  </data>
+  <data name="Sid_CryptographicOperators" xml:space="preserve">
+    <value>Kryptografie-Operatoren</value>
+  </data>
+  <data name="Sid_DistributedComUsers" xml:space="preserve">
+    <value>Distributed COM-Benutzer</value>
+  </data>
+  <data name="Sid_EnterpriseDomainControllers" xml:space="preserve">
+    <value>DOMÄNENCONTROLLER DER ORGANISATION</value>
+  </data>
+  <data name="Sid_EventLogReaders" xml:space="preserve">
+    <value>Ereignisprotokollleser</value>
+  </data>
+  <data name="Sid_Everyone" xml:space="preserve">
+    <value>Jeder</value>
+  </data>
+  <data name="Sid_Guests" xml:space="preserve">
+    <value>Gäste</value>
+  </data>
+  <data name="Sid_HyperVAdministrators" xml:space="preserve">
+    <value>Hyper-V-Administratoren</value>
+  </data>
+  <data name="Sid_IisAppPool" xml:space="preserve">
+    <value>IIS-Anwendungspool ({0})</value>
+  </data>
+  <data name="Sid_IncomingForestTrustBuilders" xml:space="preserve">
+    <value>Erstellungen eingehender Gesamtstrukturvertrauensstellung</value>
+  </data>
+  <data name="Sid_IntegrityLevel" xml:space="preserve">
+    <value>Verbindlichkeitsstufe ({0})</value>
+  </data>
+  <data name="Sid_Interactive" xml:space="preserve">
+    <value>INTERAKTIV</value>
+  </data>
+  <data name="Sid_Local" xml:space="preserve">
+    <value>LOKAL</value>
+  </data>
+  <data name="Sid_LocalAccount" xml:space="preserve">
+    <value>Lokales Konto</value>
+  </data>
+  <data name="Sid_LocalAdminAccount" xml:space="preserve">
+    <value>Lokales Konto und Mitglied der Gruppe „Administratoren“</value>
+  </data>
+  <data name="Sid_LocalService" xml:space="preserve">
+    <value>LOKALER DIENST</value>
+  </data>
+  <data name="Sid_LogonSession" xml:space="preserve">
+    <value>Anmeldesitzung ({0})</value>
+  </data>
+  <data name="Sid_Network" xml:space="preserve">
+    <value>NETZWERK</value>
+  </data>
+  <data name="Sid_NetworkConfigurationOperators" xml:space="preserve">
+    <value>Netzwerkkonfigurations-Operatoren</value>
+  </data>
+  <data name="Sid_NetworkService" xml:space="preserve">
+    <value>NETZWERKDIENST</value>
+  </data>
+  <data name="Sid_NtlmAuthentication" xml:space="preserve">
+    <value>NTLM-Authentifizierung</value>
+  </data>
+  <data name="Sid_NullSid" xml:space="preserve">
+    <value>NULL-SID</value>
+  </data>
+  <data name="Sid_OtherOrganization" xml:space="preserve">
+    <value>Andere Organisation</value>
+  </data>
+  <data name="Sid_OwnerRights" xml:space="preserve">
+    <value>BESITZERRECHTE</value>
+  </data>
+  <data name="Sid_PerformanceLogUsers" xml:space="preserve">
+    <value>Leistungsprotokollbenutzer</value>
+  </data>
+  <data name="Sid_PerformanceMonitorUsers" xml:space="preserve">
+    <value>Leistungsüberwachungsbenutzer</value>
+  </data>
+  <data name="Sid_PowerUsers" xml:space="preserve">
+    <value>Hauptbenutzer</value>
+  </data>
+  <data name="Sid_PrefixAppPackages" xml:space="preserve">
+    <value>ZERTIFIZIERUNGSSTELLE FÜR ANWENDUNGSPAKETE\</value>
+  </data>
+  <data name="Sid_PrefixBuiltin" xml:space="preserve">
+    <value>VORDEFINIERT\</value>
+  </data>
+  <data name="Sid_PrefixNt" xml:space="preserve">
+    <value>NT-AUTORITÄT\</value>
+  </data>
+  <data name="Sid_PreWindows2000" xml:space="preserve">
+    <value>Prä-Windows 2000 kompatibler Zugriff</value>
+  </data>
+  <data name="Sid_PrintOperators" xml:space="preserve">
+    <value>Druck-Operatoren</value>
+  </data>
+  <data name="Sid_RdsEndpointServers" xml:space="preserve">
+    <value>RDS-Endpunktserver</value>
+  </data>
+  <data name="Sid_RdsManagementServers" xml:space="preserve">
+    <value>RDS-Verwaltungsserver</value>
+  </data>
+  <data name="Sid_RdsRemoteAccessServers" xml:space="preserve">
+    <value>RDS-Remotezugriffsserver</value>
+  </data>
+  <data name="Sid_RemoteDesktopUsers" xml:space="preserve">
+    <value>Remotedesktopbenutzer</value>
+  </data>
+  <data name="Sid_RemoteInteractiveLogon" xml:space="preserve">
+    <value>REMOTE INTERAKTIVE ANMELDUNG</value>
+  </data>
+  <data name="Sid_RemoteManagementUsers" xml:space="preserve">
+    <value>Remoteverwaltungsbenutzer</value>
+  </data>
+  <data name="Sid_Replicator" xml:space="preserve">
+    <value>Replikations-Operator</value>
+  </data>
+  <data name="Sid_Restricted" xml:space="preserve">
+    <value>EINGESCHRÄNKT</value>
+  </data>
+  <data name="Sid_ScheduledTask" xml:space="preserve">
+    <value>Geplante Aufgabe ({0})</value>
+  </data>
+  <data name="Sid_Self" xml:space="preserve">
+    <value>SELBST</value>
+  </data>
+  <data name="Sid_ServerOperators" xml:space="preserve">
+    <value>Server-Operatoren</value>
+  </data>
+  <data name="Sid_Service" xml:space="preserve">
+    <value>DIENST</value>
+  </data>
+  <data name="Sid_ServiceNotInstalled" xml:space="preserve">
+    <value>Nicht installierter Dienst ({0})</value>
+  </data>
+  <data name="Sid_TerminalServerLicenseServers" xml:space="preserve">
+    <value>Terminalserver-Lizenzserver</value>
+  </data>
+  <data name="Sid_TerminalServerUser" xml:space="preserve">
+    <value>TERMINALSERVERBENUTZER</value>
+  </data>
+  <data name="Sid_ThisOrganization" xml:space="preserve">
+    <value>Diese Organisation</value>
+  </data>
+  <data name="Sid_UserModeDriver" xml:space="preserve">
+    <value>Treiber im Benutzermodus ({0})</value>
+  </data>
+  <data name="Sid_Users" xml:space="preserve">
+    <value>Benutzer</value>
+  </data>
+  <data name="Sid_VirtualMachine" xml:space="preserve">
+    <value>Virtueller Computer ({0})</value>
+  </data>
+  <data name="Sid_VirtualSystemAccount" xml:space="preserve">
+    <value>Virtuelles Systemkonto ({0})</value>
+  </data>
+  <data name="Sid_WindowsAuthorizationAccess" xml:space="preserve">
+    <value>Windows-Autorisierungszugriffsgruppe</value>
+  </data>
+  <data name="Store_AccessDenied" xml:space="preserve">
+    <value>Zugriff auf die Datenbank verweigert.</value>
+  </data>
+  <data name="Store_CannotOpen" xml:space="preserve">
+    <value>Die Datenbank „{0}“ kann nicht geöffnet werden. {1}</value>
+  </data>
+  <data name="Store_CantOpen" xml:space="preserve">
+    <value>Die Datei oder ihr Journal ist nicht zugänglich: Pfad und Zugriffsrechte prüfen; möglicherweise hält ein anderes Programm sie gesperrt.</value>
+  </data>
+  <data name="Store_Constraint" xml:space="preserve">
+    <value>Die Daten verletzen eine Regel der Datenbank ({0}).</value>
+  </data>
+  <data name="Store_Corrupt" xml:space="preserve">
+    <value>Die Datenbankdatei ist beschädigt.</value>
+  </data>
+  <data name="Store_DeleteFailed" xml:space="preserve">
+    <value>Lauf {0} konnte nicht gelöscht werden.</value>
+  </data>
+  <data name="Store_DiskFull" xml:space="preserve">
+    <value>Der Datenträger ist voll.</value>
+  </data>
+  <data name="Store_FindPreviousFailed" xml:space="preserve">
+    <value>Der vorige Lauf konnte nicht gesucht werden.</value>
+  </data>
+  <data name="Store_FolderNotCreated" xml:space="preserve">
+    <value>Der Ordner für die Datenbank „{0}“ kann nicht angelegt werden: {1}</value>
+  </data>
+  <data name="Store_Foreign" xml:space="preserve">
+    <value>Die Datei „{0}“ ist eine SQLite-Datenbank, aber keine Zutritt-Datenbank. Sie wird nicht verändert.</value>
+  </data>
+  <data name="Store_InvalidData" xml:space="preserve">
+    <value>{0} Die Datenbank „{1}“ enthält ungültige Daten ({2}).</value>
+  </data>
+  <data name="Store_IoError" xml:space="preserve">
+    <value>Ein-/Ausgabefehler beim Zugriff auf die Datenbankdatei.</value>
+  </data>
+  <data name="Store_ListFailed" xml:space="preserve">
+    <value>Die Liste der Läufe konnte nicht gelesen werden.</value>
+  </data>
+  <data name="Store_LoadFailed" xml:space="preserve">
+    <value>Lauf {0} konnte nicht geladen werden.</value>
+  </data>
+  <data name="Store_Locked" xml:space="preserve">
+    <value>Die Datenbank ist von einem anderen Programm gesperrt. Bitte später erneut versuchen.</value>
+  </data>
+  <data name="Store_Newer" xml:space="preserve">
+    <value>Die Datenbank „{0}“ stammt von einer neueren Zutritt-Version (Schema {1}, diese Version kennt bis {2}). Bitte Zutritt aktualisieren.</value>
+  </data>
+  <data name="Store_NotSqlite" xml:space="preserve">
+    <value>Die Datei ist keine SQLite-Datenbank.</value>
+  </data>
+  <data name="Store_NotWritable" xml:space="preserve">
+    <value>In die Datenbank kann nicht geschrieben werden.</value>
+  </data>
+  <data name="Store_ReadOnly" xml:space="preserve">
+    <value>Die Datenbank ist schreibgeschützt (Dateirechte oder schreibgeschützter Datenträger).</value>
+  </data>
+  <data name="Store_RequestMissing" xml:space="preserve">
+    <value>Die Scan-Einstellungen fehlen.</value>
+  </data>
+  <data name="Store_SaveFailed" xml:space="preserve">
+    <value>Der Lauf konnte nicht gespeichert werden.</value>
+  </data>
+  <data name="Store_SqliteError" xml:space="preserve">
+    <value>SQLite-Fehler {0}: {1}</value>
+  </data>
+  <data name="Store_WalOverShare" xml:space="preserve">
+    <value>Die Datenbank „{0}“ ist gerade im WAL-Modus geöffnet – meist von Zutritt auf dem Rechner, auf dem sie liegt. Über eine Freigabe lässt sie sich erst öffnen, wenn sie dort geschlossen ist; Zutritt stellt sie dann dauerhaft auf das für Freigaben geeignete Journal um.</value>
+  </data>
+  <data name="Text_ListAnd" xml:space="preserve">
+    <value>{0} und {1}</value>
+  </data>
+  <data name="Text_ListSeparator" xml:space="preserve">
+    <value>, </value>
+  </data>
+  <data name="Text_Quote" xml:space="preserve">
+    <value>„{0}“</value>
+  </data>
+  <data name="Time_Milliseconds" xml:space="preserve">
+    <value>{0:0} Millisekunden</value>
+  </data>
+  <data name="Time_Minutes" xml:space="preserve">
+    <value>{0:0} Minuten</value>
+  </data>
+  <data name="Time_Seconds" xml:space="preserve">
+    <value>{0:0} Sekunden</value>
+  </data>
+</root>

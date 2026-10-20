@@ -477,12 +477,12 @@ internal static class ReportDataBuilder
         {
             if (primary.Principals.TryGetValue(sid, out var p)) return p.Label;
             if (secondary is not null && secondary.Principals.TryGetValue(sid, out var o)) return o.Label;
-            return SidCatalog.GermanName(sid) ?? sid;
+            return SidCatalog.FallbackName(sid) ?? sid;
         }
 
         public PrincipalKind Kind(string sid) =>
             primary.Principals.TryGetValue(sid, out var p) ? p.Kind
-            : SidCatalog.GermanName(sid) is not null || SidCatalog.IsSpecialIdentity(sid) ? PrincipalKind.Bekannt
+            : SidCatalog.FallbackName(sid) is not null || SidCatalog.IsSpecialIdentity(sid) ? PrincipalKind.Bekannt
             : PrincipalKind.Unbekannt;
     }
 }
