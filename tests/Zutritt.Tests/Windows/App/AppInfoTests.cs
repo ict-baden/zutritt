@@ -61,9 +61,10 @@ public sealed class AppInfoTests
     }
 
     [Fact]
-    public void Impressum_und_Webseite_zeigen_auf_die_Seiten_von_ICT_Baden()
+    public void Impressum_Datenschutz_und_Webseite_zeigen_auf_die_Seiten_von_ICT_Baden()
     {
         Assert.Equal("https://ict-baden.de/impressum/", AppInfo.ImpressumUrl);
+        Assert.Equal("https://ict-baden.de/datenschutz/zutritt/", AppInfo.PrivacyUrl);
         Assert.Equal("https://ict-baden.de/produkte/zutritt/", AppInfo.WebsiteUrl);
     }
 

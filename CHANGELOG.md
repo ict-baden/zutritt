@@ -2,7 +2,33 @@
 
 Alle wichtigen Änderungen an Zutritt. Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionen nach [Semantic Versioning](https://semver.org/lang/de/).
 
+Jeder Versionsabschnitt endet mit „English“: Das ist der Text des Releases auf GitHub (`.github/scripts/release-notes.ps1`).
+
 ## [Unveröffentlicht]
+
+## [0.1.1] – 2026-10-21
+
+### Geändert
+- Kopf der Navigation und erste Zeile von `--info` führen den Untertitel wie Fenstertitel und Seite *Info*: „Zutritt – Freigaben-Rechte“ (englisch „Share Permissions“).
+- *Datenschutz* auf der Seite *Info* und in `--info` führt auf die Datenschutzerklärung von Zutritt auf der Webseite, `https://ict-baden.de/datenschutz/zutritt/`. Die Einzelheiten stehen weiter in `docs/data-and-privacy.md`.
+- Releases einer Version tragen den englischen Abschnitt dieses CHANGELOG mit der Liste der Dateien als Text, statt automatisch erzeugter Notizen. Der Text des rollierenden Builds `latest` ist englisch.
+
+### Behoben
+- Die Bilder der Doku zeigen deutsche Daten- und Zahlenformate statt amerikanischer, und die Seite *Info* in den Bildern sagt nicht mehr, die Sprache sei durch `ZUTRITT_LANGUAGE` vorgegeben. Dafür formatieren `--screenshots` und `--demo-bericht` Daten und Zahlen in der Sprache der Bilder.
+- Die Zahl der Befunde je Schweregrad auf der Seite *Befunde* folgt dem Gebietsschema von Windows (war fest deutsch, z. B. „1.234“ auch bei englischer Oberfläche).
+
+### English
+
+Maintenance release: the product name with its subtitle everywhere, the privacy link on the ICT-Baden website, release notes, number formats and documentation images.
+
+#### Changed
+- The header of the navigation and the first line of `--info` carry the subtitle, as the window title and the *Info* page already did: “Zutritt – Share Permissions” (German “Freigaben-Rechte”).
+- *Privacy* on the *Info* page and in `--info` opens Zutritt's privacy notice on the ICT-Baden website, `https://ict-baden.de/datenschutz/zutritt/`. The details remain in `docs/data-and-privacy.md`.
+- Releases of a version use the English part of the changelog with the list of files as their notes instead of generated notes. The notes of the rolling `latest` build are in English.
+
+#### Fixed
+- The documentation images show German date and number formats instead of US ones, and the *Info* page in the images no longer says that the language is set by `ZUTRITT_LANGUAGE`. For this, `--screenshots` and `--demo-bericht` format dates and numbers in the language of the images.
+- The number of findings per severity on the *Findings* page follows the Windows regional format (it was always German, e.g. “1.234” in the English interface too).
 
 ## [0.1.0] – 2026-10-21
 
@@ -63,5 +89,22 @@ Alle wichtigen Änderungen an Zutritt. Format nach [Keep a Changelog](https://ke
 
 ### Sicherheit
 - System.Security.Cryptography.Pkcs auf 10.0.13 festgelegt: PDFsharp brachte 8.0.1 mit bekannten Schwachstellen (GHSA-846f-f764-76mx, GHSA-2fmv-rv2c-59x7) mit.
+
+### English
+
+First version of Zutritt – Share Permissions: shows who can access what on Windows file shares, and through which group.
+
+- **Scan** shares (`\\server\share`), whole servers (`\\server`), local folders and all shares of this PC (`.`): share and NTFS permissions, read-only.
+- **Groups resolved to people**, nested and protected against cycles: local accounts and groups of the scanned server and, on domain-joined PCs, Active Directory of the PC's own domain.
+- **Effective access computed like Windows**: entries in stored order (including non-canonical lists), deny entries, inheritance, *OWNER RIGHTS*, share and NTFS together – compared bit for bit with the Windows access check (AuthZ) in CI.
+- **15 rules ZT01–ZT15** with explanation and recommendation, e.g. broad group can write, orphaned SID, rights granted to a person directly, inheritance differs from the parent (moved folders), entries not in canonical order.
+- **Pages** *Overview*, *Findings*, *Folders* (who can get in here), *People*, *Comparison*, *Report* and *Info*, light and dark.
+- **Comparison** with the previous run: new and resolved findings, changed entries and group memberships, who can now do more or less; runs with a different scope are compared only where both looked.
+- **Reports** as an Excel workbook with filters and as a PDF with cover, summary, findings and a sign-off block.
+- **History** per user in a SQLite file under `%LocalAppData%\Zutritt`.
+- **Command line** `scan`, `list` and `report` (German spellings too) with exit codes 0–3 for scheduled tasks and monitoring; `--version`, `--info` and `--licenses`.
+- **Five languages** for the window, the command line and the reports: English, German, and machine-translated Spanish, French and Chinese (simplified), following Windows and switchable on the *Info* page. Error messages carry a code `ZUT-xxxx`.
+- **Support without telemetry**: a 7-day log without permissions or account names, and a diagnostics package that replaces names and addresses by default. The software sends no data to ICT-Baden.
+- **Packages**: MSI for Intune or Group Policy, single-file `Zutritt.exe` and a ZIP for PCs with the .NET 10 Desktop Runtime, each release with `SHA256SUMS.txt` and a bill of materials (CycloneDX).
 
 <!-- Abschnitte nach Bedarf: Neu, Geändert, Behoben, Entfernt, Sicherheit -->

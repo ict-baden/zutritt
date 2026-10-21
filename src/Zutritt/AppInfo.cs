@@ -14,11 +14,16 @@ public static class AppInfo
     public const string Name = "Zutritt";
     public const string RepositoryUrl = "https://github.com/ict-baden/zutritt";
     public const string SupportUrl = RepositoryUrl + "/blob/main/SUPPORT.md";
-    public const string PrivacyUrl = RepositoryUrl + "/blob/main/docs/data-and-privacy.md";
     public const string LicenseUrl = RepositoryUrl + "/blob/main/LICENSE";
 
     /// <summary>Impressum – es gibt nur eines, auf der Webseite (Richtlinie 07).</summary>
     public const string ImpressumUrl = "https://ict-baden.de/impressum/";
+
+    /// <summary>
+    /// Datenschutzerklärung von Zutritt auf der Webseite (Richtlinie 07) – gleiche Form für alle Apps:
+    /// https://ict-baden.de/datenschutz/&lt;slug&gt;/. Die Einzelheiten stehen in docs/data-and-privacy.md.
+    /// </summary>
+    public const string PrivacyUrl = "https://ict-baden.de/datenschutz/zutritt/";
 
     /// <summary>Webseite: die Produktseite von Zutritt.</summary>
     public const string WebsiteUrl = "https://ict-baden.de/produkte/zutritt/";

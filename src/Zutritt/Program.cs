@@ -16,6 +16,8 @@ internal static class Program
         // Sprache vor dem ersten Text: Umgebungsvariable, Einstellung, Vorgabe für den Rechner, sonst wie Windows
         UiLanguage.Apply();
         var options = StartOptions.Parse(args);
+        // Bilder der Doku: Daten und Zahlen im Format ihrer Sprache, nicht in dem des Rechners, auf dem sie entstehen
+        if (options.Mode == AppMode.Screenshots || StartOptions.IsDemoReport(args)) UiLanguage.ApplyFormatsOfLanguage();
         if (options.Mode == AppMode.CommandLine) return CommandLine.Run(args);
 
         var app = new App(options);
@@ -55,6 +57,10 @@ internal sealed record StartOptions(AppMode Mode, string ScreenshotFolder = "", 
         }
         return new(AppMode.CommandLine);
     }
+
+    /// <summary>Versteckter Demo-Bericht für die Bilder der Doku (<c>--demo-bericht</c>, auch englisch geschrieben).</summary>
+    public static bool IsDemoReport(string[] args) =>
+        args.Length > 0 && CommandLine.Canonical(args[0].Trim()).Equals("--demo-bericht", StringComparison.OrdinalIgnoreCase);
 
     private static StartOptions? ParseBenchmark(string[] args)
     {

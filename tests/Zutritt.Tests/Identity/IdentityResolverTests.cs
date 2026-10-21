@@ -211,19 +211,19 @@ public class IdentityResolverTests
     [Fact]
     public void Zustaendiges_Verzeichnis_nicht_erreichbar_ergibt_unbekannt_auch_wenn_die_LSA_nichts_kennt()
     {
-        var ad = new FakeAuthoritativeDirectory("lab.local", Dom + "-") { Unreachable = true };
+        var ad = new FakeAuthoritativeDirectory("contoso.com", Dom + "-") { Unreachable = true };
         var scan = Scans.On(@"C:\Daten", Max);
         Scans.Resolver(new FakeLookup(), ad).ResolveAll(scan, expandGroups: true);
 
         Assert.Equal(PrincipalKind.Unbekannt, scan.Principals[Max].Kind);
         var note = Assert.Single(scan.Errors);
-        Assert.Equal("lab.local", note.Path);
+        Assert.Equal("contoso.com", note.Path);
     }
 
     [Fact]
     public void Zustaendiges_Verzeichnis_erreichbar_ohne_Konto_ist_verwaist_auch_wenn_die_LSA_versagt()
     {
-        var ad = new FakeAuthoritativeDirectory("lab.local", Dom + "-");
+        var ad = new FakeAuthoritativeDirectory("contoso.com", Dom + "-");
         var p = Scans.Resolver(new FakeLookup().Fail(Max, LookupErrors.RpcServerUnavailable), ad).Resolve(Max);
 
         Assert.Equal(PrincipalKind.Verwaist, p.Kind);
@@ -235,7 +235,7 @@ public class IdentityResolverTests
         // Wie ein Notebook ohne DC: das AD meldet „nicht erreichbar“ für alle Konto-SIDs, die lokale
         // Kontendatenbank weiß aber sicher, dass es das lokale Konto nicht mehr gibt.
         var local = new FakeMachineDirectory(null, Machine);
-        var ad = new FakeAuthoritativeDirectory("lab.local", "S-1-5-21-") { Unreachable = true };
+        var ad = new FakeAuthoritativeDirectory("contoso.com", "S-1-5-21-") { Unreachable = true };
         var p = Scans.Resolver(new FakeLookup(), local, ad).Resolve(Machine + "-1005");
 
         Assert.Equal(PrincipalKind.Verwaist, p.Kind);
@@ -245,7 +245,7 @@ public class IdentityResolverTests
     public void LSA_Treffer_gilt_auch_wenn_das_Verzeichnis_das_Konto_nicht_kennt()
     {
         // Typisch für SID-Historie nach einer Domänenmigration: Die alte SID gehört zu einem lebenden Konto.
-        var ad = new FakeAuthoritativeDirectory("lab.local", Dom + "-");
+        var ad = new FakeAuthoritativeDirectory("contoso.com", Dom + "-");
         var lookup = new FakeLookup().Map(Max, "NEU", "max.muster", PrincipalKind.Benutzer);
         var p = Scans.Resolver(lookup, ad).Resolve(Max);
 

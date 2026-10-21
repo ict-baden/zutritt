@@ -104,6 +104,41 @@ public sealed partial class LocalizationTests
         // Den Sprachnamen selbst liefert ICU bzw. Windows (z. B. „简体中文“ oder „中文(简体)“)
         Assert.Equal(UiLanguage.NativeName(code) + suffix, UiLanguage.ChoiceName(code));
 
+    [Theory]
+    [MemberData(nameof(AllLanguages))]
+    public void Untertitel_der_Navigation_ist_der_des_Fenstertitels(string code)
+    {
+        // „Zutritt – Freigaben-Rechte“ überall (Fenstertitel, Info, Kopf der Navigation), damit der Name nicht nach
+        // Zutrittskontrolle klingt
+        var texts = Load(code);
+        Assert.Equal("Zutritt – " + texts["Ui_AppSubtitle"], texts["App_Title"]);
+    }
+
+    [Theory]
+    [InlineData("de", "de-DE", "21.10.2026")]
+    [InlineData("en", "en-US", "10/21/2026")]
+    public void Bilder_der_Doku_zeigen_Daten_im_Format_ihrer_Sprache(string language, string expected, string date)
+    {
+        // --screenshots und --demo-bericht: deutsche Bilder vom englischen Runner nicht mit „10/12/2026, 4:00 AM“
+        var formats = UiLanguage.FormatsOf(language);
+        Assert.Equal(expected, formats.Name);
+        Assert.False(formats.UseUserOverride);
+        Assert.Equal(date, new DateTime(2026, 10, 21).ToString("d", formats));
+        foreach (var code in UiLanguage.Supported)
+            Assert.False(UiLanguage.FormatsOf(code).IsNeutralCulture, code);
+    }
+
+    [Theory]
+    [InlineData("zh-Hans", "帐户", "账户")]
+    public void Ein_Wort_je_Begriff(string code, string avoid, string use)
+    {
+        // Ein Begriff, eine Schreibweise im eigenen Text – 账户 ist die Normschreibung. Ausgenommen sind die Namen der
+        // Windows-Konten (Sid_*): Sie heißen so, wie lokalisiertes Windows sie zeigt (dort teils 帐户).
+        foreach (var data in Document(code).Root!.Elements("data").Where(d => !((string)d.Attribute("name")!).StartsWith("Sid_", StringComparison.Ordinal)))
+            Assert.False(((string?)data.Element("value") ?? "").Contains(avoid, StringComparison.Ordinal),
+                $"{data.Attribute("name")?.Value}: „{use}“ statt „{avoid}“");
+    }
+
     [Fact]
     public void Deutsch_ist_vollstaendig_und_ohne_Markierung()
     {

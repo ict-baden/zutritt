@@ -2940,7 +2940,7 @@ Berichte, die schon gespeichert sind, bleiben erhalten.</value>
     <value>{0:0} Sekunden</value>
   </data>
   <data name="Ui_AppSubtitle" xml:space="preserve">
-    <value>Wer darf wohin?</value>
+    <value>Freigaben-Rechte</value>
   </data>
   <data name="Ui_BrowserFailed" xml:space="preserve">
     <value>Der Browser ließ sich nicht öffnen: {0}</value>

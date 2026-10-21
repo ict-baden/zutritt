@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 using System.Diagnostics;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
@@ -46,20 +47,25 @@ public partial class InfoPage : UserControl, IPage
 
     // ================= Sprache (Richtlinie 13, Regel 8) =================
 
-    private void SetUpLanguages()
+    private void SetUpLanguages() =>
+        SetUpLanguages(UiLanguage.System, UiLanguage.UserSetting(), UiLanguage.MachineSetting(),
+            forced: UiLanguage.Normalize(Environment.GetEnvironmentVariable(UiLanguage.EnvironmentVariable)).Length > 0);
+
+    private void SetUpLanguages(CultureInfo system, string userSetting, string machineSetting, bool forced)
     {
+        _languageReady = false;
         // Der erste Eintrag nennt, was ohne eigene Wahl gilt: Gibt es eine Vorgabe für den Rechner, ist das sie –
         // „Wie Windows“ wäre dann falsch
-        var (fallback, fromMachine) = UiLanguage.WithoutUserChoice(UiLanguage.MachineSetting(), UiLanguage.System);
+        var (fallback, fromMachine) = UiLanguage.WithoutUserChoice(machineSetting, system);
         _defaultLanguage = fallback;
         var first = Texts.Format(fromMachine ? Strings.Info_LanguageMachine : Strings.Info_LanguageSystem, UiLanguage.NativeName(fallback));
         var choices = new List<LanguageChoice> { new("", first) };
         choices.AddRange(UiLanguage.Supported.Select(code => new LanguageChoice(code, UiLanguage.ChoiceName(code))));
         LanguageBox.ItemsSource = choices;
-        var current = UiLanguage.UserSetting();
-        LanguageBox.SelectedItem = choices.FirstOrDefault(c => c.Code == current) ?? choices[0];
-        if (UiLanguage.Normalize(Environment.GetEnvironmentVariable(UiLanguage.EnvironmentVariable)).Length > 0)
-            LanguageCard.Description = Texts.Format(Strings.Info_LanguageForced, UiLanguage.EnvironmentVariable);
+        LanguageBox.SelectedItem = choices.FirstOrDefault(c => c.Code == userSetting) ?? choices[0];
+        LanguageCard.Description = forced
+            ? Texts.Format(Strings.Info_LanguageForced, UiLanguage.EnvironmentVariable)
+            : Strings.Info_LanguageDescription;
         _languageReady = true;
     }
 
@@ -70,7 +76,7 @@ public partial class InfoPage : UserControl, IPage
         {
             UiLanguage.SaveUserSetting(choice.Code);
             // Der Hinweis gleich in der gewählten Sprache – die Oberfläche selbst wechselt erst beim nächsten Start
-            var culture = System.Globalization.CultureInfo.GetCultureInfo(choice.Code.Length > 0 ? choice.Code : _defaultLanguage);
+            var culture = CultureInfo.GetCultureInfo(choice.Code.Length > 0 ? choice.Code : _defaultLanguage);
             _state.Report(NoticeKind.Info, Strings.ResourceManager.GetString(nameof(Strings.Info_LanguageRestart), culture) ?? Strings.Info_LanguageRestart);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -100,6 +106,9 @@ public partial class InfoPage : UserControl, IPage
     public Task PrepareScreenshotAsync()
     {
         OnShown();
+        // Bilder der Doku: wie auf einem Windows in der Sprache der Bilder ohne eigene Wahl („Wie Windows (Deutsch)“),
+        // ohne den Hinweis auf die Umgebungsvariable, mit der make-assets.ps1 die Sprache setzt. Gespeichert wird nichts.
+        SetUpLanguages(CultureInfo.CurrentUICulture, userSetting: "", machineSetting: "", forced: false);
         return Ui.IdleAsync();
     }
 

@@ -99,6 +99,23 @@ public static class UiLanguage
         return culture;
     }
 
+    /// <summary>
+    /// Nur für die Bilder der Doku (<c>--screenshots</c>, <c>--demo-bericht</c>): Zahlen und Daten im Format der
+    /// eingestellten Sprache statt im Gebietsschema des Rechners – sonst zeigen deutsche Bilder vom englischen Runner
+    /// „10/12/2026, 4:00 AM“. Sonst gilt immer das Gebietsschema von Windows (siehe <see cref="Apply"/>).
+    /// </summary>
+    public static CultureInfo ApplyFormatsOfLanguage()
+    {
+        var formats = FormatsOf(CultureInfo.CurrentUICulture.Name);
+        CultureInfo.DefaultThreadCurrentCulture = formats;
+        CultureInfo.CurrentCulture = formats;
+        return formats;
+    }
+
+    /// <summary>Gebietsschema zu einer Sprache (de → de-DE), ohne Anpassungen des Benutzers – gleiche Bilder auf jedem Rechner.</summary>
+    public static CultureInfo FormatsOf(string language) =>
+        new(CultureInfo.CreateSpecificCulture(language).Name, useUserOverride: false);
+
     /// <summary>Was eingestellt ist (Umgebungsvariable, Benutzer, Rechner) – "" heißt Systemsprache.</summary>
     public static string Configured()
     {

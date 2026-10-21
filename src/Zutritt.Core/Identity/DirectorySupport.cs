@@ -38,7 +38,7 @@ internal sealed record MembersOutcome(LookupState State, IReadOnlyList<string>? 
 /// </summary>
 internal interface IAuthoritativeDirectory : IDirectory
 {
-    /// <summary>Quelle für Fehlermeldungen, z. B. „\\FS01“ oder „lab.local“.</summary>
+    /// <summary>Quelle für Fehlermeldungen, z. B. „\\FS01“ oder „contoso.com“.</summary>
     string SourceName { get; }
 
     LookupOutcome Find(string sid);

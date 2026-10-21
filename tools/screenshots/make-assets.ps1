@@ -19,7 +19,9 @@ $assets = Join-Path $repo 'docs\assets'
 $shots = Join-Path $assets 'screenshots'
 $tmp = Join-Path ([IO.Path]::GetTempPath()) ("zutritt-assets-" + [Guid]::NewGuid().ToString('N').Substring(0, 8))
 New-Item -ItemType Directory -Force $shots, $tmp | Out-Null
-# Doku und Bilder zeigen die deutsche Oberfläche – unabhängig von der Sprache des Rechners (der Runner ist englisch)
+# Doku und Bilder zeigen die deutsche Oberfläche – unabhängig von der Sprache des Rechners (der Runner ist englisch).
+# Daten und Zahlen formatieren --screenshots und --demo-bericht dann ebenfalls deutsch, und die Info-Seite zeigt den
+# Hinweis auf die Umgebungsvariable in den Bildern nicht.
 $language = $env:ZUTRITT_LANGUAGE
 $env:ZUTRITT_LANGUAGE = 'de'
 

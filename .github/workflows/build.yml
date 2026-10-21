@@ -100,6 +100,18 @@ jobs:
           "suffix=$suffix" >> $env:GITHUB_OUTPUT
           Write-Host "Version: $v  MSI: $msi  Signieren: $env:SIGN"
 
+      - name: Release-Text (nur bei Tag v*)
+        # Englischer Abschnitt des CHANGELOG mit Dateiliste statt --generate-notes (deutsche PR-Titel, „New Contributors“,
+        # leerer Vergleich mit 'latest'). Früh im Lauf: Fehlt der Abschnitt, endet er vor dem Bauen statt ohne Release.
+        if: github.ref_type == 'tag'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        shell: pwsh
+        run: |
+          $notes = ./.github/scripts/release-notes.ps1 -Version $env:VERSION -Signed:($env:SIGN -eq 'true')
+          [IO.File]::WriteAllText("$env:RUNNER_TEMP/release-notes.md", ($notes -join "`n") + "`n", [Text.UTF8Encoding]::new($false))
+          Get-Content "$env:RUNNER_TEMP/release-notes.md"
+
       - name: Restore
         run: dotnet restore "${{ env.APP }}.sln"
 
@@ -393,7 +405,7 @@ jobs:
         run: |
           # v1.0.0-rc1 und ähnliche: Vorabversion, nicht „Latest“
           $pre = if ($env:GITHUB_REF_NAME -match '-') { @('--prerelease') } else { @() }
-          gh release create $env:GITHUB_REF_NAME (Get-ChildItem dist/*).FullName --title "$env:APP $env:GITHUB_REF_NAME" --generate-notes @pre
+          gh release create $env:GITHUB_REF_NAME (Get-ChildItem dist/*).FullName --title "$env:APP $env:GITHUB_REF_NAME" --notes-file "$env:RUNNER_TEMP/release-notes.md" @pre
           if ($LASTEXITCODE -ne 0) { throw "Release ließ sich nicht anlegen ($LASTEXITCODE)" }
 
       - name: "Release 'latest' aktualisieren (main)"
@@ -405,12 +417,14 @@ jobs:
           # Rollierendes Release: immer der neueste main-Stand, unter festen Links (Einzelheiten im Skript)
           $base = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/latest"
           $built = (Get-Date).ToUniversalTime().ToString('yyyy-MM-dd HH:mm')
-          $signed = if ($env:SIGN -eq 'true') { 'signiert' } else { 'noch nicht signiert' }
-          $notes = "Automatischer Build von main ($($env:GITHUB_SHA.Substring(0,7))), Version ${{ steps.version.outputs.version }}, gebaut $built UTC, $signed.`n`n" +
-                   "Die Links bleiben gleich und zeigen immer auf den neuesten Build:`n`n" +
-                   "- **[$env:APP-x64.msi]($base/$env:APP-x64.msi)**: Installer für alle Benutzer (Intune/GPO)`n" +
-                   "- **[$env:APP.exe]($base/$env:APP.exe)**: eine Datei, läuft ohne Installation und ohne .NET-Runtime`n" +
-                   "- **[$env:APP-win-x64-framework.zip]($base/$env:APP-win-x64-framework.zip)**: kleine Variante, braucht die .NET 10 Desktop Runtime`n" +
-                   "- [SHA256SUMS.txt]($base/SHA256SUMS.txt): Prüfsummen`n" +
-                   "- [$env:APP-sbom.cdx.json]($base/$env:APP-sbom.cdx.json): Stückliste der Bestandteile (CycloneDX)"
+          $signed = if ($env:SIGN -eq 'true') { 'code-signed' } else { 'not yet code-signed' }
+          # Release-Texte englisch, wie die Doku
+          $notes = "Automatic build of main ($($env:GITHUB_SHA.Substring(0,7))), version ${{ steps.version.outputs.version }}, built $built UTC, $signed. " +
+                   "For trying changes before the next version – for production, use the [current release](https://github.com/$env:GITHUB_REPOSITORY/releases/latest).`n`n" +
+                   "The links stay the same and always point to the newest build:`n`n" +
+                   "- **[$env:APP-x64.msi]($base/$env:APP-x64.msi)**: installer for all users of a PC (Intune, Group Policy)`n" +
+                   "- **[$env:APP.exe]($base/$env:APP.exe)**: a single file, runs without installation and without a .NET runtime`n" +
+                   "- **[$env:APP-win-x64-framework.zip]($base/$env:APP-win-x64-framework.zip)**: small variant, needs the .NET 10 Desktop Runtime`n" +
+                   "- [SHA256SUMS.txt]($base/SHA256SUMS.txt): checksums`n" +
+                   "- [$env:APP-sbom.cdx.json]($base/$env:APP-sbom.cdx.json): bill of materials (CycloneDX)"
           ./.github/scripts/release-latest.ps1 -Notes $notes -Title "Latest Build (main) – ${{ steps.version.outputs.version }}"

@@ -129,7 +129,8 @@ internal static class CommandLine
     /// <summary>Dieselben Angaben wie die Info-Seite (Richtlinie 07), als Text.</summary>
     internal static void PrintInfo()
     {
-        Console.WriteLine($"{AppInfo.Name} {AppInfo.VersionWithBuild} – .NET {Environment.Version.ToString(3)}");
+        // Mit Untertitel wie Fenstertitel und Info-Seite („Zutritt – Freigaben-Rechte“), sonst klingt es nach Zutrittskontrolle
+        Console.WriteLine($"{Strings.App_Title} {AppInfo.VersionWithBuild} · .NET {Environment.Version.ToString(3)}");
         Console.WriteLine(Strings.App_Tagline);
         Console.WriteLine();
         (string Label, string Value)[] lines =

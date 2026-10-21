@@ -2,7 +2,8 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:res="clr-namespace:Zutritt.Core.Resources;assembly=Zutritt.Core"
-             xmlns:ui="clr-namespace:Zutritt.UI">
+             xmlns:ui="clr-namespace:Zutritt.UI"
+             xmlns:glob="clr-namespace:System.Globalization;assembly=System.Runtime">
     <Grid Margin="36,0,36,20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -88,7 +89,7 @@
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" Margin="8,12,0,4">
                                         <ui:SeverityPill Severity="{Binding Name}"/>
-                                        <TextBlock Text="{Binding ItemCount, StringFormat={}{0:N0}, ConverterCulture=de-DE}" Style="{StaticResource Caption}" FontSize="13"
+                                        <TextBlock Text="{Binding ItemCount, StringFormat={}{0:N0}, ConverterCulture={x:Static glob:CultureInfo.CurrentCulture}}" Style="{StaticResource Caption}" FontSize="13"
                                                    Margin="8,0,0,0" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </DataTemplate>

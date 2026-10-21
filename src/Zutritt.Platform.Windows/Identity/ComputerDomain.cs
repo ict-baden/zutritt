@@ -5,7 +5,7 @@ namespace Zutritt.Platform.Windows.Identity;
 
 /// <summary>Domäne, in der dieser Rechner Mitglied ist.</summary>
 /// <param name="NetBiosName">Kurzname, wie er in „DOMÄNE\name“ steht.</param>
-/// <param name="DnsName">DNS-Name (z. B. lab.local), leer bei sehr alten Domänen.</param>
+/// <param name="DnsName">DNS-Name (z. B. contoso.com), leer bei sehr alten Domänen.</param>
 /// <param name="Sid">SID der Domäne (S-1-5-21-…), Präfix aller Domänenkonten.</param>
 public sealed record ComputerDomainInfo(string NetBiosName, string DnsName, string Sid);
 

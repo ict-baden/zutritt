@@ -157,13 +157,13 @@ public sealed class AnonymizerTests
     [InlineData(@"Freigabe \\FS01\Personal\Kündigung Hans Meier\2026 nicht lesbar", @"Freigabe \\SERVER-1\… nicht lesbar")]
     [InlineData(@"Could not find a part of the path 'C:\Users\x\Erika Mustermann'.", "Could not find a part of the path '…'.")]
     [InlineData(@"Access to the path '\\FS01\Personal\Hans Meier.docx' is denied.", "Access to the path '…' is denied.")]
-    [InlineData("LDAP://CN=Hans Meier,OU=Vorstand,DC=kanzlei,DC=local", "LDAP://CN=…,OU=…,DC=…,DC=…")]
+    [InlineData("LDAP://CN=Hans Meier,OU=Vorstand,DC=contoso,DC=com", "LDAP://CN=…,OU=…,DC=…,DC=…")]
     [InlineData("Gruppe cn=Projekt Geheim,ou=Gruppen nicht lesbar", "Gruppe cn=…,ou=…")]
-    [InlineData("Domäne (kanzlei-mueller.local) antwortet nicht, Server dc01.kanzlei-mueller.local", "Domäne (DNS-DOMÄNE) antwortet nicht, Server dc01.DNS-DOMÄNE")]
+    [InlineData("Domäne (contoso.com) antwortet nicht, Server dc01.contoso.com", "Domäne (DNS-DOMÄNE) antwortet nicht, Server dc01.DNS-DOMÄNE")]
     [InlineData("Zutritt's Protokoll bleibt", "Zutritt's Protokoll bleibt")]
     [InlineData(@"Kopie von D:\Akte Muster\a nach E:\Ziel\b fertig", @"Kopie von D:\… nach E:\… fertig")]
     public void Ersetzt_Pfade_mit_Leerzeichen_LDAP_Namen_und_DNS_Domaene(string input, string expected) =>
-        Assert.Equal(expected, new Anonymizer("PC-LABOR-07", "jdoe", "MUSTER", "kanzlei-mueller.local").Apply(input));
+        Assert.Equal(expected, new Anonymizer("PC-LABOR-07", "jdoe", "MUSTER", "contoso.com").Apply(input));
 
     public static TheoryData<string> Languages => [.. Zutritt.Core.Localization.UiLanguage.Supported];
 
@@ -176,9 +176,9 @@ public sealed class AnonymizerTests
         using var _ = TestCulture.Use(language);
         string[] messages =
         [
-            Texts.Format(Strings.Ad_Unreachable, "firma.local", "Server antwortet nicht"),
-            Texts.Format(Strings.Ad_MembersUnreadable, "Labor-Alle", "firma.local", "Zeitlimit"),
-            Texts.Format(Strings.Ad_AccountUnreadable, "Projekt-Gast", "firma.local", "Zeitlimit"),
+            Texts.Format(Strings.Ad_Unreachable, "contoso.com", "Server antwortet nicht"),
+            Texts.Format(Strings.Ad_MembersUnreadable, "Labor-Alle", "contoso.com", "Zeitlimit"),
+            Texts.Format(Strings.Ad_AccountUnreadable, "Projekt-Gast", "contoso.com", "Zeitlimit"),
             Texts.Format(Strings.Local_MembersUnreadable, "Projekt-Leser", "Zugriff verweigert"),
             Texts.Format(Strings.Share_InvalidName, "Geheim-Archiv"),
             Texts.Format(Strings.Text_Quote, "Vertrieb Süd"),
@@ -186,13 +186,13 @@ public sealed class AnonymizerTests
         foreach (var message in messages)
         {
             var clean = _anonymizer.Apply(message);
-            foreach (var name in new[] { "firma.local", "Labor-Alle", "Projekt-Gast", "Projekt-Leser", "Geheim-Archiv", "Vertrieb Süd" })
+            foreach (var name in new[] { "contoso.com", "Labor-Alle", "Projekt-Gast", "Projekt-Leser", "Geheim-Archiv", "Vertrieb Süd" })
                 Assert.False(clean.Contains(name, StringComparison.OrdinalIgnoreCase), $"{language}: „{name}“ steht noch in „{clean}“");
         }
     }
 
     [Theory]
-    [InlineData("Members of “Labor-Alle” (“firma.local”) not readable: timeout", "Members of „…“ („…“) not readable: timeout")]
+    [InlineData("Members of “Labor-Alle” (“contoso.com”) not readable: timeout", "Members of „…“ („…“) not readable: timeout")]
     [InlineData("Membres de « Labor-Alle » illisibles", "Membres de „…“ illisibles")]
     [InlineData("Miembros de «Labor-Alle»", "Miembros de „…“")]
     [InlineData("无法读取“Labor-Alle”的成员", "无法读取„…“的成员")]

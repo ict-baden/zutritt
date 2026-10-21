@@ -109,7 +109,7 @@ public sealed partial class Anonymizer
         _local = [.. local];
     }
 
-    /// <summary>DNS-Domäne dieses Rechners (z. B. firma.local), leer ohne Domäne.</summary>
+    /// <summary>DNS-Domäne dieses Rechners (z. B. contoso.com), leer ohne Domäne.</summary>
     private static string DnsDomain()
     {
         try

@@ -126,11 +126,11 @@
   </tr>
 </table>
 
-**① Download** – from the **[current release](https://github.com/ict-baden/zutritt/releases/latest)** (file names carry the version, e.g. `Zutritt-0.1.0-x64.msi`):
+**① Download** – from the **[current release](https://github.com/ict-baden/zutritt/releases/latest)** (file names carry the version, e.g. `Zutritt-0.1.1-x64.msi`; `Zutritt.exe` keeps its name, so that scheduled tasks and scripts that call it keep working after an update, and so does `SHA256SUMS.txt`):
 
 | File | What it is |
 |---|---|
-| **Zutritt-*version*-x64.msi** | Installer for all users: `C:\Program Files\Zutritt`, Start menu entry, no service, no autostart. No .NET runtime needed. Silent: `msiexec /i Zutritt-0.1.0-x64.msi /qn` – for Intune or GPO. |
+| **Zutritt-*version*-x64.msi** | Installer for all users: `C:\Program Files\Zutritt`, Start menu entry, no service, no autostart. No .NET runtime needed. Silent: `msiexec /i Zutritt-0.1.1-x64.msi /qn` – for Intune or GPO. |
 | **[Zutritt.exe](https://github.com/ict-baden/zutritt/releases/latest/download/Zutritt.exe)** | A single file that runs without installation and without a .NET runtime. |
 | Zutritt-*version*-win-x64-framework.zip | Small variant; needs the .NET 10 Desktop Runtime. |
 | [SHA256SUMS.txt](https://github.com/ict-baden/zutritt/releases/latest/download/SHA256SUMS.txt) | Checksums of all files – the builds are not code-signed yet, so check them ([how](docs/installation.md#verifying-the-download)). |
@@ -269,7 +269,7 @@ Needs the .NET 10 SDK (`global.json`: 10.0.100, roll forward to the latest featu
 
 ---
 
-<!-- Impressum: dieselbe Adresse wie in der App (AppInfo.ImpressumUrl). -->
+<!-- Impressum und Datenschutz: dieselben Adressen wie in der App (AppInfo.ImpressumUrl, AppInfo.PrivacyUrl). -->
 <sub>
 Zutritt is free and open source software by <b>ICT-Baden</b>. &nbsp;·&nbsp;
 Licence: <a href="LICENSE">MIT</a> &nbsp;·&nbsp;
@@ -278,5 +278,5 @@ Support: free via GitHub, guaranteed with a <a href="SUPPORT.md">support contrac
 <a href="SECURITY.md">Security</a> &nbsp;·&nbsp;
 <a href="https://ict-baden.de/">Website</a> &nbsp;·&nbsp;
 <a href="https://ict-baden.de/impressum/">Impressum</a> &nbsp;·&nbsp;
-<a href="https://ict-baden.de/datenschutz/">Datenschutz</a>
+<a href="https://ict-baden.de/datenschutz/zutritt/">Datenschutz</a>
 </sub>

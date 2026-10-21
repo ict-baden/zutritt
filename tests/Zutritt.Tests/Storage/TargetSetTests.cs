@@ -71,7 +71,7 @@ public sealed class TargetSetTests
     [InlineData(@"\\?\UNC\localhost\Daten", true)]
     [InlineData(@"\\FS01\Labor", false)]
     [InlineData(@"\\FS01", false)]
-    [InlineData(@"\\fs01.lab.local\Labor", false)]
+    [InlineData(@"\\fs01.contoso.com\Labor", false)]
     [InlineData(@"\\?\UNC\FS01\Labor", false)]
     [InlineData("", false)]
     public void Rechnerabhaengige_Ziele(string target, bool expected) => Assert.Equal(expected, TargetSet.DependsOnMachine(target));

@@ -3229,7 +3229,8 @@ Reports that have already been saved are kept.</value>
     <comment>{0} = limit.TotalSeconds</comment>
   </data>
   <data name="Ui_AppSubtitle" xml:space="preserve">
-    <value>Who can access what?</value>
+    <value>Share Permissions</value>
+    <comment>Under the product name at the top of the navigation: the subtitle from App_Title (the part after “Zutritt – ”)</comment>
   </data>
   <data name="Ui_BrowserFailed" xml:space="preserve">
     <value>The browser could not be opened: {0}</value>

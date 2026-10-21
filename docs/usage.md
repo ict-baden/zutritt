@@ -187,7 +187,7 @@ From top to bottom:
 | *Drittanbieter-Lizenzen* › *Anzeigen* | `THIRD-PARTY-NOTICES.txt`: every library Zutritt contains, with version, source, copyright and licence text. Built into the program, so it works for the single `Zutritt.exe` as well. |
 | *Hilfe & Support* | Opens [SUPPORT.md](../SUPPORT.md): free help on GitHub, guaranteed help with a support contract. |
 | *Diagnosepaket erstellen* | Saves a ZIP with version, system details and the log of the last 7 days for a support request. *Ohne Namen und Adressen* (without names and addresses, on by default) replaces computer, account and server names, paths, SIDs and addresses. No runs, no reports. Details: [Data & privacy › Diagnostics package](data-and-privacy.md#diagnostics-package-and-support). |
-| *Quellcode (GitHub)*, *Datenschutz*, *Impressum*, *Webseite* | Links to the repository, to [Data & privacy](data-and-privacy.md), to the Impressum of ICT-Baden and to the Zutritt product page. |
+| *Quellcode (GitHub)*, *Datenschutz*, *Impressum*, *Webseite* | Links to the repository, to the privacy notice of Zutritt on the ICT-Baden website (`https://ict-baden.de/datenschutz/zutritt/`; the details are in [Data & privacy](data-and-privacy.md)), to the Impressum of ICT-Baden and to the Zutritt product page. |
 | *Befehlszeile und geplante Aufgaben* | An example for a weekly scheduled task and the exit codes; `Zutritt.exe --info` prints the same details as text. |
 | *Tastatur* | The keyboard shortcuts. |
 

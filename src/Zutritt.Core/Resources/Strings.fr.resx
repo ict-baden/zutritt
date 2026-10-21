@@ -2967,7 +2967,7 @@ Les rapports déjà enregistrés sont conservés.</value>
     <value>{0:0} secondes</value>
   </data>
   <data name="Ui_AppSubtitle" xml:space="preserve">
-    <value>Qui peut accéder à quoi ?</value>
+    <value>Autorisations de partage</value>
   </data>
   <data name="Ui_BrowserFailed" xml:space="preserve">
     <value>Le navigateur n’a pas pu être ouvert : {0}</value>

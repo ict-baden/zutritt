@@ -2971,7 +2971,7 @@ Los informes ya guardados se conservan.</value>
     <value>{0:0} segundos</value>
   </data>
   <data name="Ui_AppSubtitle" xml:space="preserve">
-    <value>¿Quién puede acceder a qué?</value>
+    <value>Permisos de recursos compartidos</value>
   </data>
   <data name="Ui_BrowserFailed" xml:space="preserve">
     <value>No se pudo abrir el navegador: {0}</value>

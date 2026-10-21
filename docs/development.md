@@ -32,7 +32,7 @@ dotnet publish @common --self-contained true -p:IncludeNativeLibrariesForSelfExt
                -p:EnableCompressionInSingleFile=true -o out/standalone  # the single Zutritt.exe
 ```
 
-The version comes from `<Version>` in `src/Zutritt/Zutritt.csproj` (currently `0.1.0`); `Zutritt.Core` and `Zutritt.Platform.Windows` read it from there, and the CI overrides it for all projects with `-p:Version=…`. The build appends the commit (`0.1.0-ci.12+abc1234…`); the *Info* page and `--version` show it as *Build abc1234*.
+The version comes from `<Version>` in `src/Zutritt/Zutritt.csproj`; `Zutritt.Core` and `Zutritt.Platform.Windows` read it from there, and the CI overrides it for all projects with `-p:Version=…`. The build appends the commit (`0.1.0-ci.12+abc1234…`); the *Info* page and `--version` show it as *Build abc1234*.
 
 Settings shared by all projects – language version, nullable, implicit usings, `Company`, `Product`, `Copyright`, the neutral language `en` and the satellite languages `en;de;es;fr;zh-Hans` – live in [`Directory.Build.props`](../Directory.Build.props). The company name is set there once and appears in every assembly, on the *Info* page and in `--info`. The publish output contains `LICENSE` and `THIRD-PARTY-NOTICES.txt`; both are also embedded in `Zutritt.exe` for the *Info* page and `--lizenzen`.
 
@@ -145,7 +145,7 @@ dotnet build installer/Zutritt.Installer.wixproj -c Release -p:ProductVersion=0.
 
 1. **`linux`** (ubuntu-latest): installs DejaVu and Liberation fonts, builds and runs `tests/Zutritt.Tests -f net10.0` – the platform-neutral part.
 2. **`windows`** (windows-latest), once `linux` is green:
-   1. **Version:** a tag `v1.2.3` gives `1.2.3`; otherwise the csproj version plus the run number, e.g. `0.1.0-ci.12`. The MSI gets `0.1.0.12` (numbers only). The step prints whether signing is active.
+   1. **Version:** a tag `v1.2.3` gives `1.2.3`; otherwise the csproj version plus the run number, e.g. `0.1.0-ci.12`. The MSI gets `0.1.0.12` (numbers only). The step prints whether signing is active. For a tag, the **release notes** are written right away with [`.github/scripts/release-notes.ps1`](../.github/scripts/release-notes.ps1) – the part *English* of the version's section in `CHANGELOG.md` plus the list of files – so that a missing section stops the run before the build.
    2. **Restore, build, test** (Release, both test targets one after the other, as administrator).
    3. **Publish** the three variants and **check the output**: neither the Windows SDK projection nor the unused PDFsharp extras (`PdfSharp.WPFonts`, `.Snippets`, `.Quality`) may appear, and the language files must be exactly `de`, `es`, `fr`, `zh-Hans` (English is built in).
    4. **Sign** the three `Zutritt.exe` – only when the organisation variable `SIGNING_ACCOUNT` is set, and never for pull requests. Signing uses Azure Artifact Signing with OIDC: secrets `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, variables `SIGNING_ENDPOINT`, `SIGNING_ACCOUNT`, `SIGNING_PROFILE`. Without them the steps are skipped and the build stays green, unsigned.
@@ -153,17 +153,18 @@ dotnet build installer/Zutritt.Installer.wixproj -c Release -p:ProductVersion=0.
    6. **SBOM** with CycloneDX (`dotnet tool restore`, version pinned in `.config/dotnet-tools.json`), trimmed by [`.github/scripts/sbom-shipped.ps1`](../.github/scripts/sbom-shipped.ps1) to what the packages really contain: packages that NuGet prunes because the .NET or Windows Desktop runtime provides them are removed, the runtime packs are added with their real versions, and a shipped package missing from the SBOM fails the build. Then **`SHA256SUMS.txt`** over all files (LF line endings, so `sha256sum -c` works on Linux too).
    7. **Build provenance** (`actions/attest-build-provenance`) – only while the repository is public.
    8. **Artifact** with all files, kept 7 days (the maximum the repository allows), for trying out a pull request. Uploads may fail (the artifact storage is shared by all repositories of the organisation) without failing the build; the releases take the files directly from `dist/`.
-   9. **Release:** a tag `v*` creates the release *Zutritt v…* with generated notes and versioned file names; a tag with a hyphen (`v1.2.0-rc1`) becomes a pre-release. A push to `main` updates the release **`latest`** in place with [`.github/scripts/release-latest.ps1`](../.github/scripts/release-latest.ps1): new files are uploaded under temporary names first, then replace the old ones under the fixed names `Zutritt-x64.msi`, `Zutritt.exe`, `Zutritt-win-x64-framework.zip`, `Zutritt-sbom.cdx.json` and `SHA256SUMS.txt`, so the download links never break. `latest` is marked *Latest* as long as there is no tagged release; after the first tag it becomes a pre-release.
+   9. **Release:** a tag `v*` creates the release *Zutritt v…* with these notes and versioned file names (except `Zutritt.exe`, which keeps its name for scheduled tasks and scripts, and `SHA256SUMS.txt`); for a pre-release without its own section the notes are a short pre-release note; a tag with a hyphen (`v1.2.0-rc1`) becomes a pre-release. A push to `main` updates the release **`latest`** in place with [`.github/scripts/release-latest.ps1`](../.github/scripts/release-latest.ps1): new files are uploaded under temporary names first, then replace the old ones under the fixed names `Zutritt-x64.msi`, `Zutritt.exe`, `Zutritt-win-x64-framework.zip`, `Zutritt-sbom.cdx.json` and `SHA256SUMS.txt`, so the download links never break. `latest` is marked *Latest* as long as there is no tagged release; after the first tag it becomes a pre-release.
 
 Runs on the same branch are queued, so `latest` updates do not overtake each other. Dependabot ([`.github/dependabot.yml`](../.github/dependabot.yml)) proposes NuGet, GitHub Actions and npm updates, except the ones that would change a licence (see below).
 
 ## Releasing a version
 
-1. In [`CHANGELOG.md`](../CHANGELOG.md), rename *Unveröffentlicht* to `## [X.Y.Z] – YYYY-MM-DD` and start a new empty *Unveröffentlicht* above it.
+1. In [`CHANGELOG.md`](../CHANGELOG.md), rename *Unveröffentlicht* to `## [X.Y.Z] – YYYY-MM-DD` and start a new empty *Unveröffentlicht* above it. End the section with `### English` – the release notes in English (the changelog itself is German). The test `ChangelogTests` fails without it.
 2. Raise `<Version>` in `src/Zutritt/Zutritt.csproj` to `X.Y.Z` and merge to `main`.
 3. Tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z`.
 4. The CI builds, signs (when configured), writes the SBOM and the checksums and creates the release.
-5. Install the MSI on a clean machine, start the app and the demo, and check *Info* (version, build, licence).
+5. Raise `<Version>` on `main` to the next patch version (`X.Y.Z+1`), so that builds of `main` are never named older than the release. `ChangelogTests` checks that the csproj is never behind the newest version in the changelog.
+6. Install the MSI on a clean machine, start the app and the demo, and check *Info* (version, build, licence).
 
 The release checklist of the guidelines lists the remaining checks (README, screenshots, notices).
 
@@ -188,7 +189,7 @@ npm install                    # playwright-core, for the banner
 
 The script
 
-1. builds Zutritt (Release) and runs `Zutritt.exe --screenshots <temp>`: every page of the demo, light and dark, at 1200 × 800 and 1.5× scale, in a window placed off-screen. The German page names are mapped to the English file names used here (`uebersicht` → `overview`, `ordner-verschoben` → `folders-moved` …);
+1. builds Zutritt (Release) and runs `Zutritt.exe --screenshots <temp>`: every page of the demo, light and dark, at 1200 × 800 and 1.5× scale, in a window placed off-screen, with dates and numbers in the format of the language (`ZUTRITT_LANGUAGE=de` → German) and the *Info* page as it looks when no language has been chosen (*Wie Windows (Deutsch)*). The German page names are mapped to the English file names used here (`uebersicht` → `overview`, `ordner-verschoben` → `folders-moved` …);
 2. writes a demo PDF with `--demo-bericht --vergleich` and renders the cover, summary, changes and sign-off pages with `report-pages.py` (pypdfium2 and Pillow);
 3. renders `banner.html` to `banner.png` (2560 × 840) with the installed Google Chrome through playwright-core (`CHROME_PATH` for another browser). The banner background uses the icon colours `#22C3A6` → `#3B6CF6`; `docs/assets/logo.svg` is the source of the icon.
 
@@ -203,7 +204,7 @@ Zutritt.exe --demo-bericht --bericht <datei> [--bericht …] [--vergleich]
 Zutritt.exe --messen [<ordner>] [--ordner N] [--personen N]
 ```
 
-- `--demo-bericht` – Writes Excel or PDF reports from the built-in demo runs.
+- `--demo-bericht` – Writes Excel or PDF reports from the built-in demo runs. Like `--screenshots`, it formats dates and numbers in the language of the output, not in the regional format of the PC – German images get German dates on an English Windows too.
 - `--messen` – Benchmark: creates a large synthetic run (default 50,000 stored folders and 3,000 people), opens it like the app, and prints per step the duration and the longest time the UI thread was blocked. With a folder, it also saves an image of every page. The environment variable `ZUTRITT_MESSEN_SEITEN=befunde,ordner` limits the measurement to those pages; add `berichte` to include the reports.
 
 ---

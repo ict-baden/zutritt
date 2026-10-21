@@ -9,7 +9,7 @@ public class MachineNamesTests
     [Theory]
     [InlineData(@"\\FS01\Labor", "FS01")]
     [InlineData(@"\\fs01\Labor\Unter\Ordner", "FS01")]
-    [InlineData(@"\\fs01.lab.local\Labor", "FS01.LAB.LOCAL")]
+    [InlineData(@"\\fs01.contoso.com\Labor", "FS01.CONTOSO.COM")]
     [InlineData(@"\\FS01", "FS01")]
     [InlineData(@"\\FS01\", "FS01")]
     [InlineData(@"\\?\UNC\FS01\Labor\x", "FS01")]

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- Zutritt – 简体中文文本。机器翻译，尚未经母语者审校（准则 13）；语言选择和 README 中已注明。注释为 “nicht an echter Ausgabe belegt” 的 Windows 帐户名称需在中文版 Windows 上核对。 -->
+  <!-- Zutritt – 简体中文文本。机器翻译，尚未经母语者审校（准则 13）；语言选择和 README 中已注明。注释为 “nicht an echter Ausgabe belegt” 的 Windows 账户名称需在中文版 Windows 上核对。 -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -2713,9 +2713,11 @@ Zutritt 只读取——不会更改任何权限或文件。
   </data>
   <data name="Sid_LocalAccount" xml:space="preserve">
     <value>本地帐户</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups); chinesisches Windows schreibt hier 帐户, nicht 账户 wie der übrige Text</comment>
   </data>
   <data name="Sid_LocalAdminAccount" xml:space="preserve">
     <value>本地帐户和管理员组成员</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups); chinesisches Windows schreibt hier 帐户, nicht 账户 wie der übrige Text</comment>
   </data>
   <data name="Sid_LocalService" xml:space="preserve">
     <value>LOCAL SERVICE</value>
@@ -2938,7 +2940,7 @@ Zutritt 只读取——不会更改任何权限或文件。
     <value>{0:0} 秒</value>
   </data>
   <data name="Ui_AppSubtitle" xml:space="preserve">
-    <value>谁可以访问哪里？</value>
+    <value>共享权限</value>
   </data>
   <data name="Ui_BrowserFailed" xml:space="preserve">
     <value>无法打开浏览器：{0}</value>

@@ -24,7 +24,7 @@ public sealed class TargetParserTests
     [Theory]
     [InlineData(@"\\FS01", "FS01")]
     [InlineData(@"\\FS01\", "FS01")]
-    [InlineData(@"//fs01.lab.local", "fs01.lab.local")]
+    [InlineData(@"//fs01.contoso.com", "fs01.contoso.com")]
     public void Server(string raw, string server)
     {
         var t = TargetParser.Parse(raw, out _);

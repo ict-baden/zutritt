@@ -15,14 +15,19 @@
 
         <!-- ===================== Navigation ===================== -->
         <DockPanel Margin="12,12,8,12">
-            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="12,8,0,20">
+            <!-- Name mit Untertitel wie im Fenstertitel; Grid statt StackPanel, damit ein langer Untertitel umbricht (es) -->
+            <Grid DockPanel.Dock="Top" Margin="12,8,0,20">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
                 <Image Source="pack://application:,,,/Zutritt;component/Assets/zutritt.png" Width="34" Height="34"
-                       RenderOptions.BitmapScalingMode="HighQuality"/>
-                <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                       RenderOptions.BitmapScalingMode="HighQuality" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
                     <TextBlock Text="Zutritt" Style="{StaticResource BodyStrong}" FontSize="16"/>
                     <TextBlock Text="{x:Static res:Strings.Ui_AppSubtitle}" Style="{StaticResource Caption}"/>
                 </StackPanel>
-            </StackPanel>
+            </Grid>
 
             <!-- Geladener Lauf -->
             <Border DockPanel.Dock="Top" Margin="4,0,4,14" CornerRadius="8" Padding="12,10" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"

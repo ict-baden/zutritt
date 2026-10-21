@@ -98,7 +98,7 @@ The switch ***Ohne Namen und Adressen*** is on by default: names of this PC, its
 
 Zutritt connects only to what it scans and resolves: the file servers (SMB and the Windows network APIs for shares and local accounts), the LSA of these servers and of this PC, and – on domain-joined PCs – the domain controllers of its own domain. There is no telemetry, no update check and no other internet connection.
 
-The *Info* page has links to the source code, help and support, this page, the Impressum and the ICT-Baden website; the licence texts are built into the program and shown in a window. They open in your browser **only when you click them**, and only `http`/`https` addresses are opened.
+The *Info* page has links to the source code, help and support, the privacy notice of Zutritt on the ICT-Baden website (a summary of this page), the Impressum and the product page; the licence texts are built into the program and shown in a window. They open in your browser **only when you click them**, and only `http`/`https` addresses are opened.
 
 ---
 
