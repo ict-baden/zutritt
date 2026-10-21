@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using Zutritt.Platform.Windows;
 using Zutritt.Core.Identity;
 using Zutritt.Core.Model;

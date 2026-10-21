@@ -2,7 +2,7 @@
 
 # Command line
 
-The same `Zutritt.exe` that opens the window also runs without one: given a command, it scans, stores the run, writes reports and ends with an exit code – suitable for scheduled tasks and monitoring. Output and reports are in German.
+The same `Zutritt.exe` that opens the window also runs without one: given a command, it scans, stores the run, writes reports and ends with an exit code – suitable for scheduled tasks and monitoring. Output and reports follow the language of the window ([Using the app › Languages](usage.md#languages)); for scripts, set it with the environment variable `ZUTRITT_LANGUAGE` (`en`, `de`, `es`, `fr`, `zh-Hans`). Every command and option has an English spelling as well (`list`, `report`, `--files`, `--depth`, `--deep-from`, `--no-groups`, `--include-admin-shares`, `--report`, `--compare`, `--help`, `--licenses`); the German ones below keep working. Errors end with a code such as `ZUT-0202` ([Error codes](error-codes.md)).
 
 **Contents:** [Overview](#overview) · [Targets](#targets) · [scan](#scan) · [liste](#liste) · [bericht](#bericht) · [Exit codes](#exit-codes) · [Waiting for the end](#waiting-for-the-end) · [Scheduled tasks](#scheduled-tasks) · [Logs and encoding](#logs-and-encoding) · [Other switches](#other-switches)
 
@@ -67,7 +67,7 @@ Notes:
 
 - **Report paths** are checked before the scan starts – only `.xlsx` and `.pdf` are accepted. Missing folders are created. A report is first written to a temporary file next to the target and then moved into place, so an existing report is never left half-written; if the file is open in Excel or a PDF viewer, writing fails with a clear message. One failed report does not stop the others, but the exit code becomes 3.
 - **Environment variables** in `--bericht` and `--db` are expanded by Zutritt itself, so `--bericht %USERPROFILE%\Berichte\Zutritt.pdf` also works in PowerShell.
-- **The comparison** looks for the newest earlier run whose set of targets is the same (order, upper/lower case and a trailing `\` do not matter). For targets that depend on the machine – `.`, local paths, `\\localhost\…` – only runs from the same PC count. Without such a run, Zutritt says so (*Vergleich: Es gibt noch keinen früheren Lauf mit denselben Zielen.*) and continues.
+- **The comparison** looks for the newest earlier run whose set of targets is the same (order, upper/lower case, a trailing `\` and `D:` instead of `D:\` do not matter), preferring one with the same options; with other options only the common scope is compared and the summary says *Achtung: Umfang weicht ab …* ([How it works › Comparison](how-it-works.md#comparison)). For targets that depend on the machine – `.`, local paths, `\\localhost\…` – only runs from the same PC count. Without such a run, Zutritt says so (*Vergleich: Es gibt noch keinen früheren Lauf mit denselben Zielen.*) and continues.
 - <kbd>Ctrl</kbd>+<kbd>C</kbd> while targets, folders and accounts are processed cancels cleanly: *Abgebrochen.*, exit code 3, nothing is saved. Once the findings are being evaluated (*Befunde*), the run is completed and saved.
 
 **Output** (example, shortened). In a console window the progress is one line that updates itself; when the output is redirected, only the phases are printed.
@@ -99,7 +99,7 @@ Seit dem Lauf vom 05.10.2026, 06:00: 4 neue, 3 behobene Befunde, 79 Zugriffsänd
 Exitcode 2: mindestens ein Befund „Hoch“
 ```
 
-The summary lists at most 15 findings of severity *Mittel* or *Hoch*; all findings are in the database and the reports. Numbers use German formatting (`18.734` = 18,734).
+The summary lists at most 15 findings of severity *Mittel* or *Hoch*; all findings are in the database and the reports. Numbers and dates use the regional format of Windows (German: `18.734` = 18,734).
 
 ## liste
 
@@ -133,10 +133,14 @@ Writes one or more reports for a saved run, as stored – the findings are not r
 | `0` | no findings of severity *Mittel* or higher | success |
 | `1` | findings *Mittel*, none *Hoch* | – |
 | `2` | at least one finding *Hoch* | – |
-| `3` | error or cancellation, or a report could not be written | error |
+| `3` | error or cancellation, the run could not be saved, a report could not be written, or **no target could be checked at all** | error |
 
 > [!WARNING]
-> **An unreachable target is not an error in this sense.** If a server, share or folder cannot be read, the scan still completes: the problem becomes a finding [ZT09](rules.md#zt09--folder-not-readable) or [ZT13](rules.md#zt13--share-permissions-not-readable) of severity *Info*, which does not raise the exit code. A run that could read nothing can therefore end with `0`. When you monitor scheduled runs, check the *Info* count and *Ordner geprüft* in the summary, or the *Fehler* sheet of the Excel report. *Nicht lesbar* in the summary counts only folders: a server whose list of shares could not be read is not counted there. As the only target, such a server gives *Ordner geprüft 0* and an *Info* finding ZT09.
+> **A partly unreachable scan is not an error in this sense.** If some servers, shares or folders cannot be read, the scan completes: the problem becomes a finding [ZT09](rules.md#zt09--folder-not-readable) or [ZT13](rules.md#zt13--share-permissions-not-readable) of severity *Info*, which does not raise the exit code, and the summary says *Achtung: N von M Zielen bzw. Freigaben konnten nicht geprüft werden*. M counts each target, and for a whole server (`\\server`) or `.` each of its shares; a server that does not answer or whose share list cannot be read counts as one target not checked. A folder whose own permissions cannot be read still counts as checked if Zutritt could read something below it. Only when **nothing** could be checked at all – the server is off, the only share is not readable – the exit code is `3`, so that a scheduled task does not look clean. When you monitor scheduled runs, also check the *Info* count and *Ordner geprüft* in the summary, or the *Fehler* sheet of the Excel report.
+
+An MSI update or uninstall closes a running Zutritt; a scan stopped this way ends with exit code `3`, like one cancelled with Ctrl+C.
+
+If the run cannot be saved (database read-only, locked, disk full), the reports given with `--bericht` are written anyway and the exit code is `3`. The database and the report folders are checked **before** the scan: if they cannot be written, Zutritt stops at once with exit code `3` and scans nothing.
 
 ## Waiting for the end
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -7,6 +8,8 @@ using Zutritt.Core.Identity;
 using Zutritt.Platform.Windows;
 using Zutritt.Core.Model;
 using Zutritt.Core.Scanning;
+using Zutritt.Core;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.UI.Pages;
 
@@ -26,10 +29,10 @@ public partial class OverviewPage : UserControl, IPage
         _clock = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _clock.Tick += (_, _) => ProgressElapsed.Text = Labels.Duration(DateTime.UtcNow - _started);
         DatabaseHint.Text = state.Store is null
-            ? "Keine Datenbank geöffnet – Läufe werden in dieser Sitzung nicht gespeichert."
+            ? Strings.Ov_NoDatabase
             : state.IsDemo
-                ? $"Demo-Datenbank, wird beim Beenden gelöscht: {state.DatabasePath}"
-                : $"Gespeichert in {state.DatabasePath}";
+                ? Texts.Format(Strings.Ov_DemoDatabase, state.DatabasePath)
+                : Texts.Format(Strings.Ov_SavedIn, state.DatabasePath);
     }
 
     /// <summary>Ein Scan läuft gerade (das Hauptfenster fragt dann beim Schließen nach).</summary>
@@ -63,13 +66,15 @@ public partial class OverviewPage : UserControl, IPage
 
         ResultTitle.Text = Labels.Targets(scan.Request.Targets);
         ResultTitle.ToolTip = string.Join(Environment.NewLine, scan.Request.Targets.Select(Labels.TargetName));
-        var duration = scan.FinishedAt > scan.StartedAt ? $" · Dauer {Labels.Duration(scan.FinishedAt - scan.StartedAt)}" : "";
-        ResultMeta.Text = $"{Labels.Date(scan.StartedAt)}{duration} · {scan.ScannedBy} auf {scan.Machine}" + (_state.IsDemo ? " · Demo" : "");
+        var duration = scan.FinishedAt > scan.StartedAt ? Texts.Format(Strings.Ov_Duration, Labels.Duration(scan.FinishedAt - scan.StartedAt)) : "";
+        ResultMeta.Text = Texts.Format(Strings.Ov_ResultMeta, Labels.Date(scan.StartedAt), duration, scan.ScannedBy, scan.Machine) + (_state.IsDemo ? Strings.Ov_DemoSuffix : "");
 
         if (_state.Comparison is { } c)
         {
-            ResultChanges.Text = $"Seit dem Lauf vom {Labels.Date(c.Older.StartedAt)}: {Plural(c.NewFindings.Count, "neuer Befund", "neue Befunde")}, " +
-                $"{Plural(c.ResolvedFindings.Count, "behobener", "behobene")} und {Plural(c.AccessChanges.Count, "Zugriffsänderung", "Zugriffsänderungen")}.";
+            ResultChanges.Text = Texts.Format(Strings.Ov_ChangesSince, Labels.Date(c.Older.StartedAt),
+                Plural(c.NewFindings.Count, Strings.Ov_NewFindingsOne, Strings.Ov_NewFindingsMany),
+                Plural(c.ResolvedFindings.Count, Strings.Ov_ResolvedOne, Strings.Ov_ResolvedMany),
+                Plural(c.AccessChanges.Count, Strings.Ov_AccessChangesOne, Strings.Ov_AccessChangesMany));
             ResultChanges.Visibility = Visibility.Visible;
             ShowCompareButton.Visibility = Visibility.Visible;
         }
@@ -82,7 +87,7 @@ public partial class OverviewPage : UserControl, IPage
         int Count(Severity s) => scan.Findings.Count(f => f.Severity == s);
         int unreadable = Math.Max(scan.Folders.Count(f => f.Error is not null), scan.Errors.Count);
         TileVisited.Value = Labels.Number(scan.FoldersVisited);
-        TileVisited.Label = scan.FilesVisited > 0 ? $"Ordner geprüft (+ {Labels.Number(scan.FilesVisited)} Dateien)" : "Ordner geprüft";
+        TileVisited.Label = scan.FilesVisited > 0 ? Texts.Format(Strings.Ov_FoldersCheckedFiles, Labels.Number(scan.FilesVisited)) : Strings.Pdf_FoldersChecked;
         TileStored.Value = Labels.Number(scan.Folders.Count(f => f.Error is null));
         TilePeople.Value = Labels.Number(scan.Principals.Values.Count(p => p.Kind == PrincipalKind.Benutzer));
         TileErrors.Value = Labels.Number(unreadable);
@@ -93,7 +98,7 @@ public partial class OverviewPage : UserControl, IPage
         TileInfo.Value = Labels.Number(Count(Severity.Info));
     }
 
-    private static string Plural(int n, string one, string many) => $"{Labels.Number(n)} {(n == 1 ? one : many)}";
+    private static string Plural(int n, string one, string many) => Texts.Format(Texts.Plural(n, one, many), Labels.Number(n));
 
     private void ShowFindings_Click(object sender, RoutedEventArgs e) => _state.ShowPage("befunde");
     private void ShowCompare_Click(object sender, RoutedEventArgs e) => _state.ShowPage("vergleich");
@@ -102,7 +107,7 @@ public partial class OverviewPage : UserControl, IPage
 
     private void BrowseFolder_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new OpenFolderDialog { Title = "Ordner für den Scan wählen", Multiselect = true };
+        var dialog = new OpenFolderDialog { Title = Strings.Ov_ChooseFolderTitle, Multiselect = true };
         if (dialog.ShowDialog(Window.GetWindow(this)) != true) return;
         foreach (var folder in dialog.FolderNames) AppendTarget(folder);
     }
@@ -126,7 +131,7 @@ public partial class OverviewPage : UserControl, IPage
         {
             ScanHintIcon.Text = "\uE72E";
             ScanHintIcon.SetResourceReference(TextBlock.ForegroundProperty, "TextFillColorSecondaryBrush");
-            ScanHint.Text = "Es wird nur gelesen – an Rechten und Dateien ändert Zutritt nichts.";
+            ScanHint.Text = Strings.Ov_ReadOnly;
             ScanHint.SetResourceReference(TextBlock.ForegroundProperty, "TextFillColorSecondaryBrush");
             return;
         }
@@ -144,7 +149,7 @@ public partial class OverviewPage : UserControl, IPage
             .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         if (targets.Count == 0)
         {
-            problem = @"Bitte mindestens ein Ziel eintragen – z. B. \\server\freigabe oder „.“ für die Freigaben dieses Rechners.";
+            problem = Strings.Ov_NeedTarget;
             return false;
         }
 
@@ -153,14 +158,14 @@ public partial class OverviewPage : UserControl, IPage
         {
             if (!int.TryParse(depthText, out var d) || d < 0)
             {
-                problem = "Maximale Tiefe: bitte eine ganze Zahl ab 0 eintragen oder leer lassen.";
+                problem = Strings.Ov_BadDepth;
                 return false;
             }
             maxDepth = d;
         }
         if (!int.TryParse(DeepBox.Text.Trim(), out var deep) || deep < 1)
         {
-            problem = "„Ausnahme gilt als tief ab Ebene“: bitte eine ganze Zahl ab 1 eintragen.";
+            problem = Strings.Ov_BadDeepFrom;
             return false;
         }
 
@@ -196,20 +201,23 @@ public partial class OverviewPage : UserControl, IPage
                 var scanner = WindowsPlatform.CreateScanner();
                 return await scanner.RunAsync(request, progress, cts.Token);
             });
-            ProgressPhase.Text = "Speichern und vergleichen …";
+            ProgressPhase.Text = Strings.Ov_SavingComparing;
             ProgressPath.Text = "";
-            await _state.AdoptAsync(scan);
+            var notSaved = await _state.AdoptAsync(scan);
             var findings = scan.Findings.Count;
-            _state.Report(NoticeKind.Success,
-                $"Scan abgeschlossen: {Labels.Number(scan.FoldersVisited)} Ordner geprüft, {Labels.Number(findings)} {(findings == 1 ? "Befund" : "Befunde")}.");
+            if (notSaved is not null)
+                _state.Report(NoticeKind.Warning, Texts.Format(Strings.Ov_NotSaved, notSaved));
+            else
+                _state.Report(NoticeKind.Success, Texts.Format(Texts.Plural(findings, Strings.Ov_ScanDoneOne, Strings.Ov_ScanDoneMany),
+                    Labels.Number(scan.FoldersVisited), Labels.Number(findings)));
         }
         catch (OperationCanceledException)
         {
-            _state.Report(NoticeKind.Info, "Scan abgebrochen – es wurde nichts gespeichert.");
+            _state.Report(NoticeKind.Info, Strings.Ov_ScanCancelled);
         }
         catch (Exception ex) when (!_state.Strict)
         {
-            _state.Report(NoticeKind.Error, $"Der Scan ist fehlgeschlagen: {ex.Message}");
+            _state.Report(NoticeKind.Error, Texts.Format(Strings.Ov_ScanFailed, ErrorCodes.Describe(ex, ErrorCodes.ScanFailed)));
         }
         finally
         {
@@ -224,7 +232,7 @@ public partial class OverviewPage : UserControl, IPage
     {
         if (_cts is null) return;
         _cts.Cancel();
-        ProgressPhase.Text = "Wird abgebrochen …";
+        ProgressPhase.Text = Strings.Ov_Cancelling;
         CancelButton.IsEnabled = false;
     }
 
@@ -237,7 +245,7 @@ public partial class OverviewPage : UserControl, IPage
         if (on)
         {
             _started = DateTime.UtcNow;
-            ProgressPhase.Text = "Scan wird vorbereitet …";
+            ProgressPhase.Text = Strings.Ov_Preparing;
             ProgressPath.Text = "";
             ProgressVisited.Text = ProgressStored.Text = ProgressErrors.Text = "0";
             ProgressElapsed.Text = Labels.Duration(TimeSpan.Zero);
@@ -266,7 +274,7 @@ public partial class OverviewPage : UserControl, IPage
     /// <summary>Zeile der Lauf-Liste (öffentlich, damit die Bindungen sie sicher lesen können).</summary>
     public sealed class RunRow(ScanSummary summary, bool isCurrent)
     {
-        public override string ToString() => $"{Date}, {Targets}, {FindingsText} Befunde";
+        public override string ToString() => Texts.Format(Strings.Ov_RunRowText, Date, Targets, FindingsText);
         public ScanSummary Summary { get; } = summary;
         public long Id => Summary.Id;
         public DateTimeOffset StartedAt => Summary.StartedAt;
@@ -278,7 +286,7 @@ public partial class OverviewPage : UserControl, IPage
         public int Findings => Summary.Findings;
         public string FindingsText => Labels.Number(Summary.Findings);
         public bool HasHigh => Summary.HighFindings > 0;
-        public string HighText => $"{Labels.Number(Summary.HighFindings)} Hoch";
+        public string HighText => Texts.Format(Strings.Ov_HighCount, Labels.Number(Summary.HighFindings));
         public string ScannedBy => Summary.ScannedBy;
         public bool IsCurrent { get; } = isCurrent;
     }
@@ -287,7 +295,7 @@ public partial class OverviewPage : UserControl, IPage
     {
         var task = LoadRunsAsync();
         _runsTask = task;
-        Ui.Run(_state, () => task, "Die gespeicherten Läufe ließen sich nicht lesen");
+        Ui.Run(_state, () => task, Strings.Ov_RunsUnreadable);
     }
 
     private async Task LoadRunsAsync()
@@ -301,8 +309,8 @@ public partial class OverviewPage : UserControl, IPage
         RunsGrid.Visibility = rows.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         RunsEmpty.Visibility = rows.Count > 0 ? Visibility.Collapsed : Visibility.Visible;
         RunsEmpty.Text = _state.Store is null
-            ? "Ohne Datenbank gibt es keine gespeicherten Läufe."
-            : "Noch keine gespeicherten Läufe – nach dem ersten Scan erscheint er hier.";
+            ? Strings.Ov_NoDatabaseNoRuns
+            : Strings.Ov_NoRuns;
         UpdateRunButtons();
     }
 
@@ -362,22 +370,22 @@ public partial class OverviewPage : UserControl, IPage
             {
                 Mouse.OverrideCursor = null;
             }
-            _state.Report(NoticeKind.Success, $"Lauf vom {row.Date} geladen ({row.Targets}).");
-        }, "Der Lauf ließ sich nicht öffnen");
+            _state.Report(NoticeKind.Success, Texts.Format(Strings.Ov_RunLoaded, row.Date, row.Targets));
+        }, Strings.Ov_RunNotOpened);
     }
 
     private void DeleteRun(RunRow row)
     {
         if (IsScanning) return;
         var answer = MessageBox.Show(Window.GetWindow(this),
-            $"Den Lauf vom {row.Date} ({row.Targets}) endgültig löschen?\n\nBerichte, die schon gespeichert sind, bleiben erhalten.",
-            "Lauf löschen", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
+            Texts.Format(Strings.Ov_DeleteConfirm, row.Date, row.Targets),
+            Strings.Ov_DeleteRun, MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
         if (answer != MessageBoxResult.Yes) return;
         Ui.Run(_state, async () =>
         {
             await _state.DeleteRunAsync(row.Id);
             ReloadRuns();
-            _state.Report(NoticeKind.Info, $"Lauf vom {row.Date} gelöscht.");
-        }, "Der Lauf ließ sich nicht löschen");
+            _state.Report(NoticeKind.Info, Texts.Format(Strings.Ov_RunDeleted, row.Date));
+        }, Strings.Ov_RunNotDeleted);
     }
 }

@@ -1,7 +1,9 @@
+// SPDX-License-Identifier: MIT
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using Zutritt.Core.Identity;
 using Zutritt.Core.Model;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.Platform.Windows.Identity;
 
@@ -268,8 +270,8 @@ public sealed class LocalDirectory : IAuthoritativeDirectory, IMachineDirectory
     private sealed record AccountDomain(string Name, string Sid, bool IsDomain);
 
     private static string SamProblem(string error) =>
-        $"Lokale Konten und Gruppen nicht lesbar: {error}. Mitglieder lokaler und VORDEFINIERT-Gruppen fehlen, lokale Konten bleiben „Unbekannt“.";
+        Texts.Format(Strings.Local_Unreadable, error);
 
     private static string MembersProblem(string group, int code) =>
-        $"Mitglieder von „{group}“ nicht lesbar: {Native.Describe(code)}.";
+        Texts.Format(Strings.Local_MembersUnreadable, group, Native.Describe(code));
 }

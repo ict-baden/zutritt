@@ -12,16 +12,20 @@
 .EXAMPLE
     cd tools\screenshots; pip install pypdfium2 pillow; npm install; .\make-assets.ps1
 #>
+# SPDX-License-Identifier: MIT
 $ErrorActionPreference = 'Stop'
 $repo = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 $assets = Join-Path $repo 'docs\assets'
 $shots = Join-Path $assets 'screenshots'
 $tmp = Join-Path ([IO.Path]::GetTempPath()) ("zutritt-assets-" + [Guid]::NewGuid().ToString('N').Substring(0, 8))
 New-Item -ItemType Directory -Force $shots, $tmp | Out-Null
+# Doku und Bilder zeigen die deutsche Oberfläche – unabhängig von der Sprache des Rechners (der Runner ist englisch)
+$language = $env:ZUTRITT_LANGUAGE
+$env:ZUTRITT_LANGUAGE = 'de'
 
 try {
     dotnet build (Join-Path $repo 'src\Zutritt\Zutritt.csproj') -c Release -nologo -v q
-    $exe = Join-Path $repo 'src\Zutritt\bin\Release\net10.0-windows10.0.19041.0\Zutritt.exe'
+    $exe = Join-Path $repo 'src\Zutritt\bin\Release\net10.0-windows\Zutritt.exe'
 
     # 1. Screenshots – Dateinamen der App (deutsch) auf englische Doku-Namen abbilden
     & $exe --screenshots $tmp | Out-Host
@@ -47,5 +51,6 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "Banner fehlgeschlagen ($LASTEXITCODE)" }
 }
 finally {
+    $env:ZUTRITT_LANGUAGE = $language
     Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue
 }

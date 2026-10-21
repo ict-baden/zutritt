@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using MigraDoc.DocumentObjectModel;
 using MigraDoc.DocumentObjectModel.Tables;
 using MigraDoc.Rendering;

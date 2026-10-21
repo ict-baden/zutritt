@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using System.Globalization;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
@@ -80,31 +81,53 @@ public static class DiagnosticsPackage
 }
 
 /// <summary>
-/// Ersetzt in Texten, was auf Personen, Rechner oder das Netz des Kunden schließen lässt: Rechner-, Benutzer- und
-/// Domänenname dieses Rechners, UNC-Server und -Pfade, lokale Pfade, Konto-SIDs, „DOMÄNE\name“, Text in „…“,
-/// IP- und E-Mail-Adressen. Gleiche Server werden gleich nummeriert, damit das Protokoll lesbar bleibt.
+/// Ersetzt in Texten, was auf Personen, Rechner oder das Netz des Kunden schließen lässt: Rechner-, Benutzer-, Domänen-
+/// und DNS-Domänenname dieses Rechners, UNC-Server und -Pfade, lokale Pfade, Konto-SIDs, „DOMÄNE\name“, Namen in
+/// LDAP-Pfaden (CN=…, OU=…, DC=…), Text in Anführungszeichen jeder Sprache der Oberfläche („…“, “…”, «…», "…") und
+/// Pfade in '…' (.NET-Meldungen), IP- und E-Mail-Adressen. Gleiche Server werden gleich nummeriert, damit das Protokoll
+/// lesbar bleibt.
 /// </summary>
+/// <remarks>
+/// Grenze: Ein Pfad ohne Anführungszeichen endet am ersten Leerzeichen, nach dem kein weiterer Teil des Pfads folgt –
+/// „D:\Daten\Akte Muster\x.pdf“ wird ganz ersetzt, der letzte Teil „\Akte Muster“ am Zeilenende nur bis „Akte“. Zutritt
+/// selbst setzt Pfade in seinen Meldungen in Anführungszeichen; das Diagnosepaket vor dem Senden ansehen.
+/// </remarks>
 public sealed partial class Anonymizer
 {
     private readonly Dictionary<string, string> _servers = new(StringComparer.OrdinalIgnoreCase);
     private readonly (string Value, string Replacement)[] _local;
 
-    public Anonymizer() : this(Environment.MachineName, Environment.UserName, Environment.UserDomainName) { }
+    public Anonymizer() : this(Environment.MachineName, Environment.UserName, Environment.UserDomainName, DnsDomain()) { }
 
-    internal Anonymizer(string machine, string user, string domain)
+    internal Anonymizer(string machine, string user, string domain, string dnsDomain = "")
     {
         var local = new List<(string, string)>();
         // Längste zuerst, damit „PC-LABOR-01“ nicht als „PC“ + Rest ersetzt wird
-        foreach (var (value, replacement) in new[] { (machine, "RECHNER"), (user, "BENUTZER"), (domain, "DOMÄNE") }
+        foreach (var (value, replacement) in new[] { (machine, "RECHNER"), (user, "BENUTZER"), (domain, "DOMÄNE"), (dnsDomain, "DNS-DOMÄNE") }
                      .Where(p => p.Item1.Length >= 2).OrderByDescending(p => p.Item1.Length))
             local.Add((value, replacement));
         _local = [.. local];
+    }
+
+    /// <summary>DNS-Domäne dieses Rechners (z. B. firma.local), leer ohne Domäne.</summary>
+    private static string DnsDomain()
+    {
+        try
+        {
+            return System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().DomainName ?? "";
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            return "";
+        }
     }
 
     public string Apply(string text)
     {
         if (string.IsNullOrEmpty(text)) return text;
         text = Quoted().Replace(text, "„…“");
+        text = SingleQuotedPath().Replace(text, "'…'");
+        text = DistinguishedName().Replace(text, m => m.Groups["attr"].Value + "=…");
         text = Email().Replace(text, "<E-Mail>");
         text = Unc().Replace(text, m => $@"\\{Server(m.Groups["server"].Value)}{(m.Groups["rest"].Length > 0 ? @"\…" : "")}");
         text = DrivePath().Replace(text, m => m.Groups["drive"].Value + @":\…");
@@ -124,17 +147,29 @@ public sealed partial class Anonymizer
         return replacement;
     }
 
-    [GeneratedRegex(@"„[^“\r\n]*“")]
+    // Meldungen eines Scans kommen in der Sprache der Oberfläche und setzen Namen in deren Anführungszeichen
+    // (Text_Quote): deutsch „…“, englisch und chinesisch “…”, spanisch und französisch «…» bzw. « … ». Dazu "…".
+    [GeneratedRegex(@"„[^“\r\n]*“|“[^”\r\n]*”|«[^»\r\n]*»|""[^""\r\n]*""")]
     private static partial Regex Quoted();
+
+    // .NET setzt Pfade in seinen Meldungen in '…' ("Could not find a part of the path 'D:\Akte Muster'"). Nur mit „\“
+    // darin – ein Apostroph im Text ist kein Pfad.
+    [GeneratedRegex(@"'[^'\r\n]*\\[^'\r\n]*'")]
+    private static partial Regex SingleQuotedPath();
+
+    // LDAP-Pfade: LDAP://CN=Name Person,OU=Abteilung,DC=firma,DC=local – Werte bis zum nächsten Trenner
+    [GeneratedRegex(@"\b(?<attr>CN|OU|DC)=[^,;+/\r\n]*", RegexOptions.IgnoreCase)]
+    private static partial Regex DistinguishedName();
 
     [GeneratedRegex(@"[\w.+-]+@[\w-]+(\.[\w-]+)+")]
     private static partial Regex Email();
 
-    // \\server[\rest…] und \\?\UNC\server\…
-    [GeneratedRegex(@"\\\\(\?\\UNC\\)?(?<server>[^\\\s„“""'|<>:*?]+)(?<rest>\\[^\s„“""'|<>]*)?")]
+    // \\server[\rest…] und \\?\UNC\server\… – ein Leerzeichen gehört zum Pfad, wenn danach Wörter und dann ein „\“
+    // folgen („\Akte Muster\x“), aber kein neuer Pfad („\a \\FS02\b“, „D:\a nach D:\b“)
+    [GeneratedRegex(@"\\\\(\?\\UNC\\)?(?<server>[^\\\s„“”«»""'|<>:*?]+)(?<rest>\\(?:[^\s„“”«»""'|<>]| (?=(?:[^\s\\„“”«»""'|<>]+ )*(?![A-Za-z]:\\)[^\s\\„“”«»""'|<>]+\\(?!\\)))*)?")]
     private static partial Regex Unc();
 
-    [GeneratedRegex(@"(?<![\w\\])(?<drive>[A-Za-z]):\\[^\s„“""'|<>]*")]
+    [GeneratedRegex(@"(?<![\w\\])(?<drive>[A-Za-z]):\\(?:[^\s„“”«»""'|<>]| (?=(?:[^\s\\„“”«»""'|<>]+ )*(?![A-Za-z]:\\)[^\s\\„“”«»""'|<>]+\\(?!\\)))*")]
     private static partial Regex DrivePath();
 
     [GeneratedRegex(@"S-1-5-21(-\d+){3,4}", RegexOptions.IgnoreCase)]

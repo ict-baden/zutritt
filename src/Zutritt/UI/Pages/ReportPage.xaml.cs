@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
@@ -5,6 +6,8 @@ using System.Windows.Input;
 using Microsoft.Win32;
 using Zutritt.Core.Model;
 using Zutritt.Core.Reports;
+using Zutritt.Core;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.UI.Pages;
 
@@ -38,8 +41,8 @@ public partial class ReportPage : UserControl, IPage
         var scan = _state.Scan;
         if (scan is null)
         {
-            HeroTitle.Text = "Kein Lauf geladen";
-            HeroText.Text = "Laden Sie auf der Übersicht einen Lauf oder starten Sie einen Scan – dann lässt sich hier der Bericht speichern.";
+            HeroTitle.Text = Strings.Ui_NoRunLoaded;
+            HeroText.Text = Strings.Rp_NoRunText;
             HeroFile.Visibility = Visibility.Collapsed;
             ExcelButton.IsEnabled = PdfButton.IsEnabled = false;
             ChangesCard.IsEnabled = false;
@@ -47,10 +50,13 @@ public partial class ReportPage : UserControl, IPage
         }
 
         int high = scan.Findings.Count(f => f.Severity == Severity.Hoch);
-        HeroTitle.Text = $"Bericht für {Labels.Targets(scan.Request.Targets)}";
-        HeroText.Text = $"Lauf vom {Labels.Date(scan.StartedAt)}: {Labels.Number(scan.FoldersVisited)} Ordner geprüft, " +
-            $"{Labels.Number(scan.Findings.Count)} {(scan.Findings.Count == 1 ? "Befund" : "Befunde")}" + (high > 0 ? $", davon {Labels.Number(high)} „Hoch“." : ".");
-        HeroFile.Text = $"Vorschlag für den Dateinamen: {Labels.ReportFileName(scan)}";
+        HeroTitle.Text = Texts.Format(Strings.Rp_ReportFor, Labels.Targets(scan.Request.Targets));
+        var summary = high > 0
+            ? Texts.Plural(scan.Findings.Count, Strings.Rp_RunSummaryHighOne, Strings.Rp_RunSummaryHighMany)
+            : Texts.Plural(scan.Findings.Count, Strings.Rp_RunSummaryOne, Strings.Rp_RunSummaryMany);
+        HeroText.Text = Texts.Format(summary, Labels.Date(scan.StartedAt), Labels.Number(scan.FoldersVisited),
+            Labels.Number(scan.Findings.Count), Labels.Number(high));
+        HeroFile.Text = Texts.Format(Strings.Rp_SuggestedName, Labels.ReportFileName(scan));
         HeroFile.Visibility = Visibility.Visible;
         ExcelButton.IsEnabled = PdfButton.IsEnabled = !_busy;
 
@@ -58,13 +64,13 @@ public partial class ReportPage : UserControl, IPage
         {
             ChangesCard.IsEnabled = true;
             IncludeChanges.IsChecked = _wantChanges;
-            ChangesCard.Description = $"Vergleich mit dem Lauf vom {Labels.Date(c.Older.StartedAt)}: neue und behobene Befunde, geänderte Rechte und Mitgliedschaften als eigener Abschnitt.";
+            ChangesCard.Description = Texts.Format(Strings.Rp_ComparisonWith, Labels.Date(c.Older.StartedAt));
         }
         else
         {
             ChangesCard.IsEnabled = false;
             IncludeChanges.IsChecked = false;
-            ChangesCard.Description = "Es gibt keinen früheren Lauf zum Vergleichen – der Bericht enthält dann keinen Abschnitt „Änderungen“.";
+            ChangesCard.Description = Strings.Rp_NoEarlier;
         }
     }
 
@@ -77,8 +83,8 @@ public partial class ReportPage : UserControl, IPage
         var ext = pdf ? ".pdf" : ".xlsx";
         var dialog = new SaveFileDialog
         {
-            Title = pdf ? "PDF-Bericht speichern" : "Excel-Bericht speichern",
-            Filter = pdf ? "PDF-Dokument (*.pdf)|*.pdf" : "Excel-Arbeitsmappe (*.xlsx)|*.xlsx",
+            Title = pdf ? Strings.Rp_SavePdfTitle : Strings.Rp_SaveExcelTitle,
+            Filter = pdf ? Strings.Rp_PdfFilter : Strings.Rp_ExcelFilter,
             FileName = Labels.ReportFileName(scan) + ext,
             DefaultExt = ext,
             AddExtension = true,
@@ -107,7 +113,7 @@ public partial class ReportPage : UserControl, IPage
         catch (Exception ex) when (!_state.Strict)
         {
             ResultCard.Visibility = Visibility.Collapsed;
-            _state.Report(NoticeKind.Error, $"Der Bericht ließ sich nicht speichern: {ex.Message}");
+            _state.Report(NoticeKind.Error, Texts.Format(Strings.Rp_SaveFailed, ErrorCodes.Describe(ex, ErrorCodes.ReportWrite)));
         }
         finally
         {
@@ -124,10 +130,10 @@ public partial class ReportPage : UserControl, IPage
         ResultCard.Visibility = Visibility.Visible;
         ResultIcon.Text = "\uE916";
         ResultIcon.SetResourceReference(TextBlock.ForegroundProperty, "TextFillColorSecondaryBrush");
-        ResultTitle.Text = "Bericht wird erstellt …";
+        ResultTitle.Text = Strings.Rp_Creating;
         ResultPath.Text = path ?? "";
         ResultButtons.Visibility = Visibility.Collapsed;
-        ResultPhase.Text = "Wird vorbereitet …";
+        ResultPhase.Text = Strings.Rp_Preparing;
         ResultWorking.Visibility = Visibility.Visible;
     }
 
@@ -138,8 +144,8 @@ public partial class ReportPage : UserControl, IPage
         ResultIcon.Text = "\uE73E";
         ResultIcon.SetResourceReference(TextBlock.ForegroundProperty, "SystemFillColorSuccessBrush");
         // Die Dauer erst ab ein paar Sekunden nennen – bei großen Läufen erklärt sie das Warten
-        var took = duration.TotalSeconds >= 5 ? $" nach {Labels.Duration(duration)}" : "";
-        ResultTitle.Text = (pdf ? "PDF-Bericht gespeichert" : "Excel-Bericht gespeichert") + took;
+        var took = duration.TotalSeconds >= 5 ? Texts.Format(Strings.Rp_After, Labels.Duration(duration)) : "";
+        ResultTitle.Text = (pdf ? Strings.Rp_PdfSaved : Strings.Rp_ExcelSaved) + took;
         ResultPath.Text = path;
         ResultButtons.Visibility = Visibility.Visible;
     }
@@ -148,13 +154,13 @@ public partial class ReportPage : UserControl, IPage
     {
         if (_lastPath is null) return;
         try { Process.Start(new ProcessStartInfo(_lastPath) { UseShellExecute = true }); }
-        catch (Exception ex) { _state.Report(NoticeKind.Warning, $"Die Datei ließ sich nicht öffnen: {ex.Message}"); }
+        catch (Exception ex) { _state.Report(NoticeKind.Warning, Texts.Format(Strings.Rp_OpenFailed, ex.Message)); }
     }
 
     private void ShowResult_Click(object sender, RoutedEventArgs e)
     {
         if (_lastPath is null) return;
         try { Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{_lastPath}\"") { UseShellExecute = true }); }
-        catch (Exception ex) { _state.Report(NoticeKind.Warning, $"Der Ordner ließ sich nicht öffnen: {ex.Message}"); }
+        catch (Exception ex) { _state.Report(NoticeKind.Warning, Texts.Format(Strings.Rp_FolderOpenFailed, ex.Message)); }
     }
 }

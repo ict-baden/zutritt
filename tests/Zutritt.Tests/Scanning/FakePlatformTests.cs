@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using Zutritt.Core.Identity;
 using Zutritt.Core.Model;
 using Zutritt.Core.Platform;
@@ -52,6 +53,16 @@ public sealed class FakePlatformTests
         var node = Assert.Single(scan.Folders);
         Assert.Equal("Ziel nicht erreichbar: Netzwerkpfad nicht gefunden", node.Error);
         Assert.Contains(scan.Errors, e => e.Path == @"\\FS01\Weg");
+    }
+
+    [Fact]
+    public async Task Server_ohne_Freigabeliste_wird_als_nicht_geprueft_gezaehlt()
+    {
+        var platform = new FakeScanPlatform().Folder(@"D:\Daten");
+        var scan = await new Scanner(platform, (_, _) => { }, _ => []).RunAsync(new ScanRequest { Targets = [@"D:\Daten", @"\\FS02"] });
+
+        Assert.Equal([@"\\FS02"], scan.TargetsWithoutRoot);
+        Assert.Equal((1, 2), Core.Analysis.ScanCoverage.Count(scan));
     }
 
     [Fact]

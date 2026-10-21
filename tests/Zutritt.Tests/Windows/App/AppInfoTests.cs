@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Zutritt.UI;
@@ -57,6 +58,13 @@ public sealed class AppInfoTests
     {
         Assert.True(Links.IsAllowed(url, out var uri));
         Assert.NotNull(uri);
+    }
+
+    [Fact]
+    public void Impressum_zeigt_auf_die_erreichbare_Seite()
+    {
+        // „/impressum“ gibt es auf der heutigen Webseite nicht (404), nur index.html?page=imprint; die neue leitet weiter
+        Assert.Equal("https://ict-baden.de/index.html?page=imprint", AppInfo.ImpressumUrl);
     }
 
     [Theory]

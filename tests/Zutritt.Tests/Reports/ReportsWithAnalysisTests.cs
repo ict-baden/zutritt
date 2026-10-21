@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using ClosedXML.Excel;
 using PdfSharp.Pdf.IO;
 using Zutritt.Core.Analysis;

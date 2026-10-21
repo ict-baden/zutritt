@@ -25,6 +25,7 @@
 .EXAMPLE
     ./.github/scripts/release-latest.ps1 -Notes $notes -Title "Latest Build (main) – 0.1.0-ci.9"
 #>
+# SPDX-License-Identifier: MIT
 param(
     [Parameter(Mandatory)] [string] $Notes,
     [string] $Title = 'Latest Build (main)',

@@ -1,6 +1,7 @@
 <UserControl x:Class="Zutritt.UI.Pages.FoldersPage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="clr-namespace:Zutritt.Core.Resources;assembly=Zutritt.Core"
              xmlns:ui="clr-namespace:Zutritt.UI">
     <Grid Margin="36,0,36,20">
         <Grid.ColumnDefinitions>
@@ -17,8 +18,8 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <Grid>
-                <TextBox x:Name="SearchBox" TextChanged="Search_TextChanged" AutomationProperties.Name="Ordner suchen" Padding="10,5,30,6"/>
-                <TextBlock Style="{StaticResource Placeholder}" Text="Ordner suchen"
+                <TextBox x:Name="SearchBox" TextChanged="Search_TextChanged" AutomationProperties.Name="{x:Static res:Strings.Fo_Search}" Padding="10,5,30,6"/>
+                <TextBlock Style="{StaticResource Placeholder}" Text="{x:Static res:Strings.Fo_Search}"
                            Visibility="{Binding Text, ElementName=SearchBox, Converter={StaticResource EmptyToVisible}}"/>
                 <TextBlock Text="&#xE721;" Style="{StaticResource Icon}" FontSize="13" HorizontalAlignment="Right" Margin="0,0,11,0"
                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" IsHitTestVisible="False"/>
@@ -28,7 +29,7 @@
                     <TreeView x:Name="Tree" BorderThickness="0" Background="Transparent" ScrollViewer.CanContentScroll="True"
                               VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
                               VirtualizingPanel.CacheLength="0.5" VirtualizingPanel.CacheLengthUnit="Page"
-                              SelectedItemChanged="Tree_SelectedItemChanged" AutomationProperties.Name="Ordnerbaum">
+                              SelectedItemChanged="Tree_SelectedItemChanged" AutomationProperties.Name="{x:Static res:Strings.Fo_Tree}">
                         <TreeView.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <VirtualizingStackPanel/>
@@ -42,14 +43,14 @@
                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                     <TextBlock x:Name="Label" Text="{Binding Name}" VerticalAlignment="Center"/>
                                     <TextBlock x:Name="Broken" Text="&#xE72E;" Style="{StaticResource Icon}" FontSize="11" Margin="8,0,0,0"
-                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" Visibility="Collapsed" ToolTip="Vererbung unterbrochen"/>
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" Visibility="Collapsed" ToolTip="{x:Static res:Strings.Pdf_InheritanceBroken}"/>
                                     <TextBlock x:Name="Differs" Text="&#xE8DE;" Style="{StaticResource Icon}" FontSize="12" Margin="8,0,0,0"
                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" Visibility="Collapsed"
-                                               ToolTip="Vererbung weicht ab – vermutlich verschoben, mit Rechten vom früheren Ort"/>
+                                               ToolTip="{x:Static res:Strings.Fo_DiffersTip}"/>
                                     <Ellipse x:Name="Dot" Width="8" Height="8" Margin="8,0,0,0" VerticalAlignment="Center" Visibility="Collapsed"
-                                             ToolTip="Befund vorhanden"/>
+                                             ToolTip="{x:Static res:Strings.Fo_HasFinding}"/>
                                     <TextBlock x:Name="Err" Text="&#xE783;" Style="{StaticResource Icon}" FontSize="12" Margin="8,0,0,0"
-                                               Foreground="{DynamicResource SystemFillColorCriticalBrush}" Visibility="Collapsed" ToolTip="Nicht lesbar"/>
+                                               Foreground="{DynamicResource SystemFillColorCriticalBrush}" Visibility="Collapsed" ToolTip="{x:Static res:Strings.Fo_NotReadableCap}"/>
                                 </StackPanel>
                                 <HierarchicalDataTemplate.Triggers>
                                     <DataTrigger Binding="{Binding IsIntermediate}" Value="True">
@@ -96,7 +97,7 @@
                     <ListBox x:Name="SearchResults" Visibility="Collapsed" BorderThickness="0" Background="Transparent"
                              HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling"
-                             SelectionChanged="SearchResults_SelectionChanged" AutomationProperties.Name="Suchergebnisse">
+                             SelectionChanged="SearchResults_SelectionChanged" AutomationProperties.Name="{x:Static res:Strings.Fo_SearchResults}">
                         <ListBox.Resources>
                             <Thickness x:Key="ListBoxItemPadding">10,5,10,5</Thickness>
                         </ListBox.Resources>
@@ -116,21 +117,21 @@
             <WrapPanel Grid.Row="2" Margin="2,8,0,0">
                 <StackPanel Orientation="Horizontal" Margin="0,0,14,4">
                     <TextBlock Text="&#xE72E;" Style="{StaticResource Icon}" FontSize="11" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,5,0"/>
-                    <TextBlock Text="Vererbung unterbrochen" Style="{StaticResource Caption}"/>
+                    <TextBlock Text="{x:Static res:Strings.Pdf_InheritanceBroken}" Style="{StaticResource Caption}"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,14,4">
                     <TextBlock Text="&#xE8DE;" Style="{StaticResource Icon}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,5,0"/>
-                    <TextBlock Text="Vererbung weicht ab" Style="{StaticResource Caption}"/>
+                    <TextBlock Text="{x:Static res:Strings.Excel_ColInheritanceDiffers}" Style="{StaticResource Caption}"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,14,4">
                     <Ellipse Width="8" Height="8" Fill="{DynamicResource SevHigh}" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="Befund" Style="{StaticResource Caption}"/>
+                    <TextBlock Text="{x:Static res:Strings.Col_Finding}" Style="{StaticResource Caption}"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,0,14,4">
                     <TextBlock Text="&#xE783;" Style="{StaticResource Icon}" FontSize="11" Foreground="{DynamicResource SystemFillColorCriticalBrush}" Margin="0,0,5,0"/>
-                    <TextBlock Text="nicht lesbar" Style="{StaticResource Caption}"/>
+                    <TextBlock Text="{x:Static res:Strings.Report_NotReadable}" Style="{StaticResource Caption}"/>
                 </StackPanel>
-                <TextBlock Text="grau: ohne eigene Rechte" Style="{StaticResource Caption}" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Margin="0,0,0,4"/>
+                <TextBlock Text="{x:Static res:Strings.Fo_GreyLegend}" Style="{StaticResource Caption}" Foreground="{DynamicResource TextFillColorTertiaryBrush}" Margin="0,0,0,4"/>
             </WrapPanel>
         </Grid>
 
@@ -147,17 +148,17 @@
                         <TextBlock x:Name="DetailName" Style="{StaticResource SubtitleText}"/>
                         <TextBox x:Name="DetailPath" IsReadOnly="True" BorderThickness="0" Background="Transparent" Padding="0" Margin="0,2,0,0" MinHeight="0"
                                  FontFamily="{StaticResource MonoFont}" FontSize="12.5" TextWrapping="Wrap"
-                                 Foreground="{DynamicResource TextFillColorSecondaryBrush}" AutomationProperties.Name="Pfad"/>
+                                 Foreground="{DynamicResource TextFillColorSecondaryBrush}" AutomationProperties.Name="{x:Static res:Strings.Col_Path}"/>
                     </StackPanel>
                     <WrapPanel x:Name="Facts" Grid.Row="1" Margin="0,12,0,0"/>
 
                     <TabControl x:Name="Tabs" Grid.Row="2" Margin="0,10,0,0">
-                        <TabItem x:Name="TabAces" Header="Einträge">
+                        <TabItem x:Name="TabAces" Header="{x:Static res:Strings.Fo_Entries}">
                             <DataGrid x:Name="AcesGrid" Style="{DynamicResource Table}" Margin="0,8,0,0"
-                                      AutomationProperties.Name="Einträge der Zugriffssteuerungsliste">
+                                      AutomationProperties.Name="{x:Static res:Strings.Fo_AclEntries}">
                                 <DataGrid.Columns>
                                     <!-- Kurzname wie in den Befunden („Vertrieb-Leitung“ statt „KONZERN\Vertrieb-…“), der volle Name im Tooltip -->
-                                    <DataGridTemplateColumn Header="Konto" SortMemberPath="AccountName" Width="1.5*" MinWidth="110">
+                                    <DataGridTemplateColumn Header="{x:Static res:Strings.Col_Account}" SortMemberPath="AccountName" Width="1.5*" MinWidth="110">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding AccountName}" ToolTip="{Binding Account}" ToolTipService.InitialShowDelay="700"
@@ -165,8 +166,8 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTextColumn Header="Art" Binding="{Binding Kind}" Width="120" MinWidth="120" ElementStyle="{StaticResource CellText}"/>
-                                    <DataGridTemplateColumn Header="Recht" SortMemberPath="Level" Width="*" MinWidth="80">
+                                    <DataGridTextColumn Header="{x:Static res:Strings.Col_AccountKind}" Binding="{Binding Kind}" Width="120" MinWidth="120" ElementStyle="{StaticResource CellText}"/>
+                                    <DataGridTemplateColumn Header="{x:Static res:Strings.Col_Right}" SortMemberPath="Level" Width="*" MinWidth="80">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock x:Name="T" Text="{Binding Right}" Style="{StaticResource CellText}"/>
@@ -179,12 +180,12 @@
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTextColumn Header="Herkunft" Binding="{Binding Origin}" Width="84" MinWidth="84" ElementStyle="{StaticResource CellText}"/>
-                                    <DataGridTextColumn Header="Gilt für" Binding="{Binding AppliesTo}" Width="1.3*" MinWidth="100" ElementStyle="{StaticResource CellText}"/>
+                                    <DataGridTextColumn Header="{x:Static res:Strings.Fo_Origin}" Binding="{Binding Origin}" Width="84" MinWidth="84" ElementStyle="{StaticResource CellText}"/>
+                                    <DataGridTextColumn Header="{x:Static res:Strings.Col_AppliesTo}" Binding="{Binding AppliesTo}" Width="1.3*" MinWidth="100" ElementStyle="{StaticResource CellText}"/>
                                 </DataGrid.Columns>
                             </DataGrid>
                         </TabItem>
-                        <TabItem x:Name="TabPeople" Header="Wer darf hier rein">
+                        <TabItem x:Name="TabPeople" Header="{x:Static res:Strings.Fo_WhoCanEnter}">
                             <Grid Margin="0,8,0,0">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
@@ -203,10 +204,10 @@
                                     </Grid>
                                 </Border>
                                 <ListView x:Name="PeopleTable" Grid.Row="1" Style="{DynamicResource ListTable}" ui:ListTable.Columns="2*:140, 96, 96, 2*:110, 32"
-                                          AutomationProperties.Name="Personen mit Zugriff">
+                                          AutomationProperties.Name="{x:Static res:Strings.Excel_PeopleWithAccess}">
                                     <ListView.View>
                                         <GridView AllowsColumnReorder="False">
-                                        <GridViewColumn Header="Person" ui:ListTable.SortBy="Person">
+                                        <GridViewColumn Header="{x:Static res:Strings.Col_Person}" ui:ListTable.SortBy="Person">
                                             <GridViewColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <TextBlock Text="{Binding Person}" ToolTip="{Binding Account}" ToolTipService.InitialShowDelay="700"
@@ -214,7 +215,7 @@
                                                 </DataTemplate>
                                             </GridViewColumn.CellTemplate>
                                         </GridViewColumn>
-                                        <GridViewColumn Header="Freigabe" ui:ListTable.SortBy="EffectiveLevel">
+                                        <GridViewColumn Header="{x:Static res:Strings.Col_Share}" ui:ListTable.SortBy="EffectiveLevel">
                                             <GridViewColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <TextBlock Text="{Binding ViaShare}" Style="{StaticResource CellText}"/>
@@ -228,7 +229,7 @@
                                                 </DataTemplate>
                                             </GridViewColumn.CellTemplate>
                                         </GridViewColumn>
-                                        <GridViewColumn Header="Über Gruppen" ui:ListTable.SortBy="Via">
+                                        <GridViewColumn Header="{x:Static res:Strings.Col_ViaGroups}" ui:ListTable.SortBy="Via">
                                             <GridViewColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <TextBlock Text="{Binding Via}" ToolTip="{Binding ViaFull}" ToolTipService.InitialShowDelay="700"
@@ -251,23 +252,23 @@
                                 <TextBlock x:Name="PeopleStatus" Grid.Row="1" Style="{StaticResource Caption}" FontSize="13" Margin="4,10" Visibility="Collapsed"/>
                             </Grid>
                         </TabItem>
-                        <TabItem x:Name="TabFindings" Header="Befunde">
+                        <TabItem x:Name="TabFindings" Header="{x:Static res:Strings.Col_Findings}">
                             <Grid Margin="0,8,0,0">
-                                <DataGrid x:Name="FindingsGrid" Style="{DynamicResource Table}" AutomationProperties.Name="Befunde dieses Ordners">
+                                <DataGrid x:Name="FindingsGrid" Style="{DynamicResource Table}" AutomationProperties.Name="{x:Static res:Strings.Fo_FolderFindings}">
                                     <DataGrid.Columns>
-                                        <DataGridTemplateColumn Header="Schwere" SortMemberPath="Severity" Width="100">
+                                        <DataGridTemplateColumn Header="{x:Static res:Strings.Col_Severity}" SortMemberPath="Severity" Width="100">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <ui:SeverityPill Severity="{Binding Severity}"/>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
-                                        <DataGridTextColumn Header="Regel" Binding="{Binding RuleId}" Width="64" ElementStyle="{StaticResource CellText}"/>
-                                        <DataGridTextColumn Header="Befund" Binding="{Binding Message}" Width="3*" ElementStyle="{StaticResource CellText}"/>
+                                        <DataGridTextColumn Header="{x:Static res:Strings.Col_Rule}" Binding="{Binding RuleId}" Width="64" ElementStyle="{StaticResource CellText}"/>
+                                        <DataGridTextColumn Header="{x:Static res:Strings.Col_Finding}" Binding="{Binding Message}" Width="3*" ElementStyle="{StaticResource CellText}"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
                                 <TextBlock x:Name="FindingsEmpty" Style="{StaticResource Caption}" FontSize="13" Margin="4,10" Visibility="Collapsed"
-                                           Text="Für diesen Ordner gibt es keine Befunde."/>
+                                           Text="{x:Static res:Strings.Fo_NoFindings}"/>
                             </Grid>
                         </TabItem>
                     </TabControl>
@@ -278,13 +279,13 @@
                         <Button x:Name="ParentButton" Click="Parent_Click" Margin="0,14,0,0" HorizontalAlignment="Left">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE74A;" FontFamily="{StaticResource IconFont}" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <TextBlock Text="Übergeordneten Ordner anzeigen" VerticalAlignment="Center"/>
+                                <TextBlock Text="{x:Static res:Strings.Fo_ShowParent}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>
                 </Grid>
                 <TextBlock x:Name="DetailEmpty" Style="{StaticResource Caption}" FontSize="13" TextAlignment="Center" VerticalAlignment="Center"
-                           Margin="24" Text="Ordner links auswählen, um seine Berechtigungen zu sehen."/>
+                           Margin="24" Text="{x:Static res:Strings.Fo_SelectFolder}"/>
             </Grid>
         </Border>
     </Grid>

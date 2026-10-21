@@ -1,4 +1,6 @@
+// SPDX-License-Identifier: MIT
 using Zutritt.Core.Model;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.Core.Analysis;
 
@@ -31,78 +33,55 @@ public static class FindingRules
     internal const string ShareUnreadable = "ZT13";
     internal const string InheritanceDiffers = "ZT14";
 
-    /// <summary>Alle Regeln in fester Reihenfolge (ZT01 … ZT14).</summary>
-    public static IReadOnlyList<RuleInfo> All { get; } =
+    /// <summary>Alle Regeln in fester Reihenfolge (ZT01 … ZT14), Texte in der Sprache der Oberfläche.</summary>
+    public static IReadOnlyList<RuleInfo> All =>
     [
-        new(BroadWrite, Severity.Hoch, "Breite Gruppe darf schreiben",
-            "Eine Gruppe, die praktisch alle Personen umfasst (z. B. „Jeder“, „Authentifizierte Benutzer“, „Domänen-Benutzer“), "
-            + "darf hier Dateien anlegen oder ändern. Damit kann jede angemeldete Person Daten verfälschen, löschen oder – etwa "
-            + "durch Schadsoftware – verschlüsseln.",
-            "Schreibrecht der breiten Gruppe entfernen und nur einer fachlichen Gruppe geben, die genau die zuständigen Personen enthält."),
-        new(BroadRead, Severity.Mittel, "Breite Gruppe darf lesen",
-            "Eine Gruppe, die praktisch alle Personen umfasst, darf hier lesen oder den Inhalt auflisten. Vertrauliche Daten sind "
-            + "damit für jede angemeldete Person sichtbar.",
-            "Prüfen, ob die Daten wirklich für alle bestimmt sind; sonst die breite Gruppe durch eine fachliche Gruppe ersetzen."),
-        new(DirectUser, Severity.Mittel, "Recht direkt an Person vergeben",
-            "Das Recht ist einem einzelnen Benutzerkonto statt einer Gruppe gegeben. Solche Einträge werden bei Wechsel der "
-            + "Abteilung oder beim Austritt leicht vergessen und machen die Rechtevergabe unübersichtlich.",
-            "Recht über eine Gruppe (Rolle bzw. Abteilung) vergeben und den Eintrag für die Person entfernen."),
-        new(Orphaned, Severity.Mittel, "Verwaiste SID",
-            "Ein Eintrag oder der Besitzer verweist auf ein Konto, das es nicht mehr gibt. Die SID lässt sich keinem Namen "
-            + "zuordnen; niemand kann ohne Weiteres sagen, wem das Recht einmal gegeben wurde.",
-            "Verwaisten Eintrag entfernen; ist die SID Besitzer, einen gültigen Besitzer (z. B. „Administratoren“) eintragen."),
-        new(FullControlNonAdmin, Severity.Hoch, "Vollzugriff für Nicht-Admins",
-            "Ein Konto oder eine Gruppe ohne Administratorrolle hat Vollzugriff. Damit darf es Berechtigungen ändern und den "
-            + "Besitz übernehmen – also sich und anderen beliebige Rechte geben, an jeder Prüfung vorbei.",
-            "Auf „Ändern“ reduzieren; Vollzugriff nur Administratoren und SYSTEM geben."),
-        new(DeepBreak, Severity.Niedrig, "Tief versteckte Ausnahme",
-            "Tief in der Ordnerstruktur ist die Vererbung unterbrochen. Solche Ausnahmen sieht man von oben nicht; Änderungen "
-            + "an übergeordneten Ordnern kommen hier nicht an.",
-            "Prüfen, ob die Ausnahme noch nötig ist, und sonst die Vererbung wieder einschalten. Nötige Ausnahmen dokumentieren "
-            + "oder weiter oben in der Struktur abbilden."),
-        new(DenyEntry, Severity.Info, "Verweigern-Eintrag",
-            "Ein expliziter Verweigern-Eintrag geht allen Erlauben-Einträgen vor. Verweigerungen sind schwer nachzuvollziehen "
-            + "und treffen oft mehr Personen als beabsichtigt (z. B. alle Mitglieder einer Gruppe).",
-            "Recht lieber gar nicht erst vergeben (Gruppen passend zuschneiden). Verweigerungen nur in begründeten Ausnahmen "
-            + "nutzen und dokumentieren."),
-        new(ShareEveryone, Severity.Info, "Freigabe: Jeder Vollzugriff",
-            "Die Freigabe-Berechtigung erlaubt allen angemeldeten Personen mindestens „Ändern“. Der Schutz liegt damit allein "
-            + "bei den NTFS-Rechten. Das ist von Microsoft empfohlene Praxis, sollte aber bewusst so gewählt sein.",
-            "Nichts zu tun, wenn die NTFS-Rechte sauber sind. Sonst die Freigabe-Berechtigung zusätzlich einschränken."),
-        new(Unreadable, Severity.Info, "Ordner nicht lesbar",
-            "Der Ordner (oder die Datei) konnte nicht gelesen werden, z. B. weil der Zugriff verweigert wurde. Seine "
-            + "Berechtigungen und alles darunter sind in diesem Lauf nicht geprüft.",
-            "Ursache beheben oder mit einem Konto scannen, das die Berechtigungen lesen darf, und den Lauf wiederholen."),
-        new(OwnerIsUser, Severity.Niedrig, "Besitzer ist ein Benutzerkonto",
-            "Der Besitzer darf die Berechtigungen jederzeit ändern – unabhängig davon, was in der Liste steht. Ist eine "
-            + "einzelne Person Besitzer, behält sie diese Möglichkeit auch nach einem Rollenwechsel.",
-            "Besitz auf „Administratoren“ (bzw. eine Admin-Gruppe) übertragen."),
-        new(EmptyGroup, Severity.Niedrig, "Leere Gruppe berechtigt",
-            "Eine Gruppe ohne Mitglieder ist berechtigt. Der Eintrag wirkt heute nicht, wird aber unbemerkt wirksam, sobald "
-            + "jemand in die Gruppe aufgenommen wird.",
-            "Eintrag entfernen, wenn die Gruppe nicht mehr gebraucht wird; sonst den Zweck dokumentieren."),
-        new(DisabledAccount, Severity.Mittel, "Deaktiviertes Konto berechtigt",
-            "Ein deaktiviertes Benutzerkonto hat hier ein eigenes Recht. Wird das Konto wieder aktiviert, gilt das Recht sofort.",
-            "Eintrag entfernen; ausgeschiedene Konten nach Ablauf der Frist löschen."),
-        new(ShareUnreadable, Severity.Info, "Freigabe-Berechtigungen nicht lesbar",
-            "Die Berechtigungen der Freigabe konnten nicht gelesen werden. Die Rechte über das Netz sind deshalb allein aus "
-            + "den NTFS-Rechten berechnet und können in Wirklichkeit geringer sein.",
-            "Mit Administratorrechten auf dem Server erneut scannen."),
-        new(InheritanceDiffers, Severity.Niedrig, "Rechte weichen von der Vererbung ab",
-            "Der Ordner (oder die Datei) hat geerbte Einträge, die nicht zum übergeordneten Ordner passen. Typisch sind "
-            + "verschobene Ordner: Beim Verschieben innerhalb eines Laufwerks nimmt Windows die alten geerbten Rechte mit, "
-            + "statt die des neuen Ortes zu übernehmen. Hier gelten dann womöglich noch Rechte vom früheren Ort – auch für "
-            + "Personen, die am neuen Ort keinen Zugriff haben sollen –, und Änderungen am übergeordneten Ordner kommen "
-            + "erst nach der nächsten Weitergabe der Rechte an.",
-            "Prüfen, ob die abweichenden Rechte noch gebraucht werden. Sonst die Vererbung neu anwenden: in den erweiterten "
-            + "Sicherheitseinstellungen die Vererbung deaktivieren, dabei die geerbten Einträge entfernen und sie gleich "
-            + "wieder aktivieren – eigene Einträge bleiben erhalten."),
+        new(BroadWrite, Severity.Hoch, Strings.Rule_ZT01_Title,
+            Strings.Rule_ZT01_Explanation,
+            Strings.Rule_ZT01_Recommendation),
+        new(BroadRead, Severity.Mittel, Strings.Rule_ZT02_Title,
+            Strings.Rule_ZT02_Explanation,
+            Strings.Rule_ZT02_Recommendation),
+        new(DirectUser, Severity.Mittel, Strings.Rule_ZT03_Title,
+            Strings.Rule_ZT03_Explanation,
+            Strings.Rule_ZT03_Recommendation),
+        new(Orphaned, Severity.Mittel, Strings.Rule_ZT04_Title,
+            Strings.Rule_ZT04_Explanation,
+            Strings.Rule_ZT04_Recommendation),
+        new(FullControlNonAdmin, Severity.Hoch, Strings.Rule_ZT05_Title,
+            Strings.Rule_ZT05_Explanation,
+            Strings.Rule_ZT05_Recommendation),
+        new(DeepBreak, Severity.Niedrig, Strings.Rule_ZT06_Title,
+            Strings.Rule_ZT06_Explanation,
+            Strings.Rule_ZT06_Recommendation),
+        new(DenyEntry, Severity.Info, Strings.Rule_ZT07_Title,
+            Strings.Rule_ZT07_Explanation,
+            Strings.Rule_ZT07_Recommendation),
+        new(ShareEveryone, Severity.Info, Strings.Rule_ZT08_Title,
+            Strings.Rule_ZT08_Explanation,
+            Strings.Rule_ZT08_Recommendation),
+        new(Unreadable, Severity.Info, Strings.Rule_ZT09_Title,
+            Strings.Rule_ZT09_Explanation,
+            Strings.Rule_ZT09_Recommendation),
+        new(OwnerIsUser, Severity.Niedrig, Strings.Rule_ZT10_Title,
+            Strings.Rule_ZT10_Explanation,
+            Strings.Rule_ZT10_Recommendation),
+        new(EmptyGroup, Severity.Niedrig, Strings.Rule_ZT11_Title,
+            Strings.Rule_ZT11_Explanation,
+            Strings.Rule_ZT11_Recommendation),
+        new(DisabledAccount, Severity.Mittel, Strings.Rule_ZT12_Title,
+            Strings.Rule_ZT12_Explanation,
+            Strings.Rule_ZT12_Recommendation),
+        new(ShareUnreadable, Severity.Info, Strings.Rule_ZT13_Title,
+            Strings.Rule_ZT13_Explanation,
+            Strings.Rule_ZT13_Recommendation),
+        new(InheritanceDiffers, Severity.Niedrig, Strings.Rule_ZT14_Title,
+            Strings.Rule_ZT14_Explanation,
+            Strings.Rule_ZT14_Recommendation),
     ];
 
-    private static readonly Dictionary<string, RuleInfo> ById = All.ToDictionary(r => r.Id, StringComparer.OrdinalIgnoreCase);
-
     /// <summary>Regel zur ID (z. B. „ZT01“), null wenn unbekannt.</summary>
-    public static RuleInfo? Get(string ruleId) => ById.GetValueOrDefault(ruleId);
+    public static RuleInfo? Get(string ruleId) => All.FirstOrDefault(r => r.Id.Equals(ruleId, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>Wertet alle Regeln aus. Sortiert nach Schwere (hoch zuerst), Regel, Pfad.</summary>
     public static IReadOnlyList<Finding> Evaluate(ScanResult scan)
@@ -116,7 +95,7 @@ public static class FindingRules
             if (folder.Error is not null)
             {
                 sink.Add(Unreadable, folder.Path, null,
-                    $"{(folder.IsFile ? "Datei" : "Ordner")} nicht lesbar: {folder.Error.TrimEnd('.')} – Berechtigungen hier und darunter nicht geprüft.");
+                    Texts.Format(folder.IsFile ? Strings.Finding_UnreadableFile : Strings.Finding_UnreadableFolder, folder.Error.TrimEnd('.')));
                 continue;
             }
             // Ordner, deren Rechte Windows selbst setzt und pflegt: dort nur Befunde, die eine echte Gefahr zeigen
@@ -127,7 +106,7 @@ public static class FindingRules
             int threshold = Math.Max(1, scan.Request.DeepInheritanceBreakDepth);
             if (folder.InheritanceBroken && folder.Depth >= threshold && !managed && GrantsBeyondAdmins(folder))
                 sink.Add(DeepBreak, folder.Path, null,
-                    $"Vererbung in Tiefe {folder.Depth} unterbrochen (ab Tiefe {threshold} gilt eine Ausnahme als versteckt).");
+                    Texts.Format(Strings.Finding_DeepBreak, folder.Depth, threshold));
 
             // Auch geerbte Windows-Kennungen zählen: Unter App- und Programmordnern legen Installationsprogramme
             // Rechte oft ohne Weitergabe an – das ist kein verschobener Ordner.
@@ -155,19 +134,19 @@ public static class FindingRules
             scan.Principals.TryGetValue(sid, out var principal);
             var who = ctx.Label(sid);
             var scopes = ScopeLevels.For(ctx, folder, sid);
-            var suffix = scopes.OnlyForChildren ? " (gilt für Unterordner bzw. Dateien)" : "";
+            var suffix = scopes.OnlyForChildren ? Strings.Finding_OnlyForChildren : "";
 
             if (scopes.HasAllow && SidCatalog.IsBroad(sid))
             {
                 if (scopes.Net >= AccessLevel.Schreiben)
                     sink.Add(BroadWrite, folder.Path, sid,
-                        $"„{who}“ hat „{Rights.Label(scopes.Net)}“{suffix} – praktisch jede angemeldete Person darf hier schreiben.");
+                        Texts.Format(Strings.Finding_BroadWrite, who, Rights.Label(scopes.Net), suffix));
                 // Erst ab „Lesen“ (Inhalt auflisten bzw. Datei lesen): Bloßes Durchqueren oder Attribute lesen – etwa
                 // „Jeder: Ordner durchsuchen“ über Freigaben oder die gesperrten Kompatibilitäts-Verknüpfungen von
                 // Windows – zeigt niemandem Daten.
                 else if (scopes.Net >= AccessLevel.Lesen && !managed)
                     sink.Add(BroadRead, folder.Path, sid,
-                        $"„{who}“ hat „{Rights.Label(scopes.Net)}“{suffix} – praktisch jede angemeldete Person darf hier lesen.");
+                        Texts.Format(Strings.Finding_BroadRead, who, Rights.Label(scopes.Net), suffix));
             }
 
             bool person = kind == PrincipalKind.Benutzer && IsPerson(sid);
@@ -175,21 +154,21 @@ public static class FindingRules
             {
                 if (!SidCatalog.IsBuiltinAdministrator(sid) && !managed)
                     sink.Add(DirectUser, folder.Path, sid,
-                        $"„{who}“ hat „{Rights.Label(scopes.Raw)}“ direkt als Person statt über eine Gruppe.");
+                        Texts.Format(Strings.Finding_DirectUser, who, Rights.Label(scopes.Raw)));
                 if (principal?.IsDisabled == true)
                     sink.Add(DisabledAccount, folder.Path, sid,
-                        $"Das deaktivierte Konto „{who}“ hat hier „{Rights.Label(scopes.Raw)}“.");
+                        Texts.Format(Strings.Finding_DisabledAccount, who, Rights.Label(scopes.Raw)));
             }
 
             if (kind == PrincipalKind.Verwaist)
             {
                 bool alsoOwner = string.Equals(folder.OwnerSid, sid, StringComparison.OrdinalIgnoreCase);
-                var entry = !scopes.HasAllow ? "einen Verweigern-Eintrag"
-                    : scopes.Raw > AccessLevel.Keine ? $"einen Eintrag „{Rights.Label(scopes.Raw)}“"
-                    : $"einen Eintrag {Describe(scopes.AllowMask)}";
+                var entry = !scopes.HasAllow ? Strings.Finding_OrphanDenyEntry
+                    : scopes.Raw > AccessLevel.Keine ? Texts.Format(Strings.Finding_OrphanEntryLevel, Rights.Label(scopes.Raw))
+                    : Texts.Format(Strings.Finding_OrphanEntryParts, Describe(scopes.AllowMask));
                 sink.Add(Orphaned, folder.Path, sid, alsoOwner
-                    ? $"Die verwaiste SID {sid} ist Besitzer und hat {entry} – das Konto gibt es nicht mehr."
-                    : $"Die verwaiste SID {sid} hat {entry} – das Konto gibt es nicht mehr.");
+                    ? Texts.Format(Strings.Finding_OrphanOwnerAndEntry, sid, entry)
+                    : Texts.Format(Strings.Finding_OrphanEntry, sid, entry));
             }
 
             // In Windows-Ordnern gibt Windows dem Besitzer selbst Vollzugriff (z. B. auf seine Fehlerberichte) –
@@ -197,11 +176,11 @@ public static class FindingRules
             if (scopes.Net == AccessLevel.Vollzugriff && IsNonAdminAccountOrGroup(sid, kind)
                 && !(managed && sid.Equals(folder.OwnerSid, StringComparison.OrdinalIgnoreCase)))
                 sink.Add(FullControlNonAdmin, folder.Path, sid,
-                    $"„{who}“ hat Vollzugriff{suffix} und darf damit Berechtigungen ändern und den Besitz übernehmen.");
+                    Texts.Format(Strings.Finding_FullControl, who, suffix));
 
             if (scopes.HasDeny && !IsCompatibilityLinkDeny(folder, sid))
                 sink.Add(DenyEntry, folder.Path, sid,
-                    $"Verweigern-Eintrag für „{who}“ ({Describe(scopes.DeniedMask)} verweigert).");
+                    Texts.Format(Strings.Finding_Deny, who, Describe(scopes.DeniedMask)));
 
             // VORDEFINIERT-Gruppen (Hauptbenutzer, Sicherungs-Operatoren …) trägt Windows selbst in Systemordner ein;
             // dass sie leer sind, ist der Normalfall und keine vergessene Gruppe.
@@ -209,7 +188,7 @@ public static class FindingRules
                 && !SidCatalog.IsBuiltinGroup(sid)
                 && scan.Request.ResolveGroups && scopes.Raw > AccessLevel.Keine)
                 sink.Add(EmptyGroup, folder.Path, sid,
-                    $"Die Gruppe „{who}“ hat keine Mitglieder, ist aber berechtigt („{Rights.Label(scopes.Raw)}“).");
+                    Texts.Format(Strings.Finding_EmptyGroup, who, Rights.Label(scopes.Raw)));
         }
     }
 
@@ -252,10 +231,10 @@ public static class FindingRules
         {
             case PrincipalKind.Verwaist:
                 // Steht die SID auch als Eintrag in der Liste, nennt der Befund aus EvaluateAces beides
-                sink.Add(Orphaned, folder.Path, owner, $"Besitzer ist die verwaiste SID {owner} – das Konto gibt es nicht mehr.");
+                sink.Add(Orphaned, folder.Path, owner, Texts.Format(Strings.Finding_OrphanOwner, owner));
                 break;
             case PrincipalKind.Benutzer when !managed && IsPerson(owner) && !SidCatalog.IsBuiltinAdministrator(owner):
-                sink.Add(OwnerIsUser, folder.Path, owner, $"Besitzer ist das Benutzerkonto „{ctx.Label(owner)}“.");
+                sink.Add(OwnerIsUser, folder.Path, owner, Texts.Format(Strings.Finding_OwnerIsUser, ctx.Label(owner)));
                 break;
         }
     }
@@ -306,9 +285,8 @@ public static class FindingRules
     {
         // Vererbung eingeschaltet, aber nichts geerbt: Ein Programm hat den Ordner mit eigenen Rechten angelegt
         if (!folder.Aces.Any(a => a.IsInherited))
-            return "Erbt nichts vom übergeordneten Ordner, obwohl die Vererbung eingeschaltet ist – meist hat ein Programm den "
-                + "Ordner mit eigenen Rechten angelegt. Die Rechte von oben gelten hier erst nach der nächsten Weitergabe.";
-        const string Generic = "Geerbte Einträge passen nicht zum übergeordneten Ordner – vermutlich verschoben; es gelten womöglich noch Rechte vom früheren Ort.";
+            return Strings.Finding_InheritsNothing;
+        var generic = Strings.Finding_InheritanceDiffers;
 
         // Quelle der Vererbung: der nächste gespeicherte Ordner darüber – der Elternordner selbst oder ein Vorfahr, von dem
         // alles dazwischen unverändert erbt. Dessen Einträge, nicht ein nachgebildeter Elternordner: Der kennt weder
@@ -320,7 +298,7 @@ public static class FindingRules
             distance++;
             if (ctx.StoredAt(p) is { IsFile: false } stored) source = stored;
         }
-        if (source is null || source.Error is not null) return Generic;
+        if (source is null || source.Error is not null) return generic;
 
         // Was dort ankommt (je SID, ohne Rechte – für eine verständliche Aufzählung): Dateien erben „Objekte erben“,
         // Ordner auch das (als „nur vererben“); „nicht weitergeben“ reicht nur eine Ebene.
@@ -340,12 +318,11 @@ public static class FindingRules
                         && !(creator && a.Sid.Equals(folder.OwnerSid, StringComparison.OrdinalIgnoreCase)))
             .Select(a => a.Sid)
             .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Select(s => $"„{ctx.Label(s)}“")
+            .Select(s => Texts.Quote(ctx.Label(s)))
             .ToList();
-        if (foreign.Count == 0) return Generic;
-        var names = foreign.Count == 1 ? foreign[0] : string.Join(", ", foreign.Take(foreign.Count - 1)) + " und " + foreign[^1];
-        return $"Geerbte Einträge passen nicht zum übergeordneten Ordner – vermutlich verschoben. {names} "
-            + (foreign.Count == 1 ? "kommt" : "kommen") + " nicht von dort, sondern vom früheren Ort.";
+        if (foreign.Count == 0) return generic;
+        return Texts.Format(foreign.Count == 1 ? Strings.Finding_ForeignInheritedOne : Strings.Finding_ForeignInheritedMany,
+            Texts.JoinAnd(foreign));
     }
 
     private static void EvaluateShares(AccessContext ctx, FindingSink sink)
@@ -355,7 +332,7 @@ public static class FindingRules
             if (!share.PermissionsReadable)
             {
                 sink.Add(ShareUnreadable, share.UncPath, null,
-                    $"Die Freigabe-Berechtigungen von {share.UncPath} konnten nicht gelesen werden.");
+                    Texts.Format(Strings.Finding_ShareUnreadable, share.UncPath));
                 continue;
             }
             foreach (var ace in share.Permissions)
@@ -364,11 +341,11 @@ public static class FindingRules
                     && (ace.Sid.Equals(SidCatalog.Everyone, StringComparison.OrdinalIgnoreCase)
                         || ace.Sid.Equals(SidCatalog.AuthenticatedUsers, StringComparison.OrdinalIgnoreCase)))
                     sink.Add(ShareEveryone, share.UncPath, ace.Sid,
-                        $"Freigabe-Berechtigung „{ctx.Label(ace.Sid)}“: „{Rights.Label(ace.Access)}“ – der Schutz liegt allein bei NTFS.");
+                        Texts.Format(Strings.Finding_ShareEveryone, ctx.Label(ace.Sid), Rights.Label(ace.Access)));
 
                 if (ctx.KindOf(ace.Sid) == PrincipalKind.Verwaist)
                     sink.Add(Orphaned, share.UncPath, ace.Sid,
-                        $"Die Freigabe-Berechtigung nennt die verwaiste SID {ace.Sid} – das Konto gibt es nicht mehr.");
+                        Texts.Format(Strings.Finding_ShareOrphan, ace.Sid));
             }
         }
     }
@@ -384,7 +361,7 @@ public static class FindingRules
         foreach (var error in scan.Errors)
         {
             if (string.IsNullOrEmpty(error.Path) || known.Contains(PathOrder.Normalize(error.Path))) continue;
-            sink.Add(Unreadable, error.Path, null, $"Nicht geprüft: {error.Message.TrimEnd('.')}.");
+            sink.Add(Unreadable, error.Path, null, Texts.Format(Strings.Finding_NotChecked, error.Message.TrimEnd('.')));
         }
     }
 
@@ -445,18 +422,18 @@ public static class FindingRules
     /// </summary>
     internal static string Describe(FileRights rights)
     {
-        var quoted = Rights.Parts(rights).Select(p => $"„{p}“").ToList();
-        return quoted.Count == 1 ? quoted[0] : string.Join(", ", quoted.Take(quoted.Count - 1)) + " und " + quoted[^1];
+        return Texts.JoinAnd(Rights.Parts(rights).Select(Texts.Quote).ToList());
     }
 
     /// <summary>Sammelt Befunde eindeutig je (Regel, Pfad, SID); der erste gewinnt.</summary>
     private sealed class FindingSink(AccessContext ctx)
     {
         private readonly Dictionary<string, Finding> _findings = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, Severity> _severity = All.ToDictionary(r => r.Id, r => r.Severity, StringComparer.OrdinalIgnoreCase);
 
         public void Add(string ruleId, string path, string? sid, string message)
         {
-            var finding = new Finding { RuleId = ruleId, Severity = ById[ruleId].Severity, Path = path, Sid = sid, Message = message };
+            var finding = new Finding { RuleId = ruleId, Severity = _severity[ruleId], Path = path, Sid = sid, Message = message };
             _findings.TryAdd(finding.Key, finding);
         }
 

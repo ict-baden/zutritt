@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using Zutritt.Core.Model;
 using Zutritt.Demo;
 
@@ -44,6 +45,40 @@ public sealed class DemoDataTests
         Assert.Contains(newer.Principals.Values, p => p.Kind == PrincipalKind.Benutzer && p.IsDisabled);
         Assert.Contains(newer.Principals.Values, p => p.Kind == PrincipalKind.Verwaist);
         Assert.Contains(newer.Findings, f => f.RuleId == "ZT12");
+    }
+
+    [Fact]
+    public void Demo_zeigt_jede_Regel_mit_festen_Zahlen()
+    {
+        // Screenshots und Doku zeigen diese Demo – sie soll immer gleich aussehen
+        var (older, newer) = DemoData.Create();
+        Assert.Equal(Core.Analysis.FindingRules.All.Select(r => r.Id), newer.Findings.Select(f => f.RuleId).Distinct().Order(StringComparer.Ordinal));
+        Assert.Equal(35, older.Findings.Count);
+        Assert.Equal(36, newer.Findings.Count);
+        Assert.Equal(Core.Analysis.FindingRules.Evaluate(newer).Select(f => f.Key).Order(StringComparer.Ordinal),
+            newer.Findings.Select(f => f.Key).Order(StringComparer.Ordinal));
+    }
+
+    [Theory]
+    [InlineData("en", "Everyone", @"BUILTIN\Administrators")]
+    [InlineData("de", "Jeder", @"VORDEFINIERT\Administratoren")]
+    public void Demo_spricht_die_Sprache_der_Oberflaeche(string language, string everyone, string administrators)
+    {
+        // Befund der Prüfung: Befundtexte und Windows-Kontonamen der Demo waren fest deutsch
+        using var _ = TestCulture.Use(language);
+        var (_, newer) = DemoData.Create();
+        Assert.Equal(everyone, newer.Principals["S-1-1-0"].Name);
+        Assert.Equal(administrators, newer.Principals["S-1-5-32-544"].Name);
+        if (language == "en")
+        {
+            foreach (var f in newer.Findings)
+            {
+                Assert.DoesNotContain("„", f.Message, StringComparison.Ordinal);
+                foreach (var german in new[] { " darf ", " hat ", "Freigabe", "Vererbung", "Ordner nicht", "Besitzer", "Verweigern" })
+                    Assert.DoesNotContain(german, f.Message, StringComparison.Ordinal);
+            }
+            Assert.DoesNotContain(newer.Errors, e => e.Message.Contains("Zugriff", StringComparison.Ordinal));
+        }
     }
 
     private static void AssertNoPersons(ScanResult scan)

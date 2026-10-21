@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using System.Security.AccessControl;
 using System.Security.Principal;
 using Zutritt.Core.Model;

@@ -1,8 +1,10 @@
+// SPDX-License-Identifier: MIT
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using Microsoft.Win32.SafeHandles;
 using Zutritt.Core.Model;
 using Zutritt.Core.Scanning;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.Platform.Windows.Scanning;
 
@@ -57,7 +59,7 @@ internal static class AclReader
         string full;
         try
         {
-            if (path.Contains('\0')) return Failed(path, depth, isFile, "Ungültiger Pfad");
+            if (path.Contains('\0')) return Failed(path, depth, isFile, Strings.Win_InvalidPath);
             // Vollständige Pfade nur normalisieren, wenn nötig – GetFullPath kürzt Leerzeichen und Punkte am Namensende.
             full = LongPath.FromExtended(path);
             // „\\?\Volume{…}\x“ (Bereitstellungspunkt ohne Laufwerk) unverändert lassen: Ohne Präfix wäre es ein
@@ -67,18 +69,18 @@ internal static class AclReader
         }
         catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException)
         {
-            return Failed(path, depth, isFile, "Ungültiger Pfad");
+            return Failed(path, depth, isFile, Strings.Win_InvalidPath);
         }
 
         int error = ReadRaw(full, followLinks, out var raw, out int length, out var finalPath);
         if (error != Native.ERROR_SUCCESS)
-            return Failed(full, depth, isFile, "Berechtigungen nicht lesbar: " + Win32Error.Describe(error));
+            return Failed(full, depth, isFile, Texts.Format(Strings.Acl_Unreadable, Win32Error.Describe(error)));
 
         RawSecurityDescriptor sd;
         try { sd = new RawSecurityDescriptor(raw, 0); }
         catch (Exception e) when (e is ArgumentException or OverflowException)
         {
-            return Failed(full, depth, isFile, "Berechtigungen nicht lesbar: Sicherheitsbeschreibung ist beschädigt");
+            return Failed(full, depth, isFile, Strings.Acl_Corrupt);
         }
         if (wantDescriptor) descriptor = raw.AsSpan(0, length).ToArray();
 
@@ -149,7 +151,7 @@ internal static class AclReader
         }
 
         if (unknownTypes is not null)
-            node.Error = "Berechtigungen nicht vollständig auswertbar: unbekannter Eintragstyp " + string.Join(", ", unknownTypes.Distinct());
+            node.Error = Texts.Format(Strings.Acl_UnknownAceType, string.Join(", ", unknownTypes.Distinct()));
         return node;
     }
 

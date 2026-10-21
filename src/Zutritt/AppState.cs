@@ -1,7 +1,10 @@
+// SPDX-License-Identifier: MIT
 using Zutritt.Core.Analysis;
 using Zutritt.Core.Model;
 using Zutritt.Core.Storage;
+using Zutritt.Core;
 using Zutritt.Demo;
+using Zutritt.Core.Resources;
 
 namespace Zutritt;
 
@@ -67,10 +70,10 @@ public sealed class AppState : IDisposable
         catch (Exception ex)
         {
             // Ohne Datenbank bleibt Zutritt benutzbar (scannen, ansehen, Bericht), speichert aber nichts.
-            var where = path.Length > 0 ? $" „{path}“" : "";
+            var reason = ErrorCodes.Describe(ex, ErrorCodes.DatabaseOpen);
             return new AppState(null, path, isDemo: false, strict: false, tempDatabase: null)
             {
-                StartupProblem = $"Die Datenbank{where} lässt sich nicht öffnen ({ex.Message}). Läufe werden in dieser Sitzung nicht gespeichert.",
+                StartupProblem = path.Length > 0 ? Texts.Format(Strings.App_DbNotOpenPath, path, reason) : Texts.Format(Strings.App_DbNotOpen, reason),
             };
         }
     }
@@ -93,7 +96,7 @@ public sealed class AppState : IDisposable
             DeleteDatabaseFiles(temp);
             var state = new AppState(null, "", isDemo: true, strict: false, tempDatabase: null)
             {
-                StartupProblem = $"Die Demo-Datenbank ließ sich nicht anlegen ({ex.Message}). Der Demo-Lauf wird ohne Speicher und ohne Vergleich gezeigt.",
+                StartupProblem = Texts.Format(Strings.App_DemoDbFailed, ErrorCodes.Describe(ex)),
             };
             state.SetScan(newer, null);
             return state;
@@ -130,7 +133,7 @@ public sealed class AppState : IDisposable
         else
         {
             try { comparison = ScanComparer.Compare(older, newer); }
-            catch (Exception ex) { state.StartupProblem = $"Der Vergleich der Demo-Läufe ist fehlgeschlagen ({ex.Message})."; }
+            catch (Exception ex) { state.StartupProblem = Texts.Format(Strings.App_DemoCompareFailed, ErrorCodes.Describe(ex, ErrorCodes.ComparisonFailed)); }
         }
         state.SetScan(newer, comparison);
         return state;
@@ -148,7 +151,7 @@ public sealed class AppState : IDisposable
     /// <summary>Datenbankarbeit im Hintergrund, nacheinander.</summary>
     public async Task<T> WithStoreAsync<T>(Func<ScanStore, T> work)
     {
-        var store = Store ?? throw new InvalidOperationException("Es ist keine Datenbank geöffnet.");
+        var store = Store ?? throw new ScanStoreException(Strings.App_NoDatabase, ErrorCodes.DatabaseOpen);
         await _storeGate.WaitAsync();
         try { return await Task.Run(() => work(store)); }
         finally { _storeGate.Release(); }
@@ -162,26 +165,51 @@ public sealed class AppState : IDisposable
     {
         var (scan, comparison) = await WithStoreAsync(store =>
         {
-            var scan = store.Load(id) ?? throw new InvalidOperationException($"Lauf {id} gibt es nicht mehr.");
+            var scan = store.Load(id) ?? throw new ScanStoreException(Texts.Format(Strings.App_RunGone, id), ErrorCodes.DatabaseRead);
             return (scan, CompareWithPrevious(store, scan));
         });
         SetScan(scan, comparison);
     }
 
-    /// <summary>Frisch gescannten Lauf speichern, mit dem Vorgänger vergleichen und laden.</summary>
-    public async Task AdoptAsync(ScanResult scan)
+    /// <summary>
+    /// Frisch gescannten Lauf speichern, mit dem Vorgänger vergleichen und laden. Scheitert das Speichern – oder ist gar
+    /// keine Datenbank offen –, wird der Lauf trotzdem geladen (ansehen, Bericht erstellen); das Ergebnis ist dann die
+    /// Fehlermeldung mit Code, sonst null.
+    /// </summary>
+    public async Task<string?> AdoptAsync(ScanResult scan)
     {
         ComparisonResult? comparison = null;
-        if (Store is not null)
+        string? notSaved = null;
+        if (Store is null)
         {
-            comparison = await WithStoreAsync(store =>
+            // Die Datenbank ließ sich beim Start nicht öffnen: Der Lauf ist nirgends gespeichert – das muss die Meldung
+            // nach dem Scan sagen, nicht nur der Hinweis beim Start
+            notSaved = ErrorCodes.WithCode(Strings.App_NoDatabase, ErrorCodes.DatabaseOpen);
+        }
+        else
+        {
+            try
             {
-                store.Save(scan);
-                return CompareWithPrevious(store, scan);
-            });
-            RunsChanged?.Invoke();
+                await WithStoreAsync(store => store.Save(scan));
+                RunsChanged?.Invoke();
+            }
+            catch (Exception ex) when (!Strict && ex is ScanStoreException or IOException)
+            {
+                Zutritt.Core.Diagnostics.Log.Error("Lauf nicht gespeichert", ex, withStack: false);
+                notSaved = ErrorCodes.Describe(ex, ErrorCodes.DatabaseSave);
+            }
+            try
+            {
+                comparison = await WithStoreAsync(store => CompareWithPrevious(store, scan));
+            }
+            catch (Exception ex) when (!Strict && ex is ScanStoreException or IOException)
+            {
+                // Ohne Vergleich bleibt der Lauf vollständig nutzbar
+                Zutritt.Core.Diagnostics.Log.Error("Vergleich nach dem Scan fehlgeschlagen", ex, withStack: false);
+            }
         }
         SetScan(scan, comparison);
+        return notSaved;
     }
 
     /// <summary>Den geladenen Lauf mit einem frei gewählten älteren Lauf vergleichen.</summary>

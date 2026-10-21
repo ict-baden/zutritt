@@ -2,15 +2,11 @@
   <PropertyGroup>
     <!-- Windows-Ziel: alle Tests (Core, Windows-Anbindung mit echten Ordnern, Freigaben und Konten, App).
          net10.0: nur die plattformneutralen Core-Tests, die auch unter Linux laufen (ohne Windows/**). -->
-    <TargetFrameworks>net10.0-windows10.0.19041.0;net10.0</TargetFrameworks>
+    <TargetFrameworks>net10.0-windows;net10.0</TargetFrameworks>
     <!-- auch unter Linux wiederherstellbar (das Windows-Ziel wird dort nur nicht ausgeführt) -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <IsPackable>false</IsPackable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'">
-    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,8 +23,15 @@
     <ProjectReference Include="..\..\src\Zutritt.Core\Zutritt.Core.csproj" />
   </ItemGroup>
 
+  <!-- Sprachdateien als Kopie neben der Test-DLL: In der CI schreibt ContinuousIntegrationBuild die Quellpfade um,
+       ein Weg über [CallerFilePath] fände sie dort nicht -->
+  <ItemGroup>
+    <None Include="..\..\src\Zutritt.Core\Resources\Strings*.resx" Link="Resources\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\docs\error-codes.md" Link="docs\error-codes.md" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <!-- Nur unter Windows: Windows-Anbindung (NTFS, Freigaben, Konten) und die WPF-App (Info, Befehlszeile, Demo-Daten) -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows10.0.19041.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows'">
     <ProjectReference Include="..\..\src\Zutritt.Platform.Windows\Zutritt.Platform.Windows.csproj" />
     <ProjectReference Include="..\..\src\Zutritt\Zutritt.csproj" />
   </ItemGroup>

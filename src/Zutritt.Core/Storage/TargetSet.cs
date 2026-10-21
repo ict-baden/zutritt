@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using Zutritt.Core.Model;
 
 namespace Zutritt.Core.Storage;
@@ -11,24 +12,40 @@ internal static class TargetSet
     public static string Display(IEnumerable<string>? targets) => string.Join("; ", targets ?? []);
 
     /// <summary>
-    /// Schlüssel der Zielmenge: Reihenfolge, Groß/Klein, doppelte Einträge, „/“ statt „\“ und ein
-    /// abschließendes „\“ spielen keine Rolle. Zeilenumbruch als Trenner, weil er in Pfaden nicht vorkommen kann.
+    /// Schlüssel der Zielmenge: Reihenfolge, Groß/Klein, doppelte Einträge, „/“ statt „\“, ein
+    /// abschließendes „\“ und „D:“ statt „D:\“ spielen keine Rolle. Zeilenumbruch als Trenner, weil er in Pfaden nicht vorkommen kann.
     /// </summary>
-    public static string Key(IEnumerable<string>? targets) =>
-        string.Join("\n", (targets ?? [])
-            .Select(Normalize)
-            .Where(t => t.Length > 0)
-            .Distinct(StringComparer.Ordinal)
-            .Order(StringComparer.Ordinal));
+    public static string Key(IEnumerable<string>? targets) => Join((targets ?? []).Select(Normalize));
 
     public static string Normalize(string? target)
     {
         var t = WindowsPath.WithBackslashes((target ?? "").Trim());
         var trimmed = t.TrimEnd(WindowsPath.Separator);
         if (trimmed.Length == 0) trimmed = t;                                     // „\“ allein: nichts zu kürzen
-        else if (trimmed.Length == 2 && trimmed[1] == ':' && t.Length > 2) trimmed += WindowsPath.Separator;  // „C:\“ bleibt Laufwerkswurzel
+        // „C:“ und „C:\“ meinen beide das ganze Laufwerk (so liest es auch der TargetParser) und bleiben Laufwerkswurzel
+        else if (IsDriveLetter(trimmed)) trimmed += WindowsPath.Separator;
         return trimmed.ToUpperInvariant();
     }
+
+    /// <summary>
+    /// Dieselbe Zielmenge, wie Ausgaben bis Oktober 2026 sie gespeichert haben: „D:“ blieb dort „D:“, heute ist es „D:\“
+    /// wie „D:\“ selbst. Ohne diese Schlüssel fände ein geplantes „scan D: --vergleich“ nach dem Update seine früheren
+    /// Läufe nicht. Leer, wenn die Ziele keine Laufwerkswurzel enthalten.
+    /// </summary>
+    public static IReadOnlyList<string> LegacyKeys(IEnumerable<string>? targets)
+    {
+        var current = (targets ?? []).Select(Normalize).Where(t => t.Length > 0).Distinct(StringComparer.Ordinal).ToList();
+        var roots = current.Where(t => t.Length == 3 && IsDriveLetter(t[..2])).ToList();
+        if (roots.Count == 0) return [];
+        // Jede Wurzel kann als „D:“ oder „D:\“ gespeichert sein; bei sehr vielen nur die Form von „scan D: E: …“
+        var masks = roots.Count <= 4 ? Enumerable.Range(1, (1 << roots.Count) - 1) : [(1 << roots.Count) - 1];
+        return [.. masks.Select(mask => Join(current.Select(t => roots.IndexOf(t) is var i and >= 0 && (mask & (1 << i)) != 0 ? t[..2] : t)))];
+    }
+
+    private static bool IsDriveLetter(string text) => text.Length == 2 && text[1] == ':';
+
+    private static string Join(IEnumerable<string> normalized) =>
+        string.Join("\n", normalized.Where(t => t.Length > 0).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal));
 
     /// <summary>
     /// Ob die Ziele vom scannenden Rechner abhängen („.“, C:\…, \\localhost\…). Dann ist derselbe Text auf

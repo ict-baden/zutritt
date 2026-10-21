@@ -126,7 +126,9 @@ jobs:
         shell: pwsh
         run: |
           $v = '${{ steps.version.outputs.version }}'
-          $common = @("src/$env:APP/$env:APP.csproj", '-c', 'Release', '-r', 'win-x64', '-p:PublishSingleFile=true', "-p:Version=$v", '-p:DebugType=none')
+          # Dateiversion mit der Build-Nummer als 4. Stelle (wie die MSI), sonst trüge jeder Build 0.1.0.0
+          $common = @("src/$env:APP/$env:APP.csproj", '-c', 'Release', '-r', 'win-x64', '-p:PublishSingleFile=true', "-p:Version=$v",
+                      '-p:FileVersion=${{ steps.version.outputs.msi }}', '-p:DebugType=none')
           # Benötigt .NET 10 Desktop Runtime auf dem Zielgerät
           dotnet publish @common --self-contained false -o out/framework
           if ($LASTEXITCODE -ne 0) { throw "Publish (framework) fehlgeschlagen ($LASTEXITCODE)" }
@@ -136,6 +138,24 @@ jobs:
           # Eine einzige Exe zum Direkt-Download: Runtime und native DLLs (SQLite, WPF) eingebettet
           dotnet publish @common --self-contained true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o out/standalone
           if ($LASTEXITCODE -ne 0) { throw "Publish (Einzeldatei) fehlgeschlagen ($LASTEXITCODE)" }
+
+      - name: Ausgabe prüfen
+        shell: pwsh
+        run: |
+          # Nie ausliefern: die Windows-SDK-Projektion (Lizenz des Windows SDK, nicht MIT – Ziel ist net10.0-windows ohne
+          # SDK-Version) und die PDFsharp-Zusatzbibliotheken mit den Segoe-WP-Schriften (Directory.Build.targets)
+          $never = '(Microsoft\.Windows\.SDK\.NET|WinRT\.Runtime|PdfSharp\.(WPFonts|Snippets|Quality))\.dll'
+          $found = @(Get-ChildItem out -Recurse -File | Where-Object Name -Match "^$never$") +
+                   @(Get-ChildItem src -Recurse -Filter *.deps.json | Select-String -Pattern $never -List)
+          if ($found.Count -gt 0) { $found | Out-String | Write-Host; throw "Nicht auslieferbare Bibliotheken in der Ausgabe oder einer deps.json" }
+          # Sprachen (Richtlinie 13): Englisch steckt in Zutritt.Core.dll, dazu genau vier Sprachdateien. Die Einzeldateien
+          # bündeln sie in die Exe, deshalb zählt die deps.json des Publish, nicht ein Ordner neben der Exe.
+          $deps = @(Get-ChildItem "src/$env:APP/obj/Release/*/win-x64/$env:APP.deps.json")
+          if ($deps.Count -ne 1) { throw "deps.json des Publish nicht eindeutig gefunden ($($deps.Count))" }
+          $json = Get-Content $deps[0].FullName -Raw | ConvertFrom-Json -AsHashtable
+          $cultures = @($json.targets.Values | ForEach-Object { $_.GetEnumerator() } | Where-Object { $_.Key -like "$env:APP.Core/*" } |
+                        ForEach-Object { if ($_.Value.resources) { $_.Value.resources.Values | ForEach-Object { $_.locale } } } | Sort-Object -Unique)
+          if (($cultures -join ',') -ne 'de,es,fr,zh-Hans') { throw "Unerwartete Sprachdateien im Paket: $($cultures -join ', ')" }
 
       # ---- Signieren der Programmdateien (vor dem Packen, damit ZIP und MSI signierte Dateien enthalten) ----
       - name: Bei Azure anmelden
@@ -219,6 +239,91 @@ jobs:
           file-digest: SHA256
           timestamp-rfc3161: http://timestamp.acs.microsoft.com
           timestamp-digest: SHA256
+
+      # ---- MSI-Probe: CHECKLISTE-RELEASE „MSI installiert, gestartet, deinstalliert“ auf dem sauberen Runner ----
+      # Drei Schritte mit eigener Zeitgrenze, damit ein hängendes msiexec oder Zutritt den Lauf nicht stundenlang blockiert
+      # und das Protokoll zeigt, wo es hängt.
+      - name: MSI-Probe – installieren
+        id: msi-install
+        timeout-minutes: 10
+        shell: pwsh
+        run: |
+          $msi = (Resolve-Path "dist/$env:APP${{ steps.version.outputs.suffix }}-x64.msi").Path
+          $logs = (New-Item -ItemType Directory -Force msi-logs).FullName
+          $p = Start-Process msiexec.exe -ArgumentList @('/i', "`"$msi`"", '/qn', '/norestart', '/l*v', "`"$logs\install.log`"") -PassThru
+          $null = $p.Handle
+          if (-not $p.WaitForExit(480000)) { $p.Kill($true); throw "msiexec /i hängt seit 8 Minuten (Protokoll: msi-logs/install.log)" }
+          if ($p.ExitCode -notin 0, 3010) { throw "msiexec /i endete mit $($p.ExitCode) (Protokoll: msi-logs/install.log)" }
+          $dir = Join-Path $env:ProgramFiles $env:APP
+          foreach ($file in "$env:APP.exe", 'LICENSE', 'THIRD-PARTY-NOTICES.txt') {
+            if (-not (Test-Path (Join-Path $dir $file))) { throw "$file fehlt in $dir nach der Installation" }
+          }
+          $lnk = Join-Path $env:ProgramData "Microsoft\Windows\Start Menu\Programs\$env:APP.lnk"
+          if (-not (Test-Path $lnk)) { throw "Startmenü-Eintrag $lnk fehlt" }
+          Write-Host "Installiert nach $dir"
+
+      - name: MSI-Probe – installierte App starten
+        timeout-minutes: 10
+        shell: pwsh
+        run: |
+          # --info auf Englisch (Sprache des Runners) und Deutsch (Sprachdateien in der Exe), dann ein kleiner Scan mit
+          # Excel-Bericht: SQLite, Berichte und Kontenauflösung der installierten Exe
+          $exe = Join-Path $env:ProgramFiles "$env:APP\$env:APP.exe"
+          function Run([string[]] $arguments, [int[]] $ok, [string] $language = '') {
+            $psi = [Diagnostics.ProcessStartInfo]::new($exe)
+            foreach ($a in $arguments) { $psi.ArgumentList.Add($a) }
+            $psi.UseShellExecute = $false
+            $psi.RedirectStandardOutput = $true
+            $psi.RedirectStandardError = $true
+            if ($language) { $psi.Environment['ZUTRITT_LANGUAGE'] = $language }
+            Write-Host "> $env:APP.exe $($arguments -join ' ') $(if ($language) { "(ZUTRITT_LANGUAGE=$language)" })"
+            $p = [Diagnostics.Process]::Start($psi)
+            $out = $p.StandardOutput.ReadToEndAsync()
+            $err = $p.StandardError.ReadToEndAsync()
+            if (-not $p.WaitForExit(240000)) {
+              $p.Kill($true); $null = $p.WaitForExit(10000)
+              Write-Host ($out.Result + $err.Result)
+              throw "$env:APP $($arguments -join ' ') hängt seit 4 Minuten"
+            }
+            $text = $out.Result + $err.Result
+            Write-Host $text
+            if ($p.ExitCode -notin $ok) { throw "$env:APP $($arguments -join ' ') endete mit $($p.ExitCode)" }
+            return $text
+          }
+          $info = Run @('--info') @(0)
+          if ($info -notmatch [regex]::Escape('${{ steps.version.outputs.version }}')) { throw "--info nennt die Version nicht" }
+          $infoDe = Run @('--info') @(0) 'de'
+          if ($infoDe -notmatch 'Datenbank:' -or $infoDe -notmatch 'Protokoll:') { throw "--info kommt mit ZUTRITT_LANGUAGE=de nicht auf Deutsch" }
+          $target = New-Item -ItemType Directory -Force (Join-Path $env:RUNNER_TEMP 'zutritt-probe\Daten\Projekt')
+          $scan = Run @('scan', $target.Parent.FullName, '--db', (Join-Path $env:RUNNER_TEMP 'zutritt-probe.db'),
+                        '--report', (Join-Path $env:RUNNER_TEMP 'zutritt-probe.xlsx')) @(0, 1, 2) 'en'
+          if ($scan -notmatch 'Report written') { throw "Der Scan hat keinen Bericht geschrieben (oder nicht auf Englisch)" }
+
+      - name: MSI-Probe – deinstallieren und Reste suchen
+        if: always() && steps.msi-install.outcome != 'skipped'
+        timeout-minutes: 10
+        shell: pwsh
+        run: |
+          $msi = (Resolve-Path "dist/$env:APP${{ steps.version.outputs.suffix }}-x64.msi").Path
+          $logs = (New-Item -ItemType Directory -Force msi-logs).FullName
+          $p = Start-Process msiexec.exe -ArgumentList @('/x', "`"$msi`"", '/qn', '/norestart', '/l*v', "`"$logs\uninstall.log`"") -PassThru
+          $null = $p.Handle
+          if (-not $p.WaitForExit(480000)) { $p.Kill($true); throw "msiexec /x hängt seit 8 Minuten (Protokoll: msi-logs/uninstall.log)" }
+          if ($p.ExitCode -notin 0, 3010) { throw "msiexec /x endete mit $($p.ExitCode) (Protokoll: msi-logs/uninstall.log)" }
+          $left = @((Join-Path $env:ProgramFiles $env:APP), (Join-Path $env:ProgramData "Microsoft\Windows\Start Menu\Programs\$env:APP.lnk"),
+                    'HKLM:\SOFTWARE\ICT-Baden\Zutritt') | Where-Object { Test-Path $_ }
+          if ($left.Count -gt 0) { throw "Reste nach der Deinstallation: $($left -join ', ')" }
+          Write-Host "MSI-Probe bestanden: installiert, gestartet, deinstalliert, keine Reste."
+
+      - name: MSI-Protokolle
+        if: failure()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: msi-logs
+          path: msi-logs/
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Stückliste (SBOM)
         shell: pwsh

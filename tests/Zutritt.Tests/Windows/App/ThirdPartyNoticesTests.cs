@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -27,6 +28,17 @@ public sealed partial class ThirdPartyNoticesTests
             else if (!entry.Contains(version, StringComparison.Ordinal)) missing.Add($"{id}: Version {version} fehlt in seinem Eintrag");
         }
         Assert.True(missing.Count == 0, "THIRD-PARTY-NOTICES.txt ist nicht aktuell:\n  " + string.Join("\n  ", missing));
+    }
+
+    [Fact]
+    public void Nicht_ausgelieferte_Bestandteile_fehlen_in_der_deps_json()
+    {
+        // Windows-SDK-Projektion (Lizenz des Windows SDK) und PDFsharp-Zusatzbibliotheken mit den Segoe-WP-Schriften
+        // (Directory.Build.targets) – die CI prüft zusätzlich die veröffentlichten Pakete
+        var deps = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Zutritt.deps.json"));
+        foreach (var file in new[] { "Microsoft.Windows.SDK.NET.dll", "WinRT.Runtime.dll", "PdfSharp.WPFonts.dll", "PdfSharp.Snippets.dll", "PdfSharp.Quality.dll" })
+            Assert.DoesNotContain(file, deps, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("PdfSharp.dll", deps, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>Pakete (Id, Version) aus Zutritt.deps.json – die Abhängigkeiten der App, wie sie ausgeliefert werden.</summary>

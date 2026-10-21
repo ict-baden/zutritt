@@ -1,9 +1,12 @@
+// SPDX-License-Identifier: MIT
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using Zutritt.Core;
 using Zutritt.Core.Model;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.UI;
 
@@ -40,7 +43,7 @@ internal static class Ui
         }
         catch (Exception ex) when (!state.Strict)
         {
-            state.Report(NoticeKind.Error, $"{failure}: {ex.Message}");
+            state.Report(NoticeKind.Error, Texts.Format(Strings.Ui_FailureWithReason, failure, ErrorCodes.Describe(ex)));
         }
     }
 

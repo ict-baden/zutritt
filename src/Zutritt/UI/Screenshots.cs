@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
@@ -5,6 +6,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Zutritt.Interop;
 using Zutritt.UI.Theme;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.UI;
 
@@ -28,7 +30,7 @@ internal static class Screenshots
             "dunkel" => [true],
             _ => [false, true],
         };
-        Console.WriteLine($"Zutritt {AppInfo.Version} – Screenshots nach {folder}");
+        Console.WriteLine(Texts.Format(Strings.Shot_Start, AppInfo.Version, folder));
 
         using var state = AppState.OpenDemo(strict: true);
         int written = 0;
@@ -65,7 +67,7 @@ internal static class Screenshots
                 window.Close();
             }
         }
-        Console.WriteLine($"{written} Bilder geschrieben.");
+        Console.WriteLine(Texts.Format(Strings.Shot_Written, written));
         return 0;
     }
 
@@ -114,7 +116,7 @@ internal static class Screenshots
         var root = (FrameworkElement)window.Content;
         double width = root.ActualWidth, height = root.ActualHeight;
         if (Math.Abs(width - Width) > 1 || Math.Abs(height - Height) > 1)
-            throw new InvalidOperationException($"Das Fenster hat {width:0}×{height:0} statt {Width:0}×{Height:0} Punkte – die Bilder wären verzerrt.");
+            throw new InvalidOperationException(Texts.Format(Strings.Shot_WrongSize, width, height, Width, Height));
         var bitmap = new RenderTargetBitmap((int)Math.Round(width * Scale), (int)Math.Round(height * Scale),
             96 * Scale, 96 * Scale, PixelFormats.Pbgra32);
 
@@ -127,8 +129,7 @@ internal static class Screenshots
         bitmap.Render(root);
         if (IsEmpty(bitmap))
             throw new InvalidOperationException(
-                "WPF hat ein leeres Bild gezeichnet. Das passiert in einer getrennten Sitzung (Remotedesktop geschlossen, " +
-                "ohne abzumelden) – in einer angemeldeten, verbundenen Sitzung erneut starten.");
+                Strings.Shot_EmptyImage);
 
         var encoder = new PngBitmapEncoder();
         encoder.Frames.Add(BitmapFrame.Create(bitmap));

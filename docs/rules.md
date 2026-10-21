@@ -4,7 +4,7 @@
 
 The 14 rules (*Prüfregeln*) Zutritt evaluates on every run: what each finding means, why it matters, what to do about it – and when it is deliberately not reported. The rule IDs are stable across versions, so findings can be compared between runs.
 
-**Contents:** [Overview](#overview) · [How findings are produced](#how-findings-are-produced) · [ZT01](#zt01--broad-group-can-write) · [ZT02](#zt02--broad-group-can-read) · [ZT03](#zt03--right-granted-directly-to-a-person) · [ZT04](#zt04--orphaned-sid) · [ZT05](#zt05--full-control-for-non-admins) · [ZT06](#zt06--deeply-hidden-exception) · [ZT07](#zt07--deny-entry) · [ZT08](#zt08--share-everyone-full-control) · [ZT09](#zt09--folder-not-readable) · [ZT10](#zt10--owner-is-a-user-account) · [ZT11](#zt11--empty-group-has-rights) · [ZT12](#zt12--disabled-account-has-rights) · [ZT13](#zt13--share-permissions-not-readable) · [ZT14](#zt14--permissions-differ-from-inheritance)
+**Contents:** [Overview](#overview) · [How findings are produced](#how-findings-are-produced) · [ZT01](#zt01--broad-group-can-write) · [ZT02](#zt02--broad-group-can-read) · [ZT03](#zt03--right-granted-directly-to-a-person) · [ZT04](#zt04--orphaned-sid) · [ZT05](#zt05--full-control-for-non-admins) · [ZT06](#zt06--deeply-hidden-exception) · [ZT07](#zt07--deny-entry) · [ZT08](#zt08--share-everyone-can-change) · [ZT09](#zt09--folder-not-readable) · [ZT10](#zt10--owner-is-a-user-account) · [ZT11](#zt11--empty-group-has-rights) · [ZT12](#zt12--disabled-account-has-rights) · [ZT13](#zt13--share-permissions-not-readable) · [ZT14](#zt14--permissions-differ-from-inheritance)
 
 ## Overview
 
@@ -17,7 +17,7 @@ The 14 rules (*Prüfregeln*) Zutritt evaluates on every run: what each finding m
 | ZT05 | ![High](https://img.shields.io/badge/High-C62828) | Full control for non-admins | *Vollzugriff für Nicht-Admins* | explicit NTFS entries |
 | ZT06 | ![Low](https://img.shields.io/badge/Low-FBC02D) | Deeply hidden exception | *Tief versteckte Ausnahme* | broken inheritance |
 | ZT07 | ![Info](https://img.shields.io/badge/Info-BDBDBD) | Deny entry | *Verweigern-Eintrag* | explicit NTFS entries |
-| ZT08 | ![Info](https://img.shields.io/badge/Info-BDBDBD) | Share: Everyone full control | *Freigabe: Jeder Vollzugriff* | share permissions |
+| ZT08 | ![Info](https://img.shields.io/badge/Info-BDBDBD) | Share: everyone can change | *Freigabe: alle dürfen ändern* | share permissions |
 | ZT09 | ![Info](https://img.shields.io/badge/Info-BDBDBD) | Folder not readable | *Ordner nicht lesbar* | read errors |
 | ZT10 | ![Low](https://img.shields.io/badge/Low-FBC02D) | Owner is a user account | *Besitzer ist ein Benutzerkonto* | owner |
 | ZT11 | ![Low](https://img.shields.io/badge/Low-FBC02D) | Empty group has rights | *Leere Gruppe berechtigt* | explicit NTFS entries |
@@ -207,9 +207,9 @@ These exceptions were developed against `C:\Program Files`, `C:\ProgramData`, `C
 
 </details>
 
-### ZT08 – Share: Everyone full control
+### ZT08 – Share: everyone can change
 
-![Info](https://img.shields.io/badge/Info-BDBDBD) &nbsp; *Freigabe: Jeder Vollzugriff*
+![Info](https://img.shields.io/badge/Info-BDBDBD) &nbsp; *Freigabe: alle dürfen ändern* (until 0.1.0-ci builds: *Freigabe: Jeder Vollzugriff* – the rule has always fired from *Change* on, not only for *Full Control*)
 
 **What it means.** The share permission allows all signed-in people at least *Ändern* (change). Protection then rests on the NTFS permissions alone. This is practice recommended by Microsoft, but it should be a deliberate choice.
 

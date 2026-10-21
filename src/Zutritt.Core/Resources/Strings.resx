@@ -1,0 +1,3410 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- Zutritt – English texts (fallback language, guideline 13). Placeholders {0}, {1} … as described in the comments. -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Ace_Allow" xml:space="preserve">
+    <value>Allow</value>
+  </data>
+  <data name="Ace_Deny" xml:space="preserve">
+    <value>Deny</value>
+  </data>
+  <data name="Ace_Explicit" xml:space="preserve">
+    <value>explicit</value>
+  </data>
+  <data name="Ace_Inherited" xml:space="preserve">
+    <value>inherited</value>
+  </data>
+  <data name="Acl_Corrupt" xml:space="preserve">
+    <value>Permissions not readable: security descriptor is damaged</value>
+  </data>
+  <data name="Acl_UnknownAceType" xml:space="preserve">
+    <value>Permissions cannot be fully evaluated: unknown entry type {0}</value>
+    <comment>{0} = list of ACE type numbers</comment>
+  </data>
+  <data name="Acl_Unreadable" xml:space="preserve">
+    <value>Permissions not readable: {0}</value>
+    <comment>{0} = Windows error</comment>
+  </data>
+  <data name="Ad_AccountUnreadable" xml:space="preserve">
+    <value>Account “{0}” in Active Directory “{1}” not readable: {2}. It remains “Unknown”.</value>
+    <comment>{0} = sid, {1} = DomainName, {2} = ex.Message</comment>
+  </data>
+  <data name="Ad_Closed" xml:space="preserve">
+    <value>Directory has already been closed</value>
+  </data>
+  <data name="Ad_MembersUnreadable" xml:space="preserve">
+    <value>Members of “{0}” (“{1}”) not readable: {2}</value>
+    <comment>{0} = label, {1} = DomainName, {2} = ex.Message</comment>
+  </data>
+  <data name="Ad_Unreachable" xml:space="preserve">
+    <value>Active Directory “{0}” not reachable: {1}. Domain accounts remain “Unknown”, their groups are not resolved.</value>
+    <comment>{0} = DomainName, {1} = error ?? Strings.Identity_UnknownError</comment>
+  </data>
+  <data name="App_DbNotOpen" xml:space="preserve">
+    <value>The database cannot be opened ({0}). Runs are not saved in this session.</value>
+    <comment>{0} = reason</comment>
+  </data>
+  <data name="App_DbNotOpenPath" xml:space="preserve">
+    <value>The database “{0}” cannot be opened ({1}). Runs are not saved in this session.</value>
+    <comment>{0} = path, {1} = reason</comment>
+  </data>
+  <data name="App_DemoCompareFailed" xml:space="preserve">
+    <value>Comparing the demo runs failed ({0}).</value>
+    <comment>{0} = reason</comment>
+  </data>
+  <data name="App_DemoDbFailed" xml:space="preserve">
+    <value>The demo database could not be created ({0}). The demo run is shown without storage and without comparison.</value>
+    <comment>{0} = reason</comment>
+  </data>
+  <data name="App_LicenseName" xml:space="preserve">
+    <value>MIT License</value>
+  </data>
+  <data name="App_NoDatabase" xml:space="preserve">
+    <value>No database is open.</value>
+  </data>
+  <data name="App_NoDataSentence" xml:space="preserve">
+    <value>This software does not send any data to ICT-Baden.</value>
+    <comment>Required sentence (guideline 07); company name unchanged</comment>
+  </data>
+  <data name="App_RunGone" xml:space="preserve">
+    <value>Run {0} no longer exists.</value>
+  </data>
+  <data name="App_Tagline" xml:space="preserve">
+    <value>Shows who can access what on file shares – with findings, comparison and report.</value>
+  </data>
+  <data name="App_UnexpectedError" xml:space="preserve">
+    <value>Unexpected error: {0}</value>
+    <comment>{0} = message with error code</comment>
+  </data>
+  <data name="AppliesTo_Files" xml:space="preserve">
+    <value>Files only</value>
+  </data>
+  <data name="AppliesTo_FolderFiles" xml:space="preserve">
+    <value>This folder and files</value>
+  </data>
+  <data name="AppliesTo_FolderSubfolders" xml:space="preserve">
+    <value>This folder and subfolders</value>
+  </data>
+  <data name="AppliesTo_FolderSubfoldersFiles" xml:space="preserve">
+    <value>This folder, subfolders and files</value>
+  </data>
+  <data name="AppliesTo_OneLevel" xml:space="preserve">
+    <value>{0} (one level only)</value>
+    <comment>{0} = “Applies to” text</comment>
+  </data>
+  <data name="AppliesTo_OneLevelShort" xml:space="preserve">
+    <value>{0} (one level)</value>
+    <comment>{0} = “Applies to” text</comment>
+  </data>
+  <data name="AppliesTo_Subfolders" xml:space="preserve">
+    <value>Subfolders only</value>
+  </data>
+  <data name="AppliesTo_SubfoldersFiles" xml:space="preserve">
+    <value>Subfolders and files only</value>
+  </data>
+  <data name="AppliesTo_ThisFile" xml:space="preserve">
+    <value>This file only</value>
+  </data>
+  <data name="AppliesTo_ThisFolder" xml:space="preserve">
+    <value>This folder only</value>
+  </data>
+  <data name="Area_Access" xml:space="preserve">
+    <value>Access</value>
+  </data>
+  <data name="Area_Finding" xml:space="preserve">
+    <value>Finding</value>
+  </data>
+  <data name="Area_Folder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="Area_Membership" xml:space="preserve">
+    <value>Membership</value>
+  </data>
+  <data name="Area_Permission" xml:space="preserve">
+    <value>Permission</value>
+  </data>
+  <data name="Change_Added" xml:space="preserve">
+    <value>Added</value>
+  </data>
+  <data name="Change_Changed" xml:space="preserve">
+    <value>Changed</value>
+  </data>
+  <data name="Change_FolderAdded" xml:space="preserve">
+    <value>New with own permissions</value>
+  </data>
+  <data name="Change_FolderRemoved" xml:space="preserve">
+    <value>No longer own permissions</value>
+  </data>
+  <data name="Change_Joined" xml:space="preserve">
+    <value>Joined</value>
+  </data>
+  <data name="Change_LessAccess" xml:space="preserve">
+    <value>Less access</value>
+  </data>
+  <data name="Change_MoreAccess" xml:space="preserve">
+    <value>More access</value>
+  </data>
+  <data name="Change_New" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="Change_Removed" xml:space="preserve">
+    <value>Removed</value>
+  </data>
+  <data name="Change_Resolved" xml:space="preserve">
+    <value>Resolved</value>
+  </data>
+  <data name="Cli_AndMore" xml:space="preserve">
+    <value>  … and {0} more (all in the report)</value>
+  </data>
+  <data name="Cli_Attention" xml:space="preserve">
+    <value>Attention: {0}</value>
+  </data>
+  <data name="Cli_Cancelled" xml:space="preserve">
+    <value>Cancelled.</value>
+  </data>
+  <data name="Cli_CompareFailed" xml:space="preserve">
+    <value>Comparison not possible: {0}</value>
+  </data>
+  <data name="Cli_DemoAlone" xml:space="preserve">
+    <value>“--demo” stands alone: Zutritt.exe --demo</value>
+  </data>
+  <data name="Cli_ErrorLine" xml:space="preserve">
+    <value>Error {1}: {0}</value>
+    <comment>{0} = message, {1} = error code</comment>
+  </data>
+  <data name="Cli_ExitClean" xml:space="preserve">
+    <value>no findings from “Medium” up</value>
+  </data>
+  <data name="Cli_ExitCode" xml:space="preserve">
+    <value>Exit code {0}: {1}</value>
+  </data>
+  <data name="Cli_ExitHigh" xml:space="preserve">
+    <value>at least one “High” finding</value>
+  </data>
+  <data name="Cli_ExitMedium" xml:space="preserve">
+    <value>“Medium” findings, no “High”</value>
+  </data>
+  <data name="Cli_Help" xml:space="preserve">
+    <value>Zutritt {0} – who can access what on file shares?
+
+Usage:
+  Zutritt.exe                         start the window
+  Zutritt.exe scan &lt;target&gt; [&lt;target&gt; …] [options]
+  Zutritt.exe list [--db &lt;path&gt;]
+  Zutritt.exe report &lt;id&gt; --report &lt;file&gt; [--compare] [--db &lt;path&gt;]
+  Zutritt.exe --demo                  window with built-in demo data
+  Zutritt.exe --screenshots &lt;folder&gt; [--theme light|dark|both]
+  Zutritt.exe --help
+  Zutritt.exe --version               version and build
+  Zutritt.exe --info                  version, licence, links to help, privacy, imprint
+  Zutritt.exe --licenses              licence text and third-party licences
+
+Targets:
+  \\server\share[\folder]       a share or a folder in it
+  \\server                      all disk shares of a server
+  D:\Data                       a local folder
+  .                             all shares of this computer
+
+Options for “scan”:
+  --files                  also record files with their own permissions (takes longer)
+  --depth N                at most N levels below the target (default: unlimited)
+  --deep-from N            report broken inheritance from level N on as a “deeply hidden
+                           exception” (default: 3)
+  --no-groups              do not resolve groups down to people
+  --include-admin-shares   also check C$, ADMIN$ etc.
+  --report &lt;file&gt;          write a report, .xlsx or .pdf (can be repeated)
+  --compare                determine the changes since the last run with the same targets
+                           and include them in the reports
+  --db &lt;path&gt;              another database (default: %LocalAppData%\Zutritt\zutritt.db,
+                           i.e. per user)
+
+“list” shows the saved runs with their id, “report” writes reports for one of them
+afterwards.
+
+The German spellings work as well: liste, bericht, --hilfe, --lizenzen, --dateien, --tiefe,
+--ausnahme-ab, --ohne-gruppen, --mit-admin-freigaben, --bericht, --vergleich.
+Output language: as Windows, otherwise set with the environment variable ZUTRITT_LANGUAGE
+(en, de, es, fr, zh-Hans) or on the Info page of the window.
+
+Exit codes (for scheduled tasks):
+  0  no findings from “Medium” up
+  1  “Medium” findings, but no “High”
+  2  at least one “High” finding
+  3  error or cancelled – also when no target could be checked
+
+Example – every Monday at 6:00 with comparison and a PDF to sign:
+  schtasks /create /tn "Zutritt weekly report" /sc weekly /d MO /st 06:00 /tr ^
+    "\"C:\Program Files\Zutritt\Zutritt.exe\" scan \\FS01 --compare --report D:\Reports\Zutritt.pdf"
+
+Zutritt.exe is a window program; to make the command prompt wait for it to finish:
+  start /wait Zutritt.exe scan …            (cmd)
+  Zutritt.exe scan … | Out-Default          (PowerShell)
+Log for scheduled tasks: redirect in a .cmd file – cmd waits for the end there, and the
+file becomes UTF-8 (with BOM):
+  "C:\Program Files\Zutritt\Zutritt.exe" scan \\FS01 --compare &gt; D:\Reports\zutritt.log 2&gt;&amp;1
+Zutritt only reads – it changes no permissions and no files.
+{1}</value>
+    <comment>{0} = version, {1} = sentence “This software sends no data …”. Keep option names and the line structure.</comment>
+  </data>
+  <data name="Cli_HelpHint" xml:space="preserve">
+    <value>Help: Zutritt.exe --help</value>
+  </data>
+  <data name="Cli_ImportantFindings" xml:space="preserve">
+    <value>Most important findings:</value>
+  </data>
+  <data name="Cli_InfoDatabase" xml:space="preserve">
+    <value>Database</value>
+  </data>
+  <data name="Cli_InfoImprint" xml:space="preserve">
+    <value>Imprint</value>
+  </data>
+  <data name="Cli_InfoLanguage" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Cli_InfoLanguageValue" xml:space="preserve">
+    <value>{0} – change with the environment variable {1} or on the Info page</value>
+    <comment>{0} = language name, {1} = ZUTRITT_LANGUAGE</comment>
+  </data>
+  <data name="Cli_InfoLicense" xml:space="preserve">
+    <value>Licence text</value>
+  </data>
+  <data name="Cli_InfoLicenseValue" xml:space="preserve">
+    <value>{0} (Zutritt.exe --licenses, {1})</value>
+    <comment>{0} = file name, {1} = URL</comment>
+  </data>
+  <data name="Cli_InfoLog" xml:space="preserve">
+    <value>Log</value>
+  </data>
+  <data name="Cli_InfoNotices" xml:space="preserve">
+    <value>Third-party licences</value>
+  </data>
+  <data name="Cli_InfoNoticesValue" xml:space="preserve">
+    <value>{0} (Zutritt.exe --licenses, also under Info in the app)</value>
+    <comment>{0} = file name</comment>
+  </data>
+  <data name="Cli_InfoPrivacy" xml:space="preserve">
+    <value>Privacy</value>
+  </data>
+  <data name="Cli_InfoSource" xml:space="preserve">
+    <value>Source code (GitHub)</value>
+  </data>
+  <data name="Cli_InfoSupport" xml:space="preserve">
+    <value>Help &amp; support</value>
+  </data>
+  <data name="Cli_InfoWebsite" xml:space="preserve">
+    <value>Website</value>
+  </data>
+  <data name="Cli_LicensesMissing" xml:space="preserve">
+    <value>The licence texts are missing from this build – they are available at {0}.</value>
+  </data>
+  <data name="Cli_ListNoArgs" xml:space="preserve">
+    <value>“list” expects no further arguments (“{0}”).</value>
+  </data>
+  <data name="Cli_LockedHint" xml:space="preserve">
+    <value>Note: {0} The scan runs anyway; it is saved at the end.</value>
+  </data>
+  <data name="Cli_NeedReport" xml:space="preserve">
+    <value>Please specify with --report &lt;file.xlsx|file.pdf&gt; where the report should go.</value>
+  </data>
+  <data name="Cli_NeedsInteger" xml:space="preserve">
+    <value>“{0}” expects a whole number from {1}, not “{2}”.</value>
+  </data>
+  <data name="Cli_NeedsValue" xml:space="preserve">
+    <value>“{0}” needs a value.</value>
+  </data>
+  <data name="Cli_NeedTarget" xml:space="preserve">
+    <value>Please specify at least one target, e.g. Zutritt.exe scan \\server\share</value>
+  </data>
+  <data name="Cli_NoArguments" xml:space="preserve">
+    <value>“{0}” expects no further arguments.</value>
+  </data>
+  <data name="Cli_NoDatabaseYet" xml:space="preserve">
+    <value>No database yet ({0}).</value>
+  </data>
+  <data name="Cli_NoPreviousRun" xml:space="preserve">
+    <value>Comparison: there is no earlier run with the same targets yet.</value>
+  </data>
+  <data name="Cli_NoRuns" xml:space="preserve">
+    <value>No saved runs in {0}.</value>
+  </data>
+  <data name="Cli_NoSuchDatabase" xml:space="preserve">
+    <value>The database {0} does not exist.</value>
+  </data>
+  <data name="Cli_NoSuchRun" xml:space="preserve">
+    <value>Run {0} does not exist. “Zutritt.exe list” shows the saved runs.</value>
+  </data>
+  <data name="Cli_NotSavedLost" xml:space="preserve">
+    <value>The run is not in the database and will be lost. With --report &lt;file&gt;, Zutritt keeps it in a report even then.</value>
+  </data>
+  <data name="Cli_NotSavedReportsFollow" xml:space="preserve">
+    <value>The run is not in the database – the reports are written anyway.</value>
+  </data>
+  <data name="Cli_NotScanned" xml:space="preserve">
+    <value>{0} Nothing was scanned.</value>
+  </data>
+  <data name="Cli_NotScannedDb" xml:space="preserve">
+    <value>{0} Nothing was scanned. Use --db &lt;path&gt; to choose another database.</value>
+  </data>
+  <data name="Cli_NotScannedDbPath" xml:space="preserve">
+    <value>{0} ({1}) Nothing was scanned. Use --db &lt;path&gt; to choose another database.</value>
+  </data>
+  <data name="Cli_ProblemNothingChecked" xml:space="preserve">
+    <value>no target could be checked</value>
+  </data>
+  <data name="Cli_ProblemNotSaved" xml:space="preserve">
+    <value>the run was not saved</value>
+  </data>
+  <data name="Cli_ProblemReport" xml:space="preserve">
+    <value>at least one report could not be written</value>
+  </data>
+  <data name="Cli_Progress" xml:space="preserve">
+    <value>{0}: {1} folders, {2} with own permissions, {3} errors</value>
+  </data>
+  <data name="Cli_ReportExtension" xml:space="preserve">
+    <value>Report “{0}”: please specify .xlsx (Excel) or .pdf.</value>
+  </data>
+  <data name="Cli_ReportFailed" xml:space="preserve">
+    <value>Report {0} could not be written: {1}</value>
+  </data>
+  <data name="Cli_ReportWritten" xml:space="preserve">
+    <value>Report written: {0}</value>
+  </data>
+  <data name="Cli_RunSaved" xml:space="preserve">
+    <value>Run {0} saved in {1}</value>
+  </data>
+  <data name="Cli_RunsIn" xml:space="preserve">
+    <value>Saved runs in {0}:</value>
+  </data>
+  <data name="Cli_ScanStart" xml:space="preserve">
+    <value>Zutritt {0} – scan of {1}</value>
+  </data>
+  <data name="Cli_SinceRun" xml:space="preserve">
+    <value>Since the run of {0}: {1} new, {2} resolved findings, {3} access changes, {4} ACL changes, {5} membership changes.</value>
+  </data>
+  <data name="Cli_SumDuration" xml:space="preserve">
+    <value>Duration</value>
+  </data>
+  <data name="Cli_SumFoldersValue" xml:space="preserve">
+    <value>{0}, of which {1} with own permissions</value>
+  </data>
+  <data name="Cli_SumUnreadable" xml:space="preserve">
+    <value>Not readable</value>
+  </data>
+  <data name="Cli_UnknownCommand" xml:space="preserve">
+    <value>Unknown command “{0}”.</value>
+  </data>
+  <data name="Cli_UnknownOption" xml:space="preserve">
+    <value>Unknown option “{0}”.</value>
+  </data>
+  <data name="Cli_UnreachableTargets" xml:space="preserve">
+    <value>Attention: {0} of {1} targets or shares could not be checked – the result is incomplete.</value>
+  </data>
+  <data name="Cli_UsageReport" xml:space="preserve">
+    <value>Usage: Zutritt.exe report &lt;id&gt; --report &lt;file.xlsx|file.pdf&gt; [--compare] [--db &lt;path&gt;] – “Zutritt.exe list” shows the id.</value>
+  </data>
+  <data name="Cli_UsageScreenshots" xml:space="preserve">
+    <value>Usage: Zutritt.exe --screenshots &lt;folder&gt; [--theme light|dark|both]</value>
+  </data>
+  <data name="Cmp_AccessChanges" xml:space="preserve">
+    <value>Access changes</value>
+  </data>
+  <data name="Cmp_AccessRowText" xml:space="preserve">
+    <value>{0}, {1}, before {2}, after {3}</value>
+    <comment>{0} = Person, {1} = Path, {2} = Before, {3} = After</comment>
+  </data>
+  <data name="Cmp_AclAndFolderChanges" xml:space="preserve">
+    <value>ACL and folder changes</value>
+  </data>
+  <data name="Cmp_AclChanges" xml:space="preserve">
+    <value>ACL changes</value>
+  </data>
+  <data name="Cmp_ChangedAces" xml:space="preserve">
+    <value>Changed permission entries</value>
+  </data>
+  <data name="Cmp_ChangedMemberships" xml:space="preserve">
+    <value>Changed group memberships</value>
+  </data>
+  <data name="Cmp_ChangedMembershipsShort" xml:space="preserve">
+    <value>Changed memberships</value>
+  </data>
+  <data name="Cmp_DaysBefore" xml:space="preserve">
+    <value>{0:0} days before</value>
+    <comment>{0} = Math.Round(days)</comment>
+  </data>
+  <data name="Cmp_Direction" xml:space="preserve">
+    <value>Direction</value>
+  </data>
+  <data name="Cmp_Failed" xml:space="preserve">
+    <value>The comparison failed</value>
+  </data>
+  <data name="Cmp_InheritedSuffix" xml:space="preserve">
+    <value> (inherited)</value>
+  </data>
+  <data name="Cmp_Joined" xml:space="preserve">
+    <value>Joined</value>
+  </data>
+  <data name="Cmp_LessAccess" xml:space="preserve">
+    <value>People’s access restricted</value>
+  </data>
+  <data name="Cmp_LessRights" xml:space="preserve">
+    <value>less access</value>
+  </data>
+  <data name="Cmp_MemberRowText" xml:space="preserve">
+    <value>{0}: {1} in {2}</value>
+    <comment>{0} = Change, {1} = Member, {2} = Group</comment>
+  </data>
+  <data name="Cmp_Memberships" xml:space="preserve">
+    <value>Memberships</value>
+  </data>
+  <data name="Cmp_MoreAccess" xml:space="preserve">
+    <value>People’s access extended</value>
+  </data>
+  <data name="Cmp_MoreRights" xml:space="preserve">
+    <value>more access</value>
+  </data>
+  <data name="Cmp_NeedTwoRuns" xml:space="preserve">
+    <value>A comparison needs at least two runs. After the next scan of the same targets you will see here what has changed: new and resolved findings, who can do more or less, changed entries and group memberships.</value>
+  </data>
+  <data name="Cmp_NewFindings" xml:space="preserve">
+    <value>New findings</value>
+  </data>
+  <data name="Cmp_NoAccessChanges" xml:space="preserve">
+    <value>Nobody can do more or less anywhere than before.</value>
+  </data>
+  <data name="Cmp_NoAceChanges" xml:space="preserve">
+    <value>No entries in the access control lists changed.</value>
+  </data>
+  <data name="Cmp_NoDatabase" xml:space="preserve">
+    <value>Without a database there are no earlier runs to compare with.</value>
+  </data>
+  <data name="Cmp_NoEarlierRun" xml:space="preserve">
+    <value>No earlier run yet</value>
+  </data>
+  <data name="Cmp_NoMembershipChanges" xml:space="preserve">
+    <value>No group membership has changed.</value>
+  </data>
+  <data name="Cmp_NoNewFindings" xml:space="preserve">
+    <value>No new findings since the older run.</value>
+  </data>
+  <data name="Cmp_NoResolved" xml:space="preserve">
+    <value>No finding has been resolved since the older run.</value>
+  </data>
+  <data name="Cmp_NoRunText" xml:space="preserve">
+    <value>Load a run on the Overview page – this page then shows what has changed since the run before it.</value>
+  </data>
+  <data name="Cmp_NoSameTargets" xml:space="preserve">
+    <value>There is no earlier run with the same targets. Choose a run above to compare with.</value>
+  </data>
+  <data name="Cmp_OneDayBefore" xml:space="preserve">
+    <value>1 day before</value>
+  </data>
+  <data name="Cmp_OtherTargets" xml:space="preserve">
+    <value>The older run had other targets ({0}) – differences may also come from that.</value>
+    <comment>{0} = Labels.Targets(c.Older.Request.Targets)</comment>
+  </data>
+  <data name="Cmp_OwnRightsGone" xml:space="preserve">
+    <value>Own permissions removed</value>
+  </data>
+  <data name="Cmp_OwnRightsNew" xml:space="preserve">
+    <value>Own permissions new</value>
+  </data>
+  <data name="Cmp_Preparing" xml:space="preserve">
+    <value>Preparing changes …</value>
+  </data>
+  <data name="Cmp_ResolvedFindings" xml:space="preserve">
+    <value>Resolved findings</value>
+  </data>
+  <data name="Cmp_SameDay" xml:space="preserve">
+    <value>on the same day</value>
+  </data>
+  <data name="Col_Account" xml:space="preserve">
+    <value>Account</value>
+  </data>
+  <data name="Col_AccountKind" xml:space="preserve">
+    <value>Kind</value>
+  </data>
+  <data name="Col_AdminShare" xml:space="preserve">
+    <value>Admin share</value>
+  </data>
+  <data name="Col_After" xml:space="preserve">
+    <value>After</value>
+  </data>
+  <data name="Col_AllowDeny" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Col_AllowDenyLong" xml:space="preserve">
+    <value>Allow/Deny</value>
+  </data>
+  <data name="Col_AppliesTo" xml:space="preserve">
+    <value>Applies to</value>
+  </data>
+  <data name="Col_Area" xml:space="preserve">
+    <value>Area</value>
+  </data>
+  <data name="Col_Before" xml:space="preserve">
+    <value>Before</value>
+  </data>
+  <data name="Col_BeforeAfter" xml:space="preserve">
+    <value>Before → After</value>
+  </data>
+  <data name="Col_Change" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="Col_Complete" xml:space="preserve">
+    <value>Complete</value>
+  </data>
+  <data name="Col_Depth" xml:space="preserve">
+    <value>Depth</value>
+  </data>
+  <data name="Col_DirectlyGranted" xml:space="preserve">
+    <value>Directly granted</value>
+  </data>
+  <data name="Col_DirectMembers" xml:space="preserve">
+    <value>Direct members</value>
+  </data>
+  <data name="Col_Disabled" xml:space="preserve">
+    <value>Disabled</value>
+  </data>
+  <data name="Col_DisplayName" xml:space="preserve">
+    <value>Display name</value>
+  </data>
+  <data name="Col_EffectiveRight" xml:space="preserve">
+    <value>Effective permission</value>
+  </data>
+  <data name="Col_Explanation" xml:space="preserve">
+    <value>Explanation</value>
+  </data>
+  <data name="Col_Finding" xml:space="preserve">
+    <value>Finding</value>
+  </data>
+  <data name="Col_Findings" xml:space="preserve">
+    <value>Findings</value>
+  </data>
+  <data name="Col_Folders" xml:space="preserve">
+    <value>Folders</value>
+  </data>
+  <data name="Col_FoldersWithAccess" xml:space="preserve">
+    <value>Folders with access</value>
+  </data>
+  <data name="Col_GrantsListed" xml:space="preserve">
+    <value>Individual access listed</value>
+  </data>
+  <data name="Col_Group" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="Col_HighestRight" xml:space="preserve">
+    <value>Highest permission</value>
+  </data>
+  <data name="Col_InFolderAcls" xml:space="preserve">
+    <value>In folder ACLs</value>
+  </data>
+  <data name="Col_InheritedExplicit" xml:space="preserve">
+    <value>Inherited/explicit</value>
+  </data>
+  <data name="Col_ItemType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Col_Member" xml:space="preserve">
+    <value>Member</value>
+  </data>
+  <data name="Col_MembersDirect" xml:space="preserve">
+    <value>Members (direct)</value>
+  </data>
+  <data name="Col_MembersTotal" xml:space="preserve">
+    <value>Members in total (people)</value>
+  </data>
+  <data name="Col_Message" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="Col_Note" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="Col_NtfsRight" xml:space="preserve">
+    <value>NTFS permission</value>
+  </data>
+  <data name="Col_Owner" xml:space="preserve">
+    <value>Owner</value>
+  </data>
+  <data name="Col_Path" xml:space="preserve">
+    <value>Path</value>
+  </data>
+  <data name="Col_PathOrGroup" xml:space="preserve">
+    <value>Path or group</value>
+  </data>
+  <data name="Col_People" xml:space="preserve">
+    <value>People</value>
+  </data>
+  <data name="Col_PermissionsReadable" xml:space="preserve">
+    <value>Permissions readable</value>
+  </data>
+  <data name="Col_Person" xml:space="preserve">
+    <value>Person</value>
+  </data>
+  <data name="Col_Recommendation" xml:space="preserve">
+    <value>Recommendation</value>
+  </data>
+  <data name="Col_ReducedByDeny" xml:space="preserve">
+    <value>Restricted by deny</value>
+  </data>
+  <data name="Col_Remark" xml:space="preserve">
+    <value>Remark</value>
+  </data>
+  <data name="Col_Right" xml:space="preserve">
+    <value>Access</value>
+  </data>
+  <data name="Col_RightsMask" xml:space="preserve">
+    <value>Rights mask</value>
+  </data>
+  <data name="Col_Rule" xml:space="preserve">
+    <value>Rule</value>
+  </data>
+  <data name="Col_Severity" xml:space="preserve">
+    <value>Severity</value>
+  </data>
+  <data name="Col_Share" xml:space="preserve">
+    <value>Share</value>
+  </data>
+  <data name="Col_SharePermissions" xml:space="preserve">
+    <value>Share permissions</value>
+  </data>
+  <data name="Col_Title" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="Col_TitleExplanation" xml:space="preserve">
+    <value>Title and explanation</value>
+  </data>
+  <data name="Col_ViaGroups" xml:space="preserve">
+    <value>Via groups</value>
+  </data>
+  <data name="Col_ViaShare" xml:space="preserve">
+    <value>Via share</value>
+  </data>
+  <data name="Error_WithCode" xml:space="preserve">
+    <value>{0} (error {1})</value>
+    <comment>{0} = text, {1} = code</comment>
+  </data>
+  <data name="Excel_Attention" xml:space="preserve">
+    <value>Attention</value>
+  </data>
+  <data name="Excel_ColInheritanceDiffers" xml:space="preserve">
+    <value>Inheritance differs</value>
+  </data>
+  <data name="Excel_ComparisonWithRun" xml:space="preserve">
+    <value>Comparison with the run of {0}</value>
+    <comment>{0} = ReportText.DateTime(c.OlderStartedAt)</comment>
+  </data>
+  <data name="Excel_CreatedWith" xml:space="preserve">
+    <value>Created with {0} {1}</value>
+    <comment>{0} = ReportText.Product, {1} = data.Header.ReportVersion</comment>
+  </data>
+  <data name="Excel_DescAccessPerPerson" xml:space="preserve">
+    <value>Each person per folder with effective permission, NTFS and share permission and the chain of groups.</value>
+  </data>
+  <data name="Excel_DescChanges" xml:space="preserve">
+    <value>Differences from the previous run: findings, entries, memberships, folders, access of people.</value>
+  </data>
+  <data name="Excel_DescErrors" xml:space="preserve">
+    <value>Paths that could not be read – nothing was checked there.</value>
+  </data>
+  <data name="Excel_DescFindings" xml:space="preserve">
+    <value>All findings by severity – with rule, path, account, message and recommendation.</value>
+  </data>
+  <data name="Excel_DescFolders" xml:space="preserve">
+    <value>Every listed folder with every permission entry (one row per entry, including inherited ones); “Inheritance differs” marks e.g. moved folders with permissions from their previous location.</value>
+  </data>
+  <data name="Excel_DescGroups" xml:space="preserve">
+    <value>Members directly and in total (also nested) and in how many folder ACLs the group appears.</value>
+  </data>
+  <data name="Excel_DescPeople" xml:space="preserve">
+    <value>Per user account: number of folders with access, highest permission and through which groups.</value>
+  </data>
+  <data name="Excel_DescRules" xml:space="preserve">
+    <value>Scope of the review: all rules with explanation, recommendation and number of findings.</value>
+  </data>
+  <data name="Excel_DescShares" xml:space="preserve">
+    <value>Shares with path, remark and share permissions.</value>
+  </data>
+  <data name="Excel_Folder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="Excel_FoldersAdded" xml:space="preserve">
+    <value>Folders newly with own permissions</value>
+  </data>
+  <data name="Excel_FoldersRemoved" xml:space="preserve">
+    <value>Folders no longer with own permissions</value>
+  </data>
+  <data name="Excel_NoErrors" xml:space="preserve">
+    <value>No errors while reading.</value>
+  </data>
+  <data name="Excel_NoFindings" xml:space="preserve">
+    <value>No findings.</value>
+  </data>
+  <data name="Excel_NoFolders" xml:space="preserve">
+    <value>No folders stored.</value>
+  </data>
+  <data name="Excel_NoGrants" xml:space="preserve">
+    <value>No access determined.</value>
+  </data>
+  <data name="Excel_NoGroups" xml:space="preserve">
+    <value>No groups in the run.</value>
+  </data>
+  <data name="Excel_NoOnlyTotal" xml:space="preserve">
+    <value>No – total only</value>
+  </data>
+  <data name="Excel_NoRules" xml:space="preserve">
+    <value>No rules.</value>
+  </data>
+  <data name="Excel_NoShares" xml:space="preserve">
+    <value>No shares in the run (only local paths scanned).</value>
+  </data>
+  <data name="Excel_NoUsers" xml:space="preserve">
+    <value>No user accounts in the run.</value>
+  </data>
+  <data name="Excel_Numbers" xml:space="preserve">
+    <value>Figures</value>
+  </data>
+  <data name="Excel_PeopleUserAccounts" xml:space="preserve">
+    <value>People (user accounts)</value>
+  </data>
+  <data name="Excel_PeopleWithAccess" xml:space="preserve">
+    <value>People with access</value>
+  </data>
+  <data name="Excel_ProgressFilling" xml:space="preserve">
+    <value>Filling workbook …</value>
+  </data>
+  <data name="Excel_ProgressSaving" xml:space="preserve">
+    <value>Saving workbook …</value>
+  </data>
+  <data name="Excel_Result" xml:space="preserve">
+    <value>Result</value>
+  </data>
+  <data name="Excel_Run" xml:space="preserve">
+    <value>Run</value>
+  </data>
+  <data name="Excel_SheetsGuide" xml:space="preserve">
+    <value>Sheets in this workbook</value>
+  </data>
+  <data name="Excel_SheetTruncated" xml:space="preserve">
+    <value>Sheet {0} shortened: {1} of {2} rows (size limit of the Excel report).</value>
+    <comment>{0} = ReportText.Quote(sheetName), {1} = ReportText.Number(written), {2} = ReportText.Number(total)</comment>
+  </data>
+  <data name="Excel_Subtitle" xml:space="preserve">
+    <value>Zutritt · Shares and folder permissions</value>
+  </data>
+  <data name="Excel_Targets" xml:space="preserve">
+    <value>Targets</value>
+  </data>
+  <data name="Excel_ToolVersionScan" xml:space="preserve">
+    <value>Zutritt version (scan)</value>
+  </data>
+  <data name="Excel_Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Fi_AccountGone" xml:space="preserve">
+    <value> · account no longer exists</value>
+  </data>
+  <data name="Fi_AllRules" xml:space="preserve">
+    <value>All rules</value>
+  </data>
+  <data name="Fi_DetailPlaceholder" xml:space="preserve">
+    <value>The explanation and recommendation for the selected finding appear here.</value>
+  </data>
+  <data name="Fi_Disabled" xml:space="preserve">
+    <value> · disabled</value>
+  </data>
+  <data name="Fi_FilterByRule" xml:space="preserve">
+    <value>Filter by rule</value>
+  </data>
+  <data name="Fi_FindingPath" xml:space="preserve">
+    <value>Path of the finding</value>
+  </data>
+  <data name="Fi_NoDescription" xml:space="preserve">
+    <value>There is no description for this rule.</value>
+  </data>
+  <data name="Fi_NoMatches" xml:space="preserve">
+    <value>No matches</value>
+  </data>
+  <data name="Fi_NoMatchesText" xml:space="preserve">
+    <value>No finding matches the filter and search.</value>
+  </data>
+  <data name="Fi_NoRunText" xml:space="preserve">
+    <value>Start a scan on the Overview page or open a saved run.</value>
+  </data>
+  <data name="Fi_NothingFound" xml:space="preserve">
+    <value>Nothing stood out in this run. The Folders page still shows who can go where.</value>
+  </data>
+  <data name="Fi_Search" xml:space="preserve">
+    <value>Search findings</value>
+  </data>
+  <data name="Fi_SearchHint" xml:space="preserve">
+    <value>Path, account or text</value>
+  </data>
+  <data name="Fi_SelectFinding" xml:space="preserve">
+    <value>Select a finding to see the explanation and recommendation.</value>
+  </data>
+  <data name="Fi_ShowFolder" xml:space="preserve">
+    <value>Show folder</value>
+  </data>
+  <data name="Fi_WhyImportant" xml:space="preserve">
+    <value>Why does this matter?</value>
+  </data>
+  <data name="Finding_BroadRead" xml:space="preserve">
+    <value>“{0}” has “{1}”{2} – practically every signed-in person can read here.</value>
+    <comment>{0} = who, {1} = Rights.Label(scopes.Net), {2} = suffix</comment>
+  </data>
+  <data name="Finding_BroadWrite" xml:space="preserve">
+    <value>“{0}” has “{1}”{2} – practically every signed-in person can write here.</value>
+    <comment>{0} = who, {1} = Rights.Label(scopes.Net), {2} = suffix</comment>
+  </data>
+  <data name="Finding_DeepBreak" xml:space="preserve">
+    <value>Inheritance broken at depth {0} (from depth {1} an exception counts as hidden).</value>
+    <comment>{0} = folder.Depth, {1} = threshold</comment>
+  </data>
+  <data name="Finding_Deny" xml:space="preserve">
+    <value>Deny entry for “{0}” ({1} denied).</value>
+    <comment>{0} = who, {1} = Describe(scopes.DeniedMask)</comment>
+  </data>
+  <data name="Finding_DirectUser" xml:space="preserve">
+    <value>“{0}” has “{1}” directly as a person instead of through a group.</value>
+    <comment>{0} = who, {1} = Rights.Label(scopes.Raw)</comment>
+  </data>
+  <data name="Finding_DisabledAccount" xml:space="preserve">
+    <value>The disabled account “{0}” has “{1}” here.</value>
+    <comment>{0} = who, {1} = Rights.Label(scopes.Raw)</comment>
+  </data>
+  <data name="Finding_EmptyGroup" xml:space="preserve">
+    <value>The group “{0}” has no members but has permissions (“{1}”).</value>
+    <comment>{0} = who, {1} = Rights.Label(scopes.Raw)</comment>
+  </data>
+  <data name="Finding_ForeignInheritedMany" xml:space="preserve">
+    <value>Inherited entries do not match the parent folder – probably moved. {0} do not come from there but from the previous location.</value>
+    <comment>{0} = several quoted account names, e.g. “A”, “B” and “C”</comment>
+  </data>
+  <data name="Finding_ForeignInheritedOne" xml:space="preserve">
+    <value>Inherited entries do not match the parent folder – probably moved. {0} does not come from there but from the previous location.</value>
+    <comment>{0} = one quoted account name</comment>
+  </data>
+  <data name="Finding_FullControl" xml:space="preserve">
+    <value>“{0}” has full control{1} and can therefore change permissions and take ownership.</value>
+    <comment>{0} = who, {1} = suffix</comment>
+  </data>
+  <data name="Finding_InheritanceDiffers" xml:space="preserve">
+    <value>Inherited entries do not match the parent folder – probably moved; permissions from the previous location may still apply.</value>
+  </data>
+  <data name="Finding_InheritsNothing" xml:space="preserve">
+    <value>Inherits nothing from the parent folder although inheritance is enabled – usually a program created the folder with its own permissions. The permissions from above only apply here after the next propagation.</value>
+  </data>
+  <data name="Finding_NotChecked" xml:space="preserve">
+    <value>Not checked: {0}.</value>
+    <comment>{0} = error.Message.TrimEnd('.')</comment>
+  </data>
+  <data name="Finding_OnlyForChildren" xml:space="preserve">
+    <value> (applies to subfolders or files)</value>
+  </data>
+  <data name="Finding_OrphanDenyEntry" xml:space="preserve">
+    <value>a deny entry</value>
+  </data>
+  <data name="Finding_OrphanEntry" xml:space="preserve">
+    <value>The orphaned SID {0} has {1} – the account no longer exists.</value>
+    <comment>{0} = sid, {1} = entry</comment>
+  </data>
+  <data name="Finding_OrphanEntryLevel" xml:space="preserve">
+    <value>an entry “{0}”</value>
+    <comment>{0} = Rights.Label(scopes.Raw)</comment>
+  </data>
+  <data name="Finding_OrphanEntryParts" xml:space="preserve">
+    <value>an entry {0}</value>
+    <comment>{0} = Describe(scopes.AllowMask)</comment>
+  </data>
+  <data name="Finding_OrphanOwner" xml:space="preserve">
+    <value>The owner is the orphaned SID {0} – the account no longer exists.</value>
+    <comment>{0} = owner</comment>
+  </data>
+  <data name="Finding_OrphanOwnerAndEntry" xml:space="preserve">
+    <value>The orphaned SID {0} is the owner and has {1} – the account no longer exists.</value>
+    <comment>{0} = sid, {1} = entry</comment>
+  </data>
+  <data name="Finding_OwnerIsUser" xml:space="preserve">
+    <value>The owner is the user account “{0}”.</value>
+    <comment>{0} = ctx.Label(owner)</comment>
+  </data>
+  <data name="Finding_ShareEveryone" xml:space="preserve">
+    <value>Share permission “{0}”: “{1}” – protection relies on NTFS alone.</value>
+    <comment>{0} = ctx.Label(ace.Sid), {1} = Rights.Label(ace.Access)</comment>
+  </data>
+  <data name="Finding_ShareOrphan" xml:space="preserve">
+    <value>The share permission names the orphaned SID {0} – the account no longer exists.</value>
+    <comment>{0} = ace.Sid</comment>
+  </data>
+  <data name="Finding_ShareUnreadable" xml:space="preserve">
+    <value>The share permissions of {0} could not be read.</value>
+    <comment>{0} = share.UncPath</comment>
+  </data>
+  <data name="Finding_UnreadableFile" xml:space="preserve">
+    <value>File not readable: {0} – permissions here and below not checked.</value>
+    <comment>{0} = error message</comment>
+  </data>
+  <data name="Finding_UnreadableFolder" xml:space="preserve">
+    <value>Folder not readable: {0} – permissions here and below not checked.</value>
+    <comment>{0} = error message</comment>
+  </data>
+  <data name="Fo_AccountDisabled" xml:space="preserve">
+    <value>The account is disabled</value>
+  </data>
+  <data name="Fo_AclEntries" xml:space="preserve">
+    <value>Entries of the access control list</value>
+  </data>
+  <data name="Fo_AlsoBroad" xml:space="preserve">
+    <value>Also granted: {0}. This means practically every signed-in person can get in here – including those not listed individually below.</value>
+    <comment>{0} = list</comment>
+  </data>
+  <data name="Fo_BrokenTip" xml:space="preserve">
+    <value>Permissions from above do not apply here – only the folder’s own entries.</value>
+  </data>
+  <data name="Fo_Calculating" xml:space="preserve">
+    <value>Calculating …</value>
+  </data>
+  <data name="Fo_DenyPrefix" xml:space="preserve">
+    <value>Deny: {0}</value>
+    <comment>{0} = rights</comment>
+  </data>
+  <data name="Fo_DiffersFactTip" xml:space="preserve">
+    <value>The inherited entries do not match the parent folder – probably moved. Permissions from the previous location may still apply here (finding ZT14).</value>
+  </data>
+  <data name="Fo_DiffersTip" xml:space="preserve">
+    <value>Inheritance differs – probably moved, with permissions from the previous location</value>
+  </data>
+  <data name="Fo_Entries" xml:space="preserve">
+    <value>Entries</value>
+  </data>
+  <data name="Fo_EntriesCount" xml:space="preserve">
+    <value>Entries ({0})</value>
+    <comment>{0} = Labels.Number(folder.Aces.Count)</comment>
+  </data>
+  <data name="Fo_FindingsCount" xml:space="preserve">
+    <value>Findings ({0})</value>
+    <comment>{0} = Labels.Number(findings.Count)</comment>
+  </data>
+  <data name="Fo_FolderFindings" xml:space="preserve">
+    <value>Findings of this folder</value>
+  </data>
+  <data name="Fo_GreyLegend" xml:space="preserve">
+    <value>grey: no own permissions</value>
+  </data>
+  <data name="Fo_HasFinding" xml:space="preserve">
+    <value>Has a finding</value>
+  </data>
+  <data name="Fo_InheritsFrom" xml:space="preserve">
+    <value>“{0}” has no permissions of its own – what is set on “{1}” applies. Zutritt only stores folders with their own permissions.</value>
+    <comment>{0} = node.Name, {1} = ancestor.Path</comment>
+  </data>
+  <data name="Fo_InheritsFromParent" xml:space="preserve">
+    <value>Inherits from the parent folder</value>
+  </data>
+  <data name="Fo_InheritsRootless" xml:space="preserve">
+    <value>“{0}” has no permissions of its own. Zutritt only stores folders with their own permissions and the scan roots.</value>
+    <comment>{0} = node.Name</comment>
+  </data>
+  <data name="Fo_Level" xml:space="preserve">
+    <value>Level {0}</value>
+    <comment>{0} = folder.Depth</comment>
+  </data>
+  <data name="Fo_Loading" xml:space="preserve">
+    <value>Loading folders …</value>
+  </data>
+  <data name="Fo_NobodyIndividual" xml:space="preserve">
+    <value>No individual person has access here.</value>
+  </data>
+  <data name="Fo_NoFindings" xml:space="preserve">
+    <value>There are no findings for this folder.</value>
+  </data>
+  <data name="Fo_NoFolders" xml:space="preserve">
+    <value>No folders are stored in this run.</value>
+  </data>
+  <data name="Fo_NoOwnPermissions" xml:space="preserve">
+    <value>No own permissions</value>
+  </data>
+  <data name="Fo_NoPersonNoGroups" xml:space="preserve">
+    <value>No individual person found – the run was made without resolving groups.</value>
+  </data>
+  <data name="Fo_NoRun" xml:space="preserve">
+    <value>No run loaded. Start a scan on the Overview page or open a saved run.</value>
+  </data>
+  <data name="Fo_NoRunShort" xml:space="preserve">
+    <value>No run loaded.</value>
+  </data>
+  <data name="Fo_NoSearchMatch" xml:space="preserve">
+    <value>No stored folder matches “{0}”.</value>
+    <comment>{0} = query</comment>
+  </data>
+  <data name="Fo_NoShare" xml:space="preserve">
+    <value>no share</value>
+  </data>
+  <data name="Fo_NotReadableCap" xml:space="preserve">
+    <value>Not readable</value>
+  </data>
+  <data name="Fo_NotStored" xml:space="preserve">
+    <value>“{0}” is not stored as a folder in this run.</value>
+    <comment>{0} = path</comment>
+  </data>
+  <data name="Fo_Origin" xml:space="preserve">
+    <value>Origin</value>
+  </data>
+  <data name="Fo_OwnerUnknown" xml:space="preserve">
+    <value>Owner unknown</value>
+  </data>
+  <data name="Fo_PersonRowText" xml:space="preserve">
+    <value>{0}, share {1}, NTFS {2}, {3}</value>
+    <comment>{0} = Person, {1} = ViaShare, {2} = Ntfs, {3} = Via</comment>
+  </data>
+  <data name="Fo_ReducedByDeny" xml:space="preserve">
+    <value>Restricted by a deny entry</value>
+  </data>
+  <data name="Fo_ScanRoot" xml:space="preserve">
+    <value>Scan root</value>
+  </data>
+  <data name="Fo_Search" xml:space="preserve">
+    <value>Search folders</value>
+  </data>
+  <data name="Fo_SearchResults" xml:space="preserve">
+    <value>Search results</value>
+  </data>
+  <data name="Fo_SelectFolder" xml:space="preserve">
+    <value>Select a folder on the left to see its permissions.</value>
+  </data>
+  <data name="Fo_ShareFact" xml:space="preserve">
+    <value>Share {0}</value>
+    <comment>{0} = unc</comment>
+  </data>
+  <data name="Fo_SharePermissionsTip" xml:space="preserve">
+    <value>Share permissions:
+{0}</value>
+    <comment>{0} = one line per entry</comment>
+  </data>
+  <data name="Fo_ShowFailed" xml:space="preserve">
+    <value>The folder could not be shown</value>
+  </data>
+  <data name="Fo_ShowParent" xml:space="preserve">
+    <value>Show parent folder</value>
+  </data>
+  <data name="Fo_Tree" xml:space="preserve">
+    <value>Folder tree</value>
+  </data>
+  <data name="Fo_TreeFailed" xml:space="preserve">
+    <value>The folder tree could not be built</value>
+  </data>
+  <data name="Fo_UnreadableWho" xml:space="preserve">
+    <value>The folder is not readable – who can get in cannot be determined.</value>
+  </data>
+  <data name="Fo_WhoCanEnter" xml:space="preserve">
+    <value>Who can get in</value>
+  </data>
+  <data name="Fo_WhoCanEnterCount" xml:space="preserve">
+    <value>Who can get in ({0})</value>
+    <comment>{0} = Labels.Number(people.Count)</comment>
+  </data>
+  <data name="Fo_WhoFailed" xml:space="preserve">
+    <value>“Who can get in” could not be calculated</value>
+  </data>
+  <data name="Identity_DirectoryErrorAccounts" xml:space="preserve">
+    <value>Directory error while resolving accounts: {0}</value>
+    <comment>{0} = ex.Message</comment>
+  </data>
+  <data name="Identity_DirectoryErrorMembers" xml:space="preserve">
+    <value>Directory error while reading group members: {0}</value>
+    <comment>{0} = ex.Message</comment>
+  </data>
+  <data name="Identity_DirectoryTimeout" xml:space="preserve">
+    <value>Directory does not respond within {0} – accounts and groups from this source remain “Unknown”.</value>
+    <comment>{0} = TimeBudget.Describe(CallTimeout)</comment>
+  </data>
+  <data name="Identity_DirectoryUnreachable" xml:space="preserve">
+    <value>Directory not reachable.</value>
+  </data>
+  <data name="Identity_GroupsTooDeep" xml:space="preserve">
+    <value>Groups are nested deeper than {0} levels – the members of this group were not resolved any further.</value>
+    <comment>{0} = MaxGroupDepth</comment>
+  </data>
+  <data name="Identity_LookupTimeout" xml:space="preserve">
+    <value>Account resolution does not respond within {0}. The affected accounts remain “Unknown”.</value>
+    <comment>{0} = TimeBudget.Describe(CallTimeout)</comment>
+  </data>
+  <data name="Identity_MembersMerged" xml:space="preserve">
+    <value>The group has different members on the scanned servers. Because each SID occurs only once in a run, the members of all servers are combined – access through this group may apply on only one of the servers.</value>
+  </data>
+  <data name="Identity_NamesNotResolvable" xml:space="preserve">
+    <value>Account names cannot be resolved: {0}. The affected accounts remain “Unknown”.</value>
+    <comment>{0} = r.Error ?? Strings.Identity_UnknownError</comment>
+  </data>
+  <data name="Identity_NotAskedServer" xml:space="preserve">
+    <value>Accounts were not looked up on the server itself. Accounts that cannot be resolved therefore remain “Unknown” instead of “Orphaned” – only the server knows its local accounts.</value>
+  </data>
+  <data name="Identity_Service" xml:space="preserve">
+    <value>Service ({0})</value>
+    <comment>{0} = sid</comment>
+  </data>
+  <data name="Identity_UnknownError" xml:space="preserve">
+    <value>unknown error</value>
+  </data>
+  <data name="Info_Anonymize" xml:space="preserve">
+    <value>Without names and addresses</value>
+  </data>
+  <data name="Info_AnonymizeName" xml:space="preserve">
+    <value>Diagnostics package without names, paths and addresses</value>
+  </data>
+  <data name="Info_CliExample" xml:space="preserve">
+    <value>"C:\Program Files\Zutritt\Zutritt.exe" scan \\FS01 --compare --report D:\Reports\Zutritt.pdf</value>
+  </data>
+  <data name="Info_CliExampleName" xml:space="preserve">
+    <value>Command line example</value>
+  </data>
+  <data name="Info_CliHeading" xml:space="preserve">
+    <value>Command line and scheduled tasks</value>
+  </data>
+  <data name="Info_CliIntro" xml:space="preserve">
+    <value>The same Zutritt.exe also runs without a window – for example every week as a scheduled task with a report to sign:</value>
+  </data>
+  <data name="Info_CliMore" xml:space="preserve">
+    <value>All commands and options: Zutritt.exe --help · version and this information as text: Zutritt.exe --info</value>
+  </data>
+  <data name="Info_Create" xml:space="preserve">
+    <value>Create …</value>
+  </data>
+  <data name="Info_DbNotOpened" xml:space="preserve">
+    <value>{0} – could not be opened, runs are not saved</value>
+    <comment>{0} = shown</comment>
+  </data>
+  <data name="Info_DemoDb" xml:space="preserve">
+    <value>{0} (demo, deleted on exit)</value>
+    <comment>{0} = shown</comment>
+  </data>
+  <data name="Info_DiagFailed" xml:space="preserve">
+    <value>The diagnostics package could not be saved: {0}</value>
+    <comment>{0} = ErrorCodes.Describe(ex, ErrorCodes.DiagnosticsPackage)</comment>
+  </data>
+  <data name="Info_Diagnostics" xml:space="preserve">
+    <value>Create diagnostics package</value>
+  </data>
+  <data name="Info_DiagnosticsDescription" xml:space="preserve">
+    <value>Version, system information and the log of the last 7 days as a ZIP for support.</value>
+  </data>
+  <data name="Info_DiagSavedAnon" xml:space="preserve">
+    <value>Diagnostics package saved: {0} – without names, paths and addresses.</value>
+    <comment>{0} = path</comment>
+  </data>
+  <data name="Info_DiagSavedFull" xml:space="preserve">
+    <value>Diagnostics package saved: {0} – with names and paths, please share only confidentially.</value>
+    <comment>{0} = path</comment>
+  </data>
+  <data name="Info_ExitCode0" xml:space="preserve">
+    <value>Exit code 0</value>
+  </data>
+  <data name="Info_ExitCode1" xml:space="preserve">
+    <value>Exit code 1</value>
+  </data>
+  <data name="Info_ExitCode2" xml:space="preserve">
+    <value>Exit code 2</value>
+  </data>
+  <data name="Info_ExitCode3" xml:space="preserve">
+    <value>Exit code 3</value>
+  </data>
+  <data name="Info_ExitError" xml:space="preserve">
+    <value>Error or cancelled</value>
+  </data>
+  <data name="Info_ExitMediumLong" xml:space="preserve">
+    <value>“Medium” findings, but no “High”</value>
+  </data>
+  <data name="Info_HelpLinks" xml:space="preserve">
+    <value>Help and links</value>
+  </data>
+  <data name="Info_Keyboard" xml:space="preserve">
+    <value>Keyboard</value>
+  </data>
+  <data name="Info_KeyboardText" xml:space="preserve">
+    <value>Ctrl+1 to Ctrl+7 switch between pages · Ctrl+F jumps to the search box · Enter opens the selected run, Del deletes it</value>
+  </data>
+  <data name="Info_LanguageDescription" xml:space="preserve">
+    <value>Follows Windows unless chosen here and takes effect at the next start. Default for all users: %ProgramData%\Zutritt\settings.json, for scripts: environment variable ZUTRITT_LANGUAGE.</value>
+  </data>
+  <data name="Info_LanguageForced" xml:space="preserve">
+    <value>Set by the environment variable {0} – the choice here only applies without it.</value>
+  </data>
+  <data name="Info_LanguageMachine" xml:space="preserve">
+    <value>Default for this computer ({0})</value>
+    <comment>{0} = name of the language set in %ProgramData%\Zutritt\settings.json; shown instead of Info_LanguageSystem when that file sets a language</comment>
+  </data>
+  <data name="Info_LanguageNotSaved" xml:space="preserve">
+    <value>The language could not be saved: {0}</value>
+  </data>
+  <data name="Info_LanguageRestart" xml:space="preserve">
+    <value>The language changes the next time Zutritt starts.</value>
+  </data>
+  <data name="Info_LanguageSystem" xml:space="preserve">
+    <value>As Windows ({0})</value>
+    <comment>{0} = name of the language Windows uses</comment>
+  </data>
+  <data name="Info_License" xml:space="preserve">
+    <value>Licence</value>
+  </data>
+  <data name="Info_LicenseDescription" xml:space="preserve">
+    <value>Free use, modification and distribution as long as the copyright and licence text are retained.</value>
+  </data>
+  <data name="Info_LicenseMissing" xml:space="preserve">
+    <value>The licence text is missing from this build of Zutritt</value>
+  </data>
+  <data name="Info_MissingAt" xml:space="preserve">
+    <value>{0} – they are available at {1}.</value>
+    <comment>{0} = missing, {1} = url</comment>
+  </data>
+  <data name="Info_NoDb" xml:space="preserve">
+    <value>No database open – runs are not saved</value>
+  </data>
+  <data name="Info_NoticesDescription" xml:space="preserve">
+    <value>Libraries that come with Zutritt – with version, source, copyright and licence text.</value>
+  </data>
+  <data name="Info_NoticesMissing" xml:space="preserve">
+    <value>The third-party licences are missing from this build of Zutritt</value>
+  </data>
+  <data name="Info_OpenFolder" xml:space="preserve">
+    <value>Open folder</value>
+  </data>
+  <data name="Info_OpenImprint" xml:space="preserve">
+    <value>Open imprint</value>
+  </data>
+  <data name="Info_OpenPrivacy" xml:space="preserve">
+    <value>Open privacy</value>
+  </data>
+  <data name="Info_OpenSource" xml:space="preserve">
+    <value>Open source code on GitHub</value>
+  </data>
+  <data name="Info_OpenSupport" xml:space="preserve">
+    <value>Open help and support</value>
+  </data>
+  <data name="Info_OpenWebsite" xml:space="preserve">
+    <value>Open website</value>
+  </data>
+  <data name="Info_PrivacyDescription" xml:space="preserve">
+    <value>Which data Zutritt stores where, which connections it makes and how to delete everything.</value>
+  </data>
+  <data name="Info_ReadOnlyDescription" xml:space="preserve">
+    <value>Zutritt reads shares, NTFS permissions and group memberships. It changes no permissions, files or accounts. {0}</value>
+    <comment>{0} = “This software sends no data …”</comment>
+  </data>
+  <data name="Info_ReadOnlyHeader" xml:space="preserve">
+    <value>Read-only, data stays here</value>
+  </data>
+  <data name="Info_SaveDiagnostics" xml:space="preserve">
+    <value>Save diagnostics package</value>
+  </data>
+  <data name="Info_Show" xml:space="preserve">
+    <value>Show</value>
+  </data>
+  <data name="Info_ShowLicense" xml:space="preserve">
+    <value>Show licence text</value>
+  </data>
+  <data name="Info_SupportDescription" xml:space="preserve">
+    <value>Report bugs and ask questions on GitHub – with guaranteed response under a support contract.</value>
+  </data>
+  <data name="Info_Version" xml:space="preserve">
+    <value>Version {0} · .NET {1}</value>
+  </data>
+  <data name="Info_VersionBuild" xml:space="preserve">
+    <value>Version {0} · build {1} · .NET {2}</value>
+  </data>
+  <data name="Info_WebsiteDescription" xml:space="preserve">
+    <value>ICT-Baden on GitHub</value>
+  </data>
+  <data name="Info_ZipFilter" xml:space="preserve">
+    <value>ZIP archive (*.zip)|*.zip</value>
+  </data>
+  <data name="Kind_BuiltIn" xml:space="preserve">
+    <value>Built-in</value>
+  </data>
+  <data name="Kind_Computer" xml:space="preserve">
+    <value>Computer</value>
+  </data>
+  <data name="Kind_Group" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="Kind_KnownAccount" xml:space="preserve">
+    <value>Well-known account</value>
+  </data>
+  <data name="Kind_Orphaned" xml:space="preserve">
+    <value>Orphaned</value>
+  </data>
+  <data name="Kind_Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="Kind_User" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="Local_MembersUnreadable" xml:space="preserve">
+    <value>Members of “{0}” not readable: {1}.</value>
+    <comment>{0} = group, {1} = Native.Describe(code)</comment>
+  </data>
+  <data name="Local_Unreadable" xml:space="preserve">
+    <value>Local accounts and groups not readable: {0}. Members of local and BUILTIN groups are missing, local accounts remain “Unknown”.</value>
+    <comment>{0} = error</comment>
+  </data>
+  <data name="Nav_Comparison" xml:space="preserve">
+    <value>Comparison</value>
+  </data>
+  <data name="Nav_Findings" xml:space="preserve">
+    <value>Findings</value>
+  </data>
+  <data name="Nav_Folders" xml:space="preserve">
+    <value>Folders</value>
+  </data>
+  <data name="Nav_Info" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="Nav_Overview" xml:space="preserve">
+    <value>Overview</value>
+  </data>
+  <data name="Nav_People" xml:space="preserve">
+    <value>People</value>
+  </data>
+  <data name="Nav_Report" xml:space="preserve">
+    <value>Report</value>
+  </data>
+  <data name="Ov_AccessChangesMany" xml:space="preserve">
+    <value>{0} access changes</value>
+  </data>
+  <data name="Ov_AccessChangesOne" xml:space="preserve">
+    <value>{0} access change</value>
+  </data>
+  <data name="Ov_BadDeepFrom" xml:space="preserve">
+    <value>“Exception counts as deep from level”: please enter a whole number from 1.</value>
+  </data>
+  <data name="Ov_BadDepth" xml:space="preserve">
+    <value>Maximum depth: please enter a whole number from 0 or leave it empty.</value>
+  </data>
+  <data name="Ov_Cancelling" xml:space="preserve">
+    <value>Cancelling …</value>
+  </data>
+  <data name="Ov_ChangesSince" xml:space="preserve">
+    <value>Since the run of {0}: {1}, {2} and {3}.</value>
+    <comment>{0} = date, {1} = new findings, {2} = resolved, {3} = access changes</comment>
+  </data>
+  <data name="Ov_ChooseFolder" xml:space="preserve">
+    <value>Choose folder …</value>
+  </data>
+  <data name="Ov_ChooseFolderTitle" xml:space="preserve">
+    <value>Choose a folder for the scan</value>
+  </data>
+  <data name="Ov_CurrentlyLoaded" xml:space="preserve">
+    <value>Currently loaded</value>
+  </data>
+  <data name="Ov_DeepFrom" xml:space="preserve">
+    <value>Exception counts as deep from level</value>
+  </data>
+  <data name="Ov_DeepFromHint" xml:space="preserve">
+    <value>for “deeply hidden exception”</value>
+  </data>
+  <data name="Ov_DeleteConfirm" xml:space="preserve">
+    <value>Permanently delete the run of {0} ({1})?
+
+Reports that have already been saved are kept.</value>
+    <comment>{0} = row.Date, {1} = row.Targets</comment>
+  </data>
+  <data name="Ov_DeleteRun" xml:space="preserve">
+    <value>Delete run</value>
+  </data>
+  <data name="Ov_DemoDatabase" xml:space="preserve">
+    <value>Demo database, deleted on exit: {0}</value>
+    <comment>{0} = state.DatabasePath</comment>
+  </data>
+  <data name="Ov_DemoSuffix" xml:space="preserve">
+    <value> · demo</value>
+  </data>
+  <data name="Ov_Duration" xml:space="preserve">
+    <value> · duration {0}</value>
+    <comment>{0} = Labels.Duration(scan.FinishedAt - scan.StartedAt)</comment>
+  </data>
+  <data name="Ov_Elapsed" xml:space="preserve">
+    <value>Elapsed</value>
+  </data>
+  <data name="Ov_FindingsHigh" xml:space="preserve">
+    <value>Findings High</value>
+  </data>
+  <data name="Ov_FindingsInfo" xml:space="preserve">
+    <value>Notes (Info)</value>
+  </data>
+  <data name="Ov_FindingsLow" xml:space="preserve">
+    <value>Findings Low</value>
+  </data>
+  <data name="Ov_FindingsMedium" xml:space="preserve">
+    <value>Findings Medium</value>
+  </data>
+  <data name="Ov_FoldersCheckedFiles" xml:space="preserve">
+    <value>Folders checked (+ {0} files)</value>
+    <comment>{0} = Labels.Number(scan.FilesVisited)</comment>
+  </data>
+  <data name="Ov_FoldersCounted" xml:space="preserve">
+    <value>Folders counted</value>
+  </data>
+  <data name="Ov_Hero" xml:space="preserve">
+    <value>Who can access your shares?</value>
+  </data>
+  <data name="Ov_HighCount" xml:space="preserve">
+    <value>{0} High</value>
+    <comment>{0} = Labels.Number(Summary.HighFindings)</comment>
+  </data>
+  <data name="Ov_IncludeFiles" xml:space="preserve">
+    <value>Include files</value>
+  </data>
+  <data name="Ov_IncludeFilesTip" xml:space="preserve">
+    <value>Also record files with their own permissions – takes considerably longer.</value>
+  </data>
+  <data name="Ov_Intro" xml:space="preserve">
+    <value>Zutritt reads shares and NTFS permissions, resolves groups down to people and shows what stands out – with a comparison to the last run and a report to sign. Enter a target below and start the scan.</value>
+  </data>
+  <data name="Ov_MaxDepth" xml:space="preserve">
+    <value>Maximum depth</value>
+  </data>
+  <data name="Ov_MaxDepthHint" xml:space="preserve">
+    <value>empty = unlimited</value>
+  </data>
+  <data name="Ov_NeedTarget" xml:space="preserve">
+    <value>Please enter at least one target – e.g. \\server\share or “.” for the shares of this computer.</value>
+  </data>
+  <data name="Ov_NewFindingsMany" xml:space="preserve">
+    <value>{0} new findings</value>
+  </data>
+  <data name="Ov_NewFindingsOne" xml:space="preserve">
+    <value>{0} new finding</value>
+  </data>
+  <data name="Ov_NewScan" xml:space="preserve">
+    <value>New scan</value>
+  </data>
+  <data name="Ov_NoDatabase" xml:space="preserve">
+    <value>No database open – runs are not saved in this session.</value>
+  </data>
+  <data name="Ov_NoDatabaseNoRuns" xml:space="preserve">
+    <value>Without a database there are no saved runs.</value>
+  </data>
+  <data name="Ov_NoRuns" xml:space="preserve">
+    <value>No saved runs yet – after the first scan it will appear here.</value>
+  </data>
+  <data name="Ov_NotSaved" xml:space="preserve">
+    <value>Scan finished but not saved: {0} The run is loaded – please create a report under “Report” now, otherwise it is lost after closing.</value>
+    <comment>{0} = error message with code</comment>
+  </data>
+  <data name="Ov_Options" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="Ov_Preparing" xml:space="preserve">
+    <value>Preparing scan …</value>
+  </data>
+  <data name="Ov_ReadOnly" xml:space="preserve">
+    <value>Zutritt only reads – it changes no permissions and no files.</value>
+  </data>
+  <data name="Ov_RecentRuns" xml:space="preserve">
+    <value>Recent runs</value>
+  </data>
+  <data name="Ov_RefreshList" xml:space="preserve">
+    <value>Refresh list</value>
+  </data>
+  <data name="Ov_ResolvedMany" xml:space="preserve">
+    <value>{0} resolved</value>
+  </data>
+  <data name="Ov_ResolvedOne" xml:space="preserve">
+    <value>{0} resolved</value>
+  </data>
+  <data name="Ov_ResolveGroups" xml:space="preserve">
+    <value>Resolve groups down to people</value>
+  </data>
+  <data name="Ov_ResolveGroupsTip" xml:space="preserve">
+    <value>Resolve local groups and – if reachable – Active Directory groups down to the individual account.</value>
+  </data>
+  <data name="Ov_ResultMeta" xml:space="preserve">
+    <value>{0}{1} · {2} on {3}</value>
+    <comment>{0} = Labels.Date(scan.StartedAt), {1} = duration, {2} = scan.ScannedBy, {3} = scan.Machine</comment>
+  </data>
+  <data name="Ov_RunDeleted" xml:space="preserve">
+    <value>Run of {0} deleted.</value>
+    <comment>{0} = row.Date</comment>
+  </data>
+  <data name="Ov_RunLoaded" xml:space="preserve">
+    <value>Run of {0} loaded ({1}).</value>
+    <comment>{0} = row.Date, {1} = row.Targets</comment>
+  </data>
+  <data name="Ov_RunNotDeleted" xml:space="preserve">
+    <value>The run could not be deleted</value>
+  </data>
+  <data name="Ov_RunNotOpened" xml:space="preserve">
+    <value>The run could not be opened</value>
+  </data>
+  <data name="Ov_RunRowText" xml:space="preserve">
+    <value>{0}, {1}, {2} findings</value>
+    <comment>{0} = Date, {1} = Targets, {2} = FindingsText</comment>
+  </data>
+  <data name="Ov_RunsUnreadable" xml:space="preserve">
+    <value>The saved runs could not be read</value>
+  </data>
+  <data name="Ov_SavedIn" xml:space="preserve">
+    <value>Saved in {0}</value>
+    <comment>{0} = state.DatabasePath</comment>
+  </data>
+  <data name="Ov_SavingComparing" xml:space="preserve">
+    <value>Saving and comparing …</value>
+  </data>
+  <data name="Ov_ScanCancelled" xml:space="preserve">
+    <value>Scan cancelled – nothing was saved.</value>
+  </data>
+  <data name="Ov_ScanDoneMany" xml:space="preserve">
+    <value>Scan finished: {0} folders checked, {1} findings.</value>
+  </data>
+  <data name="Ov_ScanDoneOne" xml:space="preserve">
+    <value>Scan finished: {0} folders checked, {1} finding.</value>
+  </data>
+  <data name="Ov_ScanFailed" xml:space="preserve">
+    <value>The scan failed: {0}</value>
+  </data>
+  <data name="Ov_ScanRunning" xml:space="preserve">
+    <value>Scan running …</value>
+  </data>
+  <data name="Ov_ShowChanges" xml:space="preserve">
+    <value>View changes</value>
+  </data>
+  <data name="Ov_ShowFindings" xml:space="preserve">
+    <value>View findings</value>
+  </data>
+  <data name="Ov_SkipAdmin" xml:space="preserve">
+    <value>Skip admin shares</value>
+  </data>
+  <data name="Ov_SkipAdminTip" xml:space="preserve">
+    <value>Do not check C$, ADMIN$, IPC$ and print$.</value>
+  </data>
+  <data name="Ov_StartScan" xml:space="preserve">
+    <value>Start scan</value>
+  </data>
+  <data name="Ov_TargetsHint" xml:space="preserve">
+    <value>\\server\share, D:\Data or . for all shares of this computer</value>
+  </data>
+  <data name="Ov_TargetsLabel" xml:space="preserve">
+    <value>Targets – one per line</value>
+  </data>
+  <data name="Ov_TargetsName" xml:space="preserve">
+    <value>Targets, one per line</value>
+  </data>
+  <data name="Ov_WithOwnPermissions" xml:space="preserve">
+    <value>with own permissions</value>
+  </data>
+  <data name="Page_ComparisonSubtitle" xml:space="preserve">
+    <value>What has changed since the last run?</value>
+  </data>
+  <data name="Page_FindingsSubtitle" xml:space="preserve">
+    <value>What stands out – sorted by severity, with explanation and recommendation</value>
+  </data>
+  <data name="Page_FoldersSubtitle" xml:space="preserve">
+    <value>Who can get in here?</value>
+  </data>
+  <data name="Page_InfoSubtitle" xml:space="preserve">
+    <value>About Zutritt</value>
+  </data>
+  <data name="Page_OverviewSubtitle" xml:space="preserve">
+    <value>Start a new scan or open a saved run</value>
+  </data>
+  <data name="Page_PeopleSubtitle" xml:space="preserve">
+    <value>Where can someone go?</value>
+  </data>
+  <data name="Page_ReportSubtitle" xml:space="preserve">
+    <value>Excel to work with, PDF to sign</value>
+  </data>
+  <data name="Pdf_AccessChangesIntro" xml:space="preserve">
+    <value>Consequence of the changes above: who can now effectively do more or less (across all groups, after deducting denials) – {0} first, combined per folder. Every individual person with before and after is in the Excel report (sheet {1}).</value>
+    <comment>{0} = quoted “More access”, {1} = quoted sheet name</comment>
+  </data>
+  <data name="Pdf_AccountsGroups" xml:space="preserve">
+    <value>Accounts and groups</value>
+  </data>
+  <data name="Pdf_AdminShare" xml:space="preserve">
+    <value>administrative share</value>
+  </data>
+  <data name="Pdf_AndMore" xml:space="preserve">
+    <value> … and {0} more</value>
+    <comment>{0} = ReportText.Number(names.Count - maxNames)</comment>
+  </data>
+  <data name="Pdf_Attention" xml:space="preserve">
+    <value>Attention: </value>
+  </data>
+  <data name="Pdf_ChangesIntro" xml:space="preserve">
+    <value>Comparison with the run of {0}. First the findings, then the causes (permission entries, group memberships, folders), finally the consequences for individual people.</value>
+    <comment>{0} = ReportText.DateTime(comparison.OlderStartedAt)</comment>
+  </data>
+  <data name="Pdf_ComparedWith" xml:space="preserve">
+    <value>Compared with</value>
+  </data>
+  <data name="Pdf_ComparedWithRun" xml:space="preserve">
+    <value>Comparison with the run of {0}.</value>
+    <comment>{0} = ReportText.DateTime(comparison.OlderStartedAt)</comment>
+  </data>
+  <data name="Pdf_ComparisonHeading" xml:space="preserve">
+    <value>Comparison with the last run</value>
+  </data>
+  <data name="Pdf_Confidential" xml:space="preserve">
+    <value>Confidential – contains information about accounts and access rights. For internal use and auditors only.</value>
+  </data>
+  <data name="Pdf_Contents" xml:space="preserve">
+    <value>Contents</value>
+  </data>
+  <data name="Pdf_CutChanges" xml:space="preserve">
+    <value>Changes ({0} of {1})</value>
+    <comment>{0} = ReportText.Number(shown), {1} = ReportText.Number(c.Rows.Count)</comment>
+  </data>
+  <data name="Pdf_CutPart" xml:space="preserve">
+    <value>{0} ({1} of {2})</value>
+    <comment>{0} = what, {1} = ReportText.Number(limit), {2} = ReportText.Number(total)</comment>
+  </data>
+  <data name="Pdf_CutSharesMany" xml:space="preserve">
+    <value>Share permissions (at most {0} entries per share, affects {1} shares)</value>
+  </data>
+  <data name="Pdf_CutSharesOne" xml:space="preserve">
+    <value>Share permissions (at most {0} entries per share, affects {1} share)</value>
+  </data>
+  <data name="Pdf_Date" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="Pdf_Depth" xml:space="preserve">
+    <value>Depth {0}</value>
+    <comment>{0} = f.Depth.ToString(CultureInfo.InvariantCulture)</comment>
+  </data>
+  <data name="Pdf_DirectlyGranted" xml:space="preserve">
+    <value>directly granted</value>
+  </data>
+  <data name="Pdf_Disabled" xml:space="preserve">
+    <value>disabled</value>
+  </data>
+  <data name="Pdf_ErrorsIntro" xml:space="preserve">
+    <value>These paths could not be read – the report makes no statement about their permissions.</value>
+  </data>
+  <data name="Pdf_ErrorsLower" xml:space="preserve">
+    <value>areas not checked</value>
+  </data>
+  <data name="Pdf_File" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="Pdf_FilesChecked" xml:space="preserve">
+    <value>Files checked</value>
+  </data>
+  <data name="Pdf_FilesWithOwn" xml:space="preserve">
+    <value>Files with their own permissions</value>
+  </data>
+  <data name="Pdf_FindingCountMany" xml:space="preserve">
+    <value>{0} findings</value>
+  </data>
+  <data name="Pdf_FindingCountOne" xml:space="preserve">
+    <value>{0} finding</value>
+  </data>
+  <data name="Pdf_FindingsBySeverity" xml:space="preserve">
+    <value>Findings by severity</value>
+  </data>
+  <data name="Pdf_FindingsIntro" xml:space="preserve">
+    <value>Grouped by severity and rule. The explanation and recommendation for each rule are under {0}.</value>
+    <comment>{0} = quoted section title</comment>
+  </data>
+  <data name="Pdf_FirstTargetMore" xml:space="preserve">
+    <value>{0} (+{1} more)</value>
+    <comment>{0} = targets[0], {1} = targets.Count - 1</comment>
+  </data>
+  <data name="Pdf_FolderChanges" xml:space="preserve">
+    <value>Folders with new or removed own permissions</value>
+  </data>
+  <data name="Pdf_FoldersAddedRemoved" xml:space="preserve">
+    <value>Folders newly with own permissions / no longer with own permissions</value>
+  </data>
+  <data name="Pdf_FoldersChecked" xml:space="preserve">
+    <value>Folders checked</value>
+  </data>
+  <data name="Pdf_FooterCreated" xml:space="preserve">
+    <value>Created on {0} · Confidential</value>
+    <comment>{0} = ReportText.DateTime(data.Header.CreatedAt)</comment>
+  </data>
+  <data name="Pdf_GroupMemberships" xml:space="preserve">
+    <value>Group memberships</value>
+  </data>
+  <data name="Pdf_InheritanceBroken" xml:space="preserve">
+    <value>Inheritance broken</value>
+  </data>
+  <data name="Pdf_InheritanceDiffers" xml:space="preserve">
+    <value>Inheritance differs (probably moved)</value>
+  </data>
+  <data name="Pdf_Inherited" xml:space="preserve">
+    <value>Inherited: {0}</value>
+  </data>
+  <data name="Pdf_InheritedDenyAce" xml:space="preserve">
+    <value>{0} (denied: {1})</value>
+  </data>
+  <data name="Pdf_Machine" xml:space="preserve">
+    <value>Computer</value>
+  </data>
+  <data name="Pdf_ManyTargets" xml:space="preserve">
+    <value>{0} targets</value>
+  </data>
+  <data name="Pdf_MoreEntries" xml:space="preserve">
+    <value>… and {0} more entries (complete in the Excel report)</value>
+    <comment>{0} = ReportText.Number(s.Permissions.Count - limits.ShareEntries)</comment>
+  </data>
+  <data name="Pdf_MoreTargets" xml:space="preserve">
+    <value>
+… and {0} more (shortened – complete in the Excel report)</value>
+    <comment>{0} = ReportText.Number(h.Targets.Count - CoverTargets)</comment>
+  </data>
+  <data name="Pdf_NoChanges" xml:space="preserve">
+    <value>No changes since the last run.</value>
+  </data>
+  <data name="Pdf_NoChangesSince" xml:space="preserve">
+    <value>No changes since the run of {0}.</value>
+    <comment>{0} = ReportText.DateTime(c.OlderStartedAt)</comment>
+  </data>
+  <data name="Pdf_NoEntries" xml:space="preserve">
+    <value>No entries – nobody has access (only the owner can change permissions).</value>
+  </data>
+  <data name="Pdf_NoFindings" xml:space="preserve">
+    <value>No findings – none of the rules was triggered.</value>
+  </data>
+  <data name="Pdf_NoFolders" xml:space="preserve">
+    <value>No folders in the run.</value>
+  </data>
+  <data name="Pdf_NoFont" xml:space="preserve">
+    <value>No font was found for the PDF report (searched: {0} in {1}). On Linux, the package fonts-dejavu-core helps, for example.</value>
+    <comment>{0} = string.Join(", ", Candidates.Select(c =&gt; c.Family)), {1} = string.Join(", ", Directories())</comment>
+  </data>
+  <data name="Pdf_None" xml:space="preserve">
+    <value>none</value>
+  </data>
+  <data name="Pdf_NoShares" xml:space="preserve">
+    <value>No shares in the run – only local paths were scanned.</value>
+  </data>
+  <data name="Pdf_Notes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="Pdf_NotReadable" xml:space="preserve">
+    <value>Not readable: {0}</value>
+  </data>
+  <data name="Pdf_OneTarget" xml:space="preserve">
+    <value>one target</value>
+  </data>
+  <data name="Pdf_OnlyDirect" xml:space="preserve">
+    <value>direct only</value>
+  </data>
+  <data name="Pdf_Owner" xml:space="preserve">
+    <value>Owner: {0}</value>
+  </data>
+  <data name="Pdf_PageOf" xml:space="preserve">
+    <value>Page {0} of {1}</value>
+    <comment>{0} = page number field, {1} = page count field</comment>
+  </data>
+  <data name="Pdf_PeopleAccess" xml:space="preserve">
+    <value>Access of people ({0})</value>
+    <comment>{0} = ReportText.Number(rows.Count)</comment>
+  </data>
+  <data name="Pdf_PeopleIntro" xml:space="preserve">
+    <value>{0} of {1} user accounts have at least list permission on a listed folder (effective, across all groups and after deducting denials). {2} counts the listed folders with access; the individual accesses are in the Excel report (sheet {3}).</value>
+    <comment>{2} = quoted column name “Folders”, {3} = quoted sheet name</comment>
+  </data>
+  <data name="Pdf_PeopleList" xml:space="preserve">
+    <value>{0} people: {1}</value>
+    <comment>{0} = ReportText.Number(names.Count), {1} = string.Join(", ", names.Take(maxNames))</comment>
+  </data>
+  <data name="Pdf_PeopleWithAccess" xml:space="preserve">
+    <value>People (of which with access)</value>
+  </data>
+  <data name="Pdf_PeopleWithout" xml:space="preserve">
+    <value>{0} further user accounts without access to the listed folders are in the Excel report (sheet {1}).</value>
+    <comment>{1} = quoted sheet name</comment>
+  </data>
+  <data name="Pdf_Period" xml:space="preserve">
+    <value>Period</value>
+  </data>
+  <data name="Pdf_PermissionEntries" xml:space="preserve">
+    <value>Permission entries</value>
+  </data>
+  <data name="Pdf_PermissionEntriesIntro" xml:space="preserve">
+    <value>Entries in the folder ACLs that were added, removed or changed.</value>
+  </data>
+  <data name="Pdf_PreviousRun" xml:space="preserve">
+    <value>Previous run</value>
+  </data>
+  <data name="Pdf_ProgressBuilding" xml:space="preserve">
+    <value>Building document …</value>
+  </data>
+  <data name="Pdf_ProgressLayout" xml:space="preserve">
+    <value>Laying out pages …</value>
+  </data>
+  <data name="Pdf_ProgressSaving" xml:space="preserve">
+    <value>Saving PDF …</value>
+  </data>
+  <data name="Pdf_ReadErrors" xml:space="preserve">
+    <value>Errors while reading</value>
+  </data>
+  <data name="Pdf_Remarks" xml:space="preserve">
+    <value>Remarks</value>
+  </data>
+  <data name="Pdf_ReportCreated" xml:space="preserve">
+    <value>Report created</value>
+  </data>
+  <data name="Pdf_ReportCreatedWith" xml:space="preserve">
+    <value>{0} with Zutritt {1}</value>
+    <comment>{0} = ReportText.DateTime(h.CreatedAt), {1} = h.ReportVersion</comment>
+  </data>
+  <data name="Pdf_ReviewedBy" xml:space="preserve">
+    <value>Reviewed by</value>
+  </data>
+  <data name="Pdf_RulesIntro" xml:space="preserve">
+    <value>All rules this run was checked against – including those without findings.</value>
+  </data>
+  <data name="Pdf_RunOf" xml:space="preserve">
+    <value>Run of {0}</value>
+    <comment>{0} = ReportText.DateTime(comparison.OlderStartedAt)</comment>
+  </data>
+  <data name="Pdf_ScannedBy" xml:space="preserve">
+    <value>Scanned by</value>
+  </data>
+  <data name="Pdf_Scope" xml:space="preserve">
+    <value>Scope</value>
+  </data>
+  <data name="Pdf_SectionChanges" xml:space="preserve">
+    <value>Changes since the last run</value>
+  </data>
+  <data name="Pdf_SectionErrors" xml:space="preserve">
+    <value>Areas not checked</value>
+  </data>
+  <data name="Pdf_SectionFindings" xml:space="preserve">
+    <value>Findings</value>
+  </data>
+  <data name="Pdf_SectionFolders" xml:space="preserve">
+    <value>Folders with their own permissions</value>
+  </data>
+  <data name="Pdf_SectionPeople" xml:space="preserve">
+    <value>People overview</value>
+  </data>
+  <data name="Pdf_SectionRules" xml:space="preserve">
+    <value>Rules and recommendations</value>
+  </data>
+  <data name="Pdf_SectionShares" xml:space="preserve">
+    <value>Shares</value>
+  </data>
+  <data name="Pdf_SectionSignOff" xml:space="preserve">
+    <value>Review and approval</value>
+  </data>
+  <data name="Pdf_SectionSummary" xml:space="preserve">
+    <value>Summary</value>
+  </data>
+  <data name="Pdf_ShareLabel" xml:space="preserve">
+    <value>Share: {0}</value>
+  </data>
+  <data name="Pdf_SharesIntro" xml:space="preserve">
+    <value>Over the network, the stricter of share and NTFS permission applies.</value>
+  </data>
+  <data name="Pdf_ShownOf" xml:space="preserve">
+    <value>{0}, {1} of them shown</value>
+    <comment>{0} = count, {1} = ReportText.Number(rows.Count)</comment>
+  </data>
+  <data name="Pdf_Signature" xml:space="preserve">
+    <value>Signature</value>
+  </data>
+  <data name="Pdf_SignOffIntro" xml:space="preserve">
+    <value>The signature confirms that the listed permissions and findings have been reviewed. Deviations and agreed measures are noted under {0}.</value>
+    <comment>{0} = quoted label “Remarks”</comment>
+  </data>
+  <data name="Pdf_SignOffReferenceMany" xml:space="preserve">
+    <value>Refers to the run of {0} on {1} – targets: {2}; report created on {3}, {4} pages.</value>
+    <comment>{0} = period, {1} = computer, {2} = targets, {3} = creation date, {4} = page count field</comment>
+  </data>
+  <data name="Pdf_SignOffReferenceOne" xml:space="preserve">
+    <value>Refers to the run of {0} on {1} – target: {2}; report created on {3}, {4} pages.</value>
+    <comment>{0} = period, {1} = computer, {2} = target, {3} = creation date, {4} = page count field</comment>
+  </data>
+  <data name="Pdf_Subtitle" xml:space="preserve">
+    <value>Shares and folder permissions – who can access what, and through which group</value>
+  </data>
+  <data name="Pdf_SummaryChecked" xml:space="preserve">
+    <value>{0} folders were checked under {1}. {2} of them have their own permissions or are roots and are listed in this report.</value>
+    <comment>{0} = folders checked, {1} = one target / N targets, {2} = folders listed</comment>
+  </data>
+  <data name="Pdf_SummaryCheckedFiles" xml:space="preserve">
+    <value>{0} folders and {3} files were checked under {1}. {2} of them have their own permissions or are roots and are listed in this report.</value>
+    <comment>{3} = files checked</comment>
+  </data>
+  <data name="Pdf_Target" xml:space="preserve">
+    <value>Target</value>
+  </data>
+  <data name="Pdf_Targets" xml:space="preserve">
+    <value>Targets ({0})</value>
+    <comment>{0} = ReportText.Number(h.Targets.Count)</comment>
+  </data>
+  <data name="Pdf_ToolVersion" xml:space="preserve">
+    <value>Zutritt version</value>
+  </data>
+  <data name="Pdf_Truncated" xml:space="preserve">
+    <value> … (shortened – complete in the Excel report)</value>
+  </data>
+  <data name="Pdf_TruncatedChanges" xml:space="preserve">
+    <value>Shortened: {0} of {1} changes shown – complete in the Excel report.</value>
+  </data>
+  <data name="Pdf_TruncatedEntries" xml:space="preserve">
+    <value>Shortened: {0} of {1} entries shown – complete in the Excel report.</value>
+  </data>
+  <data name="Pdf_TruncatedFindings" xml:space="preserve">
+    <value>Shortened: {0} of {1} findings shown – complete in the Excel report.</value>
+  </data>
+  <data name="Pdf_TruncatedFolders" xml:space="preserve">
+    <value>Shortened: {0} of {1} folders shown – complete in the Excel report.</value>
+  </data>
+  <data name="Pdf_TruncatedLists" xml:space="preserve">
+    <value>For long lists this PDF shows only a part – the Excel report is complete: {0}.</value>
+    <comment>{0} = list of shortened sections</comment>
+  </data>
+  <data name="Pdf_TruncatedPeople" xml:space="preserve">
+    <value>Shortened: {0} of {1} people shown – complete in the Excel report.</value>
+  </data>
+  <data name="Pdf_Unknown" xml:space="preserve">
+    <value>unknown</value>
+  </data>
+  <data name="Pdf_UnknownMachine" xml:space="preserve">
+    <value>unknown computer</value>
+    <comment>Used in the sign-off reference instead of a computer name</comment>
+  </data>
+  <data name="Pdf_UnreadableFolders" xml:space="preserve">
+    <value>Unreadable folders</value>
+  </data>
+  <data name="Pe_AccessList" xml:space="preserve">
+    <value>Folders the person can access</value>
+  </data>
+  <data name="Pe_AccessNote" xml:space="preserve">
+    <value>Folders with their own permissions – subfolders without their own permissions inherit from them.</value>
+  </data>
+  <data name="Pe_AccessToMany" xml:space="preserve">
+    <value>Access to {0} folders</value>
+    <comment>{0} = number</comment>
+  </data>
+  <data name="Pe_AccessToOne" xml:space="preserve">
+    <value>Access to {0} folder</value>
+    <comment>{0} = 1</comment>
+  </data>
+  <data name="Pe_AccountDisabled" xml:space="preserve">
+    <value>Account disabled</value>
+  </data>
+  <data name="Pe_CountFailed" xml:space="preserve">
+    <value>The number of folders per person could not be calculated</value>
+  </data>
+  <data name="Pe_CountMany" xml:space="preserve">
+    <value>{0} people</value>
+    <comment>{0} = number</comment>
+  </data>
+  <data name="Pe_CountOne" xml:space="preserve">
+    <value>{0} person</value>
+    <comment>{0} = 1</comment>
+  </data>
+  <data name="Pe_DisabledSuffix" xml:space="preserve">
+    <value>, disabled</value>
+  </data>
+  <data name="Pe_DomainAccount" xml:space="preserve">
+    <value>Domain account</value>
+  </data>
+  <data name="Pe_FolderCountMany" xml:space="preserve">
+    <value>{0} folders</value>
+    <comment>{0} = number</comment>
+  </data>
+  <data name="Pe_FolderCountOne" xml:space="preserve">
+    <value>{0} folder</value>
+    <comment>{0} = 1</comment>
+  </data>
+  <data name="Pe_LocalAccount" xml:space="preserve">
+    <value>Local account</value>
+  </data>
+  <data name="Pe_MemberOf" xml:space="preserve">
+    <value>Member of</value>
+  </data>
+  <data name="Pe_MemberOfCount" xml:space="preserve">
+    <value>Member of ({0}, including through nested groups)</value>
+    <comment>{0} = memberOf.Count</comment>
+  </data>
+  <data name="Pe_NoAccess" xml:space="preserve">
+    <value>This person has no access to any of the stored folders.</value>
+  </data>
+  <data name="Pe_NoGroup" xml:space="preserve">
+    <value>Member of no group in this run</value>
+  </data>
+  <data name="Pe_NoMatch" xml:space="preserve">
+    <value>Nobody matches “{0}”.</value>
+    <comment>{0} = query</comment>
+  </data>
+  <data name="Pe_NoUsers" xml:space="preserve">
+    <value>There are no user accounts in this run.</value>
+  </data>
+  <data name="Pe_NoUsersNoGroups" xml:space="preserve">
+    <value>No user accounts – the run was made without resolving groups.</value>
+  </data>
+  <data name="Pe_NtfsNoShare" xml:space="preserve">
+    <value>NTFS: {0} · without share permissions</value>
+    <comment>{0} = Labels.Of(g.Ntfs)</comment>
+  </data>
+  <data name="Pe_NtfsViaShare" xml:space="preserve">
+    <value>NTFS: {0} · via the share: {1}</value>
+    <comment>{0} = Labels.Of(g.Ntfs), {1} = Labels.Of(share)</comment>
+  </data>
+  <data name="Pe_OfWhichDisabled" xml:space="preserve">
+    <value>, {0} of them disabled</value>
+    <comment>{0} = number</comment>
+  </data>
+  <data name="Pe_RightsFailed" xml:space="preserve">
+    <value>The person’s permissions could not be calculated</value>
+  </data>
+  <data name="Pe_Search" xml:space="preserve">
+    <value>Search people</value>
+  </data>
+  <data name="Pe_SearchHint" xml:space="preserve">
+    <value>Search name or account</value>
+  </data>
+  <data name="Pe_SelectPerson" xml:space="preserve">
+    <value>Select a person on the left to see where they can go.</value>
+  </data>
+  <data name="Pe_ShareCaps" xml:space="preserve">
+    <value>The share permission limits the NTFS permission</value>
+  </data>
+  <data name="Phase_Accounts" xml:space="preserve">
+    <value>Accounts</value>
+  </data>
+  <data name="Phase_Done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="Phase_Findings" xml:space="preserve">
+    <value>Findings</value>
+  </data>
+  <data name="Phase_Folders" xml:space="preserve">
+    <value>Folders</value>
+  </data>
+  <data name="Phase_Targets" xml:space="preserve">
+    <value>Targets</value>
+  </data>
+  <data name="Progress_ComputingAccess" xml:space="preserve">
+    <value>Calculating effective access of {0} people …</value>
+    <comment>{0} = ReportText.Number(scan.Principals.Values.Count(p =&gt; p.Kind == PrincipalKind.Benutzer))</comment>
+  </data>
+  <data name="Progress_PreparingChanges" xml:space="preserve">
+    <value>Preparing changes since the last run …</value>
+  </data>
+  <data name="Progress_PreparingFolders" xml:space="preserve">
+    <value>Preparing folders and findings …</value>
+  </data>
+  <data name="Progress_PreparingGroups" xml:space="preserve">
+    <value>Preparing groups and shares …</value>
+  </data>
+  <data name="Report_ContainsBroad" xml:space="preserve">
+    <value>contains {0} – i.e. practically all users</value>
+    <comment>{0} = string.Join(", ", broad.Select(ReportText.Quote))</comment>
+  </data>
+  <data name="Report_Direct" xml:space="preserve">
+    <value>direct</value>
+  </data>
+  <data name="Report_Member" xml:space="preserve">
+    <value>member</value>
+  </data>
+  <data name="Report_MembersUnreadable" xml:space="preserve">
+    <value>members not readable</value>
+  </data>
+  <data name="Report_NestedMembersUnreadable" xml:space="preserve">
+    <value>members of {0} not readable – count incomplete</value>
+    <comment>{0} = string.Join(", ", unreadable.Select(ReportText.Quote))</comment>
+  </data>
+  <data name="Report_NoteEffective" xml:space="preserve">
+    <value>Effective access = all permissions allowed to the person and their groups combined, minus denied permissions.</value>
+  </data>
+  <data name="Report_NoteListed" xml:space="preserve">
+    <value>Listed are the roots of the targets and all folders with their own permissions (explicit entries, broken or differing inheritance). All other folders inherit their permissions from the nearest listed folder above.</value>
+  </data>
+  <data name="Report_NoteNetwork" xml:space="preserve">
+    <value>Over the network, the stricter of share and NTFS permission applies; “Effective” takes both into account.</value>
+  </data>
+  <data name="Report_NotReadable" xml:space="preserve">
+    <value>not readable</value>
+  </data>
+  <data name="Report_OwnPermissions" xml:space="preserve">
+    <value>own permissions</value>
+  </data>
+  <data name="Report_Period" xml:space="preserve">
+    <value>{0} – {1}</value>
+    <comment>{0} = start date and time, {1} = end (time only on the same day)</comment>
+  </data>
+  <data name="Report_ShareNoEntries" xml:space="preserve">
+    <value>no entries – no access over the network</value>
+  </data>
+  <data name="Report_TimeOfDay" xml:space="preserve">
+    <value>{0}</value>
+    <comment>{0} = date and time; German adds “Uhr”</comment>
+  </data>
+  <data name="Report_Title" xml:space="preserve">
+    <value>Permissions report</value>
+  </data>
+  <data name="Report_UpToDepth" xml:space="preserve">
+    <value>down to depth {0}</value>
+    <comment>{0} = depth</comment>
+  </data>
+  <data name="Report_WarnDepthMany" xml:space="preserve">
+    <value>The depth was limited to {0} levels – deeper folders are not included.</value>
+    <comment>{0} = number of levels</comment>
+  </data>
+  <data name="Report_WarnDepthOne" xml:space="preserve">
+    <value>The depth was limited to {0} level – deeper folders are not included.</value>
+    <comment>{0} = 1</comment>
+  </data>
+  <data name="Report_WarnErrorsMany" xml:space="preserve">
+    <value>{0} errors while reading (e.g. server or shares not reachable).</value>
+    <comment>{0} = number of errors</comment>
+  </data>
+  <data name="Report_WarnErrorsOne" xml:space="preserve">
+    <value>{0} error while reading (e.g. server or share not reachable).</value>
+    <comment>{0} = 1</comment>
+  </data>
+  <data name="Report_WarnGrantsTruncatedMany" xml:space="preserve">
+    <value>Individual access per person is limited to {0} rows; for {1} people only the totals are included.</value>
+    <comment>{0} = row limit, {1} = number of people</comment>
+  </data>
+  <data name="Report_WarnGrantsTruncatedOne" xml:space="preserve">
+    <value>Individual access per person is limited to {0} rows; for {1} person only the totals are included.</value>
+    <comment>{0} = row limit, {1} = 1</comment>
+  </data>
+  <data name="Report_WarnGroupsNotResolved" xml:space="preserve">
+    <value>Groups were not resolved down to people – the people view is incomplete.</value>
+  </data>
+  <data name="Report_WarnGroupsUnreadableMany" xml:space="preserve">
+    <value>For {0} groups the members could not be read – people in them are missing from the people view.</value>
+    <comment>{0} = number of groups</comment>
+  </data>
+  <data name="Report_WarnGroupsUnreadableOne" xml:space="preserve">
+    <value>For {0} group the members could not be read – people in it are missing from the people view.</value>
+    <comment>{0} = 1</comment>
+  </data>
+  <data name="Report_WarnMoreErrorsMany" xml:space="preserve">
+    <value>{0} further errors while reading (e.g. server or shares not reachable).</value>
+    <comment>{0} = number of errors; after the line about unreadable folders</comment>
+  </data>
+  <data name="Report_WarnMoreErrorsOne" xml:space="preserve">
+    <value>{0} further error while reading (e.g. server or share not reachable).</value>
+    <comment>{0} = 1; after the line about unreadable folders</comment>
+  </data>
+  <data name="Report_WarnRootsOnly" xml:space="preserve">
+    <value>Only the roots of the targets were checked (depth 0) – subfolders are not included.</value>
+  </data>
+  <data name="Report_WarnSharesUnreadableMany" xml:space="preserve">
+    <value>For {0} shares the share permissions were not readable – access there is assessed by the NTFS permissions only.</value>
+    <comment>{0} = number of shares</comment>
+  </data>
+  <data name="Report_WarnSharesUnreadableOne" xml:space="preserve">
+    <value>For {0} share the share permissions were not readable – access there is assessed by the NTFS permissions only.</value>
+    <comment>{0} = 1</comment>
+  </data>
+  <data name="Report_WarnUnreadableFoldersMany" xml:space="preserve">
+    <value>{0} folders not readable – nothing could be checked there.</value>
+    <comment>{0} = number of folders</comment>
+  </data>
+  <data name="Report_WarnUnreadableFoldersOne" xml:space="preserve">
+    <value>{0} folder not readable – nothing could be checked there.</value>
+    <comment>{0} = 1</comment>
+  </data>
+  <data name="ReportFile_CannotReplace" xml:space="preserve">
+    <value>The file {0} cannot be replaced – is it still open (e.g. in Excel) or is write permission missing?</value>
+    <comment>{0} = file</comment>
+  </data>
+  <data name="ReportFile_DiskFull" xml:space="preserve">
+    <value>Not enough disk space for {0}.</value>
+    <comment>{0} = file</comment>
+  </data>
+  <data name="ReportFile_FolderMissing" xml:space="preserve">
+    <value>The folder for {0} does not exist and could not be created.</value>
+    <comment>{0} = file</comment>
+  </data>
+  <data name="ReportFile_InUse" xml:space="preserve">
+    <value>The file {0} is open in another program (e.g. Excel or a PDF viewer). Please close it and try again.</value>
+    <comment>{0} = file</comment>
+  </data>
+  <data name="ReportFile_InvalidName" xml:space="preserve">
+    <value>The file name {0} is invalid.</value>
+    <comment>{0} = ReportText.Quote(path)</comment>
+  </data>
+  <data name="ReportFile_IsFolder" xml:space="preserve">
+    <value>{0} is a folder – please specify a file name.</value>
+    <comment>{0} = ReportText.Quote(full)</comment>
+  </data>
+  <data name="ReportFile_NoFileName" xml:space="preserve">
+    <value>{0} contains no file name – please specify a file name.</value>
+    <comment>{0} = ReportText.Quote(full)</comment>
+  </data>
+  <data name="ReportFile_NoFolder" xml:space="preserve">
+    <value>{0} has no folder.</value>
+    <comment>{0} = ReportText.Quote(full)</comment>
+  </data>
+  <data name="ReportFile_NoPermission" xml:space="preserve">
+    <value>No permission to write {0}.</value>
+    <comment>{0} = file</comment>
+  </data>
+  <data name="ReportFile_PathTooLong" xml:space="preserve">
+    <value>The path {0} is too long.</value>
+    <comment>{0} = file</comment>
+  </data>
+  <data name="ReportFile_SaveFailed" xml:space="preserve">
+    <value>The report {0} could not be saved: {1}</value>
+    <comment>{0} = file, {1} = e.Message</comment>
+  </data>
+  <data name="Rights_ChangePermissions" xml:space="preserve">
+    <value>Change permissions</value>
+  </data>
+  <data name="Rights_Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Rights_DeleteChildren" xml:space="preserve">
+    <value>Delete subfolders and files</value>
+  </data>
+  <data name="Rights_DeniedFromModify" xml:space="preserve">
+    <value>Denied: Change and Full Control (from Change)</value>
+  </data>
+  <data name="Rights_DeniedFromRead" xml:space="preserve">
+    <value>Denied: everything (from Read)</value>
+  </data>
+  <data name="Rights_DeniedFull" xml:space="preserve">
+    <value>Denied: Full Control</value>
+  </data>
+  <data name="Rights_DeniedNothing" xml:space="preserve">
+    <value>Denied: nothing (no effect)</value>
+  </data>
+  <data name="Rights_FullControl" xml:space="preserve">
+    <value>Full control</value>
+  </data>
+  <data name="Rights_List" xml:space="preserve">
+    <value>List contents</value>
+  </data>
+  <data name="Rights_Modify" xml:space="preserve">
+    <value>Modify</value>
+  </data>
+  <data name="Rights_None" xml:space="preserve">
+    <value>No access</value>
+  </data>
+  <data name="Rights_Read" xml:space="preserve">
+    <value>Read</value>
+  </data>
+  <data name="Rights_ReadAttributes" xml:space="preserve">
+    <value>Read attributes</value>
+  </data>
+  <data name="Rights_ReadPermissions" xml:space="preserve">
+    <value>Read permissions</value>
+  </data>
+  <data name="Rights_Synchronize" xml:space="preserve">
+    <value>Synchronize</value>
+  </data>
+  <data name="Rights_TakeOwnership" xml:space="preserve">
+    <value>Take ownership</value>
+  </data>
+  <data name="Rights_Traverse" xml:space="preserve">
+    <value>Traverse folder / execute file</value>
+  </data>
+  <data name="Rights_Write" xml:space="preserve">
+    <value>Write</value>
+  </data>
+  <data name="Rights_WriteAttributes" xml:space="preserve">
+    <value>Write attributes</value>
+  </data>
+  <data name="Rp_After" xml:space="preserve">
+    <value> after {0}</value>
+    <comment>{0} = Labels.Duration(duration)</comment>
+  </data>
+  <data name="Rp_ComparisonWith" xml:space="preserve">
+    <value>Comparison with the run of {0}: new and resolved findings, changed permissions and memberships as a separate section.</value>
+    <comment>{0} = Labels.Date(c.Older.StartedAt)</comment>
+  </data>
+  <data name="Rp_Creating" xml:space="preserve">
+    <value>Creating report …</value>
+  </data>
+  <data name="Rp_Excel" xml:space="preserve">
+    <value>Excel report</value>
+  </data>
+  <data name="Rp_ExcelDescription" xml:space="preserve">
+    <value>To work with: overview, findings, folders &amp; permissions, people, groups, shares and – with a comparison – changes, each with filters.</value>
+  </data>
+  <data name="Rp_ExcelFilter" xml:space="preserve">
+    <value>Excel workbook (*.xlsx)|*.xlsx</value>
+  </data>
+  <data name="Rp_ExcelSaved" xml:space="preserve">
+    <value>Excel report saved</value>
+  </data>
+  <data name="Rp_FolderOpenFailed" xml:space="preserve">
+    <value>The folder could not be opened: {0}</value>
+    <comment>{0} = ex.Message</comment>
+  </data>
+  <data name="Rp_IncludeChanges" xml:space="preserve">
+    <value>Include changes since the last run</value>
+  </data>
+  <data name="Rp_IncludeChangesDescription" xml:space="preserve">
+    <value>New and resolved findings, changed permissions and memberships as a separate section.</value>
+  </data>
+  <data name="Rp_NoEarlier" xml:space="preserve">
+    <value>There is no earlier run to compare with – the report then has no “Changes” section.</value>
+  </data>
+  <data name="Rp_NoRunText" xml:space="preserve">
+    <value>Load a run on the Overview page or start a scan – then the report can be saved here.</value>
+  </data>
+  <data name="Rp_OpenFailed" xml:space="preserve">
+    <value>The file could not be opened: {0}</value>
+    <comment>{0} = ex.Message</comment>
+  </data>
+  <data name="Rp_Pdf" xml:space="preserve">
+    <value>PDF report</value>
+  </data>
+  <data name="Rp_PdfDescription" xml:space="preserve">
+    <value>To file and sign: cover page, summary, findings, shares, folders with their own permissions, people and a sign-off block.</value>
+  </data>
+  <data name="Rp_PdfFilter" xml:space="preserve">
+    <value>PDF document (*.pdf)|*.pdf</value>
+  </data>
+  <data name="Rp_PdfSaved" xml:space="preserve">
+    <value>PDF report saved</value>
+  </data>
+  <data name="Rp_Preparing" xml:space="preserve">
+    <value>Preparing …</value>
+  </data>
+  <data name="Rp_ReportFor" xml:space="preserve">
+    <value>Report for {0}</value>
+    <comment>{0} = Labels.Targets(scan.Request.Targets)</comment>
+  </data>
+  <data name="Rp_RunSummaryHighMany" xml:space="preserve">
+    <value>Run of {0}: {1} folders checked, {2} findings, of which {3} “High”.</value>
+  </data>
+  <data name="Rp_RunSummaryHighOne" xml:space="preserve">
+    <value>Run of {0}: {1} folders checked, {2} finding, of which {3} “High”.</value>
+  </data>
+  <data name="Rp_RunSummaryMany" xml:space="preserve">
+    <value>Run of {0}: {1} folders checked, {2} findings.</value>
+  </data>
+  <data name="Rp_RunSummaryOne" xml:space="preserve">
+    <value>Run of {0}: {1} folders checked, {2} finding.</value>
+  </data>
+  <data name="Rp_Save" xml:space="preserve">
+    <value>Save report</value>
+  </data>
+  <data name="Rp_SaveExcel" xml:space="preserve">
+    <value>Save Excel report …</value>
+  </data>
+  <data name="Rp_SaveExcelTitle" xml:space="preserve">
+    <value>Save Excel report</value>
+  </data>
+  <data name="Rp_SaveFailed" xml:space="preserve">
+    <value>The report could not be saved: {0}</value>
+    <comment>{0} = ErrorCodes.Describe(ex, ErrorCodes.ReportWrite)</comment>
+  </data>
+  <data name="Rp_SavePdf" xml:space="preserve">
+    <value>Save PDF report …</value>
+  </data>
+  <data name="Rp_SavePdfTitle" xml:space="preserve">
+    <value>Save PDF report</value>
+  </data>
+  <data name="Rp_Scheduled" xml:space="preserve">
+    <value>Regularly and without clicking: as a scheduled task with “Zutritt.exe scan … ‑‑compare ‑‑report …” (see Info).</value>
+  </data>
+  <data name="Rp_ShowInFolder" xml:space="preserve">
+    <value>Show in folder</value>
+  </data>
+  <data name="Rp_SignOff" xml:space="preserve">
+    <value>Sign-off</value>
+  </data>
+  <data name="Rp_SignOffBlock" xml:space="preserve">
+    <value>At the end of the PDF report there is a sign-off block with “Reviewed by”, “Date”, “Signature” and “Remarks”.</value>
+  </data>
+  <data name="Rp_SignOffWhy" xml:space="preserve">
+    <value>Printed and signed – or with an electronic signature in the PDF – it documents the regular review of access rights that audits under GMP (Annex 11), ISO 27001 (A.5.18) or NIS2 expect. Under “Remarks”, note which findings deliberately remain as they are and why.</value>
+  </data>
+  <data name="Rp_SuggestedName" xml:space="preserve">
+    <value>Suggested file name: {0}</value>
+    <comment>{0} = Labels.ReportFileName(scan)</comment>
+  </data>
+  <data name="Rp_Title" xml:space="preserve">
+    <value>Report for the loaded run</value>
+  </data>
+  <data name="Rule_ZT01_Explanation" xml:space="preserve">
+    <value>A group that includes practically everyone (e.g. “Everyone”, “Authenticated Users”, “Domain Users”) can create or change files here. Any signed-in person can thus falsify, delete or – for example through malware – encrypt data.</value>
+  </data>
+  <data name="Rule_ZT01_Recommendation" xml:space="preserve">
+    <value>Remove the broad group’s write permission and grant it only to a business group that contains exactly the responsible people.</value>
+  </data>
+  <data name="Rule_ZT01_Title" xml:space="preserve">
+    <value>Broad group can write</value>
+  </data>
+  <data name="Rule_ZT02_Explanation" xml:space="preserve">
+    <value>A group that includes practically everyone can read or list the contents here. Confidential data is thus visible to every signed-in person.</value>
+  </data>
+  <data name="Rule_ZT02_Recommendation" xml:space="preserve">
+    <value>Check whether the data is really meant for everyone; otherwise replace the broad group with a business group.</value>
+  </data>
+  <data name="Rule_ZT02_Title" xml:space="preserve">
+    <value>Broad group can read</value>
+  </data>
+  <data name="Rule_ZT03_Explanation" xml:space="preserve">
+    <value>The permission is granted to a single user account instead of a group. Such entries are easily forgotten when someone changes department or leaves, and they make the permission structure hard to follow.</value>
+  </data>
+  <data name="Rule_ZT03_Recommendation" xml:space="preserve">
+    <value>Grant the permission through a group (role or department) and remove the entry for the person.</value>
+  </data>
+  <data name="Rule_ZT03_Title" xml:space="preserve">
+    <value>Permission granted directly to a person</value>
+  </data>
+  <data name="Rule_ZT04_Explanation" xml:space="preserve">
+    <value>An entry or the owner refers to an account that no longer exists. The SID cannot be matched to a name; nobody can easily tell to whom the permission was once granted.</value>
+  </data>
+  <data name="Rule_ZT04_Recommendation" xml:space="preserve">
+    <value>Remove the orphaned entry; if the SID is the owner, set a valid owner (e.g. “Administrators”).</value>
+  </data>
+  <data name="Rule_ZT04_Title" xml:space="preserve">
+    <value>Orphaned SID</value>
+  </data>
+  <data name="Rule_ZT05_Explanation" xml:space="preserve">
+    <value>An account or group without an administrator role has full control. It can therefore change permissions and take ownership – i.e. give itself and others any rights, bypassing every review.</value>
+  </data>
+  <data name="Rule_ZT05_Recommendation" xml:space="preserve">
+    <value>Reduce to “Modify”; grant full control only to administrators and SYSTEM.</value>
+  </data>
+  <data name="Rule_ZT05_Title" xml:space="preserve">
+    <value>Full control for non-admins</value>
+  </data>
+  <data name="Rule_ZT06_Explanation" xml:space="preserve">
+    <value>Inheritance is broken deep in the folder structure. Such exceptions cannot be seen from above; changes to parent folders do not arrive here.</value>
+  </data>
+  <data name="Rule_ZT06_Recommendation" xml:space="preserve">
+    <value>Check whether the exception is still needed, and otherwise turn inheritance back on. Document necessary exceptions or model them higher up in the structure.</value>
+  </data>
+  <data name="Rule_ZT06_Title" xml:space="preserve">
+    <value>Deeply hidden exception</value>
+  </data>
+  <data name="Rule_ZT07_Explanation" xml:space="preserve">
+    <value>An explicit deny entry takes precedence over all allow entries. Denials are hard to follow and often affect more people than intended (e.g. all members of a group).</value>
+  </data>
+  <data name="Rule_ZT07_Recommendation" xml:space="preserve">
+    <value>Rather do not grant the permission in the first place (tailor groups accordingly). Use denials only for justified exceptions and document them.</value>
+  </data>
+  <data name="Rule_ZT07_Title" xml:space="preserve">
+    <value>Deny entry</value>
+  </data>
+  <data name="Rule_ZT08_Explanation" xml:space="preserve">
+    <value>The share permission allows all signed-in people at least “Change”. Protection therefore relies on the NTFS permissions alone. This is practice recommended by Microsoft, but it should be a deliberate choice.</value>
+  </data>
+  <data name="Rule_ZT08_Recommendation" xml:space="preserve">
+    <value>Nothing to do if the NTFS permissions are clean. Otherwise also restrict the share permission.</value>
+  </data>
+  <data name="Rule_ZT08_Title" xml:space="preserve">
+    <value>Share: everyone can change</value>
+  </data>
+  <data name="Rule_ZT09_Explanation" xml:space="preserve">
+    <value>The folder (or file) could not be read, for example because access was denied. Its permissions and everything below it have not been checked in this run.</value>
+  </data>
+  <data name="Rule_ZT09_Recommendation" xml:space="preserve">
+    <value>Fix the cause or scan with an account that may read the permissions, and repeat the run.</value>
+  </data>
+  <data name="Rule_ZT09_Title" xml:space="preserve">
+    <value>Folder not readable</value>
+  </data>
+  <data name="Rule_ZT10_Explanation" xml:space="preserve">
+    <value>The owner can change the permissions at any time – regardless of what the list says. If a single person is the owner, they keep this ability even after a change of role.</value>
+  </data>
+  <data name="Rule_ZT10_Recommendation" xml:space="preserve">
+    <value>Transfer ownership to “Administrators” (or an admin group).</value>
+  </data>
+  <data name="Rule_ZT10_Title" xml:space="preserve">
+    <value>Owner is a user account</value>
+  </data>
+  <data name="Rule_ZT11_Explanation" xml:space="preserve">
+    <value>A group without members has permissions. The entry has no effect today, but becomes effective unnoticed as soon as someone is added to the group.</value>
+  </data>
+  <data name="Rule_ZT11_Recommendation" xml:space="preserve">
+    <value>Remove the entry if the group is no longer needed; otherwise document its purpose.</value>
+  </data>
+  <data name="Rule_ZT11_Title" xml:space="preserve">
+    <value>Empty group has permissions</value>
+  </data>
+  <data name="Rule_ZT12_Explanation" xml:space="preserve">
+    <value>A disabled user account has its own permission here. If the account is enabled again, the permission applies immediately.</value>
+  </data>
+  <data name="Rule_ZT12_Recommendation" xml:space="preserve">
+    <value>Remove the entry; delete accounts of people who have left once the retention period has expired.</value>
+  </data>
+  <data name="Rule_ZT12_Title" xml:space="preserve">
+    <value>Disabled account has permissions</value>
+  </data>
+  <data name="Rule_ZT13_Explanation" xml:space="preserve">
+    <value>The share’s permissions could not be read. Network access has therefore been calculated from the NTFS permissions alone and may in reality be lower.</value>
+  </data>
+  <data name="Rule_ZT13_Recommendation" xml:space="preserve">
+    <value>Scan again with administrator rights on the server.</value>
+  </data>
+  <data name="Rule_ZT13_Title" xml:space="preserve">
+    <value>Share permissions not readable</value>
+  </data>
+  <data name="Rule_ZT14_Explanation" xml:space="preserve">
+    <value>The folder (or file) has inherited entries that do not match the parent folder. Typically these are moved folders: when moving within a drive, Windows keeps the old inherited permissions instead of taking over those of the new location. Permissions from the previous location may then still apply here – also for people who should not have access at the new location – and changes to the parent folder only arrive after the permissions are next propagated.</value>
+  </data>
+  <data name="Rule_ZT14_Recommendation" xml:space="preserve">
+    <value>Check whether the differing permissions are still needed. Otherwise reapply inheritance: in the advanced security settings, disable inheritance, removing the inherited entries, and enable it again right away – explicit entries are kept.</value>
+  </data>
+  <data name="Rule_ZT14_Title" xml:space="preserve">
+    <value>Permissions differ from inheritance</value>
+  </data>
+  <data name="Scan_AdminShareDefault" xml:space="preserve">
+    <value>Share permissions not readable: administrative share without its own permissions – the internal Windows default applies (usually administrators only)</value>
+  </data>
+  <data name="Scan_InvalidTarget" xml:space="preserve">
+    <value>Invalid target: {0}</value>
+    <comment>{0} = reason</comment>
+  </data>
+  <data name="Scan_ListingFailed" xml:space="preserve">
+    <value>Contents cannot be listed: {0}</value>
+    <comment>{0} = reason</comment>
+  </data>
+  <data name="Scan_LocalWithoutShares" xml:space="preserve">
+    <value>{0} – local folders without assignment to shares</value>
+    <comment>{0} = error while listing the shares</comment>
+  </data>
+  <data name="Scan_NoDiskShares" xml:space="preserve">
+    <value>No disk shares found</value>
+  </data>
+  <data name="Scan_NoLocalDiskShares" xml:space="preserve">
+    <value>No disk shares found on this computer</value>
+  </data>
+  <data name="Scan_NotSupported" xml:space="preserve">
+    <value>Scanning is only possible on Windows (NTFS permissions, shares, Active Directory).</value>
+  </data>
+  <data name="Scan_ShareLocalPathInvalid" xml:space="preserve">
+    <value>Invalid local path of the share: “{0}”</value>
+    <comment>{0} = read.Share.LocalPath</comment>
+  </data>
+  <data name="Scan_ShareLocalPathUnreadable" xml:space="preserve">
+    <value>Local path of the share not readable – share not checked</value>
+  </data>
+  <data name="Scan_SharePermissionsUnreadable" xml:space="preserve">
+    <value>Share permissions not readable</value>
+  </data>
+  <data name="Scan_SharesTimeout" xml:space="preserve">
+    <value>Shares of “{0}”: no response within {1}</value>
+    <comment>{0} = server, {1} = TimeBudget.Describe(ShareTimeout)</comment>
+  </data>
+  <data name="Scan_ShareTimeout" xml:space="preserve">
+    <value>Share “{0}”: no response within {1}</value>
+    <comment>{0} = key, {1} = TimeBudget.Describe(ShareTimeout)</comment>
+  </data>
+  <data name="Scan_TargetUnreachable" xml:space="preserve">
+    <value>Target not reachable: {0}</value>
+    <comment>{0} = reason</comment>
+  </data>
+  <data name="Scope_AdminIncluded" xml:space="preserve">
+    <value>administrative shares included</value>
+  </data>
+  <data name="Scope_AdminOnlyNewer" xml:space="preserve">
+    <value>only the newer run included administrative shares</value>
+  </data>
+  <data name="Scope_AdminOnlyOlder" xml:space="preserve">
+    <value>only the older run included administrative shares</value>
+  </data>
+  <data name="Scope_AdminSkipped" xml:space="preserve">
+    <value>administrative shares skipped</value>
+  </data>
+  <data name="Scope_AllLevels" xml:space="preserve">
+    <value>all levels</value>
+  </data>
+  <data name="Scope_DeepBreak" xml:space="preserve">
+    <value>deeply hidden exception before from level {0}, now from level {1}</value>
+    <comment>{0} = DeepBreak(older), {1} = DeepBreak(newer)</comment>
+  </data>
+  <data name="Scope_Depth" xml:space="preserve">
+    <value>depth before {0}, now {1}</value>
+    <comment>{0} = DepthText(older.MaxDepth), {1} = DepthText(newer.MaxDepth)</comment>
+  </data>
+  <data name="Scope_Differs" xml:space="preserve">
+    <value>Scope differs: {0}. Only what both runs covered is compared.</value>
+    <comment>{0} = string.Join("; ", parts)</comment>
+  </data>
+  <data name="Scope_FilesOnlyNewer" xml:space="preserve">
+    <value>only the newer run included files</value>
+  </data>
+  <data name="Scope_FilesOnlyOlder" xml:space="preserve">
+    <value>only the older run included files</value>
+  </data>
+  <data name="Scope_FoldersAndFiles" xml:space="preserve">
+    <value>folders and files</value>
+  </data>
+  <data name="Scope_FoldersOnly" xml:space="preserve">
+    <value>folders only (files not individually)</value>
+  </data>
+  <data name="Scope_GroupsNotResolved" xml:space="preserve">
+    <value>groups not resolved</value>
+  </data>
+  <data name="Scope_GroupsOnlyNewer" xml:space="preserve">
+    <value>only the newer run resolved groups down to people</value>
+  </data>
+  <data name="Scope_GroupsOnlyOlder" xml:space="preserve">
+    <value>only the older run resolved groups down to people</value>
+  </data>
+  <data name="Scope_GroupsResolved" xml:space="preserve">
+    <value>groups resolved down to people</value>
+  </data>
+  <data name="Scope_UpToLevel" xml:space="preserve">
+    <value>down to level {0}</value>
+    <comment>{0} = d</comment>
+  </data>
+  <data name="Severity_High" xml:space="preserve">
+    <value>High</value>
+  </data>
+  <data name="Severity_Info" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="Severity_Low" xml:space="preserve">
+    <value>Low</value>
+  </data>
+  <data name="Severity_Medium" xml:space="preserve">
+    <value>Medium</value>
+  </data>
+  <data name="Share_Change" xml:space="preserve">
+    <value>Change</value>
+    <comment>Share permission level as in the Windows dialog</comment>
+  </data>
+  <data name="Share_FullControl" xml:space="preserve">
+    <value>Full Control</value>
+    <comment>Share permission level as in the Windows dialog</comment>
+  </data>
+  <data name="Share_InvalidName" xml:space="preserve">
+    <value>Invalid share name “{0}”</value>
+    <comment>{0} = name</comment>
+  </data>
+  <data name="Share_ListUnreadable" xml:space="preserve">
+    <value>Shares of “{0}” not readable: {1}</value>
+    <comment>{0} = display, {1} = Win32Error.Describe(status)</comment>
+  </data>
+  <data name="Share_NotDisk" xml:space="preserve">
+    <value>“{0}” is not a disk share</value>
+    <comment>{0} = unc</comment>
+  </data>
+  <data name="Share_NotFound" xml:space="preserve">
+    <value>Share “{0}” not found</value>
+    <comment>{0} = unc</comment>
+  </data>
+  <data name="Share_PermissionsCorrupt" xml:space="preserve">
+    <value>Share permissions not readable: security descriptor is damaged</value>
+  </data>
+  <data name="Share_PermissionsInvalidSd" xml:space="preserve">
+    <value>Share permissions not readable: security descriptor is invalid</value>
+  </data>
+  <data name="Share_PermissionsUnreadable" xml:space="preserve">
+    <value>Share permissions not readable: {0}</value>
+    <comment>{0} = Win32Error.Describe(Native.ERROR_ACCESS_DENIED)</comment>
+  </data>
+  <data name="Share_Read" xml:space="preserve">
+    <value>Read</value>
+    <comment>Share permission level as in the Windows dialog</comment>
+  </data>
+  <data name="Share_UnknownAceType" xml:space="preserve">
+    <value>Share permissions cannot be fully evaluated: unknown entry type {0}</value>
+    <comment>{0} = (int)ace.AceType</comment>
+  </data>
+  <data name="Share_Unreadable" xml:space="preserve">
+    <value>Share “{0}” not readable: {1}</value>
+    <comment>{0} = unc, {1} = Win32Error.Describe(status)</comment>
+  </data>
+  <data name="Sheet_AccessPerPerson" xml:space="preserve">
+    <value>Access per person</value>
+  </data>
+  <data name="Sheet_Changes" xml:space="preserve">
+    <value>Changes</value>
+  </data>
+  <data name="Sheet_Errors" xml:space="preserve">
+    <value>Errors</value>
+  </data>
+  <data name="Sheet_Findings" xml:space="preserve">
+    <value>Findings</value>
+  </data>
+  <data name="Sheet_FoldersPermissions" xml:space="preserve">
+    <value>Folders &amp; permissions</value>
+  </data>
+  <data name="Sheet_Groups" xml:space="preserve">
+    <value>Groups</value>
+  </data>
+  <data name="Sheet_Overview" xml:space="preserve">
+    <value>Overview</value>
+  </data>
+  <data name="Sheet_People" xml:space="preserve">
+    <value>People</value>
+  </data>
+  <data name="Sheet_Rules" xml:space="preserve">
+    <value>Rules</value>
+  </data>
+  <data name="Sheet_Shares" xml:space="preserve">
+    <value>Shares</value>
+  </data>
+  <data name="Shot_EmptyImage" xml:space="preserve">
+    <value>WPF drew an empty image. This happens in a disconnected session (Remote Desktop closed without signing out) – start again in a signed-in, connected session.</value>
+  </data>
+  <data name="Shot_Start" xml:space="preserve">
+    <value>Zutritt {0} – screenshots to {1}</value>
+    <comment>{0} = AppInfo.Version, {1} = folder</comment>
+  </data>
+  <data name="Shot_Written" xml:space="preserve">
+    <value>{0} images written.</value>
+    <comment>{0} = written</comment>
+  </data>
+  <data name="Shot_WrongSize" xml:space="preserve">
+    <value>The window is {0:0}×{1:0} instead of {2:0}×{3:0} points – the images would be distorted.</value>
+    <comment>{0} = width, {1} = height, {2} = Width, {3} = Height</comment>
+  </data>
+  <data name="Sid_AccessControlAssistanceOperators" xml:space="preserve">
+    <value>Access Control Assistance Operators</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_AccountOperators" xml:space="preserve">
+    <value>Account Operators</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_Administrators" xml:space="preserve">
+    <value>Administrators</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_AllAppPackages" xml:space="preserve">
+    <value>ALL APPLICATION PACKAGES</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_AllRestrictedAppPackages" xml:space="preserve">
+    <value>ALL RESTRICTED APPLICATION PACKAGES</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_AllServices" xml:space="preserve">
+    <value>ALL SERVICES</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_AnonymousLogon" xml:space="preserve">
+    <value>ANONYMOUS LOGON</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_AppCapability" xml:space="preserve">
+    <value>App capability ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_AppPackage" xml:space="preserve">
+    <value>App package ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_AuthenticatedUsers" xml:space="preserve">
+    <value>Authenticated Users</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_BackupOperators" xml:space="preserve">
+    <value>Backup Operators</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_Batch" xml:space="preserve">
+    <value>BATCH</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_CapabilityGroup" xml:space="preserve">
+    <value>Capability group ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_CertificateServiceDcomAccess" xml:space="preserve">
+    <value>Certificate Service DCOM Access</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_ConsoleLogon" xml:space="preserve">
+    <value>CONSOLE LOGON</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_CreatorGroup" xml:space="preserve">
+    <value>CREATOR GROUP</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_CreatorGroupServer" xml:space="preserve">
+    <value>CREATOR GROUP SERVER</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_CreatorOwner" xml:space="preserve">
+    <value>CREATOR OWNER</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_CreatorOwnerServer" xml:space="preserve">
+    <value>CREATOR OWNER SERVER</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_CryptographicOperators" xml:space="preserve">
+    <value>Cryptographic Operators</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_DistributedComUsers" xml:space="preserve">
+    <value>Distributed COM Users</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_EnterpriseDomainControllers" xml:space="preserve">
+    <value>ENTERPRISE DOMAIN CONTROLLERS</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_EventLogReaders" xml:space="preserve">
+    <value>Event Log Readers</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_Everyone" xml:space="preserve">
+    <value>Everyone</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_Guests" xml:space="preserve">
+    <value>Guests</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_HyperVAdministrators" xml:space="preserve">
+    <value>Hyper-V Administrators</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_IisAppPool" xml:space="preserve">
+    <value>IIS application pool ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_IncomingForestTrustBuilders" xml:space="preserve">
+    <value>Incoming Forest Trust Builders</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_IntegrityLevel" xml:space="preserve">
+    <value>Integrity level ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_Interactive" xml:space="preserve">
+    <value>INTERACTIVE</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_Local" xml:space="preserve">
+    <value>LOCAL</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_LocalAccount" xml:space="preserve">
+    <value>Local account</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_LocalAdminAccount" xml:space="preserve">
+    <value>Local account and member of Administrators group</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_LocalService" xml:space="preserve">
+    <value>LOCAL SERVICE</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_LogonSession" xml:space="preserve">
+    <value>Logon session ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_Network" xml:space="preserve">
+    <value>NETWORK</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_NetworkConfigurationOperators" xml:space="preserve">
+    <value>Network Configuration Operators</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_NetworkService" xml:space="preserve">
+    <value>NETWORK SERVICE</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_NtlmAuthentication" xml:space="preserve">
+    <value>NTLM Authentication</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_NullSid" xml:space="preserve">
+    <value>NULL SID</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_OtherOrganization" xml:space="preserve">
+    <value>Other Organization</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_OwnerRights" xml:space="preserve">
+    <value>OWNER RIGHTS</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_PerformanceLogUsers" xml:space="preserve">
+    <value>Performance Log Users</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_PerformanceMonitorUsers" xml:space="preserve">
+    <value>Performance Monitor Users</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_PowerUsers" xml:space="preserve">
+    <value>Power Users</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_PrefixAppPackages" xml:space="preserve">
+    <value>APPLICATION PACKAGE AUTHORITY\</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_PrefixBuiltin" xml:space="preserve">
+    <value>BUILTIN\</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_PrefixNt" xml:space="preserve">
+    <value>NT AUTHORITY\</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_PreWindows2000" xml:space="preserve">
+    <value>Pre-Windows 2000 Compatible Access</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_PrintOperators" xml:space="preserve">
+    <value>Print Operators</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_RdsEndpointServers" xml:space="preserve">
+    <value>RDS Endpoint Servers</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_RdsManagementServers" xml:space="preserve">
+    <value>RDS Management Servers</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_RdsRemoteAccessServers" xml:space="preserve">
+    <value>RDS Remote Access Servers</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_RemoteDesktopUsers" xml:space="preserve">
+    <value>Remote Desktop Users</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_RemoteInteractiveLogon" xml:space="preserve">
+    <value>REMOTE INTERACTIVE LOGON</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_RemoteManagementUsers" xml:space="preserve">
+    <value>Remote Management Users</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_Replicator" xml:space="preserve">
+    <value>Replicator</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_Restricted" xml:space="preserve">
+    <value>RESTRICTED</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_ScheduledTask" xml:space="preserve">
+    <value>Scheduled task ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_Self" xml:space="preserve">
+    <value>SELF</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_ServerOperators" xml:space="preserve">
+    <value>Server Operators</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_Service" xml:space="preserve">
+    <value>SERVICE</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_ServiceNotInstalled" xml:space="preserve">
+    <value>Service not installed ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_TerminalServerLicenseServers" xml:space="preserve">
+    <value>Terminal Server License Servers</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_TerminalServerUser" xml:space="preserve">
+    <value>TERMINAL SERVER USER</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_ThisOrganization" xml:space="preserve">
+    <value>This Organization</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_UserModeDriver" xml:space="preserve">
+    <value>User-mode driver ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_Users" xml:space="preserve">
+    <value>Users</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Sid_VirtualMachine" xml:space="preserve">
+    <value>Virtual machine ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_VirtualSystemAccount" xml:space="preserve">
+    <value>Virtual system account ({0})</value>
+    <comment>{0} = SID</comment>
+  </data>
+  <data name="Sid_WindowsAuthorizationAccess" xml:space="preserve">
+    <value>Windows Authorization Access Group</value>
+    <comment>Name as shown by an English Windows; other languages: the name the Windows of that language shows</comment>
+  </data>
+  <data name="Store_AccessDenied" xml:space="preserve">
+    <value>Access to the database denied.</value>
+  </data>
+  <data name="Store_CannotOpen" xml:space="preserve">
+    <value>The database “{0}” cannot be opened. {1}</value>
+    <comment>{0} = DatabasePath, {1} = ScanStoreException.Describe(sx)</comment>
+  </data>
+  <data name="Store_CantOpen" xml:space="preserve">
+    <value>The file or its journal is not accessible: check the path and access rights; another program may be holding it locked.</value>
+  </data>
+  <data name="Store_Constraint" xml:space="preserve">
+    <value>The data violates a rule of the database ({0}).</value>
+    <comment>{0} = ex.Message</comment>
+  </data>
+  <data name="Store_Corrupt" xml:space="preserve">
+    <value>The database file is damaged.</value>
+  </data>
+  <data name="Store_DeleteFailed" xml:space="preserve">
+    <value>Run {0} could not be deleted.</value>
+    <comment>{0} = id</comment>
+  </data>
+  <data name="Store_DiskFull" xml:space="preserve">
+    <value>The drive is full.</value>
+  </data>
+  <data name="Store_FindPreviousFailed" xml:space="preserve">
+    <value>The previous run could not be looked up.</value>
+  </data>
+  <data name="Store_FolderNotCreated" xml:space="preserve">
+    <value>The folder for the database “{0}” cannot be created: {1}</value>
+    <comment>{0} = DatabasePath, {1} = ex.Message</comment>
+  </data>
+  <data name="Store_Foreign" xml:space="preserve">
+    <value>The file “{0}” is an SQLite database, but not a Zutritt database. It is left unchanged.</value>
+    <comment>{0} = path</comment>
+  </data>
+  <data name="Store_InvalidData" xml:space="preserve">
+    <value>{0} The database “{1}” contains invalid data ({2}).</value>
+    <comment>{0} = action, {1} = DatabasePath, {2} = ex.Message</comment>
+  </data>
+  <data name="Store_IoError" xml:space="preserve">
+    <value>Input/output error while accessing the database file.</value>
+  </data>
+  <data name="Store_ListFailed" xml:space="preserve">
+    <value>The list of runs could not be read.</value>
+  </data>
+  <data name="Store_LoadFailed" xml:space="preserve">
+    <value>Run {0} could not be loaded.</value>
+    <comment>{0} = id</comment>
+  </data>
+  <data name="Store_Locked" xml:space="preserve">
+    <value>The database is locked by another program. Please try again later.</value>
+  </data>
+  <data name="Store_Newer" xml:space="preserve">
+    <value>The database “{0}” comes from a newer version of Zutritt (schema {1}, this version knows up to {2}). Please update Zutritt.</value>
+    <comment>{0} = path, {1} = version, {2} = CurrentVersion</comment>
+  </data>
+  <data name="Store_NotSqlite" xml:space="preserve">
+    <value>The file is not an SQLite database.</value>
+  </data>
+  <data name="Store_NotWritable" xml:space="preserve">
+    <value>Cannot write to the database.</value>
+  </data>
+  <data name="Store_ReadOnly" xml:space="preserve">
+    <value>The database is read-only (file permissions or read-only drive).</value>
+  </data>
+  <data name="Store_RequestMissing" xml:space="preserve">
+    <value>The scan settings are missing.</value>
+  </data>
+  <data name="Store_SaveFailed" xml:space="preserve">
+    <value>The run could not be saved.</value>
+  </data>
+  <data name="Store_SqliteError" xml:space="preserve">
+    <value>SQLite error {0}: {1}</value>
+    <comment>{0} = ex.SqliteErrorCode, {1} = ex.Message</comment>
+  </data>
+  <data name="Store_WalOverShare" xml:space="preserve">
+    <value>The database “{0}” is currently open in WAL mode – usually by Zutritt on the computer where it is stored. It can only be opened over a share once it has been closed there; Zutritt then switches it permanently to the journal mode suitable for shares.</value>
+    <comment>{0} = path</comment>
+  </data>
+  <data name="Target_DevicePath" xml:space="preserve">
+    <value>Device paths are not supported: “{0}”</value>
+    <comment>{0} = raw</comment>
+  </data>
+  <data name="Target_Empty" xml:space="preserve">
+    <value>Empty target</value>
+  </data>
+  <data name="Target_InvalidPath" xml:space="preserve">
+    <value>Invalid path: “{0}”</value>
+    <comment>{0} = raw</comment>
+  </data>
+  <data name="Target_InvalidUnc" xml:space="preserve">
+    <value>Invalid UNC path: “{0}”</value>
+    <comment>{0} = raw</comment>
+  </data>
+  <data name="Text_ListAnd" xml:space="preserve">
+    <value>{0} and {1}</value>
+    <comment>Last two items of a list</comment>
+  </data>
+  <data name="Text_ListSeparator" xml:space="preserve">
+    <value>, </value>
+    <comment>Between list items except the last two</comment>
+  </data>
+  <data name="Text_No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="Text_Quote" xml:space="preserve">
+    <value>“{0}”</value>
+    <comment>Quotation marks around a name or term</comment>
+  </data>
+  <data name="Text_Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="Time_Milliseconds" xml:space="preserve">
+    <value>{0:0} milliseconds</value>
+    <comment>{0} = limit.TotalMilliseconds</comment>
+  </data>
+  <data name="Time_Minutes" xml:space="preserve">
+    <value>{0:0} minutes</value>
+    <comment>{0} = limit.TotalMinutes</comment>
+  </data>
+  <data name="Time_Seconds" xml:space="preserve">
+    <value>{0:0} seconds</value>
+    <comment>{0} = limit.TotalSeconds</comment>
+  </data>
+  <data name="Ui_AppSubtitle" xml:space="preserve">
+    <value>Who can access what?</value>
+  </data>
+  <data name="Ui_BrowserFailed" xml:space="preserve">
+    <value>The browser could not be opened: {0}</value>
+    <comment>{0} = ErrorCodes.Describe(ex, ErrorCodes.LinkOpen)</comment>
+  </data>
+  <data name="Ui_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Ui_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Ui_CloseNotice" xml:space="preserve">
+    <value>Close message</value>
+  </data>
+  <data name="Ui_CloseTitle" xml:space="preserve">
+    <value>Close Zutritt</value>
+  </data>
+  <data name="Ui_CloseWhileScanning" xml:space="preserve">
+    <value>A scan is still running. Close Zutritt anyway? The run will not be saved.</value>
+  </data>
+  <data name="Ui_DateTime" xml:space="preserve">
+    <value>{0}, {1}</value>
+    <comment>{0} = short date, {1} = short time</comment>
+  </data>
+  <data name="Ui_Demo" xml:space="preserve">
+    <value>Demo</value>
+  </data>
+  <data name="Ui_DemoTitle" xml:space="preserve">
+    <value>Zutritt – demo</value>
+  </data>
+  <data name="Ui_DurationHours" xml:space="preserve">
+    <value>{0}:{1:00}:{2:00} h</value>
+    <comment>{0} = hours, {1} = minutes, {2} = seconds</comment>
+  </data>
+  <data name="Ui_DurationMinutes" xml:space="preserve">
+    <value>{0}:{1:00} min</value>
+    <comment>{0} = minutes, {1} = seconds</comment>
+  </data>
+  <data name="Ui_FailureWithReason" xml:space="preserve">
+    <value>{0}: {1}</value>
+    <comment>{0} = what failed, {1} = message with error code</comment>
+  </data>
+  <data name="Ui_FileAndMore" xml:space="preserve">
+    <value>-and-{0}-more</value>
+    <comment>Part of a file name; {0} = number of further targets</comment>
+  </data>
+  <data name="Ui_FileRun" xml:space="preserve">
+    <value>Run</value>
+    <comment>Part of a file name</comment>
+  </data>
+  <data name="Ui_LinkBlocked" xml:space="preserve">
+    <value>The link “{0}” was not opened: only addresses with http or https are allowed.</value>
+    <comment>{0} = url</comment>
+  </data>
+  <data name="Ui_LocalShares" xml:space="preserve">
+    <value>Shares of this computer</value>
+    <comment>Shown for the target “.”</comment>
+  </data>
+  <data name="Ui_NoFindings" xml:space="preserve">
+    <value>No findings</value>
+  </data>
+  <data name="Ui_NoRunLoaded" xml:space="preserve">
+    <value>No run loaded</value>
+  </data>
+  <data name="Ui_NoTarget" xml:space="preserve">
+    <value>no target</value>
+  </data>
+  <data name="Ui_Off" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Ui_On" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="Ui_Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Ui_ReportFileName" xml:space="preserve">
+    <value>Zutritt-Report-{0}-{1}</value>
+    <comment>Suggested file name without extension; {0} = target, {1} = date yyyy-MM-dd</comment>
+  </data>
+  <data name="Ui_SortedAscending" xml:space="preserve">
+    <value>{0}, sorted ascending</value>
+  </data>
+  <data name="Ui_SortedDescending" xml:space="preserve">
+    <value>{0}, sorted descending</value>
+  </data>
+  <data name="Ui_StartOrOpen" xml:space="preserve">
+    <value>Start a scan or open a run</value>
+  </data>
+  <data name="Ui_TargetAndMore" xml:space="preserve">
+    <value>{0} and {1} more</value>
+    <comment>{0} = first target, {1} = number of further targets</comment>
+  </data>
+  <data name="Ui_VersionWithBuild" xml:space="preserve">
+    <value>{0} (build {1})</value>
+    <comment>{0} = version, {1} = commit</comment>
+  </data>
+  <data name="Win_AccessDenied" xml:space="preserve">
+    <value>Access denied</value>
+  </data>
+  <data name="Win_CantAccessFile" xml:space="preserve">
+    <value>The system cannot open the file</value>
+  </data>
+  <data name="Win_CantResolveLink" xml:space="preserve">
+    <value>Link cannot be resolved</value>
+  </data>
+  <data name="Win_CredentialConflict" xml:space="preserve">
+    <value>Other credentials are already in use for this server</value>
+  </data>
+  <data name="Win_DriveNotFound" xml:space="preserve">
+    <value>Drive not found</value>
+  </data>
+  <data name="Win_ErrorCode" xml:space="preserve">
+    <value>Windows error {0}: {1}</value>
+    <comment>{0} = code, {1} = text</comment>
+  </data>
+  <data name="Win_GroupNotFound" xml:space="preserve">
+    <value>Group not found</value>
+  </data>
+  <data name="Win_InUse" xml:space="preserve">
+    <value>In use by another process</value>
+  </data>
+  <data name="Win_InvalidName" xml:space="preserve">
+    <value>Invalid name</value>
+  </data>
+  <data name="Win_InvalidPath" xml:space="preserve">
+    <value>Invalid path</value>
+  </data>
+  <data name="Win_InvalidSid" xml:space="preserve">
+    <value>Invalid SID</value>
+  </data>
+  <data name="Win_LogonFailure" xml:space="preserve">
+    <value>Logon failed (wrong user name or password)</value>
+  </data>
+  <data name="Win_NetAccessDenied" xml:space="preserve">
+    <value>Network access denied</value>
+  </data>
+  <data name="Win_NetNameDeleted" xml:space="preserve">
+    <value>Network name no longer available</value>
+  </data>
+  <data name="Win_NetNameNotFound" xml:space="preserve">
+    <value>Network name not found</value>
+  </data>
+  <data name="Win_NetPathNotFound" xml:space="preserve">
+    <value>Network path not found</value>
+  </data>
+  <data name="Win_NetUnreachable" xml:space="preserve">
+    <value>Network not reachable</value>
+  </data>
+  <data name="Win_NoLogonServerDc" xml:space="preserve">
+    <value>No logon server (domain controller) reachable</value>
+  </data>
+  <data name="Win_NoLogonServers" xml:space="preserve">
+    <value>No logon server available</value>
+  </data>
+  <data name="Win_NoneMapped" xml:space="preserve">
+    <value>Account does not exist</value>
+  </data>
+  <data name="Win_NoNetwork" xml:space="preserve">
+    <value>Network not present or not started</value>
+  </data>
+  <data name="Win_NoSuchDomain" xml:space="preserve">
+    <value>Domain not found</value>
+  </data>
+  <data name="Win_NotAFolder" xml:space="preserve">
+    <value>Not a folder</value>
+  </data>
+  <data name="Win_NotReady" xml:space="preserve">
+    <value>Device not ready</value>
+  </data>
+  <data name="Win_NotSupported" xml:space="preserve">
+    <value>Operation not supported</value>
+  </data>
+  <data name="Win_PathNotFound" xml:space="preserve">
+    <value>Path not found</value>
+  </data>
+  <data name="Win_PathTooLong" xml:space="preserve">
+    <value>Path or name too long</value>
+  </data>
+  <data name="Win_RpcCallFailed" xml:space="preserve">
+    <value>RPC call failed</value>
+  </data>
+  <data name="Win_RpcUnavailable" xml:space="preserve">
+    <value>RPC server unavailable</value>
+  </data>
+  <data name="Win_ServerServiceStopped" xml:space="preserve">
+    <value>Server service is not started</value>
+  </data>
+  <data name="Win_ServerUnreachable" xml:space="preserve">
+    <value>Network server not reachable</value>
+  </data>
+  <data name="Win_ShareNotFound" xml:space="preserve">
+    <value>Share not found</value>
+  </data>
+  <data name="Win_TrustedDomainFailure" xml:space="preserve">
+    <value>Trust relationship with the domain failed</value>
+  </data>
+  <data name="Win_TrustRelationshipFailure" xml:space="preserve">
+    <value>Trust relationship between computer and domain failed</value>
+  </data>
+  <data name="Win_UnexpectedNetError" xml:space="preserve">
+    <value>Unexpected network error</value>
+  </data>
+  <data name="Win_UserNotFound" xml:space="preserve">
+    <value>User not found</value>
+  </data>
+</root>

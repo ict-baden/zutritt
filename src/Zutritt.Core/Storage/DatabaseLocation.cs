@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 namespace Zutritt.Core.Storage;
 
 /// <summary>Wo die Datenbank liegt und ob sie über das Netz erreicht wird.</summary>

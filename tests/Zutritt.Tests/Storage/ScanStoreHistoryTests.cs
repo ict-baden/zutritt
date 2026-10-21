@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using Zutritt.Core.Model;
 using Zutritt.Core.Storage;
 using Zutritt.Tests.TestSupport;
@@ -14,6 +15,25 @@ public sealed class ScanStoreHistoryTests
         scan.Machine = machine;
         if (targets.Length > 0) scan.Request = scan.Request with { Targets = targets };
         return scan;
+    }
+
+    [Fact]
+    public void Lauf_mit_altem_Schluessel_fuer_D_wird_weiter_gefunden()
+    {
+        // Ältere Ausgaben speicherten „scan D:“ unter dem Schlüssel „D:“, heute heißt er „D:\“ – ein geplanter
+        // „scan D: --vergleich“ soll nach dem Update trotzdem mit dem letzten Lauf vergleichen
+        using var db = new TestDb();
+        using var store = db.Open();
+        var old = store.Save(Run(T0, "ADMIN-PC", "D:"));
+        TestDb.Execute(store.Connection, $"UPDATE scan SET targets_key = 'D:' WHERE id = {old};");
+
+        Assert.Equal(old, store.FindPrevious(Run(T0.AddDays(7), "ADMIN-PC", "D:"))?.Id);
+        Assert.Equal(old, store.FindPrevious(Run(T0.AddDays(7), "ADMIN-PC", @"d:\"))?.Id);
+        Assert.Null(store.FindPrevious(Run(T0.AddDays(7), "ADMIN-PC", @"E:")));
+
+        // Neuere Läufe mit neuem Schlüssel gehen vor
+        var newer = store.Save(Run(T0.AddDays(1), "ADMIN-PC", "D:"));
+        Assert.Equal(newer, store.FindPrevious(Run(T0.AddDays(7), "ADMIN-PC", "D:"))?.Id);
     }
 
     [Fact]

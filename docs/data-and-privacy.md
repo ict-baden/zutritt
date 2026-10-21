@@ -11,7 +11,7 @@ What Zutritt reads, what it keeps where, how to delete it, which connections it 
 - **Zutritt sends no data to ICT-Baden** – no telemetry, no crash reports, no usage statistics, no update check. The *Info* page and `Zutritt.exe --info` say so: *Diese Software sendet keine Daten an ICT-Baden.*
 - **Everything stays on the PC that scans:** the run history in a per-user database, a short log, and the reports you save.
 - **The operator is responsible for the data.** A run contains names of people, their group memberships and their access. Whoever runs Zutritt – the customer – is the controller in the sense of the GDPR; ICT-Baden processes none of it through the software.
-- **There are no settings to store.** The options are chosen per scan (in the window or on the command line) and saved with the run; Zutritt keeps no settings file and no settings in the registry (it only reads whether Windows uses the light or dark theme). The MSI writes one registry value for its Start menu entry ([Installation › MSI](installation.md#msi-installer)).
+- **Only one setting is stored: the language**, and only if you choose one on the *Info* page – in `%LocalAppData%\Zutritt\settings.json`. Zutritt also reads `%ProgramData%\Zutritt\settings.json` (a language preset by the administrator) and the environment variable `ZUTRITT_LANGUAGE`. Scan options are chosen per scan and saved with the run; Zutritt keeps no settings in the registry (it only reads whether Windows uses the light or dark theme). The MSI writes one registry value for its Start menu entry ([Installation › MSI](installation.md#msi-installer)).
 
 ## Read-only
 
@@ -23,7 +23,7 @@ Zutritt **never changes** permissions, files, shares, accounts or group membersh
 | Shares | name, local path, remark, share permissions | open sessions, open files |
 | Account databases and Active Directory | account name, display name, kind, *disabled* flag, group memberships | passwords, e-mail addresses, other attributes |
 
-The only things Zutritt writes are its own database, its [log](#log), and the Excel, PDF or diagnostics files you ask for.
+The only things Zutritt writes are its own database, its [log](#log), the language you choose on the *Info* page (`settings.json`), and the Excel, PDF or diagnostics files you ask for. The single `Zutritt.exe` (not the MSI and not the ZIP) also unpacks its native libraries – SQLite and the WPF graphics files, about 10 MB – into `%TEMP%\.net\Zutritt\…` at the first start and reuses them later; .NET does not delete them. The environment variable `DOTNET_BUNDLE_EXTRACT_BASE_DIR` moves that folder.
 
 ## What is stored
 
@@ -89,7 +89,7 @@ Error messages from Windows or .NET can contain a file path, for example of a re
 
 *Info* › ***Diagnosepaket erstellen*** saves a ZIP file for a support request: version, build, Windows and .NET version, language and time zone, database schema and number of stored runs, and the logs of the last 7 days. It contains **no runs, no reports and no database**.
 
-The switch ***Ohne Namen und Adressen*** is on by default: names of this PC, its user and domain, server names and UNC paths, local paths, account SIDs, *DOMÄNE\\name* accounts, quoted names, IP and e-mail addresses are replaced (*RECHNER*, *BENUTZER*, *SERVER-1* …). Look into the ZIP before you send it.
+The switch ***Ohne Namen und Adressen*** is on by default: names of this PC, its user, its domain and DNS domain, server names and UNC paths, local paths (also with spaces in the middle), account SIDs, *DOMÄNE\\name* accounts, names in LDAP paths (*CN=…*, *OU=…*, *DC=…*), quoted names in every language of the interface, IP and e-mail addresses are replaced (*RECHNER*, *BENUTZER*, *SERVER-1* …). A path without quotes ends at the first space after which no further part of the path follows – Zutritt's own messages quote paths, but a message from Windows might not. Look into the ZIP before you send it.
 
 - **Free support on GitHub is public.** Attach only the anonymised package – never reports, `zutritt.db` or real server, share and account names ([SUPPORT.md](../SUPPORT.md)).
 - **Confidential analysis** of real runs or reports is part of a support contract with a data processing agreement (*Auftragsverarbeitungsvertrag*), because ICT-Baden then processes personal data on the customer's behalf.
@@ -98,7 +98,7 @@ The switch ***Ohne Namen und Adressen*** is on by default: names of this PC, its
 
 Zutritt connects only to what it scans and resolves: the file servers (SMB and the Windows network APIs for shares and local accounts), the LSA of these servers and of this PC, and – on domain-joined PCs – the domain controllers of its own domain. There is no telemetry, no update check and no other internet connection.
 
-The *Info* page has links to the source code, help and support, this page and the licence on GitHub, to the Impressum and to the ICT-Baden website. They open in your browser **only when you click them**, and only `http`/`https` addresses are opened.
+The *Info* page has links to the source code, help and support, this page, the Impressum and the ICT-Baden website; the licence texts are built into the program and shown in a window. They open in your browser **only when you click them**, and only `http`/`https` addresses are opened.
 
 ---
 

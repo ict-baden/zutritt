@@ -1,4 +1,6 @@
+// SPDX-License-Identifier: MIT
 using Zutritt.Core.Model;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.Core.Reports;
 
@@ -149,6 +151,8 @@ internal sealed record ReportNote(NoteKind Kind, string Text);
 internal sealed record ComparisonData
 {
     public DateTimeOffset OlderStartedAt { get; init; }
+    /// <summary>Hinweis, dass die Läufe einen anderen Umfang hatten und nur der gemeinsame verglichen ist; sonst leer.</summary>
+    public string ScopeNote { get; init; } = "";
     public int NewFindings { get; init; }
     public int ResolvedFindings { get; init; }
     public int MoreAccess { get; init; }
@@ -165,7 +169,7 @@ internal sealed record ComparisonData
 internal sealed record ChangeRow(string Area, string Change, string Subject, string Account, string Before, string After);
 
 /// <summary>
-/// Bereiche der Änderungen in der Reihenfolge, in der die Berichte sie zeigen: erst die Befunde, dann die
+/// Bereiche der Änderungen (Kennungen, angezeigt über <see cref="Label"/>) in der Reihenfolge, in der die Berichte sie zeigen: erst die Befunde, dann die
 /// Ursachen (Einträge, Mitgliedschaften, Ordner), zuletzt die Folgen für einzelne Personen – die sind oft
 /// hundertfach und würden sonst das Wesentliche verdrängen.
 /// </summary>
@@ -178,6 +182,17 @@ internal static class ChangeArea
     public const string Access = "Zugriff";
 
     public static IReadOnlyList<string> Order { get; } = [Finding, Ace, Membership, Folder, Access];
+
+    /// <summary>Anzeige des Bereichs in der Sprache der Oberfläche (die Konstanten oben sind nur Kennungen).</summary>
+    public static string Label(string area) => area switch
+    {
+        Finding => Strings.Area_Finding,
+        Ace => Strings.Area_Permission,
+        Membership => Strings.Area_Membership,
+        Folder => Strings.Area_Folder,
+        Access => Strings.Area_Access,
+        _ => area,
+    };
 }
 
 /// <summary>
@@ -186,13 +201,13 @@ internal static class ChangeArea
 /// </summary>
 internal static class ChangeText
 {
-    public const string New = "Neu";
-    public const string Resolved = "Behoben";
-    public const string Joined = "Aufgenommen";
-    public const string FolderAdded = "Neu mit eigenen Rechten";
-    public const string FolderRemoved = "Keine eigenen Rechte mehr";
-    public const string MoreAccess = "Mehr Zugriff";
-    public const string LessAccess = "Weniger Zugriff";
+    public static string New => Strings.Change_New;
+    public static string Resolved => Strings.Change_Resolved;
+    public static string Joined => Strings.Change_Joined;
+    public static string FolderAdded => Strings.Change_FolderAdded;
+    public static string FolderRemoved => Strings.Change_FolderRemoved;
+    public static string MoreAccess => Strings.Change_MoreAccess;
+    public static string LessAccess => Strings.Change_LessAccess;
 
     /// <summary>Mitgliedschaft: wer in eine Gruppe kommt, wird „aufgenommen“ – sonst wie Einträge.</summary>
     public static string Membership(ChangeKind kind) => kind == ChangeKind.Hinzugefuegt ? Joined : ReportText.Change(kind);

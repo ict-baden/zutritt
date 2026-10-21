@@ -1,4 +1,7 @@
+// SPDX-License-Identifier: MIT
 using System.Diagnostics;
+using Zutritt.Core;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.UI;
 
@@ -23,7 +26,7 @@ public static class Links
     /// <returns>null bei Erfolg, sonst ein deutscher Hinweis für die Meldungsleiste.</returns>
     public static string? Open(string url)
     {
-        if (!IsAllowed(url, out var uri)) return $"Der Link „{url}“ wurde nicht geöffnet: Erlaubt sind nur Adressen mit http oder https.";
+        if (!IsAllowed(url, out var uri)) return Texts.Format(Strings.Ui_LinkBlocked, url);
         try
         {
             Process.Start(new ProcessStartInfo(uri!.AbsoluteUri) { UseShellExecute = true });
@@ -31,7 +34,7 @@ public static class Links
         }
         catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
         {
-            return $"Der Browser ließ sich nicht öffnen: {ex.Message}";
+            return Texts.Format(Strings.Ui_BrowserFailed, ErrorCodes.Describe(ex, ErrorCodes.LinkOpen));
         }
     }
 }

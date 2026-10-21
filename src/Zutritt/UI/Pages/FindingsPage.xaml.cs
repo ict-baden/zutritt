@@ -1,9 +1,11 @@
+// SPDX-License-Identifier: MIT
 using System.Collections;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using Zutritt.Core.Model;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.UI.Pages;
 
@@ -89,10 +91,10 @@ public partial class FindingsPage : UserControl, IPage, ISearchPage
         {
             _view = null;
             FindingsList.ItemsSource = null;
-            RuleFilter.ItemsSource = new[] { new RuleChoice(null, "Alle Regeln") };
+            RuleFilter.ItemsSource = new[] { new RuleChoice(null, Strings.Fi_AllRules) };
             RuleFilter.SelectedIndex = 0;
             SetChipCounts(null);
-            ShowEmpty("\uE81C", "Kein Lauf geladen", "Starten Sie auf der Übersicht einen Scan oder öffnen Sie einen gespeicherten Lauf.", good: false);
+            ShowEmpty("\uE81C", Strings.Ui_NoRunLoaded, Strings.Fi_NoRunText, good: false);
             ShowDetail(null);
             return;
         }
@@ -112,7 +114,7 @@ public partial class FindingsPage : UserControl, IPage, ISearchPage
 
         var rules = scan.Findings.Select(f => f.RuleId).Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.Ordinal)
             .Select(id => new RuleChoice(id, _state.Rule(id) is { } r ? $"{id} · {r.Title}" : id));
-        RuleFilter.ItemsSource = new[] { new RuleChoice(null, "Alle Regeln") }.Concat(rules).ToList();
+        RuleFilter.ItemsSource = new[] { new RuleChoice(null, Strings.Fi_AllRules) }.Concat(rules).ToList();
         _rule = null;
         RuleFilter.SelectedIndex = 0;
 
@@ -179,9 +181,9 @@ public partial class FindingsPage : UserControl, IPage, ISearchPage
     {
         if (_view is null || _shown is null) return;
         if (_shown.Findings.Count == 0)
-            ShowEmpty("\uE73E", "Keine Befunde", "In diesem Lauf ist nichts aufgefallen. Die Ordner-Seite zeigt trotzdem, wer wohin darf.", good: true);
+            ShowEmpty("\uE73E", Strings.Ui_NoFindings, Strings.Fi_NothingFound, good: true);
         else if (_view.IsEmpty)
-            ShowEmpty("\uE721", "Keine Treffer", "Kein Befund passt zu Filter und Suche.", good: false);
+            ShowEmpty("\uE721", Strings.Fi_NoMatches, Strings.Fi_NoMatchesText, good: false);
         else
         {
             EmptyState.Visibility = Visibility.Collapsed;
@@ -201,12 +203,12 @@ public partial class FindingsPage : UserControl, IPage, ISearchPage
 
     // ================= Spalten =================
 
-    private static readonly Dictionary<string, Func<FindingRow, string>> SortKeys = new()
+    private static Dictionary<string, Func<FindingRow, string>> SortKeys => new()
     {
-        ["Regel"] = r => r.RuleId,
-        ["Titel"] = r => r.Title,
-        ["Pfad"] = r => r.Path,
-        ["Konto"] = r => r.AccountName,
+        [Strings.Col_Rule] = r => r.RuleId,
+        [Strings.Col_Title] = r => r.Title,
+        [Strings.Col_Path] = r => r.Path,
+        [Strings.Col_Account] = r => r.AccountName,
     };
 
     /// <summary>Klick auf einen Spaltenkopf sortiert innerhalb der Schwere-Gruppen (sonst gerieten die Gruppen durcheinander).</summary>
@@ -254,8 +256,8 @@ public partial class FindingsPage : UserControl, IPage, ISearchPage
         Detail.Visibility = row is null ? Visibility.Collapsed : Visibility.Visible;
         DetailEmpty.Visibility = row is null ? Visibility.Visible : Visibility.Collapsed;
         DetailEmpty.Text = _shown is null || _shown.Findings.Count == 0
-            ? "Hier erscheinen Erklärung und Empfehlung zum ausgewählten Befund."
-            : "Befund auswählen, um Erklärung und Empfehlung zu sehen.";
+            ? Strings.Fi_DetailPlaceholder
+            : Strings.Fi_SelectFinding;
         if (row is null) return;
 
         var rule = _state.Rule(row.RuleId);
@@ -272,11 +274,11 @@ public partial class FindingsPage : UserControl, IPage, ISearchPage
             DetailAccount.Text = p is not null && p.DisplayName.Length > 0 && !p.Label.EndsWith(p.DisplayName, StringComparison.OrdinalIgnoreCase)
                 ? $"{p.Label} ({p.DisplayName})"
                 : row.Account;
-            DetailAccountKind.Text = p is null ? "" : Labels.Of(p.Kind) + (p.IsDisabled ? " · deaktiviert" : "") + (p.Kind == PrincipalKind.Verwaist ? " · Konto existiert nicht mehr" : "");
+            DetailAccountKind.Text = p is null ? "" : Labels.Of(p.Kind) + (p.IsDisabled ? Strings.Fi_Disabled : "") + (p.Kind == PrincipalKind.Verwaist ? Strings.Fi_AccountGone : "");
         }
         else DetailAccountPanel.Visibility = Visibility.Collapsed;
 
-        DetailExplanation.Text = rule?.Explanation ?? "Für diese Regel liegt keine Beschreibung vor.";
+        DetailExplanation.Text = rule?.Explanation ?? Strings.Fi_NoDescription;
         DetailRecommendation.Text = rule?.Recommendation ?? "–";
         Detail.ScrollToTop();
     }

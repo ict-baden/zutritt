@@ -1,6 +1,8 @@
+// SPDX-License-Identifier: MIT
 using System.IO.Compression;
 using Zutritt.Core.Diagnostics;
 using Zutritt.Core.Model;
+using Zutritt.Core.Resources;
 using Zutritt.Core.Scanning;
 using Zutritt.Tests.TestSupport;
 
@@ -149,6 +151,54 @@ public sealed class AnonymizerTests
     [InlineData("2026-10-18 11:15:22.123 INFO Scan beendet nach 4,2 s", "2026-10-18 11:15:22.123 INFO Scan beendet nach 4,2 s")]
     [InlineData("Version 0.1.0-ci.12, .NET 10.0.0", "Version 0.1.0-ci.12, .NET 10.0.0")]
     public void Ersetzt_Namen_Pfade_und_Adressen(string input, string expected) => Assert.Equal(expected, _anonymizer.Apply(input));
+
+    [Theory]
+    [InlineData(@"Ordner D:\Daten\Personal\Erika Mustermann Akte\Vertrag.pdf fehlt", @"Ordner D:\… fehlt")]
+    [InlineData(@"Freigabe \\FS01\Personal\Kündigung Hans Meier\2026 nicht lesbar", @"Freigabe \\SERVER-1\… nicht lesbar")]
+    [InlineData(@"Could not find a part of the path 'C:\Users\x\Erika Mustermann'.", "Could not find a part of the path '…'.")]
+    [InlineData(@"Access to the path '\\FS01\Personal\Hans Meier.docx' is denied.", "Access to the path '…' is denied.")]
+    [InlineData("LDAP://CN=Hans Meier,OU=Vorstand,DC=kanzlei,DC=local", "LDAP://CN=…,OU=…,DC=…,DC=…")]
+    [InlineData("Gruppe cn=Projekt Geheim,ou=Gruppen nicht lesbar", "Gruppe cn=…,ou=…")]
+    [InlineData("Domäne (kanzlei-mueller.local) antwortet nicht, Server dc01.kanzlei-mueller.local", "Domäne (DNS-DOMÄNE) antwortet nicht, Server dc01.DNS-DOMÄNE")]
+    [InlineData("Zutritt's Protokoll bleibt", "Zutritt's Protokoll bleibt")]
+    [InlineData(@"Kopie von D:\Akte Muster\a nach E:\Ziel\b fertig", @"Kopie von D:\… nach E:\… fertig")]
+    public void Ersetzt_Pfade_mit_Leerzeichen_LDAP_Namen_und_DNS_Domaene(string input, string expected) =>
+        Assert.Equal(expected, new Anonymizer("PC-LABOR-07", "jdoe", "MUSTER", "kanzlei-mueller.local").Apply(input));
+
+    public static TheoryData<string> Languages => [.. Zutritt.Core.Localization.UiLanguage.Supported];
+
+    [Theory]
+    [MemberData(nameof(Languages))]
+    public void Namen_in_Scanmeldungen_jeder_Sprache_werden_ersetzt(string language)
+    {
+        // Befund der Prüfung: Nur „…“ wurde ersetzt – in en, es, fr und zh-Hans landeten Gruppen und Domänen im
+        // Protokoll und im „anonymisierten“ Diagnosepaket
+        using var _ = TestCulture.Use(language);
+        string[] messages =
+        [
+            Texts.Format(Strings.Ad_Unreachable, "firma.local", "Server antwortet nicht"),
+            Texts.Format(Strings.Ad_MembersUnreadable, "Labor-Alle", "firma.local", "Zeitlimit"),
+            Texts.Format(Strings.Ad_AccountUnreadable, "Projekt-Gast", "firma.local", "Zeitlimit"),
+            Texts.Format(Strings.Local_MembersUnreadable, "Projekt-Leser", "Zugriff verweigert"),
+            Texts.Format(Strings.Share_InvalidName, "Geheim-Archiv"),
+            Texts.Format(Strings.Text_Quote, "Vertrieb Süd"),
+        ];
+        foreach (var message in messages)
+        {
+            var clean = _anonymizer.Apply(message);
+            foreach (var name in new[] { "firma.local", "Labor-Alle", "Projekt-Gast", "Projekt-Leser", "Geheim-Archiv", "Vertrieb Süd" })
+                Assert.False(clean.Contains(name, StringComparison.OrdinalIgnoreCase), $"{language}: „{name}“ steht noch in „{clean}“");
+        }
+    }
+
+    [Theory]
+    [InlineData("Members of “Labor-Alle” (“firma.local”) not readable: timeout", "Members of „…“ („…“) not readable: timeout")]
+    [InlineData("Membres de « Labor-Alle » illisibles", "Membres de „…“ illisibles")]
+    [InlineData("Miembros de «Labor-Alle»", "Miembros de „…“")]
+    [InlineData("无法读取“Labor-Alle”的成员", "无法读取„…“的成员")]
+    [InlineData("Datei \"Gehälter.xlsx\" gesperrt", "Datei „…“ gesperrt")]
+    public void Ersetzt_Text_in_Anfuehrungszeichen_jeder_Sprache(string input, string expected) =>
+        Assert.Equal(expected, _anonymizer.Apply(input));
 
     [Fact]
     public void Gleiche_Server_bekommen_gleiche_Nummern()

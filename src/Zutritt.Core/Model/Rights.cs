@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+using Zutritt.Core.Resources;
 
 namespace Zutritt.Core.Model;
 
@@ -67,20 +69,21 @@ public static class Rights
 
     public static string Label(AccessLevel level) => level switch
     {
-        AccessLevel.Vollzugriff => "Vollzugriff",
-        AccessLevel.Aendern => "Ändern",
-        AccessLevel.Schreiben => "Schreiben",
-        AccessLevel.Lesen => "Lesen",
-        AccessLevel.Auflisten => "Auflisten",
-        _ => "Kein Zugriff",
+        AccessLevel.Vollzugriff => Strings.Rights_FullControl,
+        AccessLevel.Aendern => Strings.Rights_Modify,
+        AccessLevel.Schreiben => Strings.Rights_Write,
+        AccessLevel.Lesen => Strings.Rights_Read,
+        AccessLevel.Auflisten => Strings.Rights_List,
+        _ => Strings.Rights_None,
     };
 
+    /// <summary>Stufe der Freigabe-Berechtigung, benannt wie im Windows-Dialog (englisch „Change“, nicht „Modify“).</summary>
     public static string Label(ShareAccess access) => access switch
     {
-        ShareAccess.Vollzugriff => "Vollzugriff",
-        ShareAccess.Aendern => "Ändern",
-        ShareAccess.Lesen => "Lesen",
-        _ => "Kein Zugriff",
+        ShareAccess.Vollzugriff => Strings.Share_FullControl,
+        ShareAccess.Aendern => Strings.Share_Change,
+        ShareAccess.Lesen => Strings.Share_Read,
+        _ => Strings.Rights_None,
     };
 
     /// <summary>
@@ -105,27 +108,27 @@ public static class Rights
         var mask = MapGeneric(rights) & ~FileRights.Synchronize;
         bool Has(FileRights r) => (mask & r) != 0;
 
-        if ((mask & Full) == Full) return ["Vollzugriff"];
+        if ((mask & Full) == Full) return [Strings.Rights_FullControl];
         var parts = new List<string>();
-        if ((mask & Modify) == Modify) parts.Add("Ändern");
+        if ((mask & Modify) == Modify) parts.Add(Strings.Rights_Modify);
         else
         {
-            if (Has(FileRights.ReadData)) parts.Add("Lesen");
-            if (Has(FileRights.WriteData | FileRights.AppendData)) parts.Add("Schreiben");
-            if (Has(FileRights.Delete)) parts.Add("Löschen");
+            if (Has(FileRights.ReadData)) parts.Add(Strings.Rights_Read);
+            if (Has(FileRights.WriteData | FileRights.AppendData)) parts.Add(Strings.Rights_Write);
+            if (Has(FileRights.Delete)) parts.Add(Strings.Rights_Delete);
         }
-        if (Has(FileRights.DeleteSubdirectoriesAndFiles)) parts.Add("Unterordner und Dateien löschen");
-        if (Has(FileRights.ChangePermissions)) parts.Add("Berechtigungen ändern");
-        if (Has(FileRights.TakeOwnership)) parts.Add("Besitz übernehmen");
+        if (Has(FileRights.DeleteSubdirectoriesAndFiles)) parts.Add(Strings.Rights_DeleteChildren);
+        if (Has(FileRights.ChangePermissions)) parts.Add(Strings.Rights_ChangePermissions);
+        if (Has(FileRights.TakeOwnership)) parts.Add(Strings.Rights_TakeOwnership);
         if (parts.Count == 0)
         {
             // Nur Kleinigkeiten – dann genau diese nennen
-            if (Has(FileRights.ExecuteFile)) parts.Add("Ordner durchsuchen bzw. Datei ausführen");
-            if (Has(FileRights.ReadAttributes | FileRights.ReadExtendedAttributes)) parts.Add("Attribute lesen");
-            if (Has(FileRights.WriteAttributes | FileRights.WriteExtendedAttributes)) parts.Add("Attribute schreiben");
-            if (Has(FileRights.ReadPermissions)) parts.Add("Berechtigungen lesen");
+            if (Has(FileRights.ExecuteFile)) parts.Add(Strings.Rights_Traverse);
+            if (Has(FileRights.ReadAttributes | FileRights.ReadExtendedAttributes)) parts.Add(Strings.Rights_ReadAttributes);
+            if (Has(FileRights.WriteAttributes | FileRights.WriteExtendedAttributes)) parts.Add(Strings.Rights_WriteAttributes);
+            if (Has(FileRights.ReadPermissions)) parts.Add(Strings.Rights_ReadPermissions);
         }
-        if (parts.Count == 0) parts.Add("Synchronisieren");
+        if (parts.Count == 0) parts.Add(Strings.Rights_Synchronize);
         return parts;
     }
 
@@ -137,11 +140,11 @@ public static class Rights
     /// </summary>
     public static string DenyLabel(ShareAccess deniedFrom) => deniedFrom switch
     {
-        ShareAccess.Lesen => "Verweigert: alles (ab Lesen)",
-        ShareAccess.Aendern => "Verweigert: Ändern und Vollzugriff (ab Ändern)",
-        ShareAccess.Vollzugriff => "Verweigert: Vollzugriff",
+        ShareAccess.Lesen => Strings.Rights_DeniedFromRead,
+        ShareAccess.Aendern => Strings.Rights_DeniedFromModify,
+        ShareAccess.Vollzugriff => Strings.Rights_DeniedFull,
         // Legt der Scanner nie an; die Auswertung lässt einen solchen Eintrag wirkungslos
-        _ => "Verweigert: nichts (ohne Wirkung)",
+        _ => Strings.Rights_DeniedNothing,
     };
 
     /// <summary>Recht eines Freigabe-Eintrags für Menschen: Erlauben wie <see cref="Label(ShareAccess)"/>, Verweigern wie <see cref="DenyLabel"/>.</summary>

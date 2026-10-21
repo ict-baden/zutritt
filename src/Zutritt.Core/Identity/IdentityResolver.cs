@@ -1,4 +1,6 @@
+// SPDX-License-Identifier: MIT
 using Zutritt.Core.Model;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.Core.Identity;
 
@@ -135,7 +137,7 @@ public sealed class IdentityResolver : IDisposable
             if (depth >= MaxGroupDepth)
             {
                 group.MembersUnknown = true;
-                session.Note(group.Label, $"Gruppen sind tiefer als {MaxGroupDepth} Ebenen verschachtelt – die Mitglieder dieser Gruppe wurden nicht mehr aufgelöst.");
+                session.Note(group.Label, Texts.Format(Strings.Identity_GroupsTooDeep, MaxGroupDepth));
                 continue;
             }
 

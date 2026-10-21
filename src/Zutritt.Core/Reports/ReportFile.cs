@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+using Zutritt.Core.Resources;
+
 namespace Zutritt.Core.Reports;
 
 /// <summary>
@@ -26,13 +29,42 @@ internal static class ReportFile
         }
         catch (Exception e) when (e is ArgumentException or NotSupportedException or PathTooLongException)
         {
-            throw new ReportWriteException(path, $"Der Dateiname {ReportText.Quote(path)} ist ungültig.", e);
+            throw new ReportWriteException(path, Texts.Format(Strings.ReportFile_InvalidName, ReportText.Quote(path)), e);
         }
         if (Directory.Exists(full))
-            throw new ReportWriteException(full, $"{ReportText.Quote(full)} ist ein Ordner – bitte einen Dateinamen angeben.");
+            throw new ReportWriteException(full, Texts.Format(Strings.ReportFile_IsFolder, ReportText.Quote(full)));
         // „D:\Berichte\neu\“: sonst würde der Ordner angelegt und das Ersetzen schlüge danach unverständlich fehl
         if (Path.GetFileName(full).Length == 0)
-            throw new ReportWriteException(full, $"{ReportText.Quote(full)} enthält keinen Dateinamen – bitte einen Dateinamen angeben.");
+            throw new ReportWriteException(full, Texts.Format(Strings.ReportFile_NoFileName, ReportText.Quote(full)));
+        return full;
+    }
+
+    /// <summary>
+    /// Prüft vor einem langen Scan, ob der Bericht später geschrieben werden kann: gültiger Dateiname, Ordner anlegbar
+    /// und beschreibbar (probeweise eine temporäre Datei, die sofort wieder verschwindet). Eine vorhandene Datei, die
+    /// gerade in Excel offen ist, fällt erst beim Schreiben auf.
+    /// </summary>
+    /// <exception cref="ReportWriteException">Das Ziel ist ungültig oder der Ordner nicht beschreibbar.</exception>
+    public static string CheckWritable(string path)
+    {
+        var full = FullPath(path);
+        var dir = Path.GetDirectoryName(full) ?? throw new ReportWriteException(full, Texts.Format(Strings.ReportFile_NoFolder, ReportText.Quote(full)));
+        var probe = Path.Combine(dir, $"~{Path.GetFileName(full)}.{Guid.NewGuid():N}.tmp");
+        try
+        {
+            Directory.CreateDirectory(dir);
+            using (new FileStream(probe, FileMode.CreateNew, FileAccess.Write, FileShare.None, 1, FileOptions.DeleteOnClose)) { }
+        }
+        catch (UnauthorizedAccessException e)
+        {
+            TryDelete(probe);
+            throw new ReportWriteException(full, Texts.Format(Strings.ReportFile_NoPermission, ReportText.Quote(full)), e);
+        }
+        catch (IOException e)
+        {
+            TryDelete(probe);
+            throw new ReportWriteException(full, Describe(e, full), e);
+        }
         return full;
     }
 
@@ -40,7 +72,7 @@ internal static class ReportFile
     {
         ArgumentNullException.ThrowIfNull(write);
         var full = FullPath(path);
-        var dir = Path.GetDirectoryName(full) ?? throw new ReportWriteException(full, $"{ReportText.Quote(full)} hat keinen Ordner.");
+        var dir = Path.GetDirectoryName(full) ?? throw new ReportWriteException(full, Texts.Format(Strings.ReportFile_NoFolder, ReportText.Quote(full)));
         var temp = Path.Combine(dir, $"~{Path.GetFileName(full)}.{Guid.NewGuid():N}.tmp");
         try
         {
@@ -72,15 +104,15 @@ internal static class ReportFile
         bool exists = File.Exists(path);
         return e switch
         {
-            PathTooLongException => $"Der Pfad {file} ist zu lang.",
-            DirectoryNotFoundException => $"Der Ordner für {file} existiert nicht und konnte nicht angelegt werden.",
+            PathTooLongException => Texts.Format(Strings.ReportFile_PathTooLong, file),
+            DirectoryNotFoundException => Texts.Format(Strings.ReportFile_FolderMissing, file),
             UnauthorizedAccessException when exists =>
-                $"Die Datei {file} kann nicht ersetzt werden – ist sie noch geöffnet (z. B. in Excel) oder fehlt die Schreibberechtigung?",
-            UnauthorizedAccessException => $"Keine Berechtigung, {file} zu schreiben.",
+                Texts.Format(Strings.ReportFile_CannotReplace, file),
+            UnauthorizedAccessException => Texts.Format(Strings.ReportFile_NoPermission, file),
             IOException when code is ErrorSharingViolation or ErrorLockViolation =>
-                $"Die Datei {file} ist in einem anderen Programm geöffnet (z. B. Excel oder einem PDF-Betrachter). Bitte schließen und erneut versuchen.",
-            IOException when code is ErrorDiskFull or ErrorHandleDiskFull => $"Nicht genug Speicherplatz für {file}.",
-            _ => $"Der Bericht {file} konnte nicht gespeichert werden: {e.Message}",
+                Texts.Format(Strings.ReportFile_InUse, file),
+            IOException when code is ErrorDiskFull or ErrorHandleDiskFull => Texts.Format(Strings.ReportFile_DiskFull, file),
+            _ => Texts.Format(Strings.ReportFile_SaveFailed, file, e.Message),
         };
     }
 
@@ -89,4 +121,12 @@ internal static class ReportFile
         try { File.Delete(file); }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException) { /* Aufräumen ist best effort */ }
     }
+}
+
+/// <summary>Berichtsziele prüfen, bevor ein langer Scan beginnt (Befehlszeile).</summary>
+public static class ReportTarget
+{
+    /// <summary>Voller Pfad, wenn der Bericht dort geschrieben werden kann; siehe <see cref="ReportFile.CheckWritable"/>.</summary>
+    /// <exception cref="ReportWriteException">Das Ziel ist ungültig oder der Ordner nicht beschreibbar.</exception>
+    public static string Check(string path) => ReportFile.CheckWritable(path);
 }

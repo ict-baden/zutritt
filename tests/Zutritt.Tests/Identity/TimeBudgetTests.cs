@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using System.Diagnostics;
 using Zutritt.Core.Identity;
 using Zutritt.Core.Model;
@@ -60,9 +61,11 @@ public sealed class TimeBudgetTests : IDisposable
     [Fact]
     public void Fehler_der_Arbeit_kommen_unveraendert_an()
     {
-        var ex = Assert.Throws<InvalidOperationException>(() => TimeBudget.TryRun<int>(() => throw new InvalidOperationException("x"), Short, out _));
+        // Großzügiges Limit: hier geht es um die Fehler, nicht um die Zeit – mit 300 ms scheiterte der Test bei kaltem Start
+        var generous = TimeSpan.FromSeconds(30);
+        var ex = Assert.Throws<InvalidOperationException>(() => TimeBudget.TryRun<int>(() => throw new InvalidOperationException("x"), generous, out _));
         Assert.Equal("x", ex.Message);
-        Assert.True(TimeBudget.TryRun(() => 42, Short, out var value));
+        Assert.True(TimeBudget.TryRun(() => 42, generous, out var value));
         Assert.Equal(42, value);
     }
 

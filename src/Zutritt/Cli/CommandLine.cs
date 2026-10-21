@@ -1,17 +1,21 @@
+// SPDX-License-Identifier: MIT
+using Zutritt.Core;
 using Zutritt.Core.Analysis;
 using Zutritt.Core.Diagnostics;
-using Zutritt.Core.Identity;
+using Zutritt.Core.Localization;
 using Zutritt.Core.Model;
 using Zutritt.Core.Reports;
-using Zutritt.Core.Scanning;
+using Zutritt.Core.Resources;
 using Zutritt.Core.Storage;
 using Zutritt.Platform.Windows;
 
 namespace Zutritt.Cli;
 
 /// <summary>
-/// Befehlszeile derselben Exe: scan, liste, bericht, --hilfe, --version, --info, --lizenzen. Für geplante Aufgaben
-/// zählt der Exitcode (0 = nichts ab „Mittel“, 1 = „Mittel“, 2 = „Hoch“, 3 = Fehler oder Abbruch).
+/// Befehlszeile derselben Exe: scan, liste, bericht, --hilfe, --version, --info, --lizenzen – jeweils auch mit englischer
+/// Schreibweise (list, report, --help, --files …). Für geplante Aufgaben zählt der Exitcode (0 = nichts ab „Mittel“,
+/// 1 = „Mittel“, 2 = „Hoch“, 3 = Fehler oder Abbruch, auch wenn kein Ziel geprüft werden konnte). Fehler zeigen
+/// zusätzlich einen Code ZUT-xxxx (Richtlinie 13, Regel 9).
 /// </summary>
 internal static class CommandLine
 {
@@ -20,26 +24,50 @@ internal static class CommandLine
     public const int ExitHigh = 2;
     public const int ExitError = 3;
 
-    private static readonly string[] HelpWords = ["--hilfe", "-hilfe", "hilfe", "--help", "-h", "-?", "/?", "/h"];
+    private static readonly string[] HelpWords = ["--hilfe", "-hilfe", "hilfe", "-h", "-?", "/?", "/h"];
     private static readonly string[] VersionWords = ["--version", "-v", "/v"];
     private static readonly string[] InfoWords = ["--info", "/info"];
-    private static readonly string[] LicenseWords = ["--lizenzen", "--licenses"];
+    private static readonly string[] LicenseWords = ["--lizenzen"];
+
+    /// <summary>
+    /// Englische Schreibweisen, gleichwertig zu den deutschen (Skripte und geplante Aufgaben in beiden Sprachen).
+    /// Intern wird mit den deutschen Namen gearbeitet.
+    /// </summary>
+    private static readonly Dictionary<string, string> Aliases = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["help"] = "hilfe",
+        ["--help"] = "--hilfe",
+        ["--licenses"] = "--lizenzen",
+        ["list"] = "liste",
+        ["report"] = "bericht",
+        ["--demo-report"] = "--demo-bericht",
+        ["--files"] = "--dateien",
+        ["--depth"] = "--tiefe",
+        ["--deep-from"] = "--ausnahme-ab",
+        ["--no-groups"] = "--ohne-gruppen",
+        ["--include-admin-shares"] = "--mit-admin-freigaben",
+        ["--report"] = "--bericht",
+        ["--compare"] = "--vergleich",
+    };
+
+    internal static string Canonical(string word) => Aliases.TryGetValue(word, out var german) ? german : word;
 
     public static int Run(string[] args)
     {
         ConsoleSession.Attach();
         try
         {
-            var command = args.Length == 0 ? "--hilfe" : args[0].Trim();
+            var typed = args.Length == 0 ? "--hilfe" : args[0].Trim();
+            var command = Canonical(typed);
             var rest = args.Skip(1).ToArray();
-            if (HelpWords.Contains(command, StringComparer.OrdinalIgnoreCase))
+            if (HelpWords.Contains(command, StringComparer.OrdinalIgnoreCase) || command.Equals("--hilfe", StringComparison.OrdinalIgnoreCase))
             {
                 PrintHelp();
                 return ExitClean;
             }
-            if (VersionWords.Contains(command, StringComparer.OrdinalIgnoreCase)) return Single(rest, command, PrintVersion);
-            if (InfoWords.Contains(command, StringComparer.OrdinalIgnoreCase)) return Single(rest, command, PrintInfo);
-            if (LicenseWords.Contains(command, StringComparer.OrdinalIgnoreCase)) return Single(rest, command, PrintLicenses);
+            if (VersionWords.Contains(command, StringComparer.OrdinalIgnoreCase)) return Single(rest, typed, PrintVersion);
+            if (InfoWords.Contains(command, StringComparer.OrdinalIgnoreCase)) return Single(rest, typed, PrintInfo);
+            if (LicenseWords.Contains(command, StringComparer.OrdinalIgnoreCase)) return Single(rest, typed, PrintLicenses);
 
             if (command.ToLowerInvariant() is "scan" or "liste" or "bericht" or "--demo-bericht")
                 AppDiagnostics.Start("Befehlszeile: " + command.ToLowerInvariant());
@@ -50,38 +78,46 @@ internal static class CommandLine
                     values: ["--tiefe", "--ausnahme-ab", "--bericht", "--db"])),
                 "liste" => List(Arguments.Parse(rest, flags: [], values: ["--db"])),
                 "bericht" => Report(Arguments.Parse(rest, flags: ["--vergleich"], values: ["--bericht", "--db"])),
-                "--screenshots" => throw new UsageException("Aufruf: Zutritt.exe --screenshots <ordner> [--theme hell|dunkel|beide]"),
-                "--demo" => throw new UsageException("„--demo“ steht allein: Zutritt.exe --demo"),
+                "--screenshots" => throw new UsageException(Strings.Cli_UsageScreenshots),
+                "--demo" => throw new UsageException(Strings.Cli_DemoAlone),
                 // Versteckt (nicht in --hilfe): Beispielberichte aus den Demo-Daten für Doku und Vorführung
                 "--demo-bericht" => DemoReport(Arguments.Parse(rest, flags: ["--vergleich"], values: ["--bericht"])),
-                _ => throw new UsageException($"Unbekannter Befehl „{command}“."),
+                _ => throw new UsageException(Texts.Format(Strings.Cli_UnknownCommand, typed)),
             };
         }
         catch (UsageException ex)
         {
-            Console.Error.WriteLine($"Fehler: {ex.Message}");
-            Console.Error.WriteLine("Hilfe: Zutritt.exe --hilfe");
+            Console.Error.WriteLine(ErrorLine(ex.Message, ErrorCodes.Usage));
+            Console.Error.WriteLine(Strings.Cli_HelpHint);
+            return ExitError;
+        }
+        catch (PreconditionException ex)
+        {
+            Console.Error.WriteLine(ErrorLine(ex.Message, ex.ErrorCode));
             return ExitError;
         }
         catch (OperationCanceledException)
         {
             Console.Error.WriteLine();
-            Console.Error.WriteLine("Abgebrochen.");
+            Console.Error.WriteLine(Strings.Cli_Cancelled);
             return ExitError;
         }
         catch (Exception ex)
         {
             Log.Error("Befehlszeile abgebrochen", ex, withStack: ex is not (InvalidOperationException or IOException or UnauthorizedAccessException));
             Console.Error.WriteLine();
-            Console.Error.WriteLine($"Fehler: {ex.Message}");
+            Console.Error.WriteLine(ErrorLine(ex.Message, ErrorCodes.Of(ex)));
             return ExitError;
         }
     }
 
+    /// <summary>„Fehler ZUT-0203: …“ in der Sprache der Ausgabe.</summary>
+    internal static string ErrorLine(string message, string code) => Texts.Format(Strings.Cli_ErrorLine, message, code);
+
     /// <summary>Befehl ohne weitere Angaben (--version, --info, --lizenzen).</summary>
     private static int Single(string[] rest, string command, Action print)
     {
-        if (rest.Any(r => r.Trim().Length > 0)) throw new UsageException($"„{command}“ erwartet keine weiteren Angaben.");
+        if (rest.Any(r => r.Trim().Length > 0)) throw new UsageException(Texts.Format(Strings.Cli_NoArguments, command));
         print();
         return ExitClean;
     }
@@ -94,22 +130,36 @@ internal static class CommandLine
     internal static void PrintInfo()
     {
         Console.WriteLine($"{AppInfo.Name} {AppInfo.VersionWithBuild} – .NET {Environment.Version.ToString(3)}");
-        Console.WriteLine("Zeigt, wer auf Dateifreigaben worauf zugreifen darf – mit Befunden, Vergleich und Bericht.");
+        Console.WriteLine(Strings.App_Tagline);
         Console.WriteLine();
+        (string Label, string Value)[] lines =
+        [
+            (Strings.Cli_InfoLicense, Texts.Format(Strings.Cli_InfoLicenseValue, LicenseTexts.LicenseFile, AppInfo.LicenseUrl)),
+            (Strings.Cli_InfoNotices, Texts.Format(Strings.Cli_InfoNoticesValue, LicenseTexts.NoticesFile)),
+            ("", ""),
+            (Strings.Cli_InfoSource, AppInfo.RepositoryUrl),
+            (Strings.Cli_InfoSupport, AppInfo.SupportUrl),
+            (Strings.Cli_InfoPrivacy, AppInfo.PrivacyUrl),
+            (Strings.Cli_InfoImprint, AppInfo.ImpressumUrl),
+            (Strings.Cli_InfoWebsite, AppInfo.WebsiteUrl),
+            ("", ""),
+            (Strings.Cli_InfoDatabase, Labels.WithVariables(ScanStore.DefaultPath)),
+            (Strings.Cli_InfoLog, Labels.WithVariables(Log.DefaultFolder)),
+            (Strings.Cli_InfoLanguage, Texts.Format(Strings.Cli_InfoLanguageValue,
+                UiLanguage.NativeName(System.Globalization.CultureInfo.CurrentUICulture.Name), UiLanguage.EnvironmentVariable)),
+        ];
         Console.WriteLine($"{AppInfo.Copyright} · {AppInfo.LicenseName}");
-        Console.WriteLine($"Lizenztext:             {LicenseTexts.LicenseFile} (Zutritt.exe --lizenzen, {AppInfo.LicenseUrl})");
-        Console.WriteLine($"Drittanbieter-Lizenzen: {LicenseTexts.NoticesFile} (Zutritt.exe --lizenzen, auch unter Info in der App)");
-        Console.WriteLine();
-        Console.WriteLine($"Quellcode (GitHub):     {AppInfo.RepositoryUrl}");
-        Console.WriteLine($"Hilfe & Support:        {AppInfo.SupportUrl}");
-        Console.WriteLine($"Datenschutz:            {AppInfo.PrivacyUrl}");
-        Console.WriteLine($"Impressum:              {AppInfo.ImpressumUrl}");
-        Console.WriteLine($"Webseite:               {AppInfo.WebsiteUrl}");
-        Console.WriteLine();
-        Console.WriteLine($"Datenbank:              {Labels.WithVariables(ScanStore.DefaultPath)}");
-        Console.WriteLine($"Protokoll:              {Labels.WithVariables(Log.DefaultFolder)}");
+        PrintAligned(lines);
         Console.WriteLine();
         Console.WriteLine(AppInfo.NoDataSentence);
+    }
+
+    /// <summary>„Bezeichnung:  Wert“, die Werte untereinander – die Bezeichnungen sind je Sprache verschieden lang.</summary>
+    private static void PrintAligned(IReadOnlyList<(string Label, string Value)> lines, string indent = "")
+    {
+        int width = lines.Max(l => l.Label.Length) + 2;
+        foreach (var (label, value) in lines)
+            Console.WriteLine(label.Length == 0 ? "" : $"{indent}{(label + ":").PadRight(width)}{value}");
     }
 
     /// <summary>Lizenztext von Zutritt und die der mitgelieferten Bibliotheken (eingebettet, auch in der einzelnen Exe).</summary>
@@ -118,7 +168,7 @@ internal static class CommandLine
         var license = LicenseTexts.License();
         var notices = LicenseTexts.ThirdPartyNotices();
         if (license is null && notices is null)
-            throw new InvalidOperationException($"Die Lizenztexte fehlen in dieser Ausgabe – sie stehen unter {AppInfo.RepositoryUrl}.");
+            throw new InvalidOperationException(Texts.Format(Strings.Cli_LicensesMissing, AppInfo.RepositoryUrl));
         if (license is not null)
         {
             Console.WriteLine(license.TrimEnd());
@@ -132,7 +182,7 @@ internal static class CommandLine
     private static int Scan(Arguments a)
     {
         if (a.Positional.Count == 0)
-            throw new UsageException(@"Bitte mindestens ein Ziel angeben, z. B. Zutritt.exe scan \\server\freigabe");
+            throw new UsageException(Strings.Cli_NeedTarget);
         var reports = a.All("--bericht").Select(CheckReportPath).ToList();
         var request = new ScanRequest
         {
@@ -145,6 +195,11 @@ internal static class CommandLine
         };
         var database = DatabasePath(a);
 
+        // Vorher prüfen, was am Ende gebraucht wird: Ein Scan kann Stunden dauern und darf nicht erst danach an der
+        // Datenbank oder am Berichtsordner scheitern.
+        using var store = OpenStoreForScan(database);
+        foreach (var report in reports) CheckReportTarget(report);
+
         using var cts = new CancellationTokenSource();
         ConsoleCancelEventHandler onCancel = (_, e) =>
         {
@@ -155,24 +210,12 @@ internal static class CommandLine
         Console.CancelKeyPress += onCancel;
         try
         {
-            Console.WriteLine($"Zutritt {AppInfo.Version} – Scan von {string.Join(", ", request.Targets.Select(Labels.TargetName))}");
+            Console.WriteLine(Texts.Format(Strings.Cli_ScanStart, AppInfo.Version, string.Join(", ", request.Targets.Select(Labels.TargetName))));
             var progress = new ConsoleProgress();
             var scanner = WindowsPlatform.CreateScanner();
             var scan = scanner.RunAsync(request, progress, cts.Token).GetAwaiter().GetResult();
             progress.Finish();
-
-            using var store = new ScanStore(database);
-            store.Save(scan);
-            Console.WriteLine($"Lauf {scan.Id} gespeichert in {database}");
-
-            var comparison = a.Has("--vergleich") ? CompareWithPrevious(store, scan) : null;
-            bool reportFailed = !WriteReports(scan, comparison, reports);
-            PrintSummary(scan, comparison);
-
-            int code = reportFailed ? ExitError : ExitCodeFor(scan);
-            Console.WriteLine();
-            Console.WriteLine($"Exitcode {code}: {ExitMeaning(code)}");
-            return code;
+            return FinishScan(store, scan, a.Has("--vergleich"), reports);
         }
         finally
         {
@@ -180,28 +223,118 @@ internal static class CommandLine
         }
     }
 
+    /// <summary>
+    /// Öffnet die Datenbank vor dem Scan und prüft, ob sich ein Lauf darin speichern ließe. Ist sie nur gerade
+    /// gesperrt, läuft der Scan trotzdem (beim Speichern wartet Zutritt bis zu 30 s); sonst bricht Zutritt ab,
+    /// bevor gescannt wird.
+    /// </summary>
+    internal static ScanStore OpenStoreForScan(string database)
+    {
+        ScanStore store;
+        try
+        {
+            store = new ScanStore(database);
+        }
+        catch (ScanStoreException ex)
+        {
+            throw new PreconditionException(Texts.Format(Strings.Cli_NotScannedDb, ex.Message), ex.ErrorCode);
+        }
+        try
+        {
+            store.CheckWritable();
+        }
+        catch (ScanStoreException ex) when (ex.IsLocked)
+        {
+            Console.Error.WriteLine(Texts.Format(Strings.Cli_LockedHint, ex.Message));
+        }
+        catch (ScanStoreException ex)
+        {
+            store.Dispose();
+            throw new PreconditionException(Texts.Format(Strings.Cli_NotScannedDbPath, ex.Message, database), ex.ErrorCode);
+        }
+        return store;
+    }
+
+    private static void CheckReportTarget(string path)
+    {
+        try
+        {
+            ReportTarget.Check(path);
+        }
+        catch (ReportWriteException ex)
+        {
+            throw new PreconditionException(Texts.Format(Strings.Cli_NotScanned, ex.Message), ex.ErrorCode);
+        }
+    }
+
+    /// <summary>
+    /// Nach dem Scan: speichern, vergleichen, Berichte schreiben, Zusammenfassung. Scheitert das Speichern, werden die
+    /// Berichte trotzdem geschrieben – der Lauf ist dann wenigstens dort festgehalten – und der Exitcode ist 3. Ebenso 3,
+    /// wenn kein einziges Ziel geprüft werden konnte (Server aus, Freigabe nicht lesbar): Ein solcher Lauf darf in der
+    /// Aufgabenplanung nicht wie ein sauberer aussehen.
+    /// </summary>
+    internal static int FinishScan(ScanStore store, ScanResult scan, bool compare, IReadOnlyList<string> reports)
+    {
+        var problems = new List<string>();
+        try
+        {
+            store.Save(scan);
+            Console.WriteLine(Texts.Format(Strings.Cli_RunSaved, scan.Id, store.DatabasePath));
+        }
+        catch (ScanStoreException ex)
+        {
+            Log.Error("Lauf nicht gespeichert", ex, withStack: false);
+            Console.Error.WriteLine(ErrorLine(ex.Message, ex.ErrorCode));
+            Console.Error.WriteLine(reports.Count > 0 ? Strings.Cli_NotSavedReportsFollow : Strings.Cli_NotSavedLost);
+            problems.Add(Strings.Cli_ProblemNotSaved);
+        }
+
+        ComparisonResult? comparison = null;
+        if (compare)
+        {
+            try
+            {
+                comparison = CompareWithPrevious(store, scan);
+            }
+            catch (ScanStoreException ex)
+            {
+                // Der Vergleich ist eine Zugabe – ohne ihn sind die Berichte immer noch richtig
+                Console.Error.WriteLine(Texts.Format(Strings.Cli_CompareFailed, ErrorCodes.Describe(ex)));
+            }
+        }
+        if (!WriteReports(scan, comparison, reports)) problems.Add(Strings.Cli_ProblemReport);
+        var (unchecked_, targets) = ScanCoverage.Count(scan);
+        if (targets == 0 || unchecked_ == targets) problems.Add(Strings.Cli_ProblemNothingChecked);
+        PrintSummary(scan, comparison, unchecked_, targets);
+
+        int code = problems.Count > 0 ? ExitError : ExitCodeFor(scan);
+        Console.WriteLine();
+        Console.WriteLine(Texts.Format(Strings.Cli_ExitCode, code, problems.Count > 0 ? string.Join("; ", problems) : ExitMeaning(code)));
+        return code;
+    }
+
     // ================= liste =================
 
     private static int List(Arguments a)
     {
-        if (a.Positional.Count > 0) throw new UsageException($"„liste“ erwartet keine weiteren Angaben („{a.Positional[0]}“).");
+        if (a.Positional.Count > 0) throw new UsageException(Texts.Format(Strings.Cli_ListNoArgs, a.Positional[0]));
         var database = DatabasePath(a);
         if (!File.Exists(database))
         {
-            Console.WriteLine($"Noch keine Datenbank vorhanden ({database}).");
+            Console.WriteLine(Texts.Format(Strings.Cli_NoDatabaseYet, database));
             return ExitClean;
         }
         using var store = new ScanStore(database);
         var runs = store.List();
         if (runs.Count == 0)
         {
-            Console.WriteLine($"Keine gespeicherten Läufe in {database}.");
+            Console.WriteLine(Texts.Format(Strings.Cli_NoRuns, database));
             return ExitClean;
         }
 
-        Console.WriteLine($"Gespeicherte Läufe in {database}:");
+        Console.WriteLine(Texts.Format(Strings.Cli_RunsIn, database));
         Console.WriteLine();
-        Console.WriteLine($"{"Id",6}  {"Datum",-18}  {"Ordner",7}  {"Befunde",7}  {"Hoch",5}  Ziele");
+        Console.WriteLine($"{"Id",6}  {Strings.Pdf_Date,-18}  {Strings.Col_Folders,7}  {Strings.Col_Findings,7}  {Strings.Severity_High,5}  {Strings.Excel_Targets}");
         foreach (var r in runs)
             Console.WriteLine($"{r.Id,6}  {Labels.Date(r.StartedAt),-18}  {Labels.Number(r.FoldersVisited),7}  {Labels.Number(r.Findings),7}  {Labels.Number(r.HighFindings),5}  {r.Targets}");
         return ExitClean;
@@ -212,14 +345,14 @@ internal static class CommandLine
     private static int Report(Arguments a)
     {
         if (a.Positional.Count != 1 || !long.TryParse(a.Positional[0], out var id))
-            throw new UsageException("Aufruf: Zutritt.exe bericht <id> --bericht <datei.xlsx|datei.pdf> [--vergleich] [--db <pfad>] – die Id zeigt „Zutritt.exe liste“.");
+            throw new UsageException(Strings.Cli_UsageReport);
         var reports = a.All("--bericht").Select(CheckReportPath).ToList();
-        if (reports.Count == 0) throw new UsageException("Bitte mit --bericht <datei.xlsx|datei.pdf> angeben, wohin der Bericht soll.");
+        if (reports.Count == 0) throw new UsageException(Strings.Cli_NeedReport);
 
         var database = DatabasePath(a);
-        if (!File.Exists(database)) throw new InvalidOperationException($"Die Datenbank {database} gibt es nicht.");
+        if (!File.Exists(database)) throw new ScanStoreException(Texts.Format(Strings.Cli_NoSuchDatabase, database), ErrorCodes.DatabaseOpen);
         using var store = new ScanStore(database);
-        var scan = store.Load(id) ?? throw new InvalidOperationException($"Lauf {id} gibt es nicht. „Zutritt.exe liste“ zeigt die gespeicherten Läufe.");
+        var scan = store.Load(id) ?? throw new ScanStoreException(Texts.Format(Strings.Cli_NoSuchRun, id), ErrorCodes.DatabaseRead);
         var comparison = a.Has("--vergleich") ? CompareWithPrevious(store, scan) : null;
         return WriteReports(scan, comparison, reports) ? ExitClean : ExitError;
     }
@@ -230,7 +363,7 @@ internal static class CommandLine
     private static int DemoReport(Arguments a)
     {
         var reports = a.All("--bericht").Select(CheckReportPath).ToList();
-        if (reports.Count == 0) throw new UsageException("Bitte mit --bericht <datei.xlsx|datei.pdf> angeben, wohin der Bericht soll.");
+        if (reports.Count == 0) throw new UsageException(Strings.Cli_NeedReport);
         var (older, newer) = Demo.DemoData.Create();
         var comparison = a.Has("--vergleich") ? ScanComparer.Compare(older, newer) : null;
         return WriteReports(newer, comparison, reports) ? ExitClean : ExitError;
@@ -246,7 +379,7 @@ internal static class CommandLine
         var full = Path.GetFullPath(Environment.ExpandEnvironmentVariables(path));
         var ext = Path.GetExtension(full).ToLowerInvariant();
         if (ext is not (".xlsx" or ".pdf"))
-            throw new UsageException($"Bericht „{path}“: Bitte .xlsx (Excel) oder .pdf angeben.");
+            throw new UsageException(Texts.Format(Strings.Cli_ReportExtension, path));
         return full;
     }
 
@@ -256,7 +389,7 @@ internal static class CommandLine
         var older = previous is null ? null : store.Load(previous.Id);
         if (older is null)
         {
-            Console.WriteLine("Vergleich: Es gibt noch keinen früheren Lauf mit denselben Zielen.");
+            Console.WriteLine(Strings.Cli_NoPreviousRun);
             return null;
         }
         return ScanComparer.Compare(older, scan);
@@ -273,29 +406,35 @@ internal static class CommandLine
                 if (Path.GetDirectoryName(path) is { Length: > 0 } dir) Directory.CreateDirectory(dir);
                 if (path.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase)) PdfReport.Write(scan, comparison, path);
                 else ExcelReport.Write(scan, comparison, path);
-                Console.WriteLine($"Bericht geschrieben: {path}");
+                Console.WriteLine(Texts.Format(Strings.Cli_ReportWritten, path));
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Bericht {path} konnte nicht geschrieben werden: {ex.Message}");
+                Console.Error.WriteLine(Texts.Format(Strings.Cli_ReportFailed, path, ErrorCodes.Describe(ex, ErrorCodes.ReportWrite)));
                 ok = false;
             }
         }
         return ok;
     }
 
-    private static void PrintSummary(ScanResult scan, ComparisonResult? comparison)
+    private static void PrintSummary(ScanResult scan, ComparisonResult? comparison, int uncheckedTargets, int targets)
     {
-        int Count(Severity s) => scan.Findings.Count(f => f.Severity == s);
+        string Count(Severity s) => $"{Labels.Of(s)} {scan.Findings.Count(f => f.Severity == s)}";
         int unreadable = scan.Folders.Count(f => f.Error is not null);
 
         Console.WriteLine();
-        Console.WriteLine($"  Ziele            {string.Join(", ", scan.Request.Targets.Select(Labels.TargetName))}");
-        Console.WriteLine($"  Dauer            {Labels.Duration(scan.FinishedAt - scan.StartedAt)}");
-        Console.WriteLine($"  Ordner geprüft   {Labels.Number(scan.FoldersVisited)}, davon {Labels.Number(scan.Folders.Count)} mit eigenen Rechten");
-        if (scan.FilesVisited > 0) Console.WriteLine($"  Dateien geprüft  {Labels.Number(scan.FilesVisited)}");
-        Console.WriteLine($"  Nicht lesbar     {Labels.Number(unreadable)}");
-        Console.WriteLine($"  Befunde          Hoch {Count(Severity.Hoch)} · Mittel {Count(Severity.Mittel)} · Niedrig {Count(Severity.Niedrig)} · Info {Count(Severity.Info)}");
+        var lines = new List<(string, string)>
+        {
+            (Strings.Excel_Targets, string.Join(", ", scan.Request.Targets.Select(Labels.TargetName))),
+            (Strings.Cli_SumDuration, Labels.Duration(scan.FinishedAt - scan.StartedAt)),
+            (Strings.Pdf_FoldersChecked, Texts.Format(Strings.Cli_SumFoldersValue, Labels.Number(scan.FoldersVisited), Labels.Number(scan.Folders.Count))),
+        };
+        if (scan.FilesVisited > 0) lines.Add((Strings.Pdf_FilesChecked, Labels.Number(scan.FilesVisited)));
+        lines.Add((Strings.Cli_SumUnreadable, Labels.Number(unreadable)));
+        lines.Add((Strings.Col_Findings, string.Join(" · ", new[] { Severity.Hoch, Severity.Mittel, Severity.Niedrig, Severity.Info }.Select(Count))));
+        PrintAligned(lines, indent: "  ");
+        if (uncheckedTargets > 0)
+            Console.WriteLine(Texts.Format(Strings.Cli_UnreachableTargets, uncheckedTargets, targets));
 
         var important = scan.Findings.Where(f => f.Severity >= Severity.Mittel)
             .OrderByDescending(f => f.Severity).ThenBy(f => f.RuleId, StringComparer.Ordinal).ThenBy(f => f.Path, StringComparer.OrdinalIgnoreCase)
@@ -303,18 +442,18 @@ internal static class CommandLine
         if (important.Count > 0)
         {
             Console.WriteLine();
-            Console.WriteLine("Wichtigste Befunde:");
+            Console.WriteLine(Strings.Cli_ImportantFindings);
             foreach (var f in important.Take(15))
                 Console.WriteLine($"  {Labels.Of(f.Severity),-7} {f.RuleId,-5} {f.Path}");
-            if (important.Count > 15) Console.WriteLine($"  … und {important.Count - 15} weitere (alle im Bericht)");
+            if (important.Count > 15) Console.WriteLine(Texts.Format(Strings.Cli_AndMore, important.Count - 15));
         }
 
         if (comparison is not null)
         {
             Console.WriteLine();
-            Console.WriteLine($"Seit dem Lauf vom {Labels.Date(comparison.Older.StartedAt)}: {comparison.NewFindings.Count} neue, " +
-                $"{comparison.ResolvedFindings.Count} behobene Befunde, {comparison.AccessChanges.Count} Zugriffsänderungen, " +
-                $"{comparison.AceChanges.Count} ACL-Änderungen, {comparison.MembershipChanges.Count} Mitgliedschaftsänderungen.");
+            Console.WriteLine(Texts.Format(Strings.Cli_SinceRun, Labels.Date(comparison.Older.StartedAt), comparison.NewFindings.Count,
+                comparison.ResolvedFindings.Count, comparison.AccessChanges.Count, comparison.AceChanges.Count, comparison.MembershipChanges.Count));
+            if (comparison.ScopeDiffers) Console.WriteLine(Texts.Format(Strings.Cli_Attention, ScanScope.Describe(comparison)));
         }
     }
 
@@ -331,71 +470,12 @@ internal static class CommandLine
 
     private static string ExitMeaning(int code) => code switch
     {
-        ExitError => "mindestens ein Bericht ließ sich nicht schreiben",
-        ExitHigh => "mindestens ein Befund „Hoch“",
-        ExitMedium => "Befunde „Mittel“, keine „Hoch“",
-        _ => "keine Befunde ab „Mittel“",
+        ExitHigh => Strings.Cli_ExitHigh,
+        ExitMedium => Strings.Cli_ExitMedium,
+        _ => Strings.Cli_ExitClean,
     };
 
-    private static void PrintHelp()
-    {
-        Console.WriteLine($$"""
-            Zutritt {{AppInfo.Version}} – wer darf auf Dateifreigaben wohin?
-
-            Aufruf:
-              Zutritt.exe                         Oberfläche starten
-              Zutritt.exe scan <ziel> [<ziel> …] [Optionen]
-              Zutritt.exe liste [--db <pfad>]
-              Zutritt.exe bericht <id> --bericht <datei> [--vergleich] [--db <pfad>]
-              Zutritt.exe --demo                  Oberfläche mit eingebauten Demo-Daten
-              Zutritt.exe --screenshots <ordner> [--theme hell|dunkel|beide]
-              Zutritt.exe --hilfe
-              Zutritt.exe --version               Version und Build
-              Zutritt.exe --info                  Version, Lizenz, Links zu Hilfe, Datenschutz, Impressum
-              Zutritt.exe --lizenzen              Lizenztext und Drittanbieter-Lizenzen
-
-            Ziele:
-              \\server\freigabe[\ordner]    eine Freigabe oder ein Ordner darin
-              \\server                      alle Datenträger-Freigaben eines Servers
-              D:\Daten                      ein lokaler Ordner
-              .                             alle Freigaben dieses Rechners
-
-            Optionen für „scan“:
-              --dateien                auch Dateien mit eigenen Rechten erfassen (dauert länger)
-              --tiefe N                höchstens N Ebenen unter dem Ziel (Standard: unbegrenzt)
-              --ausnahme-ab N          unterbrochene Vererbung ab Ebene N als „tief versteckte
-                                       Ausnahme“ melden (Standard: 3)
-              --ohne-gruppen           Gruppen nicht bis zur Person auflösen
-              --mit-admin-freigaben    auch C$, ADMIN$ usw. prüfen
-              --bericht <datei>        Bericht schreiben, .xlsx oder .pdf (mehrfach möglich)
-              --vergleich              Änderungen seit dem letzten Lauf mit denselben Zielen
-                                       ermitteln und in die Berichte aufnehmen
-              --db <pfad>              andere Datenbank (Standard: %LocalAppData%\Zutritt\zutritt.db,
-                                       also pro Benutzer)
-
-            „liste“ zeigt die gespeicherten Läufe mit ihrer Id, „bericht“ schreibt für einen davon
-            nachträglich Berichte.
-
-            Exitcodes (für geplante Aufgaben):
-              0  keine Befunde ab „Mittel“
-              1  Befunde „Mittel“, aber keine „Hoch“
-              2  mindestens ein Befund „Hoch“
-              3  Fehler oder Abbruch
-
-            Beispiel – jeden Montag um 6 Uhr mit Vergleich und PDF zum Abzeichnen:
-              schtasks /create /tn "Zutritt Wochenbericht" /sc weekly /d MO /st 06:00 /tr ^
-                "\"C:\Program Files\Zutritt\Zutritt.exe\" scan \\FS01 --vergleich --bericht D:\Berichte\Zutritt.pdf"
-
-            Zutritt.exe ist ein Fensterprogramm; damit die Eingabeaufforderung auf das Ende wartet:
-              start /wait Zutritt.exe scan …            (cmd)
-              Zutritt.exe scan … | Out-Default          (PowerShell)
-            Protokoll für geplante Aufgaben: in einer .cmd-Datei umleiten – dort wartet cmd auf das
-            Ende, und die Datei wird UTF-8 (mit BOM):
-              "C:\Program Files\Zutritt\Zutritt.exe" scan \\FS01 --vergleich > D:\Berichte\zutritt.log 2>&1
-            Es wird nur gelesen – an Rechten und Dateien ändert Zutritt nichts.
-            {{AppInfo.NoDataSentence}}
-            """);
-    }
+    private static void PrintHelp() => Console.WriteLine(Texts.Format(Strings.Cli_Help, AppInfo.Version, AppInfo.NoDataSentence));
 
     /// <summary>Fortschritt in einer Zeile, die sich überschreibt; bei Umleitung nur die Phasen.</summary>
     private sealed class ConsoleProgress : IProgress<ScanProgress>
@@ -409,25 +489,34 @@ internal static class CommandLine
         {
             lock (_gate)
             {
-                if (!ConsoleSession.IsInteractive)
+                // Die Anzeige läuft im Scan-Thread: Ein Fehler hier (z. B. eine sehr schmale Konsole) darf den Scan
+                // nie abbrechen – dann eben ohne Fortschrittszeile.
+                try
                 {
-                    if (p.Phase == _phase) return;
-                    _phase = p.Phase;
-                    Console.WriteLine($"{p.Phase} …");
-                    return;
+                    Write(p);
                 }
-                var now = DateTime.UtcNow;
-                if (p.Phase == _phase && now - _last < TimeSpan.FromMilliseconds(200)) return;
-                _phase = p.Phase;
-                _last = now;
-                var line = $"{p.Phase}: {Labels.Number(p.FoldersVisited)} Ordner, {Labels.Number(p.FoldersStored)} mit eigenen Rechten, {p.Errors} Fehler";
-                int max = Math.Max(40, ConsoleWidth() - 1);
-                if (p.CurrentPath.Length > 0 && line.Length + 3 < max)
-                    line += " – " + Labels.ShortenPath(p.CurrentPath, max - line.Length - 3);
-                if (line.Length > max) line = line[..max];
-                Console.Write("\r" + line.PadRight(Math.Max(_width, line.Length)));
-                _width = line.Length;
+                catch (Exception ex) when (ex is ArgumentException or IOException or InvalidOperationException)
+                {
+                }
             }
+        }
+
+        private void Write(ScanProgress p)
+        {
+            if (!ConsoleSession.IsInteractive)
+            {
+                if (p.Phase == _phase) return;
+                _phase = p.Phase;
+                Console.WriteLine($"{p.Phase} …");
+                return;
+            }
+            var now = DateTime.UtcNow;
+            if (p.Phase == _phase && now - _last < TimeSpan.FromMilliseconds(200)) return;
+            _phase = p.Phase;
+            _last = now;
+            var line = ProgressLine(p, ConsoleWidth());
+            Console.Write("\r" + line.PadRight(Math.Max(_width, line.Length)));
+            _width = line.Length;
         }
 
         public void Finish()
@@ -445,9 +534,29 @@ internal static class CommandLine
         }
     }
 
+    /// <summary>
+    /// Die Fortschrittszeile für eine Konsole mit <paramref name="consoleWidth"/> Spalten: Zahlen und, wenn noch
+    /// mindestens 10 Zeichen frei sind, der gekürzte aktuelle Pfad.
+    /// </summary>
+    internal static string ProgressLine(ScanProgress p, int consoleWidth)
+    {
+        var line = Texts.Format(Strings.Cli_Progress, p.Phase, Labels.Number(p.FoldersVisited), Labels.Number(p.FoldersStored), p.Errors);
+        int max = Math.Max(40, consoleWidth - 1);
+        const string separator = " – ";
+        if (p.CurrentPath.Length > 0 && max - line.Length - separator.Length >= 10)
+            line += separator + Labels.ShortenPath(p.CurrentPath, max - line.Length - separator.Length);
+        return line.Length > max ? line[..max] : line;
+    }
+
     private sealed class UsageException(string message) : Exception(message);
 
-    /// <summary>Einfache Zerlegung: Optionen mit „--“, alles andere sind Ziele bzw. Ids.</summary>
+    /// <summary>Etwas, das der Scan am Ende braucht (Datenbank, Berichtsordner), ist nicht nutzbar – vor dem Scan gemeldet.</summary>
+    internal sealed class PreconditionException(string message, string errorCode) : Exception(message), IHasErrorCode
+    {
+        public string ErrorCode { get; } = errorCode;
+    }
+
+    /// <summary>Einfache Zerlegung: Optionen mit „--“ (deutsch oder englisch), alles andere sind Ziele bzw. Ids.</summary>
     private sealed class Arguments
     {
         private readonly HashSet<string> _flags = new(StringComparer.OrdinalIgnoreCase);
@@ -460,22 +569,23 @@ internal static class CommandLine
             var a = new Arguments();
             for (int i = 0; i < args.Length; i++)
             {
-                var arg = args[i].Trim();
-                if (arg.Length == 0) continue;
-                if (!arg.StartsWith("--", StringComparison.Ordinal))
+                var typed = args[i].Trim();
+                if (typed.Length == 0) continue;
+                if (!typed.StartsWith("--", StringComparison.Ordinal))
                 {
-                    a.Positional.Add(arg);
+                    a.Positional.Add(typed);
                     continue;
                 }
+                var arg = Canonical(typed);
                 if (values.Contains(arg, StringComparer.OrdinalIgnoreCase))
                 {
                     if (i + 1 >= args.Length || args[i + 1].StartsWith("--", StringComparison.Ordinal))
-                        throw new UsageException($"„{arg}“ braucht einen Wert.");
+                        throw new UsageException(Texts.Format(Strings.Cli_NeedsValue, typed));
                     if (!a._values.TryGetValue(arg, out var list)) a._values[arg] = list = [];
                     list.Add(args[++i].Trim());
                 }
                 else if (flags.Contains(arg, StringComparer.OrdinalIgnoreCase)) a._flags.Add(arg);
-                else throw new UsageException($"Unbekannte Option „{arg}“.");
+                else throw new UsageException(Texts.Format(Strings.Cli_UnknownOption, typed));
             }
             return a;
         }
@@ -488,7 +598,7 @@ internal static class CommandLine
         {
             if (Value(name) is not { } text) return null;
             if (!int.TryParse(text, out var n) || n < min)
-                throw new UsageException($"„{name}“ erwartet eine ganze Zahl ab {min}, nicht „{text}“.");
+                throw new UsageException(Texts.Format(Strings.Cli_NeedsInteger, name, min, text));
             return n;
         }
     }

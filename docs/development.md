@@ -34,7 +34,7 @@ dotnet publish @common --self-contained true -p:IncludeNativeLibrariesForSelfExt
 
 The version comes from `<Version>` in `src/Zutritt/Zutritt.csproj` (currently `0.1.0`); `Zutritt.Core` and `Zutritt.Platform.Windows` read it from there, and the CI overrides it for all projects with `-p:Version=…`. The build appends the commit (`0.1.0-ci.12+abc1234…`); the *Info* page and `--version` show it as *Build abc1234*.
 
-Settings shared by all projects – language version, nullable, implicit usings, `Company`, `Product`, `Copyright`, the satellite languages `de;en` – live in [`Directory.Build.props`](../Directory.Build.props). The company name is set there once and appears in every assembly, on the *Info* page and in `--info`. The publish output contains `LICENSE` and `THIRD-PARTY-NOTICES.txt`; both are also embedded in `Zutritt.exe` for the *Info* page and `--lizenzen`.
+Settings shared by all projects – language version, nullable, implicit usings, `Company`, `Product`, `Copyright`, the neutral language `en` and the satellite languages `en;de;es;fr;zh-Hans` – live in [`Directory.Build.props`](../Directory.Build.props). The company name is set there once and appears in every assembly, on the *Info* page and in `--info`. The publish output contains `LICENSE` and `THIRD-PARTY-NOTICES.txt`; both are also embedded in `Zutritt.exe` for the *Info* page and `--lizenzen`.
 
 ## Tests
 
@@ -47,7 +47,7 @@ The xUnit project `tests/Zutritt.Tests` targets two frameworks:
 
 | Target | Runs on | Contains |
 |---|---|---|
-| `net10.0-windows10.0.19041.0` | Windows | everything – about 1,260 tests |
+| `net10.0-windows` | Windows | everything – about 1,260 tests |
 | `net10.0` | any system | the platform-neutral tests – about 950: rules, effective access, comparison, identity resolution against fakes, storage, Excel and PDF, logging, time limits, the scanner against a fake platform |
 
 Everything under `tests/Zutritt.Tests/Windows/` is compiled for the Windows target only: ACL reading, shares, local accounts, the app (*Info* data, command line, demo data, third-party notices). Many of these are **integration tests against the real Windows**: they create temporary folders with real ACLs, real SMB shares and real local users and groups, scan them and clean up afterwards. They are marked `[AdminFact]` and are **skipped without administrator rights** – run the suite elevated before you trust a green result. The CI runner runs as administrator. Other markers:
@@ -113,7 +113,7 @@ flowchart LR
 | `…/Model` | Data model: `ScanRequest`, `ScanResult`, `FolderNode`, `AceEntry`, `ShareInfo`, `ShareAce`, `Principal`, `Finding`, `AccessLevel`/`ShareAccess`, `Rights`, the own `FileRights`/`AceInheritance`/`AcePropagation` (same numeric values as Windows, so stored runs stay readable) and `WindowsPath` (scanned paths are Windows paths on every system) |
 | `…/Platform` | `IScanPlatform` – the one interface to the system: parse targets, probe paths, read ACLs, list folders, list and look up shares, current user, identity resolver. `TimeBudget` – time limits for calls that can hang |
 | `…/Scanning` | `Scanner` (one run; without a platform it reports *Scannen ist nur unter Windows möglich*), `ScanRun` (targets, shares, tree walk), `ShareSecurity`, `NodeSignature` (what gets stored), `InheritanceExpectation` (ZT14), `LocalShareMap` |
-| `…/Identity` | `IdentityResolver` and `ResolveSession` (order of sources, orphaned vs. unknown, group expansion, time limits), `IDirectory`, `SidText` (SID parsing and formatting without Windows), `WellKnownSids` (fixed German names), `FakeDirectory` for tests |
+| `…/Identity` | `IdentityResolver` and `ResolveSession` (order of sources, orphaned vs. unknown, group expansion, time limits), `IDirectory`, `SidText` (SID parsing and formatting without Windows), `WellKnownSids` (fixed names in the language of the interface), `FakeDirectory` for tests |
 | `…/Analysis` | `FindingRules` (all rule texts and conditions), `AccessContext` (tokens, canonical order, share levels), `EffectiveAccess`, `PeopleAccess` (all people at once), `ScanComparer`, `SidCatalog` |
 | `…/Storage` | `ScanStore`, `Schema` (migrations), `ScanWriter`/`ScanReader`, `TargetSet` (which runs are comparable), `DatabaseLocation` (`%LocalAppData%\Zutritt`; on Linux `~/.local/share/zutritt`) |
 | `…/Reports` | `ReportDataBuilder` (shared by both formats), `ExcelReport` (ClosedXML), `PdfReport` (PDFsharp-MigraDoc), `PdfFonts` (system fonts, with Linux and macOS fallbacks), `ReportFile` (safe writing) |
@@ -124,7 +124,7 @@ flowchart LR
 | `tests/Zutritt.Tests` | xUnit tests, see [Tests](#tests) |
 | `tools/screenshots` | Generator for the documentation images |
 
-NuGet dependencies: the core uses `Microsoft.Data.Sqlite`, `ClosedXML` and `PDFsharp-MigraDoc` (plus `System.Security.Cryptography.Pkcs` pinned to a maintained version, because PDFsharp pulls in one with known vulnerabilities); the Windows project adds `System.DirectoryServices.AccountManagement`. Code comments, some identifiers and all user-facing text are in German.
+NuGet dependencies: the core uses `Microsoft.Data.Sqlite`, `ClosedXML` and `PDFsharp-MigraDoc` (plus `System.Security.Cryptography.Pkcs` pinned to a maintained version, because PDFsharp pulls in one with known vulnerabilities); the Windows project adds `System.DirectoryServices.AccountManagement`. Code comments and some identifiers are in German. **User-facing text** lives in `src/Zutritt.Core/Resources/Strings.resx` (English, the fallback) and `Strings.de.resx`, `Strings.es.resx`, `Strings.fr.resx`, `Strings.zh-Hans.resx`; the class `Zutritt.Core.Resources.Strings` is generated by the build. In code use `Strings.Key`, with placeholders `Texts.Format(Strings.Key, …)` (never concatenate sentences), quotes and lists with `Texts.Quote` and `Texts.JoinAnd`, singular/plural with `Texts.Plural`; in XAML `{x:Static res:Strings.Key}`. Every new text goes into all five files – `LocalizationTests` checks keys, placeholders and that every text can be formatted. Errors shown to the user carry a code from `ErrorCodes` (list in [Error codes](error-codes.md)). The tests run in German (`TestCulture`).
 
 ## Database schema
 
@@ -137,7 +137,7 @@ dotnet publish src/Zutritt/Zutritt.csproj -c Release -r win-x64 -p:PublishSingle
 dotnet build installer/Zutritt.Installer.wixproj -c Release -p:ProductVersion=0.1.0
 ```
 
-`installer/Package.wxs` installs everything from the publish folder (without `.pdb`, with `LICENSE` and `THIRD-PARTY-NOTICES.txt`) per machine into `C:\Program Files\Zutritt`, adds a Start menu shortcut, closes a running Zutritt, links *Apps & features* to `SUPPORT.md`, and sets `MajorUpgrade` with `AllowSameVersionUpgrades` so that CI builds – which differ only in the fourth version part – replace each other. **Never change the `UpgradeCode` or the GUID of the Start menu component** – an update would then install next to the old version instead of replacing it. The UI culture of the package is `de-DE`; `Manufacturer` is *ICT-Baden*. ICE38, 43, 57, 60 and 61 are suppressed with reasons in the project file; validation is skipped on CI.
+`installer/Package.wxs` installs everything from the publish folder (without `.pdb`, with `LICENSE` and `THIRD-PARTY-NOTICES.txt`) per machine into `C:\Program Files\Zutritt`, adds a Start menu shortcut, closes a running Zutritt (a scan stopped this way ends with exit code 3, like Ctrl+C), links *Apps & features* to `SUPPORT.md`, and sets `MajorUpgrade` with `AllowSameVersionUpgrades` so that CI builds – which differ only in the fourth version part – replace each other. **Never change the `UpgradeCode` or the GUID of the Start menu component** – an update would then install next to the old version instead of replacing it. The UI culture of the package is `de-DE`; `Manufacturer` is *ICT-Baden*. ICE38, 43, 57, 60 and 61 are suppressed with reasons in the project file; all other ICE checks also run on CI.
 
 ## CI and releases
 
@@ -147,9 +147,9 @@ dotnet build installer/Zutritt.Installer.wixproj -c Release -p:ProductVersion=0.
 2. **`windows`** (windows-latest), once `linux` is green:
    1. **Version:** a tag `v1.2.3` gives `1.2.3`; otherwise the csproj version plus the run number, e.g. `0.1.0-ci.12`. The MSI gets `0.1.0.12` (numbers only). The step prints whether signing is active.
    2. **Restore, build, test** (Release, both test targets one after the other, as administrator).
-   3. **Publish** the three variants.
+   3. **Publish** the three variants and **check the output**: neither the Windows SDK projection nor the unused PDFsharp extras (`PdfSharp.WPFonts`, `.Snippets`, `.Quality`) may appear, and the language files must be exactly `de`, `es`, `fr`, `zh-Hans` (English is built in).
    4. **Sign** the three `Zutritt.exe` – only when the organisation variable `SIGNING_ACCOUNT` is set, and never for pull requests. Signing uses Azure Artifact Signing with OIDC: secrets `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, variables `SIGNING_ENDPOINT`, `SIGNING_ACCOUNT`, `SIGNING_PROFILE`. Without them the steps are skipped and the build stays green, unsigned.
-   5. **Package** the ZIP (with `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.txt` – the step fails if the licence files are missing) and the single exe; **build the MSI** from the self-contained output and sign it (same condition).
+   5. **Package** the ZIP (with `README.md`, `LICENSE`, `THIRD-PARTY-NOTICES.txt` – the step fails if the licence files are missing) and the single exe; **build the MSI** from the self-contained output and sign it (same condition). Then the **MSI probe** installs it silently on the runner (`msiexec /qn`), checks the installation folder and the Start menu entry, runs `Zutritt.exe --info` (English and German) and a small scan with an Excel report, uninstalls it and fails if anything is left behind. The `msiexec` logs are uploaded only when the step fails.
    6. **SBOM** with CycloneDX (`dotnet tool restore`, version pinned in `.config/dotnet-tools.json`), trimmed by [`.github/scripts/sbom-shipped.ps1`](../.github/scripts/sbom-shipped.ps1) to what the packages really contain: packages that NuGet prunes because the .NET or Windows Desktop runtime provides them are removed, the runtime packs are added with their real versions, and a shipped package missing from the SBOM fails the build. Then **`SHA256SUMS.txt`** over all files (LF line endings, so `sha256sum -c` works on Linux too).
    7. **Build provenance** (`actions/attest-build-provenance`) – only while the repository is public.
    8. **Artifact** with all files, kept 7 days (the maximum the repository allows), for trying out a pull request. Uploads may fail (the artifact storage is shared by all repositories of the organisation) without failing the build; the releases take the files directly from `dist/`.

@@ -1,8 +1,11 @@
+// SPDX-License-Identifier: MIT
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Zutritt.Core.Analysis;
 using Zutritt.Core.Model;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.UI.Pages;
 
@@ -20,7 +23,7 @@ public partial class ComparisonPage : UserControl, IPage
     public sealed record AccessRow(string Person, string Account, string Path, string Before, AccessLevel BeforeLevel, string After, AccessLevel AfterLevel, bool IsMore)
     {
         public int Direction => IsMore ? 1 : 0;
-        public override string ToString() => $"{Person}, {Path}, vorher {Before}, nachher {After}";
+        public override string ToString() => Texts.Format(Strings.Cmp_AccessRowText, Person, Path, Before, After);
     }
     public sealed record AceRow(string Change, string Path, string Account, string Before, string After)
     {
@@ -28,7 +31,7 @@ public partial class ComparisonPage : UserControl, IPage
     }
     public sealed record MemberRow(string Change, string Group, string Member)
     {
-        public override string ToString() => $"{Change}: {Member} in {Group}";
+        public override string ToString() => Texts.Format(Strings.Cmp_MemberRowText, Change, Member, Group);
     }
 
     private readonly AppState _state;
@@ -80,21 +83,20 @@ public partial class ComparisonPage : UserControl, IPage
         }
         var task = LoadChoicesAsync(scan, version);
         _choicesTask = task;
-        Ui.Run(_state, () => task, "Die gespeicherten Läufe ließen sich nicht lesen");
+        Ui.Run(_state, () => task, Strings.Ov_RunsUnreadable);
     }
 
     private async Task LoadChoicesAsync(ScanResult scan, int version)
     {
         var runs = await _state.ListRunsAsync();
         if (version != _choicesVersion || !ReferenceEquals(scan, _shownScan)) return;
-        var targets = new HashSet<string>(scan.Request.Targets.Select(t => t.Trim()), StringComparer.OrdinalIgnoreCase);
         _choices = runs
             .Where(r => r.Id != scan.Id && r.StartedAt < scan.StartedAt)
             .OrderByDescending(r => r.StartedAt)
             .Select(r =>
             {
-                var same = targets.SetEquals(r.Targets.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
-                var findings = r.Findings == 1 ? "1 Befund" : $"{Labels.Number(r.Findings)} Befunde";
+                var same = ScanScope.SameTargets(scan.Request.Targets, r.Targets.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+                var findings = Texts.Format(Texts.Plural(r.Findings, Strings.Pdf_FindingCountOne, Strings.Pdf_FindingCountMany), Labels.Number(r.Findings));
                 return new OlderChoice(r.Id, $"{Labels.Date(r.StartedAt)} · {r.Targets} · {findings}", same);
             })
             .ToList();
@@ -105,7 +107,7 @@ public partial class ComparisonPage : UserControl, IPage
     {
         if (_updating || OlderBox.SelectedItem is not OlderChoice choice) return;
         if (_state.Comparison is { } c && c.Older.Id == choice.Id) return;
-        Ui.Run(_state, () => _state.CompareWithAsync(choice.Id), "Der Vergleich ist fehlgeschlagen");
+        Ui.Run(_state, () => _state.CompareWithAsync(choice.Id), Strings.Cmp_Failed);
     }
 
     // ================= Anzeige =================
@@ -117,16 +119,15 @@ public partial class ComparisonPage : UserControl, IPage
 
         if (scan is null)
         {
-            ShowNothing("Kein Lauf geladen", "Laden Sie auf der Übersicht einen Lauf – dann zeigt diese Seite, was sich seit dem Lauf davor geändert hat.");
+            ShowNothing(Strings.Ui_NoRunLoaded, Strings.Cmp_NoRunText);
             return;
         }
         if (c is null && _choices.Count == 0)
         {
-            ShowNothing("Noch kein früherer Lauf",
+            ShowNothing(Strings.Cmp_NoEarlierRun,
                 _state.Store is null
-                    ? "Ohne Datenbank gibt es keine früheren Läufe zum Vergleichen."
-                    : "Für einen Vergleich braucht es mindestens zwei Läufe. Nach dem nächsten Scan derselben Ziele sehen Sie hier, " +
-                      "was sich geändert hat: neue und behobene Befunde, wer mehr oder weniger darf, geänderte Einträge und Gruppenmitgliedschaften.");
+                    ? Strings.Cmp_NoDatabase
+                    : Strings.Cmp_NeedTwoRuns);
             return;
         }
 
@@ -150,21 +151,25 @@ public partial class ComparisonPage : UserControl, IPage
             TargetsWarning.Visibility = Visibility.Collapsed;
             foreach (var count in new[] { CountNew, CountResolved, CountAccess, CountAces, CountMembers }) count.Text = "–";
             ApplyRows(null);
-            ShowList(null, "Es gibt keinen früheren Lauf mit denselben Zielen. Wählen Sie oben einen Lauf, mit dem verglichen werden soll.");
+            ShowList(null, Strings.Cmp_NoSameTargets);
             return;
         }
 
         var days = (c.Newer.StartedAt - c.Older.StartedAt).TotalDays;
-        CompareInfo.Text = days >= 1.5 ? $"{Math.Round(days):0} Tage vorher" : days >= 0.5 ? "1 Tag vorher" : "am selben Tag";
-        var sameTargets = new HashSet<string>(c.Older.Request.Targets, StringComparer.OrdinalIgnoreCase).SetEquals(c.Newer.Request.Targets);
-        TargetsWarning.Visibility = sameTargets ? Visibility.Collapsed : Visibility.Visible;
-        TargetsWarningText.Text = $"Der ältere Lauf hatte andere Ziele ({Labels.Targets(c.Older.Request.Targets)}) – Unterschiede können auch daher kommen.";
+        CompareInfo.Text = days >= 1.5 ? Texts.Format(Strings.Cmp_DaysBefore, Math.Round(days)) : days >= 0.5 ? Strings.Cmp_OneDayBefore : Strings.Cmp_SameDay;
+        // Ziele wie beim automatischen Vergleich normalisiert („D:“ = „D:\“, „/“ = „\“, Groß/Klein egal)
+        var warnings = new List<string>();
+        if (!ScanScope.SameTargets(c.Older.Request.Targets, c.Newer.Request.Targets))
+            warnings.Add(Texts.Format(Strings.Cmp_OtherTargets, Labels.Targets(c.Older.Request.Targets)));
+        if (c.ScopeDiffers) warnings.Add(ScanScope.Describe(c));
+        TargetsWarning.Visibility = warnings.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        TargetsWarningText.Text = string.Join(Environment.NewLine, warnings);
 
         if (!ReferenceEquals(_rowsFor, c))
         {
             foreach (var count in new[] { CountNew, CountResolved, CountAccess, CountAces, CountMembers }) count.Text = "…";
             ApplyRows(null);
-            ShowList(null, "Änderungen werden aufbereitet …");
+            ShowList(null, Strings.Cmp_Preparing);
             // Läuft schon eine Aufbereitung für diesen Vergleich (Seite erneut gezeigt), auf sie warten
             if (!ReferenceEquals(_buildingFor, c) || _building is null)
             {
@@ -213,11 +218,11 @@ public partial class ComparisonPage : UserControl, IPage
             .Select(a => new AccessRow(people[a.Sid].Person, people[a.Sid].Name, a.Path, Labels.Of(a.Before), a.Before, Labels.Of(a.After), a.After, a.After > a.Before)).ToList();
         var aces = c.AceChanges.OrderBy(a => a.Path, StringComparer.OrdinalIgnoreCase)
             .Select(a => new AceRow(Labels.Of(a.Kind), a.Path, Name(a.Sid), AceText(a.Before), AceText(a.After)))
-            .Concat(c.FoldersAdded.Select(p => new AceRow("Eigene Rechte neu", p, "", "", "")))
-            .Concat(c.FoldersRemoved.Select(p => new AceRow("Eigene Rechte entfallen", p, "", "", "")))
+            .Concat(c.FoldersAdded.Select(p => new AceRow(Strings.Cmp_OwnRightsNew, p, "", "", "")))
+            .Concat(c.FoldersRemoved.Select(p => new AceRow(Strings.Cmp_OwnRightsGone, p, "", "", "")))
             .ToList();
         var members = c.MembershipChanges.OrderBy(m => Name(m.GroupSid), StringComparer.CurrentCultureIgnoreCase)
-            .Select(m => new MemberRow(m.Kind == ChangeKind.Hinzugefuegt ? "Hinzugekommen" : m.Kind == ChangeKind.Entfernt ? "Entfernt" : "Geändert",
+            .Select(m => new MemberRow(m.Kind == ChangeKind.Hinzugefuegt ? Strings.Cmp_Joined : m.Kind == ChangeKind.Entfernt ? Strings.Change_Removed : Strings.Change_Changed,
                 Name(m.GroupSid), Name(m.MemberSid))).ToList();
         return new ComparisonRows(newFindings, resolvedFindings, access, aces, members);
     }
@@ -246,31 +251,31 @@ public partial class ComparisonPage : UserControl, IPage
     }
 
     private static string AceText(AceEntry? ace) => ace is null ? ""
-        : $"{(ace.IsDeny ? "Verweigern" : "Erlauben")}: {Labels.RightsText(ace)}{(ace.IsInherited ? " (geerbt)" : "")}";
+        : $"{(ace.IsDeny ? Strings.Ace_Deny : Strings.Ace_Allow)}: {Labels.RightsText(ace)}{(ace.IsInherited ? Strings.Cmp_InheritedSuffix : "")}";
 
     private void Tile_Checked(object sender, RoutedEventArgs e)
     {
         if (_state.Comparison is null)
         {
-            ShowList(null, "Es gibt keinen früheren Lauf mit denselben Zielen. Wählen Sie oben einen Lauf, mit dem verglichen werden soll.");
+            ShowList(null, Strings.Cmp_NoSameTargets);
             return;
         }
         if (sender == TileNew)
         {
             FindingsGrid.ItemsSource = _newFindings;
-            ShowList(FindingsGrid, _newFindings.Count == 0 ? "Keine neuen Befunde seit dem älteren Lauf." : null);
+            ShowList(FindingsGrid, _newFindings.Count == 0 ? Strings.Cmp_NoNewFindings : null);
         }
         else if (sender == TileResolved)
         {
             FindingsGrid.ItemsSource = _resolvedFindings;
-            ShowList(FindingsGrid, _resolvedFindings.Count == 0 ? "Seit dem älteren Lauf wurde kein Befund behoben." : null);
+            ShowList(FindingsGrid, _resolvedFindings.Count == 0 ? Strings.Cmp_NoResolved : null);
         }
         else if (sender == TileAccess)
-            ShowList(AccessGrid, AccessGrid.Items.Count == 0 ? "Niemand darf irgendwo mehr oder weniger als vorher." : null);
+            ShowList(AccessGrid, AccessGrid.Items.Count == 0 ? Strings.Cmp_NoAccessChanges : null);
         else if (sender == TileAces)
-            ShowList(AcesGrid, AcesGrid.Items.Count == 0 ? "Keine Einträge in den Zugriffssteuerungslisten geändert." : null);
+            ShowList(AcesGrid, AcesGrid.Items.Count == 0 ? Strings.Cmp_NoAceChanges : null);
         else if (sender == TileMembers)
-            ShowList(MembersGrid, MembersGrid.Items.Count == 0 ? "Keine Gruppenmitgliedschaft hat sich geändert." : null);
+            ShowList(MembersGrid, MembersGrid.Items.Count == 0 ? Strings.Cmp_NoMembershipChanges : null);
     }
 
     /// <summary>

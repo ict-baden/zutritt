@@ -1,5 +1,7 @@
+// SPDX-License-Identifier: MIT
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.Platform.Windows.Identity;
 
@@ -185,21 +187,21 @@ internal static unsafe partial class Native
     {
         var text = code switch
         {
-            ERROR_ACCESS_DENIED => "Zugriff verweigert",
-            ERROR_BAD_NETPATH => "Netzwerkpfad nicht gefunden",
-            ERROR_NO_LOGON_SERVERS => "Kein Anmeldeserver (Domänencontroller) erreichbar",
-            ERROR_NONE_MAPPED => "Konto nicht vorhanden",
-            ERROR_INVALID_SID => "Ungültige SID",
-            ERROR_NO_SUCH_DOMAIN => "Domäne nicht gefunden",
-            ERROR_NO_SUCH_ALIAS => "Gruppe nicht gefunden",
-            RPC_S_SERVER_UNAVAILABLE => "RPC-Server nicht verfügbar",
-            RPC_S_CALL_FAILED or RPC_S_CALL_FAILED_DNE => "RPC-Aufruf fehlgeschlagen",
-            ERROR_TRUSTED_DOMAIN_FAILURE => "Vertrauensstellung zur Domäne fehlgeschlagen",
-            ERROR_TRUSTED_RELATIONSHIP_FAILURE => "Vertrauensstellung zwischen Rechner und Domäne fehlgeschlagen",
-            NERR_GroupNotFound => "Gruppe nicht gefunden",
-            NERR_UserNotFound => "Benutzer nicht gefunden",
+            ERROR_ACCESS_DENIED => Strings.Win_AccessDenied,
+            ERROR_BAD_NETPATH => Strings.Win_NetPathNotFound,
+            ERROR_NO_LOGON_SERVERS => Strings.Win_NoLogonServerDc,
+            ERROR_NONE_MAPPED => Strings.Win_NoneMapped,
+            ERROR_INVALID_SID => Strings.Win_InvalidSid,
+            ERROR_NO_SUCH_DOMAIN => Strings.Win_NoSuchDomain,
+            ERROR_NO_SUCH_ALIAS => Strings.Win_GroupNotFound,
+            RPC_S_SERVER_UNAVAILABLE => Strings.Win_RpcUnavailable,
+            RPC_S_CALL_FAILED or RPC_S_CALL_FAILED_DNE => Strings.Win_RpcCallFailed,
+            ERROR_TRUSTED_DOMAIN_FAILURE => Strings.Win_TrustedDomainFailure,
+            ERROR_TRUSTED_RELATIONSHIP_FAILURE => Strings.Win_TrustRelationshipFailure,
+            NERR_GroupNotFound => Strings.Win_GroupNotFound,
+            NERR_UserNotFound => Strings.Win_UserNotFound,
             _ => new Win32Exception(code).Message.TrimEnd('.', ' ', '\r', '\n'),
         };
-        return $"{text} (Fehler {code})";
+        return Texts.Format(Strings.Error_WithCode, text, code);
     }
 }

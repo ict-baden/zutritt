@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using Zutritt.Core.Analysis;
 using Zutritt.Core.Model;
 
@@ -123,7 +124,7 @@ internal static class LargeDemo
             // Durchnummerierte Konten statt Personennamen – auch die Messdaten nennen keine Personen
             for (int i = 0; i < peopleTarget; i++)
             {
-                var number = (i + 1).ToString("00000", Labels.German);
+                var number = (i + 1).ToString("00000", global::System.Globalization.CultureInfo.InvariantCulture);
                 var sid = NextSid();
                 bool disabled = _rng.Next(100) < 3;
                 _scan.Principals[sid] = new Principal
@@ -260,7 +261,7 @@ internal static class LargeDemo
             int perProject = 1 + ProjectParts.Length;
             int projects = Math.Max(1, count / perProject);
             const int FirstYear = 2014, Years = 13;
-            var years = Enumerable.Range(FirstYear, Years).Select(y => Folder(root, y.ToString(Labels.German), broken: false, Administrators)).ToList();
+            var years = Enumerable.Range(FirstYear, Years).Select(y => Folder(root, y.ToString(global::System.Globalization.CultureInfo.InvariantCulture), broken: false, Administrators)).ToList();
             for (int p = 0; p < projects; p++)
             {
                 int yearIndex = p * Years / projects;
@@ -298,7 +299,7 @@ internal static class LargeDemo
             {
                 if (!years.TryGetValue(year, out var y))
                 {
-                    years[year] = y = Folder(root, year.ToString(Labels.German), broken: false, Administrators, A(_departments["Geschäftsleitung"].All, Read));
+                    years[year] = y = Folder(root, year.ToString(global::System.Globalization.CultureInfo.InvariantCulture), broken: false, Administrators, A(_departments["Geschäftsleitung"].All, Read));
                     made++;
                 }
                 foreach (var d in Departments)

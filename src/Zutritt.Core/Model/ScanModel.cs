@@ -1,4 +1,4 @@
-
+// SPDX-License-Identifier: MIT
 namespace Zutritt.Core.Model;
 
 /// <summary>Was gescannt werden soll.</summary>
@@ -52,6 +52,14 @@ public sealed class ScanResult
     /// <summary>Gezählte Ordner insgesamt (auch die ohne eigene Rechte, die nicht gespeichert werden).</summary>
     public long FoldersVisited { get; set; }
     public long FilesVisited { get; set; }
+
+    /// <summary>
+    /// Ziele und Freigaben, die gar nicht erst geprüft werden konnten, weil sie keine Wurzel ergaben: ungültiges Ziel,
+    /// Freigabeliste eines Servers nicht lesbar oder ohne Datenträger-Freigaben, lokaler Pfad einer Freigabe unbekannt.
+    /// Der Grund steht in <see cref="Errors"/>. Nur im frischen Lauf gesetzt und bewusst nicht gespeichert (deshalb
+    /// internal) – dient der Zusammenfassung der Befehlszeile (<see cref="Analysis.ScanCoverage"/>).
+    /// </summary>
+    internal List<string> TargetsWithoutRoot { get; } = [];
 }
 
 /// <summary>Eine SMB-Freigabe.</summary>

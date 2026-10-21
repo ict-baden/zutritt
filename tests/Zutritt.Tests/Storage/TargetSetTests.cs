@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using Zutritt.Core.Storage;
 
 namespace Zutritt.Tests.Storage;
@@ -12,7 +13,8 @@ public sealed class TargetSetTests
     [InlineData(@"c:\daten\", @"C:\DATEN")]
     [InlineData(@"C:\", @"C:\")]
     [InlineData(@"c:/", @"C:\")]
-    [InlineData(@"C:", @"C:")]
+    [InlineData(@"C:", @"C:\")]       // wie TargetParser: das ganze Laufwerk, sonst fände „scan D:“ nie „scan D:\“
+    [InlineData(@"d:", @"D:\")]
     [InlineData(".", ".")]
     [InlineData(@"\", @"\")]
     [InlineData(@"\\server", @"\\SERVER")]
@@ -33,6 +35,19 @@ public sealed class TargetSetTests
         Assert.Equal("", TargetSet.Key([]));
         Assert.Equal("", TargetSet.Key(null));
         Assert.Equal(TargetSet.Key(["."]), TargetSet.Key(["", " ", "."]));
+    }
+
+    [Fact]
+    public void Alte_Schluessel_fuer_Laufwerkswurzeln()
+    {
+        // Bis zu dieser Änderung blieb „D:“ im Schlüssel „D:“ (heute „D:\“) – gespeicherte Läufe behalten ihn
+        Assert.Equal(["D:"], TargetSet.LegacyKeys(["D:"]));
+        Assert.Equal(["D:"], TargetSet.LegacyKeys([@"d:\"]));
+        Assert.Empty(TargetSet.LegacyKeys([@"D:\Daten", @"\\FS01\Labor", "."]));
+        Assert.Equal(
+            ["C:\nD:\\", "C:\\\nD:", "C:\nD:"],
+            TargetSet.LegacyKeys(["C:", @"D:\"]));
+        Assert.Equal([@"C:\DATEN" + "\n" + "D:"], TargetSet.LegacyKeys([@"D:", @"C:\Daten"]));
     }
 
     [Fact]

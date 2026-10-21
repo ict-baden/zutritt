@@ -1,6 +1,8 @@
+// SPDX-License-Identifier: MIT
 using System.Runtime.InteropServices;
 using Zutritt.Core.Model;
 using Zutritt.Core.Scanning;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.Platform.Windows.Scanning;
 
@@ -30,7 +32,7 @@ public static class ShareEnumerator
         var entries = new List<(string Name, uint Type, string Remark)>();
         int status = EnumerateLevel1(api, entries);
         if (status != Native.ERROR_SUCCESS)
-            return new([], $"Freigaben von „{display}“ nicht lesbar: {Win32Error.Describe(status)}", status == Native.NERR_ServerNotStarted);
+            return new([], Texts.Format(Strings.Share_ListUnreadable, display, Win32Error.Describe(status)), status == Native.NERR_ServerNotStarted);
 
         var list = new List<ShareRead>();
         foreach (var (name, type, remark) in entries.OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase))
@@ -39,7 +41,7 @@ public static class ShareEnumerator
             var read = ReadDetails(api, display, name, type, remark, out var detailStatus);
             // Zwischen Liste und Detailabfrage gelöscht: einfach auslassen. Andere Fehler: Freigabe trotzdem nennen.
             if (read is null && detailStatus != Native.NERR_NetNameNotFound && detailStatus != -1)
-                read = Basic(display, name, type, remark, "Freigabe-Berechtigungen nicht lesbar: " + Win32Error.Describe(detailStatus), out _);
+                read = Basic(display, name, type, remark, Texts.Format(Strings.Share_PermissionsUnreadable, Win32Error.Describe(detailStatus)), out _);
             if (read is not null) list.Add(read);
         }
         return new(list, null);
@@ -50,15 +52,15 @@ public static class ShareEnumerator
         var (api, display) = ServerNames(server);
         var unc = WindowsPath.Unc(display, name);
         if (string.IsNullOrWhiteSpace(name) || name.Contains(WindowsPath.Separator))
-            return new(null, $"Ungültiger Freigabename „{name}“", true);
+            return new(null, Texts.Format(Strings.Share_InvalidName, name), true);
 
         var read = ReadDetails(api, display, name, null, null, out int status);
         if (read is not null) return new(read, null, false);
         return status switch
         {
-            Native.NERR_NetNameNotFound => new(null, $"Freigabe „{unc}“ nicht gefunden", true),
-            -1 => new(null, $"„{unc}“ ist keine Datenträger-Freigabe", true),
-            _ => new(null, $"Freigabe „{unc}“ nicht lesbar: {Win32Error.Describe(status)}", false),
+            Native.NERR_NetNameNotFound => new(null, Texts.Format(Strings.Share_NotFound, unc), true),
+            -1 => new(null, Texts.Format(Strings.Share_NotDisk, unc), true),
+            _ => new(null, Texts.Format(Strings.Share_Unreadable, unc, Win32Error.Describe(status)), false),
         };
     }
 
@@ -97,7 +99,7 @@ public static class ShareEnumerator
         if (status != Native.ERROR_ACCESS_DENIED) return null;
 
         // Keine Adminrechte auf dem Server: Name, Typ und Bemerkung gibt es trotzdem.
-        var deniedNote = $"Freigabe-Berechtigungen nicht lesbar: {Win32Error.Describe(Native.ERROR_ACCESS_DENIED)}";
+        var deniedNote = Texts.Format(Strings.Share_PermissionsUnreadable, Win32Error.Describe(Native.ERROR_ACCESS_DENIED));
         if (knownType is uint type)
             return Basic(display, name, type, knownRemark ?? "", deniedNote, out status);
 
@@ -132,7 +134,7 @@ public static class ShareEnumerator
     {
         if (descriptor == 0) return ShareSecurity.ForMissingDescriptor(isSpecial);
         if (!Native.IsValidSecurityDescriptor(descriptor))
-            return ShareSecurityResult.NotReadable("Freigabe-Berechtigungen nicht lesbar: Sicherheitsbeschreibung ist ungültig");
+            return ShareSecurityResult.NotReadable(Strings.Share_PermissionsInvalidSd);
         var length = (int)Native.GetSecurityDescriptorLength(descriptor);
         var bytes = new byte[length];
         Marshal.Copy(descriptor, bytes, 0, length);

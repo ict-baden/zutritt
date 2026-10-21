@@ -1,6 +1,8 @@
+// SPDX-License-Identifier: MIT
 using System.Text;
 using MigraDoc.DocumentObjectModel;
 using PdfSharp.Drawing;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.Core.Reports;
 
@@ -21,16 +23,20 @@ internal sealed class PdfText : IDisposable
     /// </summary>
     private const int MaxLines = 30;
 
-    private const string Shortened = " … (gekürzt – vollständig im Excel-Bericht)";
+    private static string Shortened => Strings.Pdf_Truncated;
 
     private readonly string _family;
+    private readonly string? _fallback;
     private readonly XGraphics _gfx;
     private readonly Dictionary<(double Size, bool Bold), XFont> _fonts = [];
     private readonly Dictionary<(double Size, bool Bold, string Glyph), double> _glyphs = [];
 
-    public PdfText(string family)
+    /// <param name="family">Schrift des Berichts.</param>
+    /// <param name="fallback">Schrift für chinesische, japanische und koreanische Zeichen, die <paramref name="family"/> nicht hat; null = keine.</param>
+    public PdfText(string family, string? fallback = null)
     {
         _family = family;
+        _fallback = fallback is not null && !fallback.Equals(family, StringComparison.OrdinalIgnoreCase) ? fallback : null;
         _gfx = XGraphics.CreateMeasureContext(new XSize(2000, 2000), XGraphicsUnit.Point, XPageDirection.Downwards);
     }
 
@@ -46,8 +52,17 @@ internal sealed class PdfText : IDisposable
         {
             if (i > 0) paragraph.AddLineBreak();
             if (segments[i].Length == 0) continue;
-            if (bold) paragraph.AddFormattedText(segments[i], TextFormat.Bold);
-            else paragraph.AddText(segments[i]);
+            foreach (var (run, cjk) in Runs(segments[i]))
+            {
+                if (cjk && _fallback is not null)
+                {
+                    var formatted = paragraph.AddFormattedText(run);
+                    formatted.Font.Name = _fallback;
+                    if (bold) formatted.Bold = true;
+                }
+                else if (bold) paragraph.AddFormattedText(run, TextFormat.Bold);
+                else paragraph.AddText(run);
+            }
         }
     }
 
@@ -205,7 +220,13 @@ internal sealed class PdfText : IDisposable
     /// <summary>Breite in Punkt, so wie MigraDoc sie setzt.</summary>
     internal double Width(string text, double size, bool bold = false) => Measure(text, Font(size, bold));
 
-    private double Measure(string text, XFont font) => _gfx.MeasureString(text, font).Width;
+    private double Measure(string text, XFont font)
+    {
+        if (_fallback is null || !text.Any(IsCjk)) return _gfx.MeasureString(text, font).Width;
+        double width = 0;
+        foreach (var (run, cjk) in Runs(text)) width += _gfx.MeasureString(run, cjk ? Fallback(font) : font).Width;
+        return width;
+    }
 
     private double Glyph(string glyph, XFont font)
     {
@@ -214,6 +235,45 @@ internal sealed class PdfText : IDisposable
             _glyphs[key] = width = Measure(glyph, font);
         return width;
     }
+
+    private XFont Fallback(XFont font)
+    {
+        var key = (-font.Size, font.Bold);
+        if (!_fonts.TryGetValue(key, out var fallback))
+            _fonts[key] = fallback = new XFont(_fallback!, font.Size, font.Bold ? XFontStyleEx.Bold : XFontStyleEx.Regular);
+        return fallback;
+    }
+
+    /// <summary>
+    /// Zerlegt Text in Abschnitte mit und ohne chinesische, japanische oder koreanische Zeichen – die bekommen die
+    /// Ersatzschrift. Leerzeichen und Satzzeichen bleiben beim umgebenden Abschnitt.
+    /// </summary>
+    internal static IEnumerable<(string Text, bool Cjk)> Runs(string text)
+    {
+        int start = 0;
+        bool? current = null;
+        for (int i = 0; i < text.Length; i++)
+        {
+            char c = text[i];
+            if (char.IsLowSurrogate(c)) continue;
+            bool cjk = IsCjk(c);
+            if (!cjk && !char.IsLetterOrDigit(c) && !char.IsHighSurrogate(c)) continue; // neutral
+            if (current is null) current = cjk;
+            else if (cjk != current)
+            {
+                yield return (text[start..i], current.Value);
+                start = i;
+                current = cjk;
+            }
+        }
+        if (start < text.Length) yield return (text[start..], current ?? false);
+    }
+
+    /// <summary>Zeichen aus den CJK-Blöcken (Hangul, Kana, Ideogramme, Vollbreite) und die Ergänzungsebenen ab U+20000.</summary>
+    internal static bool IsCjk(char c) =>
+        c is >= '\u1100' and <= '\u11FF' or >= '\u2E80' and <= '\u9FFF' or >= '\uA960' and <= '\uA97F'
+            or >= '\uAC00' and <= '\uD7AF' or >= '\uF900' and <= '\uFAFF' or >= '\uFE30' and <= '\uFE4F' or >= '\uFF00' and <= '\uFFEF'
+            or >= '\uD840' and <= '\uD8BF';
 
     public void Dispose() => _gfx.Dispose();
 }

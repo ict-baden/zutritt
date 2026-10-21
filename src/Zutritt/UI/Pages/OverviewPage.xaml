@@ -1,6 +1,7 @@
 <UserControl x:Class="Zutritt.UI.Pages.OverviewPage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="clr-namespace:Zutritt.Core.Resources;assembly=Zutritt.Core"
              xmlns:ui="clr-namespace:Zutritt.UI">
     <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto" Padding="36,0,30,28" Focusable="False">
         <StackPanel MaxWidth="1040" HorizontalAlignment="Stretch">
@@ -8,9 +9,9 @@
             <!-- ========== Kein Lauf geladen ========== -->
             <Border x:Name="WelcomeHero" Style="{StaticResource HeroCard}">
                 <StackPanel>
-                    <TextBlock Text="Wer darf auf Ihre Freigaben zugreifen?" Style="{StaticResource SubtitleText}"/>
+                    <TextBlock Text="{x:Static res:Strings.Ov_Hero}" Style="{StaticResource SubtitleText}"/>
                     <TextBlock Style="{StaticResource Body}" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,6,0,0"
-                               Text="Zutritt liest Freigaben und NTFS-Rechte, löst Gruppen bis zur Person auf und zeigt, was auffällt – mit Vergleich zum letzten Lauf und Bericht zum Abzeichnen. Tragen Sie unten ein Ziel ein und starten Sie den Scan."/>
+                               Text="{x:Static res:Strings.Ov_Intro}"/>
                 </StackPanel>
             </Border>
 
@@ -30,27 +31,27 @@
                         <Button Style="{DynamicResource AccentButton}" Click="ShowFindings_Click" Height="40" Padding="18,0" HorizontalAlignment="Stretch">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE7BA;" FontFamily="{StaticResource IconFont}" FontSize="15" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                <TextBlock Text="Befunde ansehen" VerticalAlignment="Center"/>
+                                <TextBlock Text="{x:Static res:Strings.Ov_ShowFindings}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                         <Button x:Name="ShowCompareButton" Click="ShowCompare_Click" Margin="0,8,0,0" HorizontalAlignment="Stretch" Visibility="Collapsed">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE895;" FontFamily="{StaticResource IconFont}" FontSize="14" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                <TextBlock Text="Änderungen ansehen" VerticalAlignment="Center"/>
+                                <TextBlock Text="{x:Static res:Strings.Ov_ShowChanges}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>
                 </Grid>
             </Border>
             <UniformGrid x:Name="ResultTiles" Columns="4" Margin="-4,4,-4,0" Visibility="Collapsed">
-                <ui:StatTile x:Name="TileVisited" Glyph="&#xE8B7;" Label="Ordner geprüft"/>
-                <ui:StatTile x:Name="TileStored" Glyph="&#xE8D7;" Label="mit eigenen Rechten"/>
-                <ui:StatTile x:Name="TilePeople" Glyph="&#xE716;" Label="Personen"/>
-                <ui:StatTile x:Name="TileErrors" Glyph="&#xE783;" Label="nicht lesbar"/>
-                <ui:StatTile x:Name="TileHigh" Tone="Hoch" Label="Befunde Hoch"/>
-                <ui:StatTile x:Name="TileMedium" Tone="Mittel" Label="Befunde Mittel"/>
-                <ui:StatTile x:Name="TileLow" Tone="Niedrig" Label="Befunde Niedrig"/>
-                <ui:StatTile x:Name="TileInfo" Tone="Info" Label="Hinweise (Info)"/>
+                <ui:StatTile x:Name="TileVisited" Glyph="&#xE8B7;" Label="{x:Static res:Strings.Pdf_FoldersChecked}"/>
+                <ui:StatTile x:Name="TileStored" Glyph="&#xE8D7;" Label="{x:Static res:Strings.Ov_WithOwnPermissions}"/>
+                <ui:StatTile x:Name="TilePeople" Glyph="&#xE716;" Label="{x:Static res:Strings.Col_People}"/>
+                <ui:StatTile x:Name="TileErrors" Glyph="&#xE783;" Label="{x:Static res:Strings.Report_NotReadable}"/>
+                <ui:StatTile x:Name="TileHigh" Tone="Hoch" Label="{x:Static res:Strings.Ov_FindingsHigh}"/>
+                <ui:StatTile x:Name="TileMedium" Tone="Mittel" Label="{x:Static res:Strings.Ov_FindingsMedium}"/>
+                <ui:StatTile x:Name="TileLow" Tone="Niedrig" Label="{x:Static res:Strings.Ov_FindingsLow}"/>
+                <ui:StatTile x:Name="TileInfo" Tone="Info" Label="{x:Static res:Strings.Ov_FindingsInfo}"/>
             </UniformGrid>
 
             <!-- ========== Fortschritt ========== -->
@@ -62,33 +63,33 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock x:Name="ProgressPhase" Text="Scan läuft …" Style="{StaticResource SubtitleText}" FontSize="18"/>
+                            <TextBlock x:Name="ProgressPhase" Text="{x:Static res:Strings.Ov_ScanRunning}" Style="{StaticResource SubtitleText}" FontSize="18"/>
                             <ui:PathText x:Name="ProgressPath" FontFamily="{StaticResource MonoFont}" FontSize="12" Margin="0,4,0,0"
                                          HorizontalAlignment="Stretch" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                         </StackPanel>
                         <Button x:Name="CancelButton" Grid.Column="1" Click="Cancel_Click" VerticalAlignment="Top" Margin="16,0,0,0">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="&#xE711;" FontFamily="{StaticResource IconFont}" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                <TextBlock Text="Abbrechen" VerticalAlignment="Center"/>
+                                <TextBlock Text="{x:Static res:Strings.Ui_Cancel}" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                     </Grid>
                     <ProgressBar IsIndeterminate="True" Margin="0,14,0,14"/>
                     <UniformGrid Columns="4">
                         <StackPanel>
-                            <TextBlock Text="Ordner gezählt" Style="{StaticResource Caption}"/>
+                            <TextBlock Text="{x:Static res:Strings.Ov_FoldersCounted}" Style="{StaticResource Caption}"/>
                             <TextBlock x:Name="ProgressVisited" Text="0" Style="{StaticResource BodyStrong}" FontSize="16"/>
                         </StackPanel>
                         <StackPanel>
-                            <TextBlock Text="mit eigenen Rechten" Style="{StaticResource Caption}"/>
+                            <TextBlock Text="{x:Static res:Strings.Ov_WithOwnPermissions}" Style="{StaticResource Caption}"/>
                             <TextBlock x:Name="ProgressStored" Text="0" Style="{StaticResource BodyStrong}" FontSize="16"/>
                         </StackPanel>
                         <StackPanel>
-                            <TextBlock Text="Fehler" Style="{StaticResource Caption}"/>
+                            <TextBlock Text="{x:Static res:Strings.Sheet_Errors}" Style="{StaticResource Caption}"/>
                             <TextBlock x:Name="ProgressErrors" Text="0" Style="{StaticResource BodyStrong}" FontSize="16"/>
                         </StackPanel>
                         <StackPanel>
-                            <TextBlock Text="Laufzeit" Style="{StaticResource Caption}"/>
+                            <TextBlock Text="{x:Static res:Strings.Ov_Elapsed}" Style="{StaticResource Caption}"/>
                             <TextBlock x:Name="ProgressElapsed" Text="0:00 min" Style="{StaticResource BodyStrong}" FontSize="16"/>
                         </StackPanel>
                     </UniformGrid>
@@ -96,7 +97,7 @@
             </Border>
 
             <!-- ========== Neuer Scan ========== -->
-            <TextBlock Text="Neuer Scan" Style="{StaticResource SectionText}"/>
+            <TextBlock Text="{x:Static res:Strings.Ov_NewScan}" Style="{StaticResource SectionText}"/>
             <Border x:Name="NewScanCard" Style="{StaticResource Card}" Padding="20,16">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -105,46 +106,46 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel>
-                        <TextBlock Text="Ziele – eines pro Zeile" Style="{StaticResource Caption}" Margin="2,0,0,6"/>
+                        <TextBlock Text="{x:Static res:Strings.Ov_TargetsLabel}" Style="{StaticResource Caption}" Margin="2,0,0,6"/>
                         <Grid>
                             <TextBox x:Name="TargetsBox" Style="{DynamicResource MultiLineBox}" MinHeight="112"
-                                     AutomationProperties.Name="Ziele, eines pro Zeile" TextChanged="Targets_TextChanged"/>
+                                     AutomationProperties.Name="{x:Static res:Strings.Ov_TargetsName}" TextChanged="Targets_TextChanged"/>
                             <TextBlock Style="{StaticResource Placeholder}" FontFamily="{StaticResource MonoFont}" FontSize="13" TextWrapping="Wrap"
-                                       Text="\\server\freigabe, D:\Daten oder . für alle Freigaben dieses Rechners"
+                                       Text="{x:Static res:Strings.Ov_TargetsHint}"
                                        Visibility="{Binding Text, ElementName=TargetsBox, Converter={StaticResource EmptyToVisible}}"/>
                         </Grid>
                         <WrapPanel Margin="0,10,0,0">
                             <Button Click="BrowseFolder_Click" Margin="0,0,8,0">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="&#xE838;" FontFamily="{StaticResource IconFont}" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Ordner wählen …" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{x:Static res:Strings.Ov_ChooseFolder}" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                             <Button Click="LocalShares_Click">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="&#xE8CE;" FontFamily="{StaticResource IconFont}" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <TextBlock Text="Freigaben dieses Rechners" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{x:Static res:Strings.Ui_LocalShares}" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
                         </WrapPanel>
                     </StackPanel>
 
                     <StackPanel Grid.Column="2" Width="330">
-                        <TextBlock Text="Optionen" Style="{StaticResource Caption}" Margin="2,0,0,6"/>
-                        <CheckBox x:Name="OptFiles" Content="Dateien einbeziehen"
-                                  ToolTip="Auch Dateien mit eigenen Rechten erfassen – dauert deutlich länger."/>
-                        <CheckBox x:Name="OptGroups" Content="Gruppen bis zur Person auflösen" IsChecked="True"
-                                  ToolTip="Lokale Gruppen und – falls erreichbar – Active-Directory-Gruppen bis zum einzelnen Konto auflösen."/>
-                        <CheckBox x:Name="OptSkipAdmin" Content="Admin-Freigaben überspringen" IsChecked="True"
-                                  ToolTip="C$, ADMIN$, IPC$ und print$ nicht prüfen."/>
+                        <TextBlock Text="{x:Static res:Strings.Ov_Options}" Style="{StaticResource Caption}" Margin="2,0,0,6"/>
+                        <CheckBox x:Name="OptFiles" Content="{x:Static res:Strings.Ov_IncludeFiles}"
+                                  ToolTip="{x:Static res:Strings.Ov_IncludeFilesTip}"/>
+                        <CheckBox x:Name="OptGroups" Content="{x:Static res:Strings.Ov_ResolveGroups}" IsChecked="True"
+                                  ToolTip="{x:Static res:Strings.Ov_ResolveGroupsTip}"/>
+                        <CheckBox x:Name="OptSkipAdmin" Content="{x:Static res:Strings.Ov_SkipAdmin}" IsChecked="True"
+                                  ToolTip="{x:Static res:Strings.Ov_SkipAdminTip}"/>
                         <Grid Margin="0,10,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock x:Name="MaxDepthLabel" Text="Maximale Tiefe" Style="{StaticResource Body}"/>
-                                <TextBlock Text="leer = unbegrenzt" Style="{StaticResource Caption}"/>
+                                <TextBlock x:Name="MaxDepthLabel" Text="{x:Static res:Strings.Ov_MaxDepth}" Style="{StaticResource Body}"/>
+                                <TextBlock Text="{x:Static res:Strings.Ov_MaxDepthHint}" Style="{StaticResource Caption}"/>
                             </StackPanel>
                             <TextBox x:Name="MaxDepthBox" Grid.Column="1" Width="72" TextAlignment="Right"
                                      AutomationProperties.LabeledBy="{Binding ElementName=MaxDepthLabel}"/>
@@ -155,8 +156,8 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock x:Name="DeepLabel" Text="Ausnahme gilt als tief ab Ebene" Style="{StaticResource Body}"/>
-                                <TextBlock Text="für „tief versteckte Ausnahme“" Style="{StaticResource Caption}"/>
+                                <TextBlock x:Name="DeepLabel" Text="{x:Static res:Strings.Ov_DeepFrom}" Style="{StaticResource Body}"/>
+                                <TextBlock Text="{x:Static res:Strings.Ov_DeepFromHint}" Style="{StaticResource Caption}"/>
                             </StackPanel>
                             <TextBox x:Name="DeepBox" Grid.Column="1" Width="72" Text="3" TextAlignment="Right"
                                      AutomationProperties.LabeledBy="{Binding ElementName=DeepLabel}"/>
@@ -173,31 +174,31 @@
                     <TextBlock x:Name="ScanHintIcon" Text="&#xE72E;" Style="{StaticResource Icon}" FontSize="13" Margin="0,0,8,0"
                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                     <TextBlock x:Name="ScanHint" Style="{StaticResource Caption}" VerticalAlignment="Center"
-                               Text="Es wird nur gelesen – an Rechten und Dateien ändert Zutritt nichts."/>
+                               Text="{x:Static res:Strings.Ov_ReadOnly}"/>
                 </StackPanel>
                 <Button x:Name="StartButton" Grid.Column="1" Style="{DynamicResource AccentButton}" Click="Start_Click" Height="36" Padding="18,0">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="&#xE768;" FontFamily="{StaticResource IconFont}" FontSize="14" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <TextBlock Text="Scan starten" VerticalAlignment="Center"/>
+                        <TextBlock Text="{x:Static res:Strings.Ov_StartScan}" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
             </Grid>
 
             <!-- ========== Letzte Läufe ========== -->
             <Grid Margin="0,44,0,8">
-                <TextBlock Text="Letzte Läufe" Style="{StaticResource SectionText}" Margin="2,0,0,0" VerticalAlignment="Center"/>
+                <TextBlock Text="{x:Static res:Strings.Ov_RecentRuns}" Style="{StaticResource SectionText}" Margin="2,0,0,0" VerticalAlignment="Center"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button x:Name="OpenRunButton" Click="OpenRun_Click" IsEnabled="False" Margin="0,0,8,0">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE8E5;" FontFamily="{StaticResource IconFont}" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="Öffnen" VerticalAlignment="Center"/>
+                            <TextBlock Text="{x:Static res:Strings.Ui_Open}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                     <Button x:Name="DeleteRunButton" Click="DeleteRun_Click" IsEnabled="False" Margin="0,0,8,0"
-                            ToolTip="Lauf löschen" AutomationProperties.Name="Lauf löschen">
+                            ToolTip="{x:Static res:Strings.Ov_DeleteRun}" AutomationProperties.Name="{x:Static res:Strings.Ov_DeleteRun}">
                         <TextBlock Text="&#xE74D;" Style="{StaticResource Icon}" FontSize="14"/>
                     </Button>
-                    <Button Click="RefreshRuns_Click" ToolTip="Liste aktualisieren" AutomationProperties.Name="Liste aktualisieren">
+                    <Button Click="RefreshRuns_Click" ToolTip="{x:Static res:Strings.Ov_RefreshList}" AutomationProperties.Name="{x:Static res:Strings.Ov_RefreshList}">
                         <TextBlock Text="&#xE72C;" Style="{StaticResource Icon}" FontSize="14"/>
                     </Button>
                 </StackPanel>
@@ -205,21 +206,21 @@
             <Border Style="{StaticResource Card}" Padding="0">
                 <Grid>
                     <DataGrid x:Name="RunsGrid" Style="{DynamicResource Table}" MaxHeight="360" ui:Wheel.Bubble="True"
-                              AutomationProperties.Name="Letzte Läufe" SelectionChanged="RunsGrid_SelectionChanged"
+                              AutomationProperties.Name="{x:Static res:Strings.Ov_RecentRuns}" SelectionChanged="RunsGrid_SelectionChanged"
                               MouseDoubleClick="RunsGrid_MouseDoubleClick" PreviewKeyDown="RunsGrid_PreviewKeyDown">
                         <DataGrid.Columns>
                             <DataGridTemplateColumn Width="30" CanUserSort="False">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Ellipse Width="8" Height="8" Fill="{DynamicResource AccentFillColorDefaultBrush}" ToolTip="Gerade geladen"
+                                        <Ellipse Width="8" Height="8" Fill="{DynamicResource AccentFillColorDefaultBrush}" ToolTip="{x:Static res:Strings.Ov_CurrentlyLoaded}"
                                                  Visibility="{Binding IsCurrent, Converter={StaticResource BoolToVisible}}"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Datum" Binding="{Binding Date}" SortMemberPath="StartedAt" Width="150" ElementStyle="{StaticResource CellText}"/>
-                            <DataGridTextColumn Header="Ziele" Binding="{Binding Targets}" Width="*" ElementStyle="{StaticResource CellText}"/>
-                            <DataGridTextColumn Header="Ordner" Binding="{Binding FoldersText}" SortMemberPath="Folders" Width="90" ElementStyle="{StaticResource CellText}"/>
-                            <DataGridTemplateColumn Header="Befunde" SortMemberPath="Findings" Width="150">
+                            <DataGridTextColumn Header="{x:Static res:Strings.Pdf_Date}" Binding="{Binding Date}" SortMemberPath="StartedAt" Width="150" ElementStyle="{StaticResource CellText}"/>
+                            <DataGridTextColumn Header="{x:Static res:Strings.Excel_Targets}" Binding="{Binding Targets}" Width="*" ElementStyle="{StaticResource CellText}"/>
+                            <DataGridTextColumn Header="{x:Static res:Strings.Col_Folders}" Binding="{Binding FoldersText}" SortMemberPath="Folders" Width="90" ElementStyle="{StaticResource CellText}"/>
+                            <DataGridTemplateColumn Header="{x:Static res:Strings.Col_Findings}" SortMemberPath="Findings" Width="150">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -232,11 +233,11 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTextColumn Header="Gescannt von" Binding="{Binding ScannedBy}" Width="170" ElementStyle="{StaticResource CellText}"/>
+                            <DataGridTextColumn Header="{x:Static res:Strings.Pdf_ScannedBy}" Binding="{Binding ScannedBy}" Width="170" ElementStyle="{StaticResource CellText}"/>
                         </DataGrid.Columns>
                     </DataGrid>
                     <TextBlock x:Name="RunsEmpty" Style="{StaticResource Caption}" FontSize="13" Margin="16,14" Visibility="Collapsed"
-                               Text="Noch keine gespeicherten Läufe – nach dem ersten Scan erscheint er hier."/>
+                               Text="{x:Static res:Strings.Ov_NoRuns}"/>
                 </Grid>
             </Border>
             <TextBlock x:Name="DatabaseHint" Style="{StaticResource Caption}" Margin="2,8,0,0"/>

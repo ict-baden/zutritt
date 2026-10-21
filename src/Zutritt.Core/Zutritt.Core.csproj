@@ -15,6 +15,14 @@
     <Version>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)../Zutritt/Zutritt.csproj')), '(?&lt;=&lt;Version&gt;)[^&lt;]+'))</Version>
   </PropertyGroup>
 
+  <!-- Texte für Oberfläche, Befehlszeile und Berichte (Richtlinie 13): Strings.resx = Englisch (Rückfallsprache),
+       Strings.de.resx, Strings.es.resx, Strings.fr.resx, Strings.zh-Hans.resx. Die Klasse Zutritt.Core.Resources.Strings
+       erzeugt der Build, keine Designer-Datei im Repo. -->
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\Strings.resx" StronglyTypedLanguage="CSharp" StronglyTypedNamespace="Zutritt.Core.Resources"
+                      StronglyTypedClassName="Strings" StronglyTypedFileName="$(IntermediateOutputPath)Strings.g.cs" PublicClass="true" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
     <PackageReference Include="ClosedXML" Version="0.105.1" />

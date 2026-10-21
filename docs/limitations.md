@@ -10,7 +10,8 @@ What Zutritt cannot see or decide, stated plainly. Where it has to guess, it err
 
 - **Pre-release.** Builds of `main` are published as the release [`latest`](https://github.com/ict-baden/zutritt/releases/tag/latest); there is no tagged version yet.
 - **Not code-signed yet.** Signing starts once Artifact Signing is set up for ICT-Baden; until then SmartScreen may warn about `Zutritt.exe` and the MSI. Every release has `SHA256SUMS.txt` to check the files ([Installation › Verifying the download](installation.md#verifying-the-download)).
-- **German only.** User interface, command-line output and reports are German. A multilingual interface (English, German, Spanish, French, Chinese) is planned for version 1.0.
+- **Languages.** English and German are complete. Spanish, French and Chinese (simplified) are machine translations not yet reviewed by native speakers; names of Windows built-in accounts (*Everyone*, *BUILTIN\Administrators* …) are given in English there until someone checks the localized Windows names. Texts that are stored with a run – finding messages, read errors, names of built-in accounts – stay in the language of the scan; an old run therefore shows them in the language it was made in.
+- **PDF and Chinese characters.** PDFsharp cannot read font collections (`.ttc`), so the PDF uses a Chinese font only if one is installed as a single `.ttf` file (DengXian, SimHei, Noto Sans SC, Droid Sans Fallback, Arial Unicode MS). Without one, Chinese text in the PDF shows as boxes; the Excel report always has the full text.
 - **Windows x64 only, by design**, Windows 10 1809 or later. The task itself is bound to Windows: NTFS permissions, SMB share permissions (`NetShareEnum`, `NetShareGetInfo`), the local account databases of servers (SAM, LSA) and Active Directory are Windows concepts with Windows-only APIs. The Windows-specific code is kept in `Zutritt.Platform.Windows`; the analysis core `Zutritt.Core` – rules, effective access, comparison, storage, reports – is platform-neutral and its tests also run on Linux in CI. A front end on another platform over stored runs would therefore be possible; scanning stays on Windows.
 - **Security fixes** are provided for the newest released version only ([SECURITY.md](../SECURITY.md)).
 
@@ -65,6 +66,7 @@ These decisions are deliberate:
 - **Renamed or moved folders** are matched by path, so they appear as one removed and one new folder.
 - **Different targets.** By default only runs with the same targets are compared. If you choose another run on *Vergleich*, differences may come from the targets – the app warns about that.
 - **Runs without group resolution** are compared without memberships on both sides.
+- **Different options** (files, depth, administrative shares, group resolution, ZT06 level): only the scope both runs covered is compared, with the note *Umfang weicht ab*. A folder exactly at the smaller depth was listed only by the deeper run, so an error while listing its contents can appear as a ZT09 change.
 
 ## Reports
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using Microsoft.Data.Sqlite;
 using Zutritt.Core.Storage;
 using Zutritt.Tests.TestSupport;

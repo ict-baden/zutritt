@@ -1,0 +1,3168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- Zutritt – 简体中文文本。机器翻译，尚未经母语者审校（准则 13），首次公开发布前需审校。标有 “TODO-übersetzen” 的条目仍为英文。 -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Ace_Allow" xml:space="preserve">
+    <value>允许</value>
+  </data>
+  <data name="Ace_Deny" xml:space="preserve">
+    <value>拒绝</value>
+  </data>
+  <data name="Ace_Explicit" xml:space="preserve">
+    <value>显式</value>
+  </data>
+  <data name="Ace_Inherited" xml:space="preserve">
+    <value>继承</value>
+  </data>
+  <data name="Acl_Corrupt" xml:space="preserve">
+    <value>权限不可读：安全描述符已损坏</value>
+  </data>
+  <data name="Acl_UnknownAceType" xml:space="preserve">
+    <value>无法完整评估权限：未知条目类型 {0}</value>
+  </data>
+  <data name="Acl_Unreadable" xml:space="preserve">
+    <value>权限不可读：{0}</value>
+  </data>
+  <data name="Ad_AccountUnreadable" xml:space="preserve">
+    <value>无法读取 Active Directory“{1}”中的账户“{0}”：{2}。其保持为“未知”。</value>
+  </data>
+  <data name="Ad_Closed" xml:space="preserve">
+    <value>目录已关闭</value>
+  </data>
+  <data name="Ad_MembersUnreadable" xml:space="preserve">
+    <value>无法读取“{0}”（“{1}”）的成员：{2}</value>
+  </data>
+  <data name="Ad_Unreachable" xml:space="preserve">
+    <value>无法访问 Active Directory“{0}”：{1}。域账户保持为“未知”，其组不会被解析。</value>
+  </data>
+  <data name="App_DbNotOpen" xml:space="preserve">
+    <value>无法打开数据库（{0}）。本次会话中的扫描不会被保存。</value>
+  </data>
+  <data name="App_DbNotOpenPath" xml:space="preserve">
+    <value>无法打开数据库“{0}”（{1}）。本次会话中的扫描不会被保存。</value>
+  </data>
+  <data name="App_DemoCompareFailed" xml:space="preserve">
+    <value>比较演示扫描失败（{0}）。</value>
+  </data>
+  <data name="App_DemoDbFailed" xml:space="preserve">
+    <value>无法创建演示数据库（{0}）。演示扫描将在不保存、不比较的情况下显示。</value>
+  </data>
+  <data name="App_LicenseName" xml:space="preserve">
+    <value>MIT 许可证</value>
+  </data>
+  <data name="App_NoDatabase" xml:space="preserve">
+    <value>未打开任何数据库。</value>
+  </data>
+  <data name="App_NoDataSentence" xml:space="preserve">
+    <value>本软件不会向 ICT-Baden 发送任何数据。</value>
+  </data>
+  <data name="App_RunGone" xml:space="preserve">
+    <value>扫描 {0} 已不存在。</value>
+  </data>
+  <data name="App_Tagline" xml:space="preserve">
+    <value>显示谁可以访问文件共享中的哪些内容——包括发现项、比较和报告。</value>
+  </data>
+  <data name="App_UnexpectedError" xml:space="preserve">
+    <value>意外错误：{0}</value>
+  </data>
+  <data name="AppliesTo_Files" xml:space="preserve">
+    <value>仅文件</value>
+  </data>
+  <data name="AppliesTo_FolderFiles" xml:space="preserve">
+    <value>此文件夹和文件</value>
+  </data>
+  <data name="AppliesTo_FolderSubfolders" xml:space="preserve">
+    <value>此文件夹和子文件夹</value>
+  </data>
+  <data name="AppliesTo_FolderSubfoldersFiles" xml:space="preserve">
+    <value>此文件夹、子文件夹和文件</value>
+  </data>
+  <data name="AppliesTo_OneLevel" xml:space="preserve">
+    <value>{0}（仅一级）</value>
+  </data>
+  <data name="AppliesTo_OneLevelShort" xml:space="preserve">
+    <value>{0}（一级）</value>
+  </data>
+  <data name="AppliesTo_Subfolders" xml:space="preserve">
+    <value>仅子文件夹</value>
+  </data>
+  <data name="AppliesTo_SubfoldersFiles" xml:space="preserve">
+    <value>仅子文件夹和文件</value>
+  </data>
+  <data name="AppliesTo_ThisFile" xml:space="preserve">
+    <value>仅此文件</value>
+  </data>
+  <data name="AppliesTo_ThisFolder" xml:space="preserve">
+    <value>只有该文件夹</value>
+  </data>
+  <data name="Area_Access" xml:space="preserve">
+    <value>访问</value>
+  </data>
+  <data name="Area_Finding" xml:space="preserve">
+    <value>发现项</value>
+  </data>
+  <data name="Area_Folder" xml:space="preserve">
+    <value>文件夹</value>
+  </data>
+  <data name="Area_Membership" xml:space="preserve">
+    <value>成员身份</value>
+  </data>
+  <data name="Area_Permission" xml:space="preserve">
+    <value>权限</value>
+  </data>
+  <data name="Change_Added" xml:space="preserve">
+    <value>已添加</value>
+  </data>
+  <data name="Change_Changed" xml:space="preserve">
+    <value>已更改</value>
+  </data>
+  <data name="Change_FolderAdded" xml:space="preserve">
+    <value>新增自身权限</value>
+  </data>
+  <data name="Change_FolderRemoved" xml:space="preserve">
+    <value>不再有自身权限</value>
+  </data>
+  <data name="Change_Joined" xml:space="preserve">
+    <value>已加入</value>
+  </data>
+  <data name="Change_LessAccess" xml:space="preserve">
+    <value>访问减少</value>
+  </data>
+  <data name="Change_MoreAccess" xml:space="preserve">
+    <value>访问增加</value>
+  </data>
+  <data name="Change_New" xml:space="preserve">
+    <value>新增</value>
+  </data>
+  <data name="Change_Removed" xml:space="preserve">
+    <value>已删除</value>
+  </data>
+  <data name="Change_Resolved" xml:space="preserve">
+    <value>已解决</value>
+  </data>
+  <data name="Cli_AndMore" xml:space="preserve">
+    <value>  …另有 {0} 个（全部见报告）</value>
+  </data>
+  <data name="Cli_Attention" xml:space="preserve">
+    <value>注意：{0}</value>
+  </data>
+  <data name="Cli_Cancelled" xml:space="preserve">
+    <value>已取消。</value>
+  </data>
+  <data name="Cli_CompareFailed" xml:space="preserve">
+    <value>无法比较：{0}</value>
+  </data>
+  <data name="Cli_DemoAlone" xml:space="preserve">
+    <value>“--demo”须单独使用：Zutritt.exe --demo</value>
+  </data>
+  <data name="Cli_ErrorLine" xml:space="preserve">
+    <value>错误 {1}：{0}</value>
+  </data>
+  <data name="Cli_ExitClean" xml:space="preserve">
+    <value>没有“中”级及以上的发现项</value>
+  </data>
+  <data name="Cli_ExitCode" xml:space="preserve">
+    <value>退出代码 {0}：{1}</value>
+  </data>
+  <data name="Cli_ExitHigh" xml:space="preserve">
+    <value>至少有一个“高”级发现项</value>
+  </data>
+  <data name="Cli_ExitMedium" xml:space="preserve">
+    <value>有“中”级发现项，没有“高”级</value>
+  </data>
+  <data name="Cli_Help" xml:space="preserve">
+    <value>Zutritt {0} —— 谁可以访问文件共享中的哪些内容？
+
+用法：
+  Zutritt.exe                         打开窗口
+  Zutritt.exe scan &lt;目标&gt; [&lt;目标&gt; …] [选项]
+  Zutritt.exe list [--db &lt;路径&gt;]
+  Zutritt.exe report &lt;id&gt; --report &lt;文件&gt; [--compare] [--db &lt;路径&gt;]
+  Zutritt.exe --demo                  使用内置演示数据打开窗口
+  Zutritt.exe --screenshots &lt;文件夹&gt; [--theme light|dark|both]
+  Zutritt.exe --help
+  Zutritt.exe --version               版本和构建
+  Zutritt.exe --info                  版本、许可证、帮助、隐私和法律声明的链接
+  Zutritt.exe --licenses              许可证文本和第三方许可证
+
+目标：
+  \\server\share[\folder]       一个共享或其中的一个文件夹
+  \\server                      某台服务器的所有磁盘共享
+  D:\Data                       一个本地文件夹
+  .                             此计算机的所有共享
+
+“scan”的选项：
+  --files                  同时记录具有自身权限的文件（耗时更长）
+  --depth N                目标下最多 N 级（默认：不限）
+  --deep-from N            从第 N 级起将中断的继承报告为“深层隐藏的例外”（默认：3）
+  --no-groups              不将组解析到人员
+  --include-admin-shares   同时检查 C$、ADMIN$ 等
+  --report &lt;文件&gt;          写入报告，.xlsx 或 .pdf（可多次指定）
+  --compare                确定自上次相同目标扫描以来的更改并写入报告
+  --db &lt;路径&gt;              使用其他数据库（默认：%LocalAppData%\Zutritt\zutritt.db，即每个用户一个）
+
+“list”显示已保存的扫描及其 id，“report”可事后为其中一次扫描写入报告。
+
+德语写法同样有效：liste、bericht、--hilfe、--lizenzen、--dateien、--tiefe、
+--ausnahme-ab、--ohne-gruppen、--mit-admin-freigaben、--bericht、--vergleich。
+输出语言：与 Windows 相同；也可通过环境变量 ZUTRITT_LANGUAGE（en、de、es、fr、zh-Hans）
+或在窗口的“信息”页上设置。
+
+退出代码（用于计划任务）：
+  0  没有“中”级及以上的发现项
+  1  有“中”级发现项，但没有“高”级
+  2  至少有一个“高”级发现项
+  3  错误或取消——包括无法检查任何目标的情况
+
+示例——每周一 6:00 执行比较并生成待签署的 PDF：
+  schtasks /create /tn "Zutritt weekly report" /sc weekly /d MO /st 06:00 /tr ^
+    "\"C:\Program Files\Zutritt\Zutritt.exe\" scan \\FS01 --compare --report D:\Reports\Zutritt.pdf"
+
+Zutritt.exe 是窗口程序；要让命令提示符等待其结束：
+  start /wait Zutritt.exe scan …            (cmd)
+  Zutritt.exe scan … | Out-Default          (PowerShell)
+计划任务的日志：在 .cmd 文件中重定向——cmd 在那里会等待结束，文件为 UTF-8（带 BOM）：
+  "C:\Program Files\Zutritt\Zutritt.exe" scan \\FS01 --compare &gt; D:\Reports\zutritt.log 2&gt;&amp;1
+Zutritt 只读取——不会更改任何权限或文件。
+{1}</value>
+  </data>
+  <data name="Cli_HelpHint" xml:space="preserve">
+    <value>帮助：Zutritt.exe --help</value>
+  </data>
+  <data name="Cli_ImportantFindings" xml:space="preserve">
+    <value>最重要的发现项：</value>
+  </data>
+  <data name="Cli_InfoDatabase" xml:space="preserve">
+    <value>数据库</value>
+  </data>
+  <data name="Cli_InfoImprint" xml:space="preserve">
+    <value>法律声明</value>
+  </data>
+  <data name="Cli_InfoLanguage" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="Cli_InfoLanguageValue" xml:space="preserve">
+    <value>{0}——可通过环境变量 {1} 或在“信息”页上更改</value>
+  </data>
+  <data name="Cli_InfoLicense" xml:space="preserve">
+    <value>许可证文本</value>
+  </data>
+  <data name="Cli_InfoLicenseValue" xml:space="preserve">
+    <value>{0}（Zutritt.exe --licenses，{1}）</value>
+  </data>
+  <data name="Cli_InfoLog" xml:space="preserve">
+    <value>日志</value>
+  </data>
+  <data name="Cli_InfoNotices" xml:space="preserve">
+    <value>第三方许可证</value>
+  </data>
+  <data name="Cli_InfoNoticesValue" xml:space="preserve">
+    <value>{0}（Zutritt.exe --licenses，也可在应用的“信息”页查看）</value>
+  </data>
+  <data name="Cli_InfoPrivacy" xml:space="preserve">
+    <value>隐私</value>
+  </data>
+  <data name="Cli_InfoSource" xml:space="preserve">
+    <value>源代码（GitHub）</value>
+  </data>
+  <data name="Cli_InfoSupport" xml:space="preserve">
+    <value>帮助与支持</value>
+  </data>
+  <data name="Cli_InfoWebsite" xml:space="preserve">
+    <value>网站</value>
+  </data>
+  <data name="Cli_LicensesMissing" xml:space="preserve">
+    <value>此版本缺少许可证文本——可在 {0} 查看。</value>
+  </data>
+  <data name="Cli_ListNoArgs" xml:space="preserve">
+    <value>“list”不需要其他参数（“{0}”）。</value>
+  </data>
+  <data name="Cli_LockedHint" xml:space="preserve">
+    <value>提示：{0} 扫描仍会进行；结束时保存。</value>
+  </data>
+  <data name="Cli_NeedReport" xml:space="preserve">
+    <value>请使用 --report &lt;文件.xlsx|文件.pdf&gt; 指定报告的保存位置。</value>
+  </data>
+  <data name="Cli_NeedsInteger" xml:space="preserve">
+    <value>“{0}”需要一个不小于 {1} 的整数，而不是“{2}”。</value>
+  </data>
+  <data name="Cli_NeedsValue" xml:space="preserve">
+    <value>“{0}”需要一个值。</value>
+  </data>
+  <data name="Cli_NeedTarget" xml:space="preserve">
+    <value>请至少指定一个目标，例如 Zutritt.exe scan \\server\share</value>
+  </data>
+  <data name="Cli_NoArguments" xml:space="preserve">
+    <value>“{0}”不需要其他参数。</value>
+  </data>
+  <data name="Cli_NoDatabaseYet" xml:space="preserve">
+    <value>尚无数据库（{0}）。</value>
+  </data>
+  <data name="Cli_NoPreviousRun" xml:space="preserve">
+    <value>比较：尚无目标相同的早期扫描。</value>
+  </data>
+  <data name="Cli_NoRuns" xml:space="preserve">
+    <value>{0} 中没有已保存的扫描。</value>
+  </data>
+  <data name="Cli_NoSuchDatabase" xml:space="preserve">
+    <value>数据库 {0} 不存在。</value>
+  </data>
+  <data name="Cli_NoSuchRun" xml:space="preserve">
+    <value>扫描 {0} 不存在。“Zutritt.exe list”可显示已保存的扫描。</value>
+  </data>
+  <data name="Cli_NotSavedLost" xml:space="preserve">
+    <value>此次扫描不在数据库中，将会丢失。使用 --report &lt;文件&gt; 时，Zutritt 也会将其保存在报告中。</value>
+  </data>
+  <data name="Cli_NotSavedReportsFollow" xml:space="preserve">
+    <value>此次扫描不在数据库中——仍会写入报告。</value>
+  </data>
+  <data name="Cli_NotScanned" xml:space="preserve">
+    <value>{0} 未执行扫描。</value>
+  </data>
+  <data name="Cli_NotScannedDb" xml:space="preserve">
+    <value>{0} 未执行扫描。可使用 --db &lt;路径&gt; 选择其他数据库。</value>
+  </data>
+  <data name="Cli_NotScannedDbPath" xml:space="preserve">
+    <value>{0}（{1}）未执行扫描。可使用 --db &lt;路径&gt; 选择其他数据库。</value>
+  </data>
+  <data name="Cli_ProblemNothingChecked" xml:space="preserve">
+    <value>无法检查任何目标</value>
+  </data>
+  <data name="Cli_ProblemNotSaved" xml:space="preserve">
+    <value>扫描未保存</value>
+  </data>
+  <data name="Cli_ProblemReport" xml:space="preserve">
+    <value>至少有一个报告无法写入</value>
+  </data>
+  <data name="Cli_Progress" xml:space="preserve">
+    <value>{0}：{1} 个文件夹，{2} 个具有自身权限，{3} 个错误</value>
+  </data>
+  <data name="Cli_ReportExtension" xml:space="preserve">
+    <value>报告“{0}”：请指定 .xlsx（Excel）或 .pdf。</value>
+  </data>
+  <data name="Cli_ReportFailed" xml:space="preserve">
+    <value>无法写入报告 {0}：{1}</value>
+  </data>
+  <data name="Cli_ReportWritten" xml:space="preserve">
+    <value>已写入报告：{0}</value>
+  </data>
+  <data name="Cli_RunSaved" xml:space="preserve">
+    <value>扫描 {0} 已保存到 {1}</value>
+  </data>
+  <data name="Cli_RunsIn" xml:space="preserve">
+    <value>{0} 中已保存的扫描：</value>
+  </data>
+  <data name="Cli_ScanStart" xml:space="preserve">
+    <value>Zutritt {0} – 扫描 {1}</value>
+  </data>
+  <data name="Cli_SinceRun" xml:space="preserve">
+    <value>自 {0} 的扫描以来：{1} 个新发现项，{2} 个已解决，{3} 处访问更改，{4} 处 ACL 更改，{5} 处成员身份更改。</value>
+  </data>
+  <data name="Cli_SumDuration" xml:space="preserve">
+    <value>用时</value>
+  </data>
+  <data name="Cli_SumFoldersValue" xml:space="preserve">
+    <value>{0}，其中 {1} 个具有自身权限</value>
+  </data>
+  <data name="Cli_SumUnreadable" xml:space="preserve">
+    <value>不可读</value>
+  </data>
+  <data name="Cli_UnknownCommand" xml:space="preserve">
+    <value>未知命令“{0}”。</value>
+  </data>
+  <data name="Cli_UnknownOption" xml:space="preserve">
+    <value>未知选项“{0}”。</value>
+  </data>
+  <data name="Cli_UnreachableTargets" xml:space="preserve">
+    <value>注意：{1} 个目标或共享中有 {0} 个无法检查——结果不完整。</value>
+  </data>
+  <data name="Cli_UsageReport" xml:space="preserve">
+    <value>用法：Zutritt.exe report &lt;id&gt; --report &lt;文件.xlsx|文件.pdf&gt; [--compare] [--db &lt;路径&gt;]——“Zutritt.exe list”可显示 id。</value>
+  </data>
+  <data name="Cli_UsageScreenshots" xml:space="preserve">
+    <value>用法：Zutritt.exe --screenshots &lt;文件夹&gt; [--theme light|dark|both]</value>
+  </data>
+  <data name="Cmp_AccessChanges" xml:space="preserve">
+    <value>访问更改</value>
+  </data>
+  <data name="Cmp_AccessRowText" xml:space="preserve">
+    <value>{0}，{1}，之前 {2}，之后 {3}</value>
+  </data>
+  <data name="Cmp_AclAndFolderChanges" xml:space="preserve">
+    <value>ACL 和文件夹更改</value>
+  </data>
+  <data name="Cmp_AclChanges" xml:space="preserve">
+    <value>ACL 更改</value>
+  </data>
+  <data name="Cmp_ChangedAces" xml:space="preserve">
+    <value>已更改的权限条目</value>
+  </data>
+  <data name="Cmp_ChangedMemberships" xml:space="preserve">
+    <value>已更改的组成员身份</value>
+  </data>
+  <data name="Cmp_ChangedMembershipsShort" xml:space="preserve">
+    <value>已更改的成员身份</value>
+  </data>
+  <data name="Cmp_DaysBefore" xml:space="preserve">
+    <value>{0:0} 天前</value>
+  </data>
+  <data name="Cmp_Direction" xml:space="preserve">
+    <value>方向</value>
+  </data>
+  <data name="Cmp_Failed" xml:space="preserve">
+    <value>比较失败</value>
+  </data>
+  <data name="Cmp_InheritedSuffix" xml:space="preserve">
+    <value>（继承）</value>
+  </data>
+  <data name="Cmp_Joined" xml:space="preserve">
+    <value>已加入</value>
+  </data>
+  <data name="Cmp_LessAccess" xml:space="preserve">
+    <value>人员访问缩小</value>
+  </data>
+  <data name="Cmp_LessRights" xml:space="preserve">
+    <value>权限减少</value>
+  </data>
+  <data name="Cmp_MemberRowText" xml:space="preserve">
+    <value>{0}：{1} 在 {2} 中</value>
+  </data>
+  <data name="Cmp_Memberships" xml:space="preserve">
+    <value>成员身份</value>
+  </data>
+  <data name="Cmp_MoreAccess" xml:space="preserve">
+    <value>人员访问扩大</value>
+  </data>
+  <data name="Cmp_MoreRights" xml:space="preserve">
+    <value>权限增加</value>
+  </data>
+  <data name="Cmp_NeedTwoRuns" xml:space="preserve">
+    <value>比较至少需要两次扫描。下次扫描相同目标后，您将在此看到变化：新的和已解决的发现项、谁的权限增加或减少、已更改的条目和组成员身份。</value>
+  </data>
+  <data name="Cmp_NewFindings" xml:space="preserve">
+    <value>新发现项</value>
+  </data>
+  <data name="Cmp_NoAccessChanges" xml:space="preserve">
+    <value>没有任何人在任何位置的权限比以前多或少。</value>
+  </data>
+  <data name="Cmp_NoAceChanges" xml:space="preserve">
+    <value>访问控制列表中没有条目发生更改。</value>
+  </data>
+  <data name="Cmp_NoDatabase" xml:space="preserve">
+    <value>没有数据库就没有可供比较的更早扫描。</value>
+  </data>
+  <data name="Cmp_NoEarlierRun" xml:space="preserve">
+    <value>尚无更早的扫描</value>
+  </data>
+  <data name="Cmp_NoMembershipChanges" xml:space="preserve">
+    <value>没有组成员身份发生变化。</value>
+  </data>
+  <data name="Cmp_NoNewFindings" xml:space="preserve">
+    <value>自较早的扫描以来没有新发现项。</value>
+  </data>
+  <data name="Cmp_NoResolved" xml:space="preserve">
+    <value>自较早的扫描以来没有任何发现项被解决。</value>
+  </data>
+  <data name="Cmp_NoRunText" xml:space="preserve">
+    <value>请在“概览”页加载一次扫描——此页将显示自上一次扫描以来的变化。</value>
+  </data>
+  <data name="Cmp_NoSameTargets" xml:space="preserve">
+    <value>没有目标相同的更早扫描。请在上方选择要比较的扫描。</value>
+  </data>
+  <data name="Cmp_OneDayBefore" xml:space="preserve">
+    <value>1 天前</value>
+  </data>
+  <data name="Cmp_OtherTargets" xml:space="preserve">
+    <value>较早的扫描使用了其他目标（{0}）——差异也可能由此产生。</value>
+  </data>
+  <data name="Cmp_OwnRightsGone" xml:space="preserve">
+    <value>自身权限已取消</value>
+  </data>
+  <data name="Cmp_OwnRightsNew" xml:space="preserve">
+    <value>新增自身权限</value>
+  </data>
+  <data name="Cmp_Preparing" xml:space="preserve">
+    <value>正在准备更改…</value>
+  </data>
+  <data name="Cmp_ResolvedFindings" xml:space="preserve">
+    <value>已解决的发现项</value>
+  </data>
+  <data name="Cmp_SameDay" xml:space="preserve">
+    <value>同一天</value>
+  </data>
+  <data name="Col_Account" xml:space="preserve">
+    <value>账户</value>
+  </data>
+  <data name="Col_AccountKind" xml:space="preserve">
+    <value>类别</value>
+  </data>
+  <data name="Col_AdminShare" xml:space="preserve">
+    <value>管理共享</value>
+  </data>
+  <data name="Col_After" xml:space="preserve">
+    <value>之后</value>
+  </data>
+  <data name="Col_AllowDeny" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="Col_AllowDenyLong" xml:space="preserve">
+    <value>允许/拒绝</value>
+  </data>
+  <data name="Col_AppliesTo" xml:space="preserve">
+    <value>应用于</value>
+  </data>
+  <data name="Col_Area" xml:space="preserve">
+    <value>类别</value>
+  </data>
+  <data name="Col_Before" xml:space="preserve">
+    <value>之前</value>
+  </data>
+  <data name="Col_BeforeAfter" xml:space="preserve">
+    <value>之前 → 之后</value>
+  </data>
+  <data name="Col_Change" xml:space="preserve">
+    <value>更改</value>
+  </data>
+  <data name="Col_Complete" xml:space="preserve">
+    <value>完整</value>
+  </data>
+  <data name="Col_Depth" xml:space="preserve">
+    <value>深度</value>
+  </data>
+  <data name="Col_DirectlyGranted" xml:space="preserve">
+    <value>直接授权</value>
+  </data>
+  <data name="Col_DirectMembers" xml:space="preserve">
+    <value>直接成员</value>
+  </data>
+  <data name="Col_Disabled" xml:space="preserve">
+    <value>已禁用</value>
+  </data>
+  <data name="Col_DisplayName" xml:space="preserve">
+    <value>显示名称</value>
+  </data>
+  <data name="Col_EffectiveRight" xml:space="preserve">
+    <value>有效权限</value>
+  </data>
+  <data name="Col_Explanation" xml:space="preserve">
+    <value>说明</value>
+  </data>
+  <data name="Col_Finding" xml:space="preserve">
+    <value>发现项</value>
+  </data>
+  <data name="Col_Findings" xml:space="preserve">
+    <value>发现项</value>
+  </data>
+  <data name="Col_Folders" xml:space="preserve">
+    <value>文件夹</value>
+  </data>
+  <data name="Col_FoldersWithAccess" xml:space="preserve">
+    <value>有访问权限的文件夹</value>
+  </data>
+  <data name="Col_GrantsListed" xml:space="preserve">
+    <value>已列出单项访问</value>
+  </data>
+  <data name="Col_Group" xml:space="preserve">
+    <value>组</value>
+  </data>
+  <data name="Col_HighestRight" xml:space="preserve">
+    <value>最高权限</value>
+  </data>
+  <data name="Col_InFolderAcls" xml:space="preserve">
+    <value>所在文件夹 ACL 数</value>
+  </data>
+  <data name="Col_InheritedExplicit" xml:space="preserve">
+    <value>继承/显式</value>
+  </data>
+  <data name="Col_ItemType" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="Col_Member" xml:space="preserve">
+    <value>成员</value>
+  </data>
+  <data name="Col_MembersDirect" xml:space="preserve">
+    <value>成员（直接）</value>
+  </data>
+  <data name="Col_MembersTotal" xml:space="preserve">
+    <value>成员总数（人员）</value>
+  </data>
+  <data name="Col_Message" xml:space="preserve">
+    <value>消息</value>
+  </data>
+  <data name="Col_Note" xml:space="preserve">
+    <value>说明</value>
+  </data>
+  <data name="Col_NtfsRight" xml:space="preserve">
+    <value>NTFS 权限</value>
+  </data>
+  <data name="Col_Owner" xml:space="preserve">
+    <value>所有者</value>
+  </data>
+  <data name="Col_Path" xml:space="preserve">
+    <value>路径</value>
+  </data>
+  <data name="Col_PathOrGroup" xml:space="preserve">
+    <value>路径或组</value>
+  </data>
+  <data name="Col_People" xml:space="preserve">
+    <value>人员</value>
+  </data>
+  <data name="Col_PermissionsReadable" xml:space="preserve">
+    <value>权限可读</value>
+  </data>
+  <data name="Col_Person" xml:space="preserve">
+    <value>人员</value>
+  </data>
+  <data name="Col_Recommendation" xml:space="preserve">
+    <value>建议</value>
+  </data>
+  <data name="Col_ReducedByDeny" xml:space="preserve">
+    <value>受拒绝限制</value>
+  </data>
+  <data name="Col_Remark" xml:space="preserve">
+    <value>备注</value>
+  </data>
+  <data name="Col_Right" xml:space="preserve">
+    <value>访问</value>
+  </data>
+  <data name="Col_RightsMask" xml:space="preserve">
+    <value>权限掩码</value>
+  </data>
+  <data name="Col_Rule" xml:space="preserve">
+    <value>规则</value>
+  </data>
+  <data name="Col_Severity" xml:space="preserve">
+    <value>严重性</value>
+  </data>
+  <data name="Col_Share" xml:space="preserve">
+    <value>共享</value>
+  </data>
+  <data name="Col_SharePermissions" xml:space="preserve">
+    <value>共享权限</value>
+  </data>
+  <data name="Col_Title" xml:space="preserve">
+    <value>标题</value>
+  </data>
+  <data name="Col_TitleExplanation" xml:space="preserve">
+    <value>标题和说明</value>
+  </data>
+  <data name="Col_ViaGroups" xml:space="preserve">
+    <value>通过组</value>
+  </data>
+  <data name="Col_ViaShare" xml:space="preserve">
+    <value>通过共享</value>
+  </data>
+  <data name="Error_WithCode" xml:space="preserve">
+    <value>{0}（错误 {1}）</value>
+  </data>
+  <data name="Excel_Attention" xml:space="preserve">
+    <value>注意</value>
+  </data>
+  <data name="Excel_ColInheritanceDiffers" xml:space="preserve">
+    <value>继承不一致</value>
+  </data>
+  <data name="Excel_ComparisonWithRun" xml:space="preserve">
+    <value>与 {0} 的扫描进行比较</value>
+  </data>
+  <data name="Excel_CreatedWith" xml:space="preserve">
+    <value>使用 {0} {1} 创建</value>
+  </data>
+  <data name="Excel_DescAccessPerPerson" xml:space="preserve">
+    <value>每人每个文件夹的有效权限、NTFS 权限、共享权限以及组链。</value>
+  </data>
+  <data name="Excel_DescChanges" xml:space="preserve">
+    <value>与上次扫描的差异：发现项、条目、成员身份、文件夹、人员访问。</value>
+  </data>
+  <data name="Excel_DescErrors" xml:space="preserve">
+    <value>无法读取的路径——那里未进行任何检查。</value>
+  </data>
+  <data name="Excel_DescFindings" xml:space="preserve">
+    <value>按严重性列出的所有发现项——含规则、路径、账户、消息和建议。</value>
+  </data>
+  <data name="Excel_DescFolders" xml:space="preserve">
+    <value>每个已列出的文件夹及其每个权限条目（每个条目一行，包括继承的条目）；“继承不一致”标记例如带有原位置权限的已移动文件夹。</value>
+  </data>
+  <data name="Excel_DescGroups" xml:space="preserve">
+    <value>直接成员和全部成员（包括嵌套），以及该组出现在多少个文件夹 ACL 中。</value>
+  </data>
+  <data name="Excel_DescPeople" xml:space="preserve">
+    <value>每个用户账户：有访问权限的文件夹数量、最高权限以及通过哪些组。</value>
+  </data>
+  <data name="Excel_DescRules" xml:space="preserve">
+    <value>检查范围：所有规则及其说明、建议和发现项数量。</value>
+  </data>
+  <data name="Excel_DescShares" xml:space="preserve">
+    <value>共享及其路径、备注和共享权限。</value>
+  </data>
+  <data name="Excel_Folder" xml:space="preserve">
+    <value>文件夹</value>
+  </data>
+  <data name="Excel_FoldersAdded" xml:space="preserve">
+    <value>新增自身权限的文件夹</value>
+  </data>
+  <data name="Excel_FoldersRemoved" xml:space="preserve">
+    <value>不再有自身权限的文件夹</value>
+  </data>
+  <data name="Excel_NoErrors" xml:space="preserve">
+    <value>读取时没有错误。</value>
+  </data>
+  <data name="Excel_NoFindings" xml:space="preserve">
+    <value>没有发现项。</value>
+  </data>
+  <data name="Excel_NoFolders" xml:space="preserve">
+    <value>未保存任何文件夹。</value>
+  </data>
+  <data name="Excel_NoGrants" xml:space="preserve">
+    <value>未确定任何访问。</value>
+  </data>
+  <data name="Excel_NoGroups" xml:space="preserve">
+    <value>此次扫描中没有组。</value>
+  </data>
+  <data name="Excel_NoOnlyTotal" xml:space="preserve">
+    <value>否——仅汇总</value>
+  </data>
+  <data name="Excel_NoRules" xml:space="preserve">
+    <value>没有规则。</value>
+  </data>
+  <data name="Excel_NoShares" xml:space="preserve">
+    <value>此次扫描中没有共享（只扫描了本地路径）。</value>
+  </data>
+  <data name="Excel_NoUsers" xml:space="preserve">
+    <value>此次扫描中没有用户账户。</value>
+  </data>
+  <data name="Excel_Numbers" xml:space="preserve">
+    <value>数字</value>
+  </data>
+  <data name="Excel_PeopleUserAccounts" xml:space="preserve">
+    <value>人员（用户账户）</value>
+  </data>
+  <data name="Excel_PeopleWithAccess" xml:space="preserve">
+    <value>有访问权限的人员</value>
+  </data>
+  <data name="Excel_ProgressFilling" xml:space="preserve">
+    <value>正在填充工作簿…</value>
+  </data>
+  <data name="Excel_ProgressSaving" xml:space="preserve">
+    <value>正在保存工作簿…</value>
+  </data>
+  <data name="Excel_Result" xml:space="preserve">
+    <value>结果</value>
+  </data>
+  <data name="Excel_Run" xml:space="preserve">
+    <value>扫描</value>
+  </data>
+  <data name="Excel_SheetsGuide" xml:space="preserve">
+    <value>本工作簿中的工作表</value>
+  </data>
+  <data name="Excel_SheetTruncated" xml:space="preserve">
+    <value>工作表 {0} 已截断：{2} 行中的 {1} 行（Excel 报告的大小限制）。</value>
+  </data>
+  <data name="Excel_Subtitle" xml:space="preserve">
+    <value>Zutritt · 共享和文件夹权限</value>
+  </data>
+  <data name="Excel_Targets" xml:space="preserve">
+    <value>目标</value>
+  </data>
+  <data name="Excel_ToolVersionScan" xml:space="preserve">
+    <value>Zutritt 版本（扫描）</value>
+  </data>
+  <data name="Excel_Total" xml:space="preserve">
+    <value>合计</value>
+  </data>
+  <data name="Fi_AccountGone" xml:space="preserve">
+    <value> · 账户已不存在</value>
+  </data>
+  <data name="Fi_AllRules" xml:space="preserve">
+    <value>所有规则</value>
+  </data>
+  <data name="Fi_DetailPlaceholder" xml:space="preserve">
+    <value>所选发现项的说明和建议将显示在这里。</value>
+  </data>
+  <data name="Fi_Disabled" xml:space="preserve">
+    <value> · 已禁用</value>
+  </data>
+  <data name="Fi_FilterByRule" xml:space="preserve">
+    <value>按规则筛选</value>
+  </data>
+  <data name="Fi_FindingPath" xml:space="preserve">
+    <value>发现项的路径</value>
+  </data>
+  <data name="Fi_NoDescription" xml:space="preserve">
+    <value>此规则没有说明。</value>
+  </data>
+  <data name="Fi_NoMatches" xml:space="preserve">
+    <value>无匹配项</value>
+  </data>
+  <data name="Fi_NoMatchesText" xml:space="preserve">
+    <value>没有发现项符合筛选和搜索条件。</value>
+  </data>
+  <data name="Fi_NoRunText" xml:space="preserve">
+    <value>请在“概览”页开始扫描，或打开已保存的扫描。</value>
+  </data>
+  <data name="Fi_NothingFound" xml:space="preserve">
+    <value>此次扫描没有发现值得注意的问题。“文件夹”页仍会显示谁可以访问哪里。</value>
+  </data>
+  <data name="Fi_Search" xml:space="preserve">
+    <value>搜索发现项</value>
+  </data>
+  <data name="Fi_SearchHint" xml:space="preserve">
+    <value>路径、账户或文本</value>
+  </data>
+  <data name="Fi_SelectFinding" xml:space="preserve">
+    <value>选择一个发现项以查看说明和建议。</value>
+  </data>
+  <data name="Fi_ShowFolder" xml:space="preserve">
+    <value>显示文件夹</value>
+  </data>
+  <data name="Fi_WhyImportant" xml:space="preserve">
+    <value>为什么这很重要？</value>
+  </data>
+  <data name="Finding_BroadRead" xml:space="preserve">
+    <value>“{0}”拥有“{1}”{2}——几乎任何已登录人员都可以在此读取。</value>
+  </data>
+  <data name="Finding_BroadWrite" xml:space="preserve">
+    <value>“{0}”拥有“{1}”{2}——几乎任何已登录人员都可以在此写入。</value>
+  </data>
+  <data name="Finding_DeepBreak" xml:space="preserve">
+    <value>继承在深度 {0} 处中断（从深度 {1} 起，例外被视为隐藏）。</value>
+  </data>
+  <data name="Finding_Deny" xml:space="preserve">
+    <value>“{0}”的拒绝条目（拒绝了{1}）。</value>
+  </data>
+  <data name="Finding_DirectUser" xml:space="preserve">
+    <value>“{0}”以个人身份直接拥有“{1}”，而不是通过组。</value>
+  </data>
+  <data name="Finding_DisabledAccount" xml:space="preserve">
+    <value>已禁用的账户“{0}”在此拥有“{1}”。</value>
+  </data>
+  <data name="Finding_EmptyGroup" xml:space="preserve">
+    <value>组“{0}”没有成员，但拥有权限（“{1}”）。</value>
+  </data>
+  <data name="Finding_ForeignInheritedMany" xml:space="preserve">
+    <value>继承的条目与上级文件夹不一致——可能已被移动。{0}并非来自那里，而是来自原位置。</value>
+  </data>
+  <data name="Finding_ForeignInheritedOne" xml:space="preserve">
+    <value>继承的条目与上级文件夹不一致——可能已被移动。{0}并非来自那里，而是来自原位置。</value>
+  </data>
+  <data name="Finding_FullControl" xml:space="preserve">
+    <value>“{0}”拥有完全控制{1}，因此可以更改权限并取得所有权。</value>
+  </data>
+  <data name="Finding_InheritanceDiffers" xml:space="preserve">
+    <value>继承的条目与上级文件夹不一致——可能已被移动；原位置的权限可能仍然适用。</value>
+  </data>
+  <data name="Finding_InheritsNothing" xml:space="preserve">
+    <value>虽然已启用继承，但未从上级文件夹继承任何内容——通常是某个程序以自己的权限创建了该文件夹。上层的权限要到下一次传播后才会在此生效。</value>
+  </data>
+  <data name="Finding_NotChecked" xml:space="preserve">
+    <value>未检查：{0}。</value>
+  </data>
+  <data name="Finding_OnlyForChildren" xml:space="preserve">
+    <value>（适用于子文件夹或文件）</value>
+  </data>
+  <data name="Finding_OrphanDenyEntry" xml:space="preserve">
+    <value>一个拒绝条目</value>
+  </data>
+  <data name="Finding_OrphanEntry" xml:space="preserve">
+    <value>孤立 SID {0} 拥有{1}——该账户已不存在。</value>
+  </data>
+  <data name="Finding_OrphanEntryLevel" xml:space="preserve">
+    <value>一个“{0}”条目</value>
+  </data>
+  <data name="Finding_OrphanEntryParts" xml:space="preserve">
+    <value>一个{0}条目</value>
+  </data>
+  <data name="Finding_OrphanOwner" xml:space="preserve">
+    <value>所有者是孤立 SID {0}——该账户已不存在。</value>
+  </data>
+  <data name="Finding_OrphanOwnerAndEntry" xml:space="preserve">
+    <value>孤立 SID {0} 是所有者，并拥有{1}——该账户已不存在。</value>
+  </data>
+  <data name="Finding_OwnerIsUser" xml:space="preserve">
+    <value>所有者是用户账户“{0}”。</value>
+  </data>
+  <data name="Finding_ShareEveryone" xml:space="preserve">
+    <value>共享权限“{0}”：“{1}”——保护完全依赖 NTFS。</value>
+  </data>
+  <data name="Finding_ShareOrphan" xml:space="preserve">
+    <value>共享权限中包含孤立 SID {0}——该账户已不存在。</value>
+  </data>
+  <data name="Finding_ShareUnreadable" xml:space="preserve">
+    <value>无法读取 {0} 的共享权限。</value>
+  </data>
+  <data name="Finding_UnreadableFile" xml:space="preserve">
+    <value>文件不可读：{0}——此处及其下的权限未检查。</value>
+  </data>
+  <data name="Finding_UnreadableFolder" xml:space="preserve">
+    <value>文件夹不可读：{0}——此处及其下的权限未检查。</value>
+  </data>
+  <data name="Fo_AccountDisabled" xml:space="preserve">
+    <value>该账户已禁用</value>
+  </data>
+  <data name="Fo_AclEntries" xml:space="preserve">
+    <value>访问控制列表的条目</value>
+  </data>
+  <data name="Fo_AlsoBroad" xml:space="preserve">
+    <value>此外还获得授权的有：{0}。因此几乎任何已登录人员都可以进入这里——包括下方未单独列出的人员。</value>
+  </data>
+  <data name="Fo_BrokenTip" xml:space="preserve">
+    <value>上层的权限在此不适用——仅适用自身的条目。</value>
+  </data>
+  <data name="Fo_Calculating" xml:space="preserve">
+    <value>正在计算…</value>
+  </data>
+  <data name="Fo_DenyPrefix" xml:space="preserve">
+    <value>拒绝：{0}</value>
+  </data>
+  <data name="Fo_DiffersFactTip" xml:space="preserve">
+    <value>继承的条目与上级文件夹不一致——可能已被移动。这里可能仍适用原位置的权限（发现项 ZT14）。</value>
+  </data>
+  <data name="Fo_DiffersTip" xml:space="preserve">
+    <value>继承不一致——可能已移动，带有原位置的权限</value>
+  </data>
+  <data name="Fo_Entries" xml:space="preserve">
+    <value>条目</value>
+  </data>
+  <data name="Fo_EntriesCount" xml:space="preserve">
+    <value>条目（{0}）</value>
+  </data>
+  <data name="Fo_FindingsCount" xml:space="preserve">
+    <value>发现项（{0}）</value>
+  </data>
+  <data name="Fo_FolderFindings" xml:space="preserve">
+    <value>此文件夹的发现项</value>
+  </data>
+  <data name="Fo_GreyLegend" xml:space="preserve">
+    <value>灰色：无自身权限</value>
+  </data>
+  <data name="Fo_HasFinding" xml:space="preserve">
+    <value>存在发现项</value>
+  </data>
+  <data name="Fo_InheritsFrom" xml:space="preserve">
+    <value>“{0}”没有自身权限——适用在“{1}”上设置的权限。Zutritt 只保存具有自身权限的文件夹。</value>
+  </data>
+  <data name="Fo_InheritsFromParent" xml:space="preserve">
+    <value>从上级文件夹继承</value>
+  </data>
+  <data name="Fo_InheritsRootless" xml:space="preserve">
+    <value>“{0}”没有自身权限。Zutritt 只保存具有自身权限的文件夹和扫描根。</value>
+  </data>
+  <data name="Fo_Level" xml:space="preserve">
+    <value>第 {0} 级</value>
+  </data>
+  <data name="Fo_Loading" xml:space="preserve">
+    <value>正在加载文件夹…</value>
+  </data>
+  <data name="Fo_NobodyIndividual" xml:space="preserve">
+    <value>没有任何个人在此拥有访问权限。</value>
+  </data>
+  <data name="Fo_NoFindings" xml:space="preserve">
+    <value>此文件夹没有发现项。</value>
+  </data>
+  <data name="Fo_NoFolders" xml:space="preserve">
+    <value>此次扫描中没有保存任何文件夹。</value>
+  </data>
+  <data name="Fo_NoOwnPermissions" xml:space="preserve">
+    <value>无自身权限</value>
+  </data>
+  <data name="Fo_NoPersonNoGroups" xml:space="preserve">
+    <value>未找到任何个人——此次扫描未解析组。</value>
+  </data>
+  <data name="Fo_NoRun" xml:space="preserve">
+    <value>未加载扫描。请在“概览”页开始扫描，或打开已保存的扫描。</value>
+  </data>
+  <data name="Fo_NoRunShort" xml:space="preserve">
+    <value>未加载扫描。</value>
+  </data>
+  <data name="Fo_NoSearchMatch" xml:space="preserve">
+    <value>没有已保存的文件夹与“{0}”匹配。</value>
+  </data>
+  <data name="Fo_NoShare" xml:space="preserve">
+    <value>无共享</value>
+  </data>
+  <data name="Fo_NotReadableCap" xml:space="preserve">
+    <value>不可读</value>
+  </data>
+  <data name="Fo_NotStored" xml:space="preserve">
+    <value>“{0}”在此次扫描中未作为文件夹保存。</value>
+  </data>
+  <data name="Fo_Origin" xml:space="preserve">
+    <value>来源</value>
+  </data>
+  <data name="Fo_OwnerUnknown" xml:space="preserve">
+    <value>所有者未知</value>
+  </data>
+  <data name="Fo_PersonRowText" xml:space="preserve">
+    <value>{0}，共享 {1}，NTFS {2}，{3}</value>
+  </data>
+  <data name="Fo_ReducedByDeny" xml:space="preserve">
+    <value>受拒绝条目限制</value>
+  </data>
+  <data name="Fo_ScanRoot" xml:space="preserve">
+    <value>扫描根</value>
+  </data>
+  <data name="Fo_Search" xml:space="preserve">
+    <value>搜索文件夹</value>
+  </data>
+  <data name="Fo_SearchResults" xml:space="preserve">
+    <value>搜索结果</value>
+  </data>
+  <data name="Fo_SelectFolder" xml:space="preserve">
+    <value>在左侧选择一个文件夹以查看其权限。</value>
+  </data>
+  <data name="Fo_ShareFact" xml:space="preserve">
+    <value>共享 {0}</value>
+  </data>
+  <data name="Fo_SharePermissionsTip" xml:space="preserve">
+    <value>共享权限：
+{0}</value>
+  </data>
+  <data name="Fo_ShowFailed" xml:space="preserve">
+    <value>无法显示该文件夹</value>
+  </data>
+  <data name="Fo_ShowParent" xml:space="preserve">
+    <value>显示上级文件夹</value>
+  </data>
+  <data name="Fo_Tree" xml:space="preserve">
+    <value>文件夹树</value>
+  </data>
+  <data name="Fo_TreeFailed" xml:space="preserve">
+    <value>无法构建文件夹树</value>
+  </data>
+  <data name="Fo_UnreadableWho" xml:space="preserve">
+    <value>该文件夹不可读——无法确定谁可以进入。</value>
+  </data>
+  <data name="Fo_WhoCanEnter" xml:space="preserve">
+    <value>谁可以进入</value>
+  </data>
+  <data name="Fo_WhoCanEnterCount" xml:space="preserve">
+    <value>谁可以进入（{0}）</value>
+  </data>
+  <data name="Fo_WhoFailed" xml:space="preserve">
+    <value>无法计算“谁可以进入”</value>
+  </data>
+  <data name="Identity_DirectoryErrorAccounts" xml:space="preserve">
+    <value>解析账户时目录出错：{0}</value>
+  </data>
+  <data name="Identity_DirectoryErrorMembers" xml:space="preserve">
+    <value>读取组成员时目录出错：{0}</value>
+  </data>
+  <data name="Identity_DirectoryTimeout" xml:space="preserve">
+    <value>目录在 {0} 内无响应——来自此来源的账户和组保持为“未知”。</value>
+  </data>
+  <data name="Identity_DirectoryUnreachable" xml:space="preserve">
+    <value>无法访问目录。</value>
+  </data>
+  <data name="Identity_GroupsTooDeep" xml:space="preserve">
+    <value>组的嵌套深度超过 {0} 级——此组的成员未再继续解析。</value>
+  </data>
+  <data name="Identity_LookupTimeout" xml:space="preserve">
+    <value>账户解析在 {0} 内无响应。受影响的账户保持为“未知”。</value>
+  </data>
+  <data name="Identity_MembersMerged" xml:space="preserve">
+    <value>该组在所扫描的服务器上有不同的成员。由于每个 SID 在一次扫描中只出现一次，所有服务器的成员被合并——通过该组的访问可能只适用于其中一台服务器。</value>
+  </data>
+  <data name="Identity_NamesNotResolvable" xml:space="preserve">
+    <value>无法解析账户名称：{0}。受影响的账户保持为“未知”。</value>
+  </data>
+  <data name="Identity_NotAskedServer" xml:space="preserve">
+    <value>未在服务器本身上查找账户。因此，无法解析的账户保持为“未知”而不是“孤立”——只有服务器知道它的本地账户。</value>
+  </data>
+  <data name="Identity_Service" xml:space="preserve">
+    <value>服务 ({0})</value>
+  </data>
+  <data name="Identity_UnknownError" xml:space="preserve">
+    <value>未知错误</value>
+  </data>
+  <data name="Info_Anonymize" xml:space="preserve">
+    <value>不含名称和地址</value>
+  </data>
+  <data name="Info_AnonymizeName" xml:space="preserve">
+    <value>不含名称、路径和地址的诊断包</value>
+  </data>
+  <data name="Info_CliExample" xml:space="preserve">
+    <value>"C:\Program Files\Zutritt\Zutritt.exe" scan \\FS01 --compare --report D:\Reports\Zutritt.pdf</value>
+  </data>
+  <data name="Info_CliExampleName" xml:space="preserve">
+    <value>命令行示例</value>
+  </data>
+  <data name="Info_CliHeading" xml:space="preserve">
+    <value>命令行和计划任务</value>
+  </data>
+  <data name="Info_CliIntro" xml:space="preserve">
+    <value>同一个 Zutritt.exe 也可以在无窗口模式下运行——例如每周作为计划任务运行并生成待签署的报告：</value>
+  </data>
+  <data name="Info_CliMore" xml:space="preserve">
+    <value>所有命令和选项：Zutritt.exe --help · 以文本形式显示版本和这些信息：Zutritt.exe --info</value>
+  </data>
+  <data name="Info_Create" xml:space="preserve">
+    <value>创建…</value>
+  </data>
+  <data name="Info_DbNotOpened" xml:space="preserve">
+    <value>{0}——无法打开，扫描不会被保存</value>
+  </data>
+  <data name="Info_DemoDb" xml:space="preserve">
+    <value>{0}（演示，退出时删除）</value>
+  </data>
+  <data name="Info_DiagFailed" xml:space="preserve">
+    <value>无法保存诊断包：{0}</value>
+  </data>
+  <data name="Info_Diagnostics" xml:space="preserve">
+    <value>创建诊断包</value>
+  </data>
+  <data name="Info_DiagnosticsDescription" xml:space="preserve">
+    <value>版本、系统信息和最近 7 天的日志，打包为 ZIP 供支持人员使用。</value>
+  </data>
+  <data name="Info_DiagSavedAnon" xml:space="preserve">
+    <value>诊断包已保存：{0}——不含名称、路径和地址。</value>
+  </data>
+  <data name="Info_DiagSavedFull" xml:space="preserve">
+    <value>诊断包已保存：{0}——包含名称和路径，请仅以保密方式转交。</value>
+  </data>
+  <data name="Info_ExitCode0" xml:space="preserve">
+    <value>退出代码 0</value>
+  </data>
+  <data name="Info_ExitCode1" xml:space="preserve">
+    <value>退出代码 1</value>
+  </data>
+  <data name="Info_ExitCode2" xml:space="preserve">
+    <value>退出代码 2</value>
+  </data>
+  <data name="Info_ExitCode3" xml:space="preserve">
+    <value>退出代码 3</value>
+  </data>
+  <data name="Info_ExitError" xml:space="preserve">
+    <value>错误或取消</value>
+  </data>
+  <data name="Info_ExitMediumLong" xml:space="preserve">
+    <value>有“中”级发现项，但没有“高”级</value>
+  </data>
+  <data name="Info_HelpLinks" xml:space="preserve">
+    <value>帮助和链接</value>
+  </data>
+  <data name="Info_Keyboard" xml:space="preserve">
+    <value>键盘</value>
+  </data>
+  <data name="Info_KeyboardText" xml:space="preserve">
+    <value>Ctrl+1 到 Ctrl+7 在页面之间切换 · Ctrl+F 跳到搜索框 · Enter 打开所选扫描，Del 将其删除</value>
+  </data>
+  <data name="Info_LanguageDescription" xml:space="preserve">
+    <value>未在此选择时跟随 Windows，下次启动时生效。所有用户的默认设置：%ProgramData%\Zutritt\settings.json；脚本：环境变量 ZUTRITT_LANGUAGE。</value>
+  </data>
+  <data name="Info_LanguageForced" xml:space="preserve">
+    <value>由环境变量 {0} 指定——此处的选择仅在没有该变量时生效。</value>
+  </data>
+  <data name="Info_LanguageMachine" xml:space="preserve">
+    <value>此计算机的默认设置（{0}）</value>
+  </data>
+  <data name="Info_LanguageNotSaved" xml:space="preserve">
+    <value>无法保存语言：{0}</value>
+  </data>
+  <data name="Info_LanguageRestart" xml:space="preserve">
+    <value>语言将在下次启动 Zutritt 时更改。</value>
+  </data>
+  <data name="Info_LanguageSystem" xml:space="preserve">
+    <value>跟随 Windows（{0}）</value>
+  </data>
+  <data name="Info_License" xml:space="preserve">
+    <value>许可证</value>
+  </data>
+  <data name="Info_LicenseDescription" xml:space="preserve">
+    <value>可自由使用、修改和分发，但须保留版权声明和许可证文本。</value>
+  </data>
+  <data name="Info_LicenseMissing" xml:space="preserve">
+    <value>此版本的 Zutritt 缺少许可证文本</value>
+  </data>
+  <data name="Info_MissingAt" xml:space="preserve">
+    <value>{0}——可在 {1} 查看。</value>
+  </data>
+  <data name="Info_NoDb" xml:space="preserve">
+    <value>未打开数据库——扫描不会被保存</value>
+  </data>
+  <data name="Info_NoticesDescription" xml:space="preserve">
+    <value>Zutritt 附带的库——含版本、来源、版权和许可证文本。</value>
+  </data>
+  <data name="Info_NoticesMissing" xml:space="preserve">
+    <value>此版本的 Zutritt 缺少第三方许可证</value>
+  </data>
+  <data name="Info_OpenFolder" xml:space="preserve">
+    <value>打开文件夹</value>
+  </data>
+  <data name="Info_OpenImprint" xml:space="preserve">
+    <value>打开法律声明</value>
+  </data>
+  <data name="Info_OpenPrivacy" xml:space="preserve">
+    <value>打开隐私说明</value>
+  </data>
+  <data name="Info_OpenSource" xml:space="preserve">
+    <value>在 GitHub 上打开源代码</value>
+  </data>
+  <data name="Info_OpenSupport" xml:space="preserve">
+    <value>打开帮助与支持</value>
+  </data>
+  <data name="Info_OpenWebsite" xml:space="preserve">
+    <value>打开网站</value>
+  </data>
+  <data name="Info_PrivacyDescription" xml:space="preserve">
+    <value>Zutritt 在何处存储哪些数据、建立哪些连接以及如何删除所有内容。</value>
+  </data>
+  <data name="Info_ReadOnlyDescription" xml:space="preserve">
+    <value>Zutritt 读取共享、NTFS 权限和组成员身份。它不会更改任何权限、文件或账户。{0}</value>
+  </data>
+  <data name="Info_ReadOnlyHeader" xml:space="preserve">
+    <value>只读，数据保留在本地</value>
+  </data>
+  <data name="Info_SaveDiagnostics" xml:space="preserve">
+    <value>保存诊断包</value>
+  </data>
+  <data name="Info_Show" xml:space="preserve">
+    <value>显示</value>
+  </data>
+  <data name="Info_ShowLicense" xml:space="preserve">
+    <value>显示许可证文本</value>
+  </data>
+  <data name="Info_SupportDescription" xml:space="preserve">
+    <value>通过 GitHub 报告错误和提问——签订支持合同可获得有保障的服务。</value>
+  </data>
+  <data name="Info_Version" xml:space="preserve">
+    <value>版本 {0} · .NET {1}</value>
+  </data>
+  <data name="Info_VersionBuild" xml:space="preserve">
+    <value>版本 {0} · 构建 {1} · .NET {2}</value>
+  </data>
+  <data name="Info_WebsiteDescription" xml:space="preserve">
+    <value>GitHub 上的 ICT-Baden</value>
+  </data>
+  <data name="Info_ZipFilter" xml:space="preserve">
+    <value>ZIP 存档 (*.zip)|*.zip</value>
+  </data>
+  <data name="Kind_BuiltIn" xml:space="preserve">
+    <value>内置</value>
+  </data>
+  <data name="Kind_Computer" xml:space="preserve">
+    <value>计算机</value>
+  </data>
+  <data name="Kind_Group" xml:space="preserve">
+    <value>组</value>
+  </data>
+  <data name="Kind_KnownAccount" xml:space="preserve">
+    <value>已知账户</value>
+  </data>
+  <data name="Kind_Orphaned" xml:space="preserve">
+    <value>孤立</value>
+  </data>
+  <data name="Kind_Unknown" xml:space="preserve">
+    <value>未知</value>
+  </data>
+  <data name="Kind_User" xml:space="preserve">
+    <value>用户</value>
+  </data>
+  <data name="Local_MembersUnreadable" xml:space="preserve">
+    <value>无法读取“{0}”的成员：{1}。</value>
+  </data>
+  <data name="Local_Unreadable" xml:space="preserve">
+    <value>无法读取本地账户和组：{0}。缺少本地组和 BUILTIN 组的成员，本地账户保持为“未知”。</value>
+  </data>
+  <data name="Nav_Comparison" xml:space="preserve">
+    <value>比较</value>
+  </data>
+  <data name="Nav_Findings" xml:space="preserve">
+    <value>发现项</value>
+  </data>
+  <data name="Nav_Folders" xml:space="preserve">
+    <value>文件夹</value>
+  </data>
+  <data name="Nav_Info" xml:space="preserve">
+    <value>信息</value>
+  </data>
+  <data name="Nav_Overview" xml:space="preserve">
+    <value>概览</value>
+  </data>
+  <data name="Nav_People" xml:space="preserve">
+    <value>人员</value>
+  </data>
+  <data name="Nav_Report" xml:space="preserve">
+    <value>报告</value>
+  </data>
+  <data name="Ov_AccessChangesMany" xml:space="preserve">
+    <value>{0} 处访问更改</value>
+  </data>
+  <data name="Ov_AccessChangesOne" xml:space="preserve">
+    <value>{0} 处访问更改</value>
+  </data>
+  <data name="Ov_BadDeepFrom" xml:space="preserve">
+    <value>“从此级别起视为深层例外”：请输入不小于 1 的整数。</value>
+  </data>
+  <data name="Ov_BadDepth" xml:space="preserve">
+    <value>最大深度：请输入不小于 0 的整数，或留空。</value>
+  </data>
+  <data name="Ov_Cancelling" xml:space="preserve">
+    <value>正在取消…</value>
+  </data>
+  <data name="Ov_ChangesSince" xml:space="preserve">
+    <value>自 {0} 的扫描以来：{1}、{2}和{3}。</value>
+  </data>
+  <data name="Ov_ChooseFolder" xml:space="preserve">
+    <value>选择文件夹…</value>
+  </data>
+  <data name="Ov_ChooseFolderTitle" xml:space="preserve">
+    <value>选择要扫描的文件夹</value>
+  </data>
+  <data name="Ov_CurrentlyLoaded" xml:space="preserve">
+    <value>当前已加载</value>
+  </data>
+  <data name="Ov_DeepFrom" xml:space="preserve">
+    <value>从此级别起视为深层例外</value>
+  </data>
+  <data name="Ov_DeepFromHint" xml:space="preserve">
+    <value>用于“深层隐藏的例外”</value>
+  </data>
+  <data name="Ov_DeleteConfirm" xml:space="preserve">
+    <value>要永久删除 {0} 的扫描（{1}）吗？
+
+已保存的报告会保留。</value>
+  </data>
+  <data name="Ov_DeleteRun" xml:space="preserve">
+    <value>删除扫描</value>
+  </data>
+  <data name="Ov_DemoDatabase" xml:space="preserve">
+    <value>演示数据库，退出时删除：{0}</value>
+  </data>
+  <data name="Ov_DemoSuffix" xml:space="preserve">
+    <value> · 演示</value>
+  </data>
+  <data name="Ov_Duration" xml:space="preserve">
+    <value> · 用时 {0}</value>
+  </data>
+  <data name="Ov_Elapsed" xml:space="preserve">
+    <value>已用时间</value>
+  </data>
+  <data name="Ov_FindingsHigh" xml:space="preserve">
+    <value>高级发现项</value>
+  </data>
+  <data name="Ov_FindingsInfo" xml:space="preserve">
+    <value>提示（信息）</value>
+  </data>
+  <data name="Ov_FindingsLow" xml:space="preserve">
+    <value>低级发现项</value>
+  </data>
+  <data name="Ov_FindingsMedium" xml:space="preserve">
+    <value>中级发现项</value>
+  </data>
+  <data name="Ov_FoldersCheckedFiles" xml:space="preserve">
+    <value>已检查的文件夹（+ {0} 个文件）</value>
+  </data>
+  <data name="Ov_FoldersCounted" xml:space="preserve">
+    <value>已统计的文件夹</value>
+  </data>
+  <data name="Ov_Hero" xml:space="preserve">
+    <value>谁可以访问您的共享？</value>
+  </data>
+  <data name="Ov_HighCount" xml:space="preserve">
+    <value>{0} 高</value>
+  </data>
+  <data name="Ov_IncludeFiles" xml:space="preserve">
+    <value>包括文件</value>
+  </data>
+  <data name="Ov_IncludeFilesTip" xml:space="preserve">
+    <value>同时记录具有自身权限的文件——耗时明显更长。</value>
+  </data>
+  <data name="Ov_Intro" xml:space="preserve">
+    <value>Zutritt 读取共享和 NTFS 权限，将组解析到人员并显示值得注意的问题——附与上次扫描的比较和可供签署的报告。请在下方输入目标并开始扫描。</value>
+  </data>
+  <data name="Ov_MaxDepth" xml:space="preserve">
+    <value>最大深度</value>
+  </data>
+  <data name="Ov_MaxDepthHint" xml:space="preserve">
+    <value>留空 = 不限</value>
+  </data>
+  <data name="Ov_NeedTarget" xml:space="preserve">
+    <value>请至少输入一个目标——例如 \\server\share，或输入“.”表示此计算机的共享。</value>
+  </data>
+  <data name="Ov_NewFindingsMany" xml:space="preserve">
+    <value>{0} 个新发现项</value>
+  </data>
+  <data name="Ov_NewFindingsOne" xml:space="preserve">
+    <value>{0} 个新发现项</value>
+  </data>
+  <data name="Ov_NewScan" xml:space="preserve">
+    <value>新扫描</value>
+  </data>
+  <data name="Ov_NoDatabase" xml:space="preserve">
+    <value>未打开数据库——本次会话中的扫描不会被保存。</value>
+  </data>
+  <data name="Ov_NoDatabaseNoRuns" xml:space="preserve">
+    <value>没有数据库就没有已保存的扫描。</value>
+  </data>
+  <data name="Ov_NoRuns" xml:space="preserve">
+    <value>尚无已保存的扫描——首次扫描后将显示在这里。</value>
+  </data>
+  <data name="Ov_NotSaved" xml:space="preserve">
+    <value>扫描已完成，但未保存：{0} 此次扫描已加载——请立即在“报告”下创建报告，否则关闭后将丢失。</value>
+  </data>
+  <data name="Ov_Options" xml:space="preserve">
+    <value>选项</value>
+  </data>
+  <data name="Ov_Preparing" xml:space="preserve">
+    <value>正在准备扫描…</value>
+  </data>
+  <data name="Ov_ReadOnly" xml:space="preserve">
+    <value>只读取——Zutritt 不会更改任何权限或文件。</value>
+  </data>
+  <data name="Ov_RecentRuns" xml:space="preserve">
+    <value>最近的扫描</value>
+  </data>
+  <data name="Ov_RefreshList" xml:space="preserve">
+    <value>刷新列表</value>
+  </data>
+  <data name="Ov_ResolvedMany" xml:space="preserve">
+    <value>{0} 个已解决</value>
+  </data>
+  <data name="Ov_ResolvedOne" xml:space="preserve">
+    <value>{0} 个已解决</value>
+  </data>
+  <data name="Ov_ResolveGroups" xml:space="preserve">
+    <value>将组解析到人员</value>
+  </data>
+  <data name="Ov_ResolveGroupsTip" xml:space="preserve">
+    <value>将本地组以及（若可访问）Active Directory 组解析到单个账户。</value>
+  </data>
+  <data name="Ov_ResultMeta" xml:space="preserve">
+    <value>{0}{1} · {2}，在 {3} 上</value>
+  </data>
+  <data name="Ov_RunDeleted" xml:space="preserve">
+    <value>已删除 {0} 的扫描。</value>
+  </data>
+  <data name="Ov_RunLoaded" xml:space="preserve">
+    <value>已加载 {0} 的扫描（{1}）。</value>
+  </data>
+  <data name="Ov_RunNotDeleted" xml:space="preserve">
+    <value>无法删除该扫描</value>
+  </data>
+  <data name="Ov_RunNotOpened" xml:space="preserve">
+    <value>无法打开该扫描</value>
+  </data>
+  <data name="Ov_RunRowText" xml:space="preserve">
+    <value>{0}，{1}，{2} 个发现项</value>
+  </data>
+  <data name="Ov_RunsUnreadable" xml:space="preserve">
+    <value>无法读取已保存的扫描</value>
+  </data>
+  <data name="Ov_SavedIn" xml:space="preserve">
+    <value>保存在 {0}</value>
+  </data>
+  <data name="Ov_SavingComparing" xml:space="preserve">
+    <value>正在保存和比较…</value>
+  </data>
+  <data name="Ov_ScanCancelled" xml:space="preserve">
+    <value>扫描已取消——未保存任何内容。</value>
+  </data>
+  <data name="Ov_ScanDoneMany" xml:space="preserve">
+    <value>扫描完成：已检查 {0} 个文件夹，{1} 个发现项。</value>
+  </data>
+  <data name="Ov_ScanDoneOne" xml:space="preserve">
+    <value>扫描完成：已检查 {0} 个文件夹，{1} 个发现项。</value>
+  </data>
+  <data name="Ov_ScanFailed" xml:space="preserve">
+    <value>扫描失败：{0}</value>
+  </data>
+  <data name="Ov_ScanRunning" xml:space="preserve">
+    <value>正在扫描…</value>
+  </data>
+  <data name="Ov_ShowChanges" xml:space="preserve">
+    <value>查看更改</value>
+  </data>
+  <data name="Ov_ShowFindings" xml:space="preserve">
+    <value>查看发现项</value>
+  </data>
+  <data name="Ov_SkipAdmin" xml:space="preserve">
+    <value>跳过管理共享</value>
+  </data>
+  <data name="Ov_SkipAdminTip" xml:space="preserve">
+    <value>不检查 C$、ADMIN$、IPC$ 和 print$。</value>
+  </data>
+  <data name="Ov_StartScan" xml:space="preserve">
+    <value>开始扫描</value>
+  </data>
+  <data name="Ov_TargetsHint" xml:space="preserve">
+    <value>\\server\share、D:\Data 或 .（表示此计算机的所有共享）</value>
+  </data>
+  <data name="Ov_TargetsLabel" xml:space="preserve">
+    <value>目标——每行一个</value>
+  </data>
+  <data name="Ov_TargetsName" xml:space="preserve">
+    <value>目标，每行一个</value>
+  </data>
+  <data name="Ov_WithOwnPermissions" xml:space="preserve">
+    <value>具有自身权限</value>
+  </data>
+  <data name="Page_ComparisonSubtitle" xml:space="preserve">
+    <value>自上次扫描以来有哪些变化？</value>
+  </data>
+  <data name="Page_FindingsSubtitle" xml:space="preserve">
+    <value>值得注意的问题——按严重性排序，附说明和建议</value>
+  </data>
+  <data name="Page_FoldersSubtitle" xml:space="preserve">
+    <value>谁可以进入这里？</value>
+  </data>
+  <data name="Page_InfoSubtitle" xml:space="preserve">
+    <value>关于 Zutritt</value>
+  </data>
+  <data name="Page_OverviewSubtitle" xml:space="preserve">
+    <value>开始新扫描或打开已保存的扫描</value>
+  </data>
+  <data name="Page_PeopleSubtitle" xml:space="preserve">
+    <value>某人可以访问哪些地方？</value>
+  </data>
+  <data name="Page_ReportSubtitle" xml:space="preserve">
+    <value>Excel 用于后续处理，PDF 用于签署</value>
+  </data>
+  <data name="Pdf_AccessChangesIntro" xml:space="preserve">
+    <value>上述更改的结果：谁现在实际上可以做得更多或更少（涵盖所有组，扣除拒绝后）——先列 {0}，按文件夹汇总。每个人的之前和之后见 Excel 报告（工作表 {1}）。</value>
+  </data>
+  <data name="Pdf_AccountsGroups" xml:space="preserve">
+    <value>账户和组</value>
+  </data>
+  <data name="Pdf_AdminShare" xml:space="preserve">
+    <value>管理共享</value>
+  </data>
+  <data name="Pdf_AndMore" xml:space="preserve">
+    <value> …另有 {0} 人</value>
+  </data>
+  <data name="Pdf_Attention" xml:space="preserve">
+    <value>注意：</value>
+  </data>
+  <data name="Pdf_ChangesIntro" xml:space="preserve">
+    <value>与 {0} 的扫描进行比较。先列出发现项，再列出原因（权限条目、组成员身份、文件夹），最后列出对个人的影响。</value>
+  </data>
+  <data name="Pdf_ComparedWith" xml:space="preserve">
+    <value>比较对象</value>
+  </data>
+  <data name="Pdf_ComparedWithRun" xml:space="preserve">
+    <value>与 {0} 的扫描进行比较。</value>
+  </data>
+  <data name="Pdf_ComparisonHeading" xml:space="preserve">
+    <value>与上次扫描的比较</value>
+  </data>
+  <data name="Pdf_Confidential" xml:space="preserve">
+    <value>机密——包含账户和访问权限信息。仅供内部使用和审计人员查阅。</value>
+  </data>
+  <data name="Pdf_Contents" xml:space="preserve">
+    <value>目录</value>
+  </data>
+  <data name="Pdf_CutChanges" xml:space="preserve">
+    <value>更改（{1} 项中的 {0} 项）</value>
+  </data>
+  <data name="Pdf_CutPart" xml:space="preserve">
+    <value>{0}（{2} 项中的 {1} 项）</value>
+  </data>
+  <data name="Pdf_CutSharesMany" xml:space="preserve">
+    <value>共享权限（每个共享最多 {0} 个条目，涉及 {1} 个共享）</value>
+  </data>
+  <data name="Pdf_CutSharesOne" xml:space="preserve">
+    <value>共享权限（每个共享最多 {0} 个条目，涉及 {1} 个共享）</value>
+  </data>
+  <data name="Pdf_Date" xml:space="preserve">
+    <value>日期</value>
+  </data>
+  <data name="Pdf_Depth" xml:space="preserve">
+    <value>深度 {0}</value>
+  </data>
+  <data name="Pdf_DirectlyGranted" xml:space="preserve">
+    <value>直接授权</value>
+  </data>
+  <data name="Pdf_Disabled" xml:space="preserve">
+    <value>已禁用</value>
+  </data>
+  <data name="Pdf_ErrorsIntro" xml:space="preserve">
+    <value>无法读取这些路径——报告不对其权限作任何说明。</value>
+  </data>
+  <data name="Pdf_ErrorsLower" xml:space="preserve">
+    <value>未检查的区域</value>
+  </data>
+  <data name="Pdf_File" xml:space="preserve">
+    <value>文件</value>
+  </data>
+  <data name="Pdf_FilesChecked" xml:space="preserve">
+    <value>已检查的文件</value>
+  </data>
+  <data name="Pdf_FilesWithOwn" xml:space="preserve">
+    <value>具有自身权限的文件</value>
+  </data>
+  <data name="Pdf_FindingCountMany" xml:space="preserve">
+    <value>{0} 个发现项</value>
+  </data>
+  <data name="Pdf_FindingCountOne" xml:space="preserve">
+    <value>{0} 个发现项</value>
+  </data>
+  <data name="Pdf_FindingsBySeverity" xml:space="preserve">
+    <value>按严重性统计的发现项</value>
+  </data>
+  <data name="Pdf_FindingsIntro" xml:space="preserve">
+    <value>按严重性和规则分组。每条规则的说明和建议见 {0}。</value>
+  </data>
+  <data name="Pdf_FirstTargetMore" xml:space="preserve">
+    <value>{0}（另有 {1} 个）</value>
+  </data>
+  <data name="Pdf_FolderChanges" xml:space="preserve">
+    <value>自身权限新增或取消的文件夹</value>
+  </data>
+  <data name="Pdf_FoldersAddedRemoved" xml:space="preserve">
+    <value>新增自身权限的文件夹 / 不再有自身权限的文件夹</value>
+  </data>
+  <data name="Pdf_FoldersChecked" xml:space="preserve">
+    <value>已检查的文件夹</value>
+  </data>
+  <data name="Pdf_FooterCreated" xml:space="preserve">
+    <value>创建于 {0} · 机密</value>
+  </data>
+  <data name="Pdf_GroupMemberships" xml:space="preserve">
+    <value>组成员身份</value>
+  </data>
+  <data name="Pdf_InheritanceBroken" xml:space="preserve">
+    <value>继承已中断</value>
+  </data>
+  <data name="Pdf_InheritanceDiffers" xml:space="preserve">
+    <value>继承不一致（可能已移动）</value>
+  </data>
+  <data name="Pdf_Inherited" xml:space="preserve">
+    <value>继承：{0}</value>
+  </data>
+  <data name="Pdf_InheritedDenyAce" xml:space="preserve">
+    <value>{0}（拒绝：{1}）</value>
+  </data>
+  <data name="Pdf_Machine" xml:space="preserve">
+    <value>计算机</value>
+  </data>
+  <data name="Pdf_ManyTargets" xml:space="preserve">
+    <value>{0} 个目标</value>
+  </data>
+  <data name="Pdf_MoreEntries" xml:space="preserve">
+    <value>…另有 {0} 个条目（完整内容见 Excel 报告）</value>
+  </data>
+  <data name="Pdf_MoreTargets" xml:space="preserve">
+    <value>
+…另有 {0} 个（已截断——完整内容见 Excel 报告）</value>
+  </data>
+  <data name="Pdf_NoChanges" xml:space="preserve">
+    <value>自上次扫描以来没有更改。</value>
+  </data>
+  <data name="Pdf_NoChangesSince" xml:space="preserve">
+    <value>自 {0} 的扫描以来没有更改。</value>
+  </data>
+  <data name="Pdf_NoEntries" xml:space="preserve">
+    <value>无条目——没有人有访问权限（只有所有者可以更改权限）。</value>
+  </data>
+  <data name="Pdf_NoFindings" xml:space="preserve">
+    <value>没有发现项——没有任何检查规则被触发。</value>
+  </data>
+  <data name="Pdf_NoFolders" xml:space="preserve">
+    <value>此次扫描中没有文件夹。</value>
+  </data>
+  <data name="Pdf_NoFont" xml:space="preserve">
+    <value>未找到用于 PDF 报告的字体（已查找：{1} 中的 {0}）。在 Linux 上，例如安装 fonts-dejavu-core 软件包会有帮助。</value>
+  </data>
+  <data name="Pdf_None" xml:space="preserve">
+    <value>无</value>
+  </data>
+  <data name="Pdf_NoShares" xml:space="preserve">
+    <value>此次扫描中没有共享——只扫描了本地路径。</value>
+  </data>
+  <data name="Pdf_Notes" xml:space="preserve">
+    <value>说明</value>
+  </data>
+  <data name="Pdf_NotReadable" xml:space="preserve">
+    <value>不可读：{0}</value>
+  </data>
+  <data name="Pdf_OneTarget" xml:space="preserve">
+    <value>一个目标</value>
+  </data>
+  <data name="Pdf_OnlyDirect" xml:space="preserve">
+    <value>仅直接</value>
+  </data>
+  <data name="Pdf_Owner" xml:space="preserve">
+    <value>所有者：{0}</value>
+  </data>
+  <data name="Pdf_PageOf" xml:space="preserve">
+    <value>第 {0} 页，共 {1} 页</value>
+  </data>
+  <data name="Pdf_PeopleAccess" xml:space="preserve">
+    <value>人员访问（{0}）</value>
+  </data>
+  <data name="Pdf_PeopleIntro" xml:space="preserve">
+    <value>{1} 个用户账户中有 {0} 个至少对某个已列出的文件夹拥有列出权限（有效权限，涵盖所有组并扣除拒绝）。{2} 统计有访问权限的已列出文件夹；单项访问见 Excel 报告（工作表 {3}）。</value>
+  </data>
+  <data name="Pdf_PeopleList" xml:space="preserve">
+    <value>{0} 人：{1}</value>
+  </data>
+  <data name="Pdf_PeopleWithAccess" xml:space="preserve">
+    <value>人员（其中有访问权限的）</value>
+  </data>
+  <data name="Pdf_PeopleWithout" xml:space="preserve">
+    <value>另有 {0} 个对已列出文件夹没有访问权限的用户账户，见 Excel 报告（工作表 {1}）。</value>
+  </data>
+  <data name="Pdf_Period" xml:space="preserve">
+    <value>时间段</value>
+  </data>
+  <data name="Pdf_PermissionEntries" xml:space="preserve">
+    <value>权限条目</value>
+  </data>
+  <data name="Pdf_PermissionEntriesIntro" xml:space="preserve">
+    <value>文件夹 ACL 中已添加、删除或更改的条目。</value>
+  </data>
+  <data name="Pdf_PreviousRun" xml:space="preserve">
+    <value>上次扫描</value>
+  </data>
+  <data name="Pdf_ProgressBuilding" xml:space="preserve">
+    <value>正在生成文档…</value>
+  </data>
+  <data name="Pdf_ProgressLayout" xml:space="preserve">
+    <value>正在排版页面…</value>
+  </data>
+  <data name="Pdf_ProgressSaving" xml:space="preserve">
+    <value>正在保存 PDF…</value>
+  </data>
+  <data name="Pdf_ReadErrors" xml:space="preserve">
+    <value>读取错误</value>
+  </data>
+  <data name="Pdf_Remarks" xml:space="preserve">
+    <value>备注</value>
+  </data>
+  <data name="Pdf_ReportCreated" xml:space="preserve">
+    <value>报告创建时间</value>
+  </data>
+  <data name="Pdf_ReportCreatedWith" xml:space="preserve">
+    <value>{0}，使用 Zutritt {1}</value>
+  </data>
+  <data name="Pdf_ReviewedBy" xml:space="preserve">
+    <value>审查人</value>
+  </data>
+  <data name="Pdf_RulesIntro" xml:space="preserve">
+    <value>本次扫描所依据的全部规则——包括没有发现项的规则。</value>
+  </data>
+  <data name="Pdf_RunOf" xml:space="preserve">
+    <value>{0} 的扫描</value>
+  </data>
+  <data name="Pdf_ScannedBy" xml:space="preserve">
+    <value>扫描者</value>
+  </data>
+  <data name="Pdf_Scope" xml:space="preserve">
+    <value>范围</value>
+  </data>
+  <data name="Pdf_SectionChanges" xml:space="preserve">
+    <value>自上次扫描以来的更改</value>
+  </data>
+  <data name="Pdf_SectionErrors" xml:space="preserve">
+    <value>未检查的区域</value>
+  </data>
+  <data name="Pdf_SectionFindings" xml:space="preserve">
+    <value>发现项</value>
+  </data>
+  <data name="Pdf_SectionFolders" xml:space="preserve">
+    <value>具有自身权限的文件夹</value>
+  </data>
+  <data name="Pdf_SectionPeople" xml:space="preserve">
+    <value>人员概览</value>
+  </data>
+  <data name="Pdf_SectionRules" xml:space="preserve">
+    <value>检查规则与建议</value>
+  </data>
+  <data name="Pdf_SectionShares" xml:space="preserve">
+    <value>共享</value>
+  </data>
+  <data name="Pdf_SectionSignOff" xml:space="preserve">
+    <value>审查与批准</value>
+  </data>
+  <data name="Pdf_SectionSummary" xml:space="preserve">
+    <value>摘要</value>
+  </data>
+  <data name="Pdf_ShareLabel" xml:space="preserve">
+    <value>共享：{0}</value>
+  </data>
+  <data name="Pdf_SharesIntro" xml:space="preserve">
+    <value>通过网络访问时，以共享权限和 NTFS 权限中较严格者为准。</value>
+  </data>
+  <data name="Pdf_ShownOf" xml:space="preserve">
+    <value>{0}，显示其中 {1} 个</value>
+  </data>
+  <data name="Pdf_Signature" xml:space="preserve">
+    <value>签名</value>
+  </data>
+  <data name="Pdf_SignOffIntro" xml:space="preserve">
+    <value>签名即确认已审查所列权限和发现项。偏差及商定的措施记录在 {0} 中。</value>
+  </data>
+  <data name="Pdf_SignOffReferenceMany" xml:space="preserve">
+    <value>对应 {0} 在 {1} 上的扫描——目标：{2}；报告创建于 {3}，共 {4} 页。</value>
+  </data>
+  <data name="Pdf_SignOffReferenceOne" xml:space="preserve">
+    <value>对应 {0} 在 {1} 上的扫描——目标：{2}；报告创建于 {3}，共 {4} 页。</value>
+  </data>
+  <data name="Pdf_Subtitle" xml:space="preserve">
+    <value>共享和文件夹权限——谁可以访问什么，以及通过哪个组</value>
+  </data>
+  <data name="Pdf_SummaryChecked" xml:space="preserve">
+    <value>在 {1} 下检查了 {0} 个文件夹。其中 {2} 个具有自身权限或为根，已列入本报告。</value>
+  </data>
+  <data name="Pdf_SummaryCheckedFiles" xml:space="preserve">
+    <value>在 {1} 下检查了 {0} 个文件夹和 {3} 个文件。其中 {2} 个具有自身权限或为根，已列入本报告。</value>
+  </data>
+  <data name="Pdf_Target" xml:space="preserve">
+    <value>目标</value>
+  </data>
+  <data name="Pdf_Targets" xml:space="preserve">
+    <value>目标（{0}）</value>
+  </data>
+  <data name="Pdf_ToolVersion" xml:space="preserve">
+    <value>Zutritt 版本</value>
+  </data>
+  <data name="Pdf_Truncated" xml:space="preserve">
+    <value> …（已截断——完整内容见 Excel 报告）</value>
+  </data>
+  <data name="Pdf_TruncatedChanges" xml:space="preserve">
+    <value>已截断：显示 {1} 项更改中的 {0} 项——完整内容见 Excel 报告。</value>
+  </data>
+  <data name="Pdf_TruncatedEntries" xml:space="preserve">
+    <value>已截断：显示 {1} 个条目中的 {0} 个——完整内容见 Excel 报告。</value>
+  </data>
+  <data name="Pdf_TruncatedFindings" xml:space="preserve">
+    <value>已截断：显示 {1} 个发现项中的 {0} 个——完整内容见 Excel 报告。</value>
+  </data>
+  <data name="Pdf_TruncatedFolders" xml:space="preserve">
+    <value>已截断：显示 {1} 个文件夹中的 {0} 个——完整内容见 Excel 报告。</value>
+  </data>
+  <data name="Pdf_TruncatedLists" xml:space="preserve">
+    <value>对于长列表，本 PDF 只显示一部分——Excel 报告是完整的：{0}。</value>
+  </data>
+  <data name="Pdf_TruncatedPeople" xml:space="preserve">
+    <value>已截断：显示 {1} 名人员中的 {0} 名——完整内容见 Excel 报告。</value>
+  </data>
+  <data name="Pdf_Unknown" xml:space="preserve">
+    <value>未知</value>
+  </data>
+  <data name="Pdf_UnknownMachine" xml:space="preserve">
+    <value>未知计算机</value>
+  </data>
+  <data name="Pdf_UnreadableFolders" xml:space="preserve">
+    <value>不可读的文件夹</value>
+  </data>
+  <data name="Pe_AccessList" xml:space="preserve">
+    <value>该人员可以访问的文件夹</value>
+  </data>
+  <data name="Pe_AccessNote" xml:space="preserve">
+    <value>具有自身权限的文件夹——没有自身权限的子文件夹从中继承。</value>
+  </data>
+  <data name="Pe_AccessToMany" xml:space="preserve">
+    <value>可访问 {0} 个文件夹</value>
+  </data>
+  <data name="Pe_AccessToOne" xml:space="preserve">
+    <value>可访问 {0} 个文件夹</value>
+  </data>
+  <data name="Pe_AccountDisabled" xml:space="preserve">
+    <value>账户已禁用</value>
+  </data>
+  <data name="Pe_CountFailed" xml:space="preserve">
+    <value>无法计算每人的文件夹数量</value>
+  </data>
+  <data name="Pe_CountMany" xml:space="preserve">
+    <value>{0} 人</value>
+  </data>
+  <data name="Pe_CountOne" xml:space="preserve">
+    <value>{0} 人</value>
+  </data>
+  <data name="Pe_DisabledSuffix" xml:space="preserve">
+    <value>，已禁用</value>
+  </data>
+  <data name="Pe_DomainAccount" xml:space="preserve">
+    <value>域账户</value>
+  </data>
+  <data name="Pe_FolderCountMany" xml:space="preserve">
+    <value>{0} 个文件夹</value>
+  </data>
+  <data name="Pe_FolderCountOne" xml:space="preserve">
+    <value>{0} 个文件夹</value>
+  </data>
+  <data name="Pe_LocalAccount" xml:space="preserve">
+    <value>本地账户</value>
+  </data>
+  <data name="Pe_MemberOf" xml:space="preserve">
+    <value>所属组</value>
+  </data>
+  <data name="Pe_MemberOfCount" xml:space="preserve">
+    <value>所属组（{0} 个，包括嵌套组）</value>
+  </data>
+  <data name="Pe_NoAccess" xml:space="preserve">
+    <value>此人员无权访问任何已保存的文件夹。</value>
+  </data>
+  <data name="Pe_NoGroup" xml:space="preserve">
+    <value>不属于此次扫描中的任何组</value>
+  </data>
+  <data name="Pe_NoMatch" xml:space="preserve">
+    <value>没有人与“{0}”匹配。</value>
+  </data>
+  <data name="Pe_NoUsers" xml:space="preserve">
+    <value>此次扫描中没有用户账户。</value>
+  </data>
+  <data name="Pe_NoUsersNoGroups" xml:space="preserve">
+    <value>没有用户账户——此次扫描未解析组。</value>
+  </data>
+  <data name="Pe_NtfsNoShare" xml:space="preserve">
+    <value>NTFS：{0} · 无共享权限</value>
+  </data>
+  <data name="Pe_NtfsViaShare" xml:space="preserve">
+    <value>NTFS：{0} · 通过共享：{1}</value>
+  </data>
+  <data name="Pe_OfWhichDisabled" xml:space="preserve">
+    <value>，其中 {0} 个已禁用</value>
+  </data>
+  <data name="Pe_RightsFailed" xml:space="preserve">
+    <value>无法计算该人员的权限</value>
+  </data>
+  <data name="Pe_Search" xml:space="preserve">
+    <value>搜索人员</value>
+  </data>
+  <data name="Pe_SearchHint" xml:space="preserve">
+    <value>搜索姓名或账户</value>
+  </data>
+  <data name="Pe_SelectPerson" xml:space="preserve">
+    <value>在左侧选择一个人员以查看其可以访问的位置。</value>
+  </data>
+  <data name="Pe_ShareCaps" xml:space="preserve">
+    <value>共享权限限制了 NTFS 权限</value>
+  </data>
+  <data name="Phase_Accounts" xml:space="preserve">
+    <value>账户</value>
+  </data>
+  <data name="Phase_Done" xml:space="preserve">
+    <value>完成</value>
+  </data>
+  <data name="Phase_Findings" xml:space="preserve">
+    <value>发现项</value>
+  </data>
+  <data name="Phase_Folders" xml:space="preserve">
+    <value>文件夹</value>
+  </data>
+  <data name="Phase_Targets" xml:space="preserve">
+    <value>目标</value>
+  </data>
+  <data name="Progress_ComputingAccess" xml:space="preserve">
+    <value>正在计算 {0} 名人员的有效访问权限…</value>
+  </data>
+  <data name="Progress_PreparingChanges" xml:space="preserve">
+    <value>正在准备自上次扫描以来的更改…</value>
+  </data>
+  <data name="Progress_PreparingFolders" xml:space="preserve">
+    <value>正在准备文件夹和发现项…</value>
+  </data>
+  <data name="Progress_PreparingGroups" xml:space="preserve">
+    <value>正在准备组和共享…</value>
+  </data>
+  <data name="Report_ContainsBroad" xml:space="preserve">
+    <value>包含 {0}——即几乎所有用户</value>
+  </data>
+  <data name="Report_Direct" xml:space="preserve">
+    <value>直接</value>
+  </data>
+  <data name="Report_Member" xml:space="preserve">
+    <value>成员</value>
+  </data>
+  <data name="Report_MembersUnreadable" xml:space="preserve">
+    <value>成员不可读</value>
+  </data>
+  <data name="Report_NestedMembersUnreadable" xml:space="preserve">
+    <value>{0} 的成员不可读——数量不完整</value>
+  </data>
+  <data name="Report_NoteEffective" xml:space="preserve">
+    <value>有效访问权限 = 该人员及其所属组获得的所有允许权限之和，减去被拒绝的权限。</value>
+  </data>
+  <data name="Report_NoteListed" xml:space="preserve">
+    <value>列出的是目标的根以及所有具有自身权限的文件夹（显式条目、继承中断或不一致）。其他所有文件夹都从上方最近的已列出文件夹继承权限。</value>
+  </data>
+  <data name="Report_NoteNetwork" xml:space="preserve">
+    <value>通过网络访问时，以共享权限和 NTFS 权限中较严格者为准；“有效”同时考虑两者。</value>
+  </data>
+  <data name="Report_NotReadable" xml:space="preserve">
+    <value>不可读</value>
+  </data>
+  <data name="Report_OwnPermissions" xml:space="preserve">
+    <value>自身权限</value>
+  </data>
+  <data name="Report_Period" xml:space="preserve">
+    <value>{0} – {1}</value>
+  </data>
+  <data name="Report_ShareNoEntries" xml:space="preserve">
+    <value>无条目——无法通过网络访问</value>
+  </data>
+  <data name="Report_TimeOfDay" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="Report_Title" xml:space="preserve">
+    <value>权限报告</value>
+  </data>
+  <data name="Report_UpToDepth" xml:space="preserve">
+    <value>至深度 {0}</value>
+  </data>
+  <data name="Report_WarnDepthMany" xml:space="preserve">
+    <value>深度限制为 {0} 级——未包含更深的文件夹。</value>
+  </data>
+  <data name="Report_WarnDepthOne" xml:space="preserve">
+    <value>深度限制为 {0} 级——未包含更深的文件夹。</value>
+  </data>
+  <data name="Report_WarnErrorsMany" xml:space="preserve">
+    <value>{0} 个读取错误（例如服务器或共享无法访问）。</value>
+  </data>
+  <data name="Report_WarnErrorsOne" xml:space="preserve">
+    <value>{0} 个读取错误（例如服务器或共享无法访问）。</value>
+  </data>
+  <data name="Report_WarnGrantsTruncatedMany" xml:space="preserve">
+    <value>每人的单项访问限制为 {0} 行；有 {1} 人仅包含汇总。</value>
+  </data>
+  <data name="Report_WarnGrantsTruncatedOne" xml:space="preserve">
+    <value>每人的单项访问限制为 {0} 行；有 {1} 人仅包含汇总。</value>
+  </data>
+  <data name="Report_WarnGroupsNotResolved" xml:space="preserve">
+    <value>组未解析到人员——人员视图不完整。</value>
+  </data>
+  <data name="Report_WarnGroupsUnreadableMany" xml:space="preserve">
+    <value>有 {0} 个组的成员无法读取——其中的人员未出现在人员视图中。</value>
+  </data>
+  <data name="Report_WarnGroupsUnreadableOne" xml:space="preserve">
+    <value>有 {0} 个组的成员无法读取——其中的人员未出现在人员视图中。</value>
+  </data>
+  <data name="Report_WarnMoreErrorsMany" xml:space="preserve">
+    <value>另有 {0} 个读取错误（例如服务器或共享无法访问）。</value>
+  </data>
+  <data name="Report_WarnMoreErrorsOne" xml:space="preserve">
+    <value>另有 {0} 个读取错误（例如服务器或共享无法访问）。</value>
+  </data>
+  <data name="Report_WarnRootsOnly" xml:space="preserve">
+    <value>仅检查了目标的根（深度 0）——未包含子文件夹。</value>
+  </data>
+  <data name="Report_WarnSharesUnreadableMany" xml:space="preserve">
+    <value>有 {0} 个共享的共享权限不可读——这些位置的访问仅根据 NTFS 权限评估。</value>
+  </data>
+  <data name="Report_WarnSharesUnreadableOne" xml:space="preserve">
+    <value>有 {0} 个共享的共享权限不可读——这些位置的访问仅根据 NTFS 权限评估。</value>
+  </data>
+  <data name="Report_WarnUnreadableFoldersMany" xml:space="preserve">
+    <value>{0} 个文件夹不可读——那里无法检查任何内容。</value>
+  </data>
+  <data name="Report_WarnUnreadableFoldersOne" xml:space="preserve">
+    <value>{0} 个文件夹不可读——那里无法检查任何内容。</value>
+  </data>
+  <data name="ReportFile_CannotReplace" xml:space="preserve">
+    <value>无法替换文件 {0}——它是否仍处于打开状态（例如在 Excel 中），或者缺少写入权限？</value>
+  </data>
+  <data name="ReportFile_DiskFull" xml:space="preserve">
+    <value>{0} 的磁盘空间不足。</value>
+  </data>
+  <data name="ReportFile_FolderMissing" xml:space="preserve">
+    <value>{0} 所在的文件夹不存在，且无法创建。</value>
+  </data>
+  <data name="ReportFile_InUse" xml:space="preserve">
+    <value>文件 {0} 已在其他程序中打开（例如 Excel 或 PDF 查看器）。请关闭后重试。</value>
+  </data>
+  <data name="ReportFile_InvalidName" xml:space="preserve">
+    <value>文件名 {0} 无效。</value>
+  </data>
+  <data name="ReportFile_IsFolder" xml:space="preserve">
+    <value>{0} 是文件夹——请指定文件名。</value>
+  </data>
+  <data name="ReportFile_NoFileName" xml:space="preserve">
+    <value>{0} 不包含文件名——请指定文件名。</value>
+  </data>
+  <data name="ReportFile_NoFolder" xml:space="preserve">
+    <value>{0} 没有文件夹。</value>
+  </data>
+  <data name="ReportFile_NoPermission" xml:space="preserve">
+    <value>没有写入 {0} 的权限。</value>
+  </data>
+  <data name="ReportFile_PathTooLong" xml:space="preserve">
+    <value>路径 {0} 太长。</value>
+  </data>
+  <data name="ReportFile_SaveFailed" xml:space="preserve">
+    <value>无法保存报告 {0}：{1}</value>
+  </data>
+  <data name="Rights_ChangePermissions" xml:space="preserve">
+    <value>更改权限</value>
+  </data>
+  <data name="Rights_Delete" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="Rights_DeleteChildren" xml:space="preserve">
+    <value>删除子文件夹及文件</value>
+  </data>
+  <data name="Rights_DeniedFromModify" xml:space="preserve">
+    <value>已拒绝：更改和完全控制（从“更改”起）</value>
+  </data>
+  <data name="Rights_DeniedFromRead" xml:space="preserve">
+    <value>已拒绝：全部（从“读取”起）</value>
+  </data>
+  <data name="Rights_DeniedFull" xml:space="preserve">
+    <value>已拒绝：完全控制</value>
+  </data>
+  <data name="Rights_DeniedNothing" xml:space="preserve">
+    <value>已拒绝：无（无效果）</value>
+  </data>
+  <data name="Rights_FullControl" xml:space="preserve">
+    <value>完全控制</value>
+  </data>
+  <data name="Rights_List" xml:space="preserve">
+    <value>列出内容</value>
+  </data>
+  <data name="Rights_Modify" xml:space="preserve">
+    <value>修改</value>
+  </data>
+  <data name="Rights_None" xml:space="preserve">
+    <value>无访问权限</value>
+  </data>
+  <data name="Rights_Read" xml:space="preserve">
+    <value>读取</value>
+  </data>
+  <data name="Rights_ReadAttributes" xml:space="preserve">
+    <value>读取属性</value>
+  </data>
+  <data name="Rights_ReadPermissions" xml:space="preserve">
+    <value>读取权限</value>
+  </data>
+  <data name="Rights_Synchronize" xml:space="preserve">
+    <value>同步</value>
+  </data>
+  <data name="Rights_TakeOwnership" xml:space="preserve">
+    <value>取得所有权</value>
+  </data>
+  <data name="Rights_Traverse" xml:space="preserve">
+    <value>遍历文件夹/执行文件</value>
+  </data>
+  <data name="Rights_Write" xml:space="preserve">
+    <value>写入</value>
+  </data>
+  <data name="Rights_WriteAttributes" xml:space="preserve">
+    <value>写入属性</value>
+  </data>
+  <data name="Rp_After" xml:space="preserve">
+    <value>，用时 {0}</value>
+  </data>
+  <data name="Rp_ComparisonWith" xml:space="preserve">
+    <value>与 {0} 的扫描进行比较：新的和已解决的发现项、已更改的权限和成员身份作为单独的部分。</value>
+  </data>
+  <data name="Rp_Creating" xml:space="preserve">
+    <value>正在创建报告…</value>
+  </data>
+  <data name="Rp_Excel" xml:space="preserve">
+    <value>Excel 报告</value>
+  </data>
+  <data name="Rp_ExcelDescription" xml:space="preserve">
+    <value>便于后续处理：概览、发现项、文件夹和权限、人员、组、共享，以及（有比较时）更改，均带筛选功能。</value>
+  </data>
+  <data name="Rp_ExcelFilter" xml:space="preserve">
+    <value>Excel 工作簿 (*.xlsx)|*.xlsx</value>
+  </data>
+  <data name="Rp_ExcelSaved" xml:space="preserve">
+    <value>Excel 报告已保存</value>
+  </data>
+  <data name="Rp_FolderOpenFailed" xml:space="preserve">
+    <value>无法打开文件夹：{0}</value>
+  </data>
+  <data name="Rp_IncludeChanges" xml:space="preserve">
+    <value>包含自上次扫描以来的更改</value>
+  </data>
+  <data name="Rp_IncludeChangesDescription" xml:space="preserve">
+    <value>新的和已解决的发现项、已更改的权限和成员身份作为单独的部分。</value>
+  </data>
+  <data name="Rp_NoEarlier" xml:space="preserve">
+    <value>没有可供比较的更早扫描——报告将不包含“更改”部分。</value>
+  </data>
+  <data name="Rp_NoRunText" xml:space="preserve">
+    <value>请在“概览”页加载一次扫描或开始扫描——之后即可在此保存报告。</value>
+  </data>
+  <data name="Rp_OpenFailed" xml:space="preserve">
+    <value>无法打开文件：{0}</value>
+  </data>
+  <data name="Rp_Pdf" xml:space="preserve">
+    <value>PDF 报告</value>
+  </data>
+  <data name="Rp_PdfDescription" xml:space="preserve">
+    <value>便于归档和签署：封面、摘要、发现项、共享、具有自身权限的文件夹、人员和签署栏。</value>
+  </data>
+  <data name="Rp_PdfFilter" xml:space="preserve">
+    <value>PDF 文档 (*.pdf)|*.pdf</value>
+  </data>
+  <data name="Rp_PdfSaved" xml:space="preserve">
+    <value>PDF 报告已保存</value>
+  </data>
+  <data name="Rp_Preparing" xml:space="preserve">
+    <value>正在准备…</value>
+  </data>
+  <data name="Rp_ReportFor" xml:space="preserve">
+    <value>{0} 的报告</value>
+  </data>
+  <data name="Rp_RunSummaryHighMany" xml:space="preserve">
+    <value>{0} 的扫描：已检查 {1} 个文件夹，{2} 个发现项，其中 {3} 个“高”级。</value>
+  </data>
+  <data name="Rp_RunSummaryHighOne" xml:space="preserve">
+    <value>{0} 的扫描：已检查 {1} 个文件夹，{2} 个发现项，其中 {3} 个“高”级。</value>
+  </data>
+  <data name="Rp_RunSummaryMany" xml:space="preserve">
+    <value>{0} 的扫描：已检查 {1} 个文件夹，{2} 个发现项。</value>
+  </data>
+  <data name="Rp_RunSummaryOne" xml:space="preserve">
+    <value>{0} 的扫描：已检查 {1} 个文件夹，{2} 个发现项。</value>
+  </data>
+  <data name="Rp_Save" xml:space="preserve">
+    <value>保存报告</value>
+  </data>
+  <data name="Rp_SaveExcel" xml:space="preserve">
+    <value>保存 Excel 报告…</value>
+  </data>
+  <data name="Rp_SaveExcelTitle" xml:space="preserve">
+    <value>保存 Excel 报告</value>
+  </data>
+  <data name="Rp_SaveFailed" xml:space="preserve">
+    <value>无法保存报告：{0}</value>
+  </data>
+  <data name="Rp_SavePdf" xml:space="preserve">
+    <value>保存 PDF 报告…</value>
+  </data>
+  <data name="Rp_SavePdfTitle" xml:space="preserve">
+    <value>保存 PDF 报告</value>
+  </data>
+  <data name="Rp_Scheduled" xml:space="preserve">
+    <value>定期且无需点击：作为计划任务使用“Zutritt.exe scan … ‑‑compare ‑‑report …”（见“信息”）。</value>
+  </data>
+  <data name="Rp_ShowInFolder" xml:space="preserve">
+    <value>在文件夹中显示</value>
+  </data>
+  <data name="Rp_SignOff" xml:space="preserve">
+    <value>签署</value>
+  </data>
+  <data name="Rp_SignOffBlock" xml:space="preserve">
+    <value>PDF 报告末尾有一个签署栏，包含“审查人”“日期”“签名”和“备注”。</value>
+  </data>
+  <data name="Rp_SignOffWhy" xml:space="preserve">
+    <value>打印并签署（或在 PDF 中使用电子签名）后，可证明已按 GMP（附录 11）、ISO 27001（A.5.18）或 NIS2 审计要求定期审查访问权限。在“备注”中注明哪些发现项有意保留及其原因。</value>
+  </data>
+  <data name="Rp_SuggestedName" xml:space="preserve">
+    <value>建议的文件名：{0}</value>
+  </data>
+  <data name="Rp_Title" xml:space="preserve">
+    <value>已加载扫描的报告</value>
+  </data>
+  <data name="Rule_ZT01_Explanation" xml:space="preserve">
+    <value>几乎包含所有人员的组（例如“Everyone”、“Authenticated Users”、“Domain Users”）可以在此创建或更改文件。这样，任何已登录的人员都可以篡改、删除数据，或者（例如通过恶意软件）加密数据。</value>
+  </data>
+  <data name="Rule_ZT01_Recommendation" xml:space="preserve">
+    <value>移除该广泛组的写入权限，只授予恰好包含相关负责人员的业务组。</value>
+  </data>
+  <data name="Rule_ZT01_Title" xml:space="preserve">
+    <value>广泛组可写入</value>
+  </data>
+  <data name="Rule_ZT02_Explanation" xml:space="preserve">
+    <value>几乎包含所有人员的组可以在此读取或列出内容。因此，机密数据对任何已登录的人员都可见。</value>
+  </data>
+  <data name="Rule_ZT02_Recommendation" xml:space="preserve">
+    <value>检查这些数据是否确实面向所有人；否则用业务组替换该广泛组。</value>
+  </data>
+  <data name="Rule_ZT02_Title" xml:space="preserve">
+    <value>广泛组可读取</value>
+  </data>
+  <data name="Rule_ZT03_Explanation" xml:space="preserve">
+    <value>权限授予了单个用户账户而不是组。人员调岗或离职时，这类条目很容易被遗忘，也会使权限分配变得混乱。</value>
+  </data>
+  <data name="Rule_ZT03_Recommendation" xml:space="preserve">
+    <value>通过组（角色或部门）授予权限，并删除该人员的条目。</value>
+  </data>
+  <data name="Rule_ZT03_Title" xml:space="preserve">
+    <value>权限直接授予个人</value>
+  </data>
+  <data name="Rule_ZT04_Explanation" xml:space="preserve">
+    <value>某个条目或所有者指向已不存在的账户。该 SID 无法对应到任何名称，没人能轻易说出当初把权限授予了谁。</value>
+  </data>
+  <data name="Rule_ZT04_Recommendation" xml:space="preserve">
+    <value>删除孤立条目；如果该 SID 是所有者，请设置有效的所有者（例如“Administrators”）。</value>
+  </data>
+  <data name="Rule_ZT04_Title" xml:space="preserve">
+    <value>孤立 SID</value>
+  </data>
+  <data name="Rule_ZT05_Explanation" xml:space="preserve">
+    <value>没有管理员角色的账户或组拥有完全控制权限。因此它可以更改权限并取得所有权——也就是绕过任何审查，给自己和他人任意权限。</value>
+  </data>
+  <data name="Rule_ZT05_Recommendation" xml:space="preserve">
+    <value>降为“修改”；只向管理员和 SYSTEM 授予完全控制。</value>
+  </data>
+  <data name="Rule_ZT05_Title" xml:space="preserve">
+    <value>非管理员拥有完全控制</value>
+  </data>
+  <data name="Rule_ZT06_Explanation" xml:space="preserve">
+    <value>继承在文件夹结构的深层被中断。从上层看不到这类例外；对上级文件夹的更改不会传递到这里。</value>
+  </data>
+  <data name="Rule_ZT06_Recommendation" xml:space="preserve">
+    <value>检查该例外是否仍然需要，否则重新启用继承。对必要的例外进行记录，或在结构的更上层实现。</value>
+  </data>
+  <data name="Rule_ZT06_Title" xml:space="preserve">
+    <value>深层隐藏的例外</value>
+  </data>
+  <data name="Rule_ZT07_Explanation" xml:space="preserve">
+    <value>显式拒绝条目优先于所有允许条目。拒绝很难追溯，而且往往会影响比预期更多的人员（例如组的所有成员）。</value>
+  </data>
+  <data name="Rule_ZT07_Recommendation" xml:space="preserve">
+    <value>最好一开始就不授予该权限（相应地调整组）。仅在有正当理由的例外情况下使用拒绝，并加以记录。</value>
+  </data>
+  <data name="Rule_ZT07_Title" xml:space="preserve">
+    <value>拒绝条目</value>
+  </data>
+  <data name="Rule_ZT08_Explanation" xml:space="preserve">
+    <value>共享权限允许所有已登录人员至少拥有“更改”权限。因此，保护完全依赖于 NTFS 权限。这是 Microsoft 推荐的做法，但应当是有意为之。</value>
+  </data>
+  <data name="Rule_ZT08_Recommendation" xml:space="preserve">
+    <value>如果 NTFS 权限没有问题，则无需处理。否则还应限制共享权限。</value>
+  </data>
+  <data name="Rule_ZT08_Title" xml:space="preserve">
+    <value>共享：所有人都可更改</value>
+  </data>
+  <data name="Rule_ZT09_Explanation" xml:space="preserve">
+    <value>无法读取该文件夹（或文件），例如因为访问被拒绝。本次扫描未检查其权限及其下的所有内容。</value>
+  </data>
+  <data name="Rule_ZT09_Recommendation" xml:space="preserve">
+    <value>排除原因，或使用有权读取权限的账户进行扫描，然后重新扫描。</value>
+  </data>
+  <data name="Rule_ZT09_Title" xml:space="preserve">
+    <value>文件夹不可读</value>
+  </data>
+  <data name="Rule_ZT10_Explanation" xml:space="preserve">
+    <value>所有者可以随时更改权限，而不受列表内容的限制。如果某个人是所有者，即使其角色变更后，此人仍保留这种能力。</value>
+  </data>
+  <data name="Rule_ZT10_Recommendation" xml:space="preserve">
+    <value>将所有权转给“Administrators”（或某个管理员组）。</value>
+  </data>
+  <data name="Rule_ZT10_Title" xml:space="preserve">
+    <value>所有者是用户账户</value>
+  </data>
+  <data name="Rule_ZT11_Explanation" xml:space="preserve">
+    <value>一个没有成员的组拥有权限。该条目目前不起作用，但一旦有人被加入该组，就会在不知不觉中生效。</value>
+  </data>
+  <data name="Rule_ZT11_Recommendation" xml:space="preserve">
+    <value>如果不再需要该组，请删除该条目；否则请记录其用途。</value>
+  </data>
+  <data name="Rule_ZT11_Title" xml:space="preserve">
+    <value>空组拥有权限</value>
+  </data>
+  <data name="Rule_ZT12_Explanation" xml:space="preserve">
+    <value>一个已禁用的用户账户在此拥有自己的权限。如果该账户被重新启用，该权限会立即生效。</value>
+  </data>
+  <data name="Rule_ZT12_Recommendation" xml:space="preserve">
+    <value>删除该条目；离职人员的账户在保留期满后予以删除。</value>
+  </data>
+  <data name="Rule_ZT12_Title" xml:space="preserve">
+    <value>已禁用账户拥有权限</value>
+  </data>
+  <data name="Rule_ZT13_Explanation" xml:space="preserve">
+    <value>无法读取共享的权限。因此，网络访问权限仅根据 NTFS 权限计算，实际可能更低。</value>
+  </data>
+  <data name="Rule_ZT13_Recommendation" xml:space="preserve">
+    <value>在服务器上使用管理员权限重新扫描。</value>
+  </data>
+  <data name="Rule_ZT13_Title" xml:space="preserve">
+    <value>共享权限不可读</value>
+  </data>
+  <data name="Rule_ZT14_Explanation" xml:space="preserve">
+    <value>该文件夹（或文件）具有与上级文件夹不一致的继承条目。典型情况是被移动的文件夹：在同一驱动器内移动时，Windows 会保留旧的继承权限，而不是采用新位置的权限。这里可能仍适用原位置的权限——包括对在新位置不应有访问权限的人员——而上级文件夹的更改要等到下一次权限传播后才会生效。</value>
+  </data>
+  <data name="Rule_ZT14_Recommendation" xml:space="preserve">
+    <value>检查这些不一致的权限是否仍然需要。否则重新应用继承：在高级安全设置中禁用继承并删除继承的条目，然后立即重新启用——显式条目会保留。</value>
+  </data>
+  <data name="Rule_ZT14_Title" xml:space="preserve">
+    <value>权限与继承不一致</value>
+  </data>
+  <data name="Scan_AdminShareDefault" xml:space="preserve">
+    <value>共享权限不可读：管理共享没有自己的权限——适用 Windows 内部默认设置（通常仅限管理员）</value>
+  </data>
+  <data name="Scan_InvalidTarget" xml:space="preserve">
+    <value>无效目标：{0}</value>
+  </data>
+  <data name="Scan_ListingFailed" xml:space="preserve">
+    <value>无法列出内容：{0}</value>
+  </data>
+  <data name="Scan_LocalWithoutShares" xml:space="preserve">
+    <value>{0}——本地文件夹未对应到共享</value>
+  </data>
+  <data name="Scan_NoDiskShares" xml:space="preserve">
+    <value>未找到磁盘共享</value>
+  </data>
+  <data name="Scan_NoLocalDiskShares" xml:space="preserve">
+    <value>此计算机上未找到磁盘共享</value>
+  </data>
+  <data name="Scan_NotSupported" xml:space="preserve">
+    <value>只能在 Windows 上扫描（NTFS 权限、共享、Active Directory）。</value>
+  </data>
+  <data name="Scan_ShareLocalPathInvalid" xml:space="preserve">
+    <value>共享的本地路径无效：“{0}”</value>
+  </data>
+  <data name="Scan_ShareLocalPathUnreadable" xml:space="preserve">
+    <value>无法读取共享的本地路径——未检查该共享</value>
+  </data>
+  <data name="Scan_SharePermissionsUnreadable" xml:space="preserve">
+    <value>共享权限不可读</value>
+  </data>
+  <data name="Scan_SharesTimeout" xml:space="preserve">
+    <value>“{0}”的共享：{1} 内无响应</value>
+  </data>
+  <data name="Scan_ShareTimeout" xml:space="preserve">
+    <value>共享“{0}”：{1} 内无响应</value>
+  </data>
+  <data name="Scan_TargetUnreachable" xml:space="preserve">
+    <value>无法访问目标：{0}</value>
+  </data>
+  <data name="Scope_AdminIncluded" xml:space="preserve">
+    <value>已包含管理共享</value>
+  </data>
+  <data name="Scope_AdminOnlyNewer" xml:space="preserve">
+    <value>只有较新的扫描包含了管理共享</value>
+  </data>
+  <data name="Scope_AdminOnlyOlder" xml:space="preserve">
+    <value>只有较早的扫描包含了管理共享</value>
+  </data>
+  <data name="Scope_AdminSkipped" xml:space="preserve">
+    <value>已跳过管理共享</value>
+  </data>
+  <data name="Scope_AllLevels" xml:space="preserve">
+    <value>所有级别</value>
+  </data>
+  <data name="Scope_DeepBreak" xml:space="preserve">
+    <value>深层隐藏的例外：之前从第 {0} 级起，现在从第 {1} 级起</value>
+  </data>
+  <data name="Scope_Depth" xml:space="preserve">
+    <value>深度：之前{0}，现在{1}</value>
+  </data>
+  <data name="Scope_Differs" xml:space="preserve">
+    <value>范围不同：{0}。仅比较两次扫描都涵盖的内容。</value>
+  </data>
+  <data name="Scope_FilesOnlyNewer" xml:space="preserve">
+    <value>只有较新的扫描包含了文件</value>
+  </data>
+  <data name="Scope_FilesOnlyOlder" xml:space="preserve">
+    <value>只有较早的扫描包含了文件</value>
+  </data>
+  <data name="Scope_FoldersAndFiles" xml:space="preserve">
+    <value>文件夹和文件</value>
+  </data>
+  <data name="Scope_FoldersOnly" xml:space="preserve">
+    <value>仅文件夹（不单独检查文件）</value>
+  </data>
+  <data name="Scope_GroupsNotResolved" xml:space="preserve">
+    <value>未解析组</value>
+  </data>
+  <data name="Scope_GroupsOnlyNewer" xml:space="preserve">
+    <value>只有较新的扫描将组解析到了人员</value>
+  </data>
+  <data name="Scope_GroupsOnlyOlder" xml:space="preserve">
+    <value>只有较早的扫描将组解析到了人员</value>
+  </data>
+  <data name="Scope_GroupsResolved" xml:space="preserve">
+    <value>组已解析到人员</value>
+  </data>
+  <data name="Scope_UpToLevel" xml:space="preserve">
+    <value>至第 {0} 级</value>
+  </data>
+  <data name="Severity_High" xml:space="preserve">
+    <value>高</value>
+  </data>
+  <data name="Severity_Info" xml:space="preserve">
+    <value>信息</value>
+  </data>
+  <data name="Severity_Low" xml:space="preserve">
+    <value>低</value>
+  </data>
+  <data name="Severity_Medium" xml:space="preserve">
+    <value>中</value>
+  </data>
+  <data name="Share_Change" xml:space="preserve">
+    <value>更改</value>
+  </data>
+  <data name="Share_FullControl" xml:space="preserve">
+    <value>完全控制</value>
+  </data>
+  <data name="Share_InvalidName" xml:space="preserve">
+    <value>共享名称“{0}”无效</value>
+  </data>
+  <data name="Share_ListUnreadable" xml:space="preserve">
+    <value>无法读取“{0}”的共享：{1}</value>
+  </data>
+  <data name="Share_NotDisk" xml:space="preserve">
+    <value>“{0}”不是磁盘共享</value>
+  </data>
+  <data name="Share_NotFound" xml:space="preserve">
+    <value>找不到共享“{0}”</value>
+  </data>
+  <data name="Share_PermissionsCorrupt" xml:space="preserve">
+    <value>共享权限不可读：安全描述符已损坏</value>
+  </data>
+  <data name="Share_PermissionsInvalidSd" xml:space="preserve">
+    <value>共享权限不可读：安全描述符无效</value>
+  </data>
+  <data name="Share_PermissionsUnreadable" xml:space="preserve">
+    <value>共享权限不可读：{0}</value>
+  </data>
+  <data name="Share_Read" xml:space="preserve">
+    <value>读取</value>
+  </data>
+  <data name="Share_UnknownAceType" xml:space="preserve">
+    <value>无法完整评估共享权限：未知条目类型 {0}</value>
+  </data>
+  <data name="Share_Unreadable" xml:space="preserve">
+    <value>无法读取共享“{0}”：{1}</value>
+  </data>
+  <data name="Sheet_AccessPerPerson" xml:space="preserve">
+    <value>每人访问</value>
+  </data>
+  <data name="Sheet_Changes" xml:space="preserve">
+    <value>更改</value>
+  </data>
+  <data name="Sheet_Errors" xml:space="preserve">
+    <value>错误</value>
+  </data>
+  <data name="Sheet_Findings" xml:space="preserve">
+    <value>发现项</value>
+  </data>
+  <data name="Sheet_FoldersPermissions" xml:space="preserve">
+    <value>文件夹和权限</value>
+  </data>
+  <data name="Sheet_Groups" xml:space="preserve">
+    <value>组</value>
+  </data>
+  <data name="Sheet_Overview" xml:space="preserve">
+    <value>概览</value>
+  </data>
+  <data name="Sheet_People" xml:space="preserve">
+    <value>人员</value>
+  </data>
+  <data name="Sheet_Rules" xml:space="preserve">
+    <value>规则</value>
+  </data>
+  <data name="Sheet_Shares" xml:space="preserve">
+    <value>共享</value>
+  </data>
+  <data name="Shot_EmptyImage" xml:space="preserve">
+    <value>WPF 绘制了空白图片。这会在已断开的会话中发生（关闭远程桌面但未注销）——请在已登录且已连接的会话中重新启动。</value>
+  </data>
+  <data name="Shot_Start" xml:space="preserve">
+    <value>Zutritt {0} – 截图保存到 {1}</value>
+  </data>
+  <data name="Shot_Written" xml:space="preserve">
+    <value>已写入 {0} 张图片。</value>
+  </data>
+  <data name="Shot_WrongSize" xml:space="preserve">
+    <value>窗口为 {0:0}×{1:0}，而不是 {2:0}×{3:0} 点——图片会变形。</value>
+  </data>
+  <data name="Sid_AccessControlAssistanceOperators" xml:space="preserve">
+    <value>Access Control Assistance Operators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_AccountOperators" xml:space="preserve">
+    <value>Account Operators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Administrators" xml:space="preserve">
+    <value>Administrators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_AllAppPackages" xml:space="preserve">
+    <value>ALL APPLICATION PACKAGES</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_AllRestrictedAppPackages" xml:space="preserve">
+    <value>ALL RESTRICTED APPLICATION PACKAGES</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_AllServices" xml:space="preserve">
+    <value>ALL SERVICES</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_AnonymousLogon" xml:space="preserve">
+    <value>ANONYMOUS LOGON</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_AppCapability" xml:space="preserve">
+    <value>应用功能 ({0})</value>
+  </data>
+  <data name="Sid_AppPackage" xml:space="preserve">
+    <value>应用包 ({0})</value>
+  </data>
+  <data name="Sid_AuthenticatedUsers" xml:space="preserve">
+    <value>Authenticated Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_BackupOperators" xml:space="preserve">
+    <value>Backup Operators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Batch" xml:space="preserve">
+    <value>BATCH</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_CapabilityGroup" xml:space="preserve">
+    <value>功能组 ({0})</value>
+  </data>
+  <data name="Sid_CertificateServiceDcomAccess" xml:space="preserve">
+    <value>Certificate Service DCOM Access</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_ConsoleLogon" xml:space="preserve">
+    <value>CONSOLE LOGON</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_CreatorGroup" xml:space="preserve">
+    <value>CREATOR GROUP</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_CreatorGroupServer" xml:space="preserve">
+    <value>CREATOR GROUP SERVER</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_CreatorOwner" xml:space="preserve">
+    <value>CREATOR OWNER</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_CreatorOwnerServer" xml:space="preserve">
+    <value>CREATOR OWNER SERVER</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_CryptographicOperators" xml:space="preserve">
+    <value>Cryptographic Operators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_DistributedComUsers" xml:space="preserve">
+    <value>Distributed COM Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_EnterpriseDomainControllers" xml:space="preserve">
+    <value>ENTERPRISE DOMAIN CONTROLLERS</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_EventLogReaders" xml:space="preserve">
+    <value>Event Log Readers</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Everyone" xml:space="preserve">
+    <value>Everyone</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Guests" xml:space="preserve">
+    <value>Guests</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_HyperVAdministrators" xml:space="preserve">
+    <value>Hyper-V Administrators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_IisAppPool" xml:space="preserve">
+    <value>IIS 应用程序池 ({0})</value>
+  </data>
+  <data name="Sid_IncomingForestTrustBuilders" xml:space="preserve">
+    <value>Incoming Forest Trust Builders</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_IntegrityLevel" xml:space="preserve">
+    <value>完整性级别 ({0})</value>
+  </data>
+  <data name="Sid_Interactive" xml:space="preserve">
+    <value>INTERACTIVE</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Local" xml:space="preserve">
+    <value>LOCAL</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_LocalAccount" xml:space="preserve">
+    <value>Local account</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_LocalAdminAccount" xml:space="preserve">
+    <value>Local account and member of Administrators group</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_LocalService" xml:space="preserve">
+    <value>LOCAL SERVICE</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_LogonSession" xml:space="preserve">
+    <value>登录会话 ({0})</value>
+  </data>
+  <data name="Sid_Network" xml:space="preserve">
+    <value>NETWORK</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_NetworkConfigurationOperators" xml:space="preserve">
+    <value>Network Configuration Operators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_NetworkService" xml:space="preserve">
+    <value>NETWORK SERVICE</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_NtlmAuthentication" xml:space="preserve">
+    <value>NTLM Authentication</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_NullSid" xml:space="preserve">
+    <value>NULL SID</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_OtherOrganization" xml:space="preserve">
+    <value>Other Organization</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_OwnerRights" xml:space="preserve">
+    <value>OWNER RIGHTS</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PerformanceLogUsers" xml:space="preserve">
+    <value>Performance Log Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PerformanceMonitorUsers" xml:space="preserve">
+    <value>Performance Monitor Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PowerUsers" xml:space="preserve">
+    <value>Power Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PrefixAppPackages" xml:space="preserve">
+    <value>APPLICATION PACKAGE AUTHORITY\</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PrefixBuiltin" xml:space="preserve">
+    <value>BUILTIN\</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PrefixNt" xml:space="preserve">
+    <value>NT AUTHORITY\</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PreWindows2000" xml:space="preserve">
+    <value>Pre-Windows 2000 Compatible Access</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_PrintOperators" xml:space="preserve">
+    <value>Print Operators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_RdsEndpointServers" xml:space="preserve">
+    <value>RDS Endpoint Servers</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_RdsManagementServers" xml:space="preserve">
+    <value>RDS Management Servers</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_RdsRemoteAccessServers" xml:space="preserve">
+    <value>RDS Remote Access Servers</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_RemoteDesktopUsers" xml:space="preserve">
+    <value>Remote Desktop Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_RemoteInteractiveLogon" xml:space="preserve">
+    <value>REMOTE INTERACTIVE LOGON</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_RemoteManagementUsers" xml:space="preserve">
+    <value>Remote Management Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Replicator" xml:space="preserve">
+    <value>Replicator</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Restricted" xml:space="preserve">
+    <value>RESTRICTED</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_ScheduledTask" xml:space="preserve">
+    <value>计划任务 ({0})</value>
+  </data>
+  <data name="Sid_Self" xml:space="preserve">
+    <value>SELF</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_ServerOperators" xml:space="preserve">
+    <value>Server Operators</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_Service" xml:space="preserve">
+    <value>SERVICE</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_ServiceNotInstalled" xml:space="preserve">
+    <value>未安装的服务 ({0})</value>
+  </data>
+  <data name="Sid_TerminalServerLicenseServers" xml:space="preserve">
+    <value>Terminal Server License Servers</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_TerminalServerUser" xml:space="preserve">
+    <value>TERMINAL SERVER USER</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_ThisOrganization" xml:space="preserve">
+    <value>This Organization</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_UserModeDriver" xml:space="preserve">
+    <value>用户模式驱动程序 ({0})</value>
+  </data>
+  <data name="Sid_Users" xml:space="preserve">
+    <value>Users</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Sid_VirtualMachine" xml:space="preserve">
+    <value>虚拟机 ({0})</value>
+  </data>
+  <data name="Sid_VirtualSystemAccount" xml:space="preserve">
+    <value>虚拟系统账户 ({0})</value>
+  </data>
+  <data name="Sid_WindowsAuthorizationAccess" xml:space="preserve">
+    <value>Windows Authorization Access Group</value>
+    <comment>TODO-übersetzen</comment>
+  </data>
+  <data name="Store_AccessDenied" xml:space="preserve">
+    <value>拒绝访问数据库。</value>
+  </data>
+  <data name="Store_CannotOpen" xml:space="preserve">
+    <value>无法打开数据库“{0}”。{1}</value>
+  </data>
+  <data name="Store_CantOpen" xml:space="preserve">
+    <value>无法访问该文件或其日志：请检查路径和访问权限；可能有其他程序锁定了它。</value>
+  </data>
+  <data name="Store_Constraint" xml:space="preserve">
+    <value>数据违反了数据库的规则（{0}）。</value>
+  </data>
+  <data name="Store_Corrupt" xml:space="preserve">
+    <value>数据库文件已损坏。</value>
+  </data>
+  <data name="Store_DeleteFailed" xml:space="preserve">
+    <value>无法删除扫描 {0}。</value>
+  </data>
+  <data name="Store_DiskFull" xml:space="preserve">
+    <value>驱动器已满。</value>
+  </data>
+  <data name="Store_FindPreviousFailed" xml:space="preserve">
+    <value>无法查找上一次扫描。</value>
+  </data>
+  <data name="Store_FolderNotCreated" xml:space="preserve">
+    <value>无法创建数据库“{0}”所在的文件夹：{1}</value>
+  </data>
+  <data name="Store_Foreign" xml:space="preserve">
+    <value>文件“{0}”是 SQLite 数据库，但不是 Zutritt 数据库。不会对其进行修改。</value>
+  </data>
+  <data name="Store_InvalidData" xml:space="preserve">
+    <value>{0} 数据库“{1}”包含无效数据（{2}）。</value>
+  </data>
+  <data name="Store_IoError" xml:space="preserve">
+    <value>访问数据库文件时发生输入/输出错误。</value>
+  </data>
+  <data name="Store_ListFailed" xml:space="preserve">
+    <value>无法读取扫描列表。</value>
+  </data>
+  <data name="Store_LoadFailed" xml:space="preserve">
+    <value>无法加载扫描 {0}。</value>
+  </data>
+  <data name="Store_Locked" xml:space="preserve">
+    <value>数据库已被其他程序锁定。请稍后重试。</value>
+  </data>
+  <data name="Store_Newer" xml:space="preserve">
+    <value>数据库“{0}”来自较新版本的 Zutritt（架构 {1}，此版本最高支持 {2}）。请更新 Zutritt。</value>
+  </data>
+  <data name="Store_NotSqlite" xml:space="preserve">
+    <value>该文件不是 SQLite 数据库。</value>
+  </data>
+  <data name="Store_NotWritable" xml:space="preserve">
+    <value>无法写入数据库。</value>
+  </data>
+  <data name="Store_ReadOnly" xml:space="preserve">
+    <value>数据库为只读（文件权限或只读驱动器）。</value>
+  </data>
+  <data name="Store_RequestMissing" xml:space="preserve">
+    <value>缺少扫描设置。</value>
+  </data>
+  <data name="Store_SaveFailed" xml:space="preserve">
+    <value>无法保存此次扫描。</value>
+  </data>
+  <data name="Store_SqliteError" xml:space="preserve">
+    <value>SQLite 错误 {0}：{1}</value>
+  </data>
+  <data name="Store_WalOverShare" xml:space="preserve">
+    <value>数据库“{0}”当前以 WAL 模式打开——通常是其所在计算机上的 Zutritt。只有在那里关闭后才能通过共享打开；随后 Zutritt 会将其永久切换为适合共享的日志模式。</value>
+  </data>
+  <data name="Target_DevicePath" xml:space="preserve">
+    <value>不支持设备路径：“{0}”</value>
+  </data>
+  <data name="Target_Empty" xml:space="preserve">
+    <value>目标为空</value>
+  </data>
+  <data name="Target_InvalidPath" xml:space="preserve">
+    <value>路径无效：“{0}”</value>
+  </data>
+  <data name="Target_InvalidUnc" xml:space="preserve">
+    <value>UNC 路径无效：“{0}”</value>
+  </data>
+  <data name="Text_ListAnd" xml:space="preserve">
+    <value>{0}和{1}</value>
+  </data>
+  <data name="Text_ListSeparator" xml:space="preserve">
+    <value>、</value>
+  </data>
+  <data name="Text_No" xml:space="preserve">
+    <value>否</value>
+  </data>
+  <data name="Text_Quote" xml:space="preserve">
+    <value>“{0}”</value>
+  </data>
+  <data name="Text_Yes" xml:space="preserve">
+    <value>是</value>
+  </data>
+  <data name="Time_Milliseconds" xml:space="preserve">
+    <value>{0:0} 毫秒</value>
+  </data>
+  <data name="Time_Minutes" xml:space="preserve">
+    <value>{0:0} 分钟</value>
+  </data>
+  <data name="Time_Seconds" xml:space="preserve">
+    <value>{0:0} 秒</value>
+  </data>
+  <data name="Ui_AppSubtitle" xml:space="preserve">
+    <value>谁可以访问哪里？</value>
+  </data>
+  <data name="Ui_BrowserFailed" xml:space="preserve">
+    <value>无法打开浏览器：{0}</value>
+  </data>
+  <data name="Ui_Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="Ui_Close" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="Ui_CloseNotice" xml:space="preserve">
+    <value>关闭消息</value>
+  </data>
+  <data name="Ui_CloseTitle" xml:space="preserve">
+    <value>关闭 Zutritt</value>
+  </data>
+  <data name="Ui_CloseWhileScanning" xml:space="preserve">
+    <value>扫描仍在进行。仍要关闭 Zutritt 吗？此次扫描将不会被保存。</value>
+  </data>
+  <data name="Ui_DateTime" xml:space="preserve">
+    <value>{0} {1}</value>
+  </data>
+  <data name="Ui_Demo" xml:space="preserve">
+    <value>演示</value>
+  </data>
+  <data name="Ui_DemoTitle" xml:space="preserve">
+    <value>Zutritt – 演示</value>
+  </data>
+  <data name="Ui_DurationHours" xml:space="preserve">
+    <value>{0}:{1:00}:{2:00}</value>
+  </data>
+  <data name="Ui_DurationMinutes" xml:space="preserve">
+    <value>{0}:{1:00}</value>
+  </data>
+  <data name="Ui_FailureWithReason" xml:space="preserve">
+    <value>{0}：{1}</value>
+  </data>
+  <data name="Ui_FileAndMore" xml:space="preserve">
+    <value>-及另外{0}个</value>
+  </data>
+  <data name="Ui_FileRun" xml:space="preserve">
+    <value>扫描</value>
+  </data>
+  <data name="Ui_LinkBlocked" xml:space="preserve">
+    <value>未打开链接“{0}”：仅允许 http 或 https 地址。</value>
+  </data>
+  <data name="Ui_LocalShares" xml:space="preserve">
+    <value>此计算机的共享</value>
+  </data>
+  <data name="Ui_NoFindings" xml:space="preserve">
+    <value>没有发现项</value>
+  </data>
+  <data name="Ui_NoRunLoaded" xml:space="preserve">
+    <value>未加载扫描</value>
+  </data>
+  <data name="Ui_NoTarget" xml:space="preserve">
+    <value>无目标</value>
+  </data>
+  <data name="Ui_Off" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="Ui_On" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="Ui_Open" xml:space="preserve">
+    <value>打开</value>
+  </data>
+  <data name="Ui_ReportFileName" xml:space="preserve">
+    <value>Zutritt-报告-{0}-{1}</value>
+  </data>
+  <data name="Ui_SortedAscending" xml:space="preserve">
+    <value>{0}，升序排列</value>
+  </data>
+  <data name="Ui_SortedDescending" xml:space="preserve">
+    <value>{0}，降序排列</value>
+  </data>
+  <data name="Ui_StartOrOpen" xml:space="preserve">
+    <value>开始扫描或打开扫描记录</value>
+  </data>
+  <data name="Ui_TargetAndMore" xml:space="preserve">
+    <value>{0} 及另外 {1} 个</value>
+  </data>
+  <data name="Ui_VersionWithBuild" xml:space="preserve">
+    <value>{0}（构建 {1}）</value>
+  </data>
+  <data name="Win_AccessDenied" xml:space="preserve">
+    <value>拒绝访问</value>
+  </data>
+  <data name="Win_CantAccessFile" xml:space="preserve">
+    <value>系统无法打开该文件</value>
+  </data>
+  <data name="Win_CantResolveLink" xml:space="preserve">
+    <value>无法解析链接</value>
+  </data>
+  <data name="Win_CredentialConflict" xml:space="preserve">
+    <value>此服务器已在使用其他凭据</value>
+  </data>
+  <data name="Win_DriveNotFound" xml:space="preserve">
+    <value>找不到驱动器</value>
+  </data>
+  <data name="Win_ErrorCode" xml:space="preserve">
+    <value>Windows 错误 {0}：{1}</value>
+  </data>
+  <data name="Win_GroupNotFound" xml:space="preserve">
+    <value>找不到组</value>
+  </data>
+  <data name="Win_InUse" xml:space="preserve">
+    <value>正被另一个进程使用</value>
+  </data>
+  <data name="Win_InvalidName" xml:space="preserve">
+    <value>名称无效</value>
+  </data>
+  <data name="Win_InvalidPath" xml:space="preserve">
+    <value>路径无效</value>
+  </data>
+  <data name="Win_InvalidSid" xml:space="preserve">
+    <value>SID 无效</value>
+  </data>
+  <data name="Win_LogonFailure" xml:space="preserve">
+    <value>登录失败（用户名或密码错误）</value>
+  </data>
+  <data name="Win_NetAccessDenied" xml:space="preserve">
+    <value>拒绝网络访问</value>
+  </data>
+  <data name="Win_NetNameDeleted" xml:space="preserve">
+    <value>网络名称不再可用</value>
+  </data>
+  <data name="Win_NetNameNotFound" xml:space="preserve">
+    <value>找不到网络名称</value>
+  </data>
+  <data name="Win_NetPathNotFound" xml:space="preserve">
+    <value>找不到网络路径</value>
+  </data>
+  <data name="Win_NetUnreachable" xml:space="preserve">
+    <value>无法访问网络</value>
+  </data>
+  <data name="Win_NoLogonServerDc" xml:space="preserve">
+    <value>无法访问登录服务器（域控制器）</value>
+  </data>
+  <data name="Win_NoLogonServers" xml:space="preserve">
+    <value>没有可用的登录服务器</value>
+  </data>
+  <data name="Win_NoneMapped" xml:space="preserve">
+    <value>账户不存在</value>
+  </data>
+  <data name="Win_NoNetwork" xml:space="preserve">
+    <value>网络不存在或未启动</value>
+  </data>
+  <data name="Win_NoSuchDomain" xml:space="preserve">
+    <value>找不到域</value>
+  </data>
+  <data name="Win_NotAFolder" xml:space="preserve">
+    <value>不是文件夹</value>
+  </data>
+  <data name="Win_NotReady" xml:space="preserve">
+    <value>设备未就绪</value>
+  </data>
+  <data name="Win_NotSupported" xml:space="preserve">
+    <value>不支持该操作</value>
+  </data>
+  <data name="Win_PathNotFound" xml:space="preserve">
+    <value>找不到路径</value>
+  </data>
+  <data name="Win_PathTooLong" xml:space="preserve">
+    <value>路径或名称太长</value>
+  </data>
+  <data name="Win_RpcCallFailed" xml:space="preserve">
+    <value>RPC 调用失败</value>
+  </data>
+  <data name="Win_RpcUnavailable" xml:space="preserve">
+    <value>RPC 服务器不可用</value>
+  </data>
+  <data name="Win_ServerServiceStopped" xml:space="preserve">
+    <value>Server 服务未启动</value>
+  </data>
+  <data name="Win_ServerUnreachable" xml:space="preserve">
+    <value>无法访问网络服务器</value>
+  </data>
+  <data name="Win_ShareNotFound" xml:space="preserve">
+    <value>找不到共享</value>
+  </data>
+  <data name="Win_TrustedDomainFailure" xml:space="preserve">
+    <value>与域的信任关系失败</value>
+  </data>
+  <data name="Win_TrustRelationshipFailure" xml:space="preserve">
+    <value>计算机与域之间的信任关系失败</value>
+  </data>
+  <data name="Win_UnexpectedNetError" xml:space="preserve">
+    <value>意外的网络错误</value>
+  </data>
+  <data name="Win_UserNotFound" xml:space="preserve">
+    <value>找不到用户</value>
+  </data>
+</root>

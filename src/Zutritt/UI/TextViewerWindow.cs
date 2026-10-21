@@ -1,8 +1,10 @@
+// SPDX-License-Identifier: MIT
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using Zutritt.UI.Theme;
+using Zutritt.Core.Resources;
 
 namespace Zutritt.UI;
 
@@ -40,7 +42,7 @@ public sealed class TextViewerWindow : Window, IThemedWindow
         box.SetResourceReference(FontFamilyProperty, "MonoFont");
         System.Windows.Automation.AutomationProperties.SetName(box, title);
 
-        var close = new Button { Content = "Schließen", IsCancel = true, IsDefault = true, MinWidth = 110, HorizontalAlignment = HorizontalAlignment.Right };
+        var close = new Button { Content = Strings.Ui_Close, IsCancel = true, IsDefault = true, MinWidth = 110, HorizontalAlignment = HorizontalAlignment.Right };
         close.Click += (_, _) => Close();
 
         var root = new DockPanel { Margin = new Thickness(16) };

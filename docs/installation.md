@@ -17,7 +17,7 @@ Which file to download, how to check it, how to roll it out, and which rights th
 | **.NET** | None for the MSI and for `Zutritt.exe` – both carry the .NET 10 runtime. The ZIP variant needs the **.NET 10 Desktop Runtime**. |
 | **Network** | The scanning PC must reach the file servers over SMB. Shares, share permissions, local accounts and account names are queried with the standard Windows network APIs (`NetShareEnum`, `NetShareGetInfo`, `NetLocalGroupGetMembers`, LSA lookups). |
 | **Active Directory** | Optional. Domain accounts are resolved and domain groups expanded only when the scanning PC is a **member of the domain** and a domain controller is reachable. |
-| **Language** | The user interface, the command-line output and the reports are German, regardless of the Windows display language. |
+| **Language** | English, German, Spanish, French or Chinese (simplified) for the window, the command-line output and the reports – following the Windows display language, otherwise English. Switch on the *Info* page, preset for all users in `%ProgramData%\Zutritt\settings.json` (`{ "language": "de" }`) or force with the environment variable `ZUTRITT_LANGUAGE` ([Using the app › Languages](usage.md#languages)). |
 
 **Why Windows only.** What Zutritt reads – NTFS permissions, SMB share permissions, the local account databases of servers (SAM, LSA) and Active Directory – exists only on Windows and is only reachable through Windows APIs. The program is therefore a Windows (WPF) application. Its analysis core – rules, effective access, comparison, storage and reports – is platform-neutral and tested on Linux as well ([Development › Architecture](development.md#architecture)).
 
@@ -31,7 +31,7 @@ Which file to download, how to check it, how to roll it out, and which rights th
 | [`Zutritt.exe`](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt.exe) | included | Running without installation, e.g. from an admin share or a USB stick. |
 | [`Zutritt-win-x64-framework.zip`](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt-win-x64-framework.zip) | .NET 10 Desktop Runtime | A small download where the runtime is already installed. |
 | [`SHA256SUMS.txt`](https://github.com/ict-baden/zutritt/releases/download/latest/SHA256SUMS.txt) | – | SHA-256 checksums of all files in the release. |
-| [`Zutritt-sbom.cdx.json`](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt-sbom.cdx.json) | – | Bill of materials (CycloneDX): every library the program contains, and the .NET, Windows Desktop and Windows SDK runtime packs with their versions. |
+| [`Zutritt-sbom.cdx.json`](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt-sbom.cdx.json) | – | Bill of materials (CycloneDX): every library the program contains, and the .NET and Windows Desktop runtime packs with their versions. |
 
 Builds from `main` carry versions like `0.1.0-ci.12` (12 = the number of the build run). A **tagged version** `v1.2.0` gets its own release whose file names contain the version: `Zutritt-1.2.0-x64.msi`, `Zutritt-1.2.0-win-x64-framework.zip`, `Zutritt-1.2.0-sbom.cdx.json`, plus `Zutritt.exe` and `SHA256SUMS.txt`. Tags with a hyphen (`v1.2.0-rc1`) are marked as pre-releases.
 
@@ -91,7 +91,7 @@ Zutritt only needs to be installed on the PCs that scan – usually a few admin 
 
 ## Single exe and ZIP
 
-**`Zutritt.exe`** is the whole program in one file – runtime and native libraries (SQLite, WPF) are embedded. Copy it anywhere and start it. While it is not signed, SmartScreen may show *Windows protected your PC*; *More info* › *Run anyway* starts it.
+**`Zutritt.exe`** is the whole program in one file – runtime and native libraries (SQLite, WPF) are embedded. Copy it anywhere and start it. At the first start .NET unpacks the native libraries (about 10 MB) into `%TEMP%\.net\Zutritt\…` and leaves them there for later starts; set `DOTNET_BUNDLE_EXTRACT_BASE_DIR` to use another folder. Where AppLocker or WDAC block programs in `%TEMP%`, use the MSI or the ZIP instead. While it is not signed, SmartScreen may show *Windows protected your PC*; *More info* › *Run anyway* starts it.
 
 **The ZIP** contains a smaller, framework-dependent build, `LICENSE`, `THIRD-PARTY-NOTICES.txt` and a copy of the project's `README.md` (its images and links point into the repository and only work on GitHub). Extract it and start `Zutritt.exe`; Windows asks for the .NET 10 Desktop Runtime if it is missing.
 
@@ -128,7 +128,7 @@ A server, directory or account database that does not answer at all does not sto
 
 ## Updates and uninstalling
 
-- **MSI:** install the newer MSI over the old one. Builds from `main` replace each other (Windows Installer compares only the first three parts of the version, and the package allows same-version upgrades); a release with a higher version replaces them as well. Installing an *older* version over a newer one is refused (*Eine neuere Version von Zutritt ist bereits installiert.*).
+- **MSI:** install the newer MSI over the old one. Builds from `main` replace each other (Windows Installer compares only the first three parts of the version, and the package allows same-version upgrades); a release with a higher version replaces them as well. Installing a version whose first three parts are *lower* is refused (*Eine neuere Version von Zutritt ist bereits installiert.*). Builds with the same first three parts – the builds from `main` and the tagged release of that version – replace each other in **either** direction, so check the version under *Info* (the file version of `Zutritt.exe` carries the build number as its fourth part).
 - **Exe and ZIP:** replace the files.
 - **Database:** a newer Zutritt upgrades the database schema automatically. An older Zutritt refuses to open a database written by a newer version instead of damaging it.
 - **Uninstalling** removes the program files, the Start menu entry and the registry value. The run history and the logs in `%LocalAppData%\Zutritt` of each user stay; delete that folder to remove them.

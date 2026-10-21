@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 using Zutritt.Core.Model;
 
 namespace Zutritt.Core.Analysis;
@@ -108,7 +109,7 @@ internal sealed class AccessContext
     public string Label(string sid)
     {
         if (Scan.Principals.TryGetValue(sid, out var p) && !string.IsNullOrEmpty(p.Name)) return p.Name;
-        return SidCatalog.GermanName(sid) ?? sid;
+        return SidCatalog.FallbackName(sid) ?? sid;
     }
 
     /// <summary>
