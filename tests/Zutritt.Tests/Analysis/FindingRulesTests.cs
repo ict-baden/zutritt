@@ -73,10 +73,11 @@ public sealed class FindingRulesTests
     public void Regelkatalog_vollstaendig()
     {
         var all = FindingRules.All;
-        Assert.Equal(Enumerable.Range(1, 14).Select(i => $"ZT{i:00}"), all.Select(r => r.Id));
+        Assert.Equal(Enumerable.Range(1, 15).Select(i => $"ZT{i:00}"), all.Select(r => r.Id));
         Assert.Equal(
             [Severity.Hoch, Severity.Mittel, Severity.Mittel, Severity.Mittel, Severity.Hoch, Severity.Niedrig, Severity.Info,
-             Severity.Info, Severity.Info, Severity.Niedrig, Severity.Niedrig, Severity.Mittel, Severity.Info, Severity.Niedrig],
+             Severity.Info, Severity.Info, Severity.Niedrig, Severity.Niedrig, Severity.Mittel, Severity.Info, Severity.Niedrig,
+             Severity.Mittel],
             all.Select(r => r.Severity));
         Assert.All(all, r =>
         {

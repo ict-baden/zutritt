@@ -173,16 +173,31 @@ public sealed class EffectiveAccessTests
     }
 
     [Fact]
-    public void Explizites_Verweigern_gewinnt_unabhaengig_von_der_Speicherreihenfolge()
+    public void Explizites_Verweigern_gewinnt_in_kanonischer_Reihenfolge()
     {
         var u = Sid(2001); var g = Sid(1001);
         var b = new ScanBuilder().User(u, @"T\u").Group(g, @"T\G", u);
-        // Erlauben steht (nicht kanonisch) vor Verweigern
-        var f = b.LocalFolder(@"D:\Daten\X", 0, Allow(g, Modify), Deny(u, FileRights.Write));
+        var f = b.LocalFolder(@"D:\Daten\X", 0, Deny(u, FileRights.Write), Allow(g, Modify));
         var grant = EffectiveAccessInternals.Grant(b.Scan, f, u);
         Assert.Equal(AccessLevel.Lesen, grant.Ntfs);
         Assert.True(grant.ReducedByDeny);
         Assert.Equal([@"T\G"], grant.Via);
+    }
+
+    [Fact]
+    public void Nicht_kanonisch_zaehlt_die_gespeicherte_Reihenfolge()
+    {
+        // Wie Windows (AuthZ, im Windows-Abgleich geprüft): Erlauben steht vor Verweigern und gewährt die Bits zuerst
+        var u = Sid(2001); var g = Sid(1001);
+        var b = new ScanBuilder().User(u, @"T\u").Group(g, @"T\G", u);
+        var allowFirst = b.LocalFolder(@"D:\Daten\X", 0, Allow(g, Modify), Deny(u, FileRights.Write));
+        var grant = EffectiveAccessInternals.Grant(b.Scan, allowFirst, u);
+        Assert.Equal(AccessLevel.Aendern, grant.Ntfs);
+        Assert.False(grant.ReducedByDeny);
+
+        // Geerbte Verweigerung vor explizitem Erlauben: die Verweigerung greift
+        var inheritedFirst = b.LocalFolder(@"D:\Daten\Y", 0, Deny(g, FileRights.Write, inherited: true), Allow(u, Modify));
+        Assert.Equal(AccessLevel.Lesen, EffectiveAccessInternals.Grant(b.Scan, inheritedFirst, u).Ntfs);
     }
 
     [Fact]
@@ -263,8 +278,8 @@ public sealed class EffectiveAccessTests
     {
         var u = Sid(2001);
         var b = new ScanBuilder().User(u, @"T\u").WithShare(new ShareAce(S.Everyone, ShareAccess.Vollzugriff, false));
-        var shared = b.Folder("", 0, Allow(u, Modify), Deny(SidCatalog.Network, FileRights.Write));
-        var local = b.LocalFolder(@"D:\Lokal", 0, Allow(u, Modify), Deny(SidCatalog.Network, FileRights.Write));
+        var shared = b.Folder("", 0, Deny(SidCatalog.Network, FileRights.Write), Allow(u, Modify));
+        var local = b.LocalFolder(@"D:\Lokal", 0, Deny(SidCatalog.Network, FileRights.Write), Allow(u, Modify));
         var interactiveOnly = b.LocalFolder(@"D:\Konsole", 0, Allow(SidCatalog.Interactive, Read));
 
         Assert.Equal(AccessLevel.Lesen, EffectiveAccessInternals.Grant(b.Scan, shared, u).Effective);
@@ -273,6 +288,23 @@ public sealed class EffectiveAccessTests
     }
 
     // ---------- Freigabe ----------
+
+    [Fact]
+    public void Freigabe_in_gespeicherter_Reihenfolge()
+    {
+        var u = Sid(2001);
+        // Erlauben Vollzugriff vor Verweigern Ändern: der Server gewährt Vollzugriff (nicht kanonisch, ZT15)
+        var b = new ScanBuilder().User(u, @"T\u").WithShare(
+            new ShareAce(S.Everyone, ShareAccess.Vollzugriff, false), new ShareAce(u, ShareAccess.Aendern, true));
+        b.Folder("", 0, Allow(u, Full));
+        Assert.Equal(AccessLevel.Vollzugriff, Assert.Single(EffectiveAccess.ForPerson(b.Scan, u)).Effective);
+
+        // Kanonisch (Verweigern vorn) bleibt Lesen
+        var c = new ScanBuilder().User(u, @"T\u").WithShare(
+            new ShareAce(u, ShareAccess.Aendern, true), new ShareAce(S.Everyone, ShareAccess.Vollzugriff, false));
+        c.Folder("", 0, Allow(u, Full));
+        Assert.Equal(AccessLevel.Lesen, Assert.Single(EffectiveAccess.ForPerson(c.Scan, u)).Effective);
+    }
 
     [Fact]
     public void Freigabe_begrenzt_NTFS()
@@ -309,7 +341,7 @@ public sealed class EffectiveAccessTests
     {
         var u = Sid(2001); var g = Sid(1001);
         var b = new ScanBuilder().User(u, @"T\u").Group(g, @"T\Praktikanten", u)
-            .WithShare(new ShareAce(S.Everyone, ShareAccess.Vollzugriff, false), new ShareAce(g, deniedFrom, true));
+            .WithShare(new ShareAce(g, deniedFrom, true), new ShareAce(S.Everyone, ShareAccess.Vollzugriff, false));
         var f = b.Folder("", 0, Allow(u, Full));
         var grant = EffectiveAccessInternals.Grant(b.Scan, f, u);
         Assert.Equal(AccessLevel.Vollzugriff, grant.Ntfs);
@@ -344,8 +376,8 @@ public sealed class EffectiveAccessTests
     {
         var u = Sid(2001); var g = Sid(1001);
         var b = new ScanBuilder().User(u, @"T\u").Group(g, @"T\Praktikanten", u)
-            .WithShare(new ShareAce(S.Everyone, ShareAccess.Vollzugriff, false),
-                new ShareAce(g, ShareAccess.Vollzugriff, true), new ShareAce(u, ShareAccess.Aendern, true));
+            .WithShare(new ShareAce(g, ShareAccess.Vollzugriff, true), new ShareAce(u, ShareAccess.Aendern, true),
+                new ShareAce(S.Everyone, ShareAccess.Vollzugriff, false));
         var f = b.Folder("", 0, Allow(u, Full));
         Assert.Equal(AccessLevel.Lesen, EffectiveAccessInternals.Grant(b.Scan, f, u).ViaShare);
     }

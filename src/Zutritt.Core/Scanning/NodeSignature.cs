@@ -33,20 +33,36 @@ internal static class NodeSignature
     {
         var effective = new Dictionary<(string Sid, bool Deny), uint>();
         var inheritable = new Dictionary<(string Sid, bool Deny), uint>();
+        // Mit Verweigerungen zählt auch die Reihenfolge (Windows wertet sie so aus, siehe Befund ZT15): Ordnet ein Skript nur
+        // den Elternordner neu, behalten die Kinder ihre alte Reihenfolge und müssen gespeichert werden.
+        var effectiveOrder = new StringBuilder();
+        var inheritableOrder = new StringBuilder();
+        bool anyDeny = false;
         foreach (var ace in node.Aces)
         {
             // SYNCHRONIZE ist für Rechte bedeutungslos, wird beim Vererben aber teils ergänzt.
             var mask = FileAccessMask.MapGeneric((uint)ace.Rights) & ~FileAccessMask.Synchronize;
             var key = (ace.Sid.ToUpperInvariant(), ace.IsDeny);
-            if (!ace.InheritOnly) Merge(effective, key, mask);
-            if (withInheritable && PassesToSubfolders(ace)) Merge(inheritable, key, mask);
+            anyDeny |= ace.IsDeny;
+            if (!ace.InheritOnly)
+            {
+                Merge(effective, key, mask);
+                effectiveOrder.Append(key.Item1).Append(ace.IsDeny ? 'D' : 'A').Append(',');
+            }
+            if (withInheritable && PassesToSubfolders(ace))
+            {
+                Merge(inheritable, key, mask);
+                inheritableOrder.Append(key.Item1).Append(ace.IsDeny ? 'D' : 'A').Append(',');
+            }
         }
         var sb = new StringBuilder();
         Append(sb, effective);
+        if (anyDeny) sb.Append('[').Append(effectiveOrder).Append(']');
         if (withInheritable)
         {
             sb.Append('#');
             Append(sb, inheritable);
+            if (anyDeny) sb.Append('[').Append(inheritableOrder).Append(']');
         }
         return sb.ToString();
     }

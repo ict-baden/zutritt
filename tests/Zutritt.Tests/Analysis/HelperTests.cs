@@ -159,16 +159,32 @@ public sealed class InheritanceReconstructionTests
     [Fact]
     public void Kanonische_Reihenfolge_des_Vorfahren_bleibt_erhalten()
     {
-        // Explizites Erlauben am Vorfahren steht im Kind vor dessen geerbter Verweigerung – wie bei Windows
+        // Explizit vor geerbt beim Vorfahren – im Kind (alles geerbt) in derselben Reihenfolge
         var g = Sid(1001);
         var parent = Parent(
-            Deny(g, FileRights.Write, inherited: true),
-            Allow(U, FileRights.Modify));
+            Allow(U, FileRights.Modify),
+            Deny(g, FileRights.Write, inherited: true));
         var child = AccessContext.Inherit(parent, @"D:\A\B", 1, false);
         Assert.Equal([U, g], child.Aces.Select(a => a.Sid));
 
         var b = new ScanBuilder().User(U, @"T\u").Group(g, @"T\G", U);
         var ctx = new AccessContext(b.Scan);
         Assert.Equal(AccessLevel.Aendern, ctx.Evaluate(child, ctx.TokenOf(U, LogonKind.Network)).Level);
+    }
+
+    [Fact]
+    public void Nicht_kanonische_Reihenfolge_des_Vorfahren_bleibt_erhalten()
+    {
+        // Windows übernimmt die Reihenfolge des Elternordners auch dann, wenn sie nicht kanonisch ist
+        var g = Sid(1001);
+        var parent = Parent(
+            Deny(g, FileRights.Write, inherited: true),
+            Allow(U, FileRights.Modify));
+        var child = AccessContext.Inherit(parent, @"D:\A\B", 1, false);
+        Assert.Equal([g, U], child.Aces.Select(a => a.Sid));
+
+        var b = new ScanBuilder().User(U, @"T\u").Group(g, @"T\G", U);
+        var ctx = new AccessContext(b.Scan);
+        Assert.Equal(AccessLevel.Lesen, ctx.Evaluate(child, ctx.TokenOf(U, LogonKind.Network)).Level);
     }
 }

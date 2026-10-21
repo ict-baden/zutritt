@@ -103,9 +103,9 @@ public static class SampleScan
         // Tief versteckte Ausnahme: Vererbung in Tiefe 4 unterbrochen, verwaiste SID, deaktiviertes Konto, leere Gruppe
         F(@"\Projekte\2019\Alt\Rohdaten", 4, true, Administrators,
             Ace(Administrators, Full), Ace(Verwaist, Modify), Ace(Klaus, Read), Ace(LeereGruppe, Read));
-        // Archiv: Authentifizierte Benutzer lesen, Max verweigert
+        // Archiv: Authentifizierte Benutzer lesen, Max verweigert (kanonisch: Verweigern vorn)
         F(@"\Archiv", 1, false, Administrators,
-            Ace(AuthenticatedUsers, Read), Ace(Max, Modify, deny: true), Ace(System, Full, inherited: true), Ace(Administrators, Full, inherited: true), Ace(LaborAlle, Modify, inherited: true));
+            Ace(Max, Modify, deny: true), Ace(AuthenticatedUsers, Read), Ace(System, Full, inherited: true), Ace(Administrators, Full, inherited: true), Ace(LaborAlle, Modify, inherited: true));
 
         scan.Errors.Add(new ScanError(@"\\FS01\Labor\Personal", "Zugriff verweigert"));
         scan.Folders.Add(new FolderNode { Path = @"\\FS01\Labor\Personal", Depth = 1, ShareUnc = @"\\FS01\Labor", Error = "Zugriff verweigert" });

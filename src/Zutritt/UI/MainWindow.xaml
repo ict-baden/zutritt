@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:res="clr-namespace:Zutritt.Core.Resources;assembly=Zutritt.Core"
         xmlns:ui="clr-namespace:Zutritt.UI"
-        Title="Zutritt" Width="1200" Height="800" MinWidth="980" MinHeight="640"
+        Title="{x:Static res:Strings.App_Title}" Width="1200" Height="800" MinWidth="980" MinHeight="640"
         WindowStartupLocation="CenterScreen" FontFamily="{StaticResource UiFont}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
         Background="{DynamicResource ApplicationBackgroundBrush}" UseLayoutRounding="True"
         Icon="pack://application:,,,/Zutritt;component/Assets/zutritt.ico">

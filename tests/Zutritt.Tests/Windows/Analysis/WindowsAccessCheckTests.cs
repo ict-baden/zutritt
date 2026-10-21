@@ -73,6 +73,35 @@ public sealed class WindowsAccessCheckTests
                     $"geerbt {Rel(root, path)}: Windows {(uint)windows:X8} ({Rights.ToLevel(windows)}), Zutritt {(uint)ours:X8} ({Rights.ToLevel(ours)})");
             }
 
+            // Nicht kanonische Listen (Befund ZT15): Windows wertet die gespeicherte Reihenfolge aus – Zutritt auch.
+            // Stichprobe: Kanonisch sortiert käme jeweils etwas anderes heraus, sonst prüften die Fälle nichts.
+            foreach (var path in NonCanonicalCases(root, u, g))
+            {
+                var sd = ReadSecurityDescriptor(path);
+                var node = ToNode(path, sd, false);
+                Assert.False(AccessContext.IsCanonical(node.Aces, out _, out _), $"{Rel(root, path)} ist kanonisch gespeichert");
+                var windows = authz.MaximumAllowed(sd);
+                var ours = Evaluate(scan, node, u.Value);
+                Assert.True(windows == ours,
+                    $"nicht kanonisch {Rel(root, path)}: Windows {(uint)windows:X8} ({Rights.ToLevel(windows)}), Zutritt {(uint)ours:X8} ({Rights.ToLevel(ours)})");
+                var sorted = new FolderNode { Path = node.Path, OwnerSid = node.OwnerSid };
+                sorted.Aces.AddRange(node.Aces.Where(a => !a.IsInherited && a.IsDeny));
+                sorted.Aces.AddRange(node.Aces.Where(a => !a.IsInherited && !a.IsDeny));
+                sorted.Aces.AddRange(node.Aces.Where(a => a.IsInherited));
+                Assert.NotEqual(windows, Evaluate(scan, sorted, u.Value));
+                Assert.Contains(FindingRules.Evaluate(ScanWith(scan, node)), f => f.RuleId == "ZT15");
+            }
+            // Vererbung von einem nicht kanonischen Elternordner: Windows übernimmt dessen Reihenfolge
+            foreach (var (ancestor, path, isFile) in NonCanonicalInheritanceCases(root))
+            {
+                var anc = ToNode(ancestor, ReadSecurityDescriptor(ancestor), false);
+                var virtualNode = AccessContext.Inherit(anc, path, 1, isFile);
+                var windows = authz.MaximumAllowed(ReadSecurityDescriptor(path));
+                var ours = Evaluate(scan, virtualNode, u.Value);
+                Assert.True(windows == ours,
+                    $"geerbt, nicht kanonisch {Rel(root, path)}: Windows {(uint)windows:X8} ({Rights.ToLevel(windows)}), Zutritt {(uint)ours:X8} ({Rights.ToLevel(ours)})");
+            }
+
             // Stichprobe: Die Fälle decken wirklich verschiedene Stufen ab (sonst wäre der Abgleich wertlos)
             var levels = cases.Select(c => Rights.ToLevel(authz.MaximumAllowed(ReadSecurityDescriptor(c.Path)))).Distinct().ToList();
             Assert.Contains(AccessLevel.Keine, levels);
@@ -308,6 +337,86 @@ public sealed class WindowsAccessCheckTests
         cases.Add((w, false));
 
         return cases;
+    }
+
+    /// <summary>Lauf mit den Konten aus <paramref name="scan"/> und genau diesem Knoten.</summary>
+    private static ScanResult ScanWith(ScanResult scan, FolderNode node)
+    {
+        var copy = new ScanResult { Request = scan.Request };
+        foreach (var (sid, p) in scan.Principals) copy.Principals[sid] = p;
+        copy.Folders.Add(node);
+        return copy;
+    }
+
+    /// <summary>
+    /// Ordner mit nicht kanonischer DACL, wie sie Skripte oder Migrationswerkzeuge hinterlassen. Die .NET-Klassen
+    /// (DirectorySecurity) sortieren beim Schreiben, deshalb roh über SetFileSecurity.
+    /// </summary>
+    private static List<string> NonCanonicalCases(string root, SecurityIdentifier u, SecurityIdentifier g)
+    {
+        var cases = new List<string>();
+
+        // Erlauben vor Verweigern: Windows gewährt „Ändern“ samt Schreiben, kanonisch wäre Schreiben gesperrt
+        var nk1 = Path.Combine(root, "nk1");
+        Directory.CreateDirectory(nk1);
+        WriteRawDacl(nk1, protect: true,
+            (g, FileSystemRights.Modify, false, false),
+            (u, FileSystemRights.Write, true, false));
+        cases.Add(nk1);
+
+        // Geerbte Verweigerung vor explizitem Erlauben: Windows sperrt Schreiben, kanonisch gälte das Erlauben zuerst
+        var nk2 = Path.Combine(root, "nk2");
+        Directory.CreateDirectory(nk2);
+        WriteRawDacl(nk2, protect: false,
+            (g, FileSystemRights.Write, true, true),
+            (u, FileSystemRights.Modify, false, false));
+        cases.Add(nk2);
+
+        // Elternordner für die Vererbung: Erlauben vor Verweigern, erst danach Unterordner und Datei anlegen
+        var nk3 = Path.Combine(root, "nk3");
+        Directory.CreateDirectory(nk3);
+        WriteRawDacl(nk3, protect: true,
+            (g, FileSystemRights.Modify, false, false),
+            (u, FileSystemRights.WriteData, true, false));
+        Directory.CreateDirectory(Path.Combine(nk3, "kind"));
+        System.IO.File.WriteAllText(Path.Combine(nk3, "datei.txt"), "x");
+        cases.Add(nk3);
+
+        return cases;
+    }
+
+    private static IEnumerable<(string Ancestor, string Path, bool IsFile)> NonCanonicalInheritanceCases(string root)
+    {
+        var nk3 = Path.Combine(root, "nk3");
+        yield return (nk3, Path.Combine(nk3, "kind"), false);
+        yield return (nk3, Path.Combine(nk3, "datei.txt"), true);
+    }
+
+    /// <summary>
+    /// DACL genau in der angegebenen Reihenfolge schreiben (alle Einträge vererbbar), dahinter Vollzugriff für den Test
+    /// selbst und die Administratoren – damit der Test aufräumen kann.
+    /// </summary>
+    private static void WriteRawDacl(string path, bool protect, params (SecurityIdentifier Sid, FileSystemRights Rights, bool Deny, bool Inherited)[] entries)
+    {
+        var dacl = new RawAcl(GenericAcl.AclRevision, entries.Length + 2);
+        var all = entries.Concat(new (SecurityIdentifier, FileSystemRights, bool, bool)[]
+        {
+            (WindowsIdentity.GetCurrent().User!, FileSystemRights.FullControl, false, false),
+            (new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null), FileSystemRights.FullControl, false, false),
+        });
+        foreach (var (sid, rights, deny, inherited) in all)
+        {
+            var flags = AceFlags.ContainerInherit | AceFlags.ObjectInherit | (inherited ? AceFlags.Inherited : AceFlags.None);
+            dacl.InsertAce(dacl.Count, new CommonAce(flags, deny ? AceQualifier.AccessDenied : AceQualifier.AccessAllowed,
+                (int)rights, sid, false, null));
+        }
+        var control = ControlFlags.DiscretionaryAclPresent | ControlFlags.SelfRelative
+            | (protect ? ControlFlags.DiscretionaryAclProtected : ControlFlags.DiscretionaryAclAutoInherited);
+        var sd = new RawSecurityDescriptor(control, null, null, null, dacl);
+        var bytes = new byte[sd.BinaryLength];
+        sd.GetBinaryForm(bytes, 0);
+        if (!NativeMethods.SetFileSecurity(path, NativeMethods.DaclSecurityInformation, bytes))
+            throw new Win32Exception(Marshal.GetLastWin32Error(), path);
     }
 
     private static IEnumerable<(string Ancestor, string Path, bool IsFile)> InheritanceCases(string root)

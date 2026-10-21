@@ -102,6 +102,9 @@
   <data name="App_Tagline" xml:space="preserve">
     <value>Zeigt, wer auf Dateifreigaben worauf zugreifen darf – mit Befunden, Vergleich und Bericht.</value>
   </data>
+  <data name="App_Title" xml:space="preserve">
+    <value>Zutritt – Freigaben-Rechte</value>
+  </data>
   <data name="App_UnexpectedError" xml:space="preserve">
     <value>Unerwarteter Fehler: {0}</value>
   </data>
@@ -898,6 +901,15 @@ Es wird nur gelesen – an Rechten und Dateien ändert Zutritt nichts.
   <data name="Finding_InheritsNothing" xml:space="preserve">
     <value>Erbt nichts vom übergeordneten Ordner, obwohl die Vererbung eingeschaltet ist – meist hat ein Programm den Ordner mit eigenen Rechten angelegt. Die Rechte von oben gelten hier erst nach der nächsten Weitergabe.</value>
   </data>
+  <data name="Finding_NonCanonicalAfterInherited" xml:space="preserve">
+    <value>Expliziter Eintrag für „{0}“ steht hinter geerbten Einträgen – Windows wertet die gespeicherte Reihenfolge aus, geerbte Einträge davor greifen zuerst.</value>
+  </data>
+  <data name="Finding_NonCanonicalDeny" xml:space="preserve">
+    <value>Verweigern-Eintrag für „{0}“ steht hinter einem Erlauben-Eintrag – Windows wertet die gespeicherte Reihenfolge aus, Erlaubnisse davor greifen zuerst.</value>
+  </data>
+  <data name="Finding_NonCanonicalShareDeny" xml:space="preserve">
+    <value>Freigabe-Berechtigungen: Verweigern-Eintrag für „{0}“ steht hinter einem Erlauben-Eintrag – der Server wertet die gespeicherte Reihenfolge aus, Erlaubnisse davor greifen zuerst.</value>
+  </data>
   <data name="Finding_NotChecked" xml:space="preserve">
     <value>Nicht geprüft: {0}.</value>
   </data>
@@ -1198,6 +1210,9 @@ Es wird nur gelesen – an Rechten und Dateien ändert Zutritt nichts.
   </data>
   <data name="Info_LanguageMachine" xml:space="preserve">
     <value>Vorgabe für diesen Rechner ({0})</value>
+  </data>
+  <data name="Info_LanguageMachineTranslated" xml:space="preserve">
+    <value>{0} (maschinelle Übersetzung)</value>
   </data>
   <data name="Info_LanguageNotSaved" xml:space="preserve">
     <value>Die Sprache ließ sich nicht speichern: {0}</value>
@@ -2416,6 +2431,15 @@ Berichte, die schon gespeichert sind, bleiben erhalten.</value>
   </data>
   <data name="Rule_ZT14_Title" xml:space="preserve">
     <value>Rechte weichen von der Vererbung ab</value>
+  </data>
+  <data name="Rule_ZT15_Explanation" xml:space="preserve">
+    <value>Windows prüft die Einträge einer Zugriffsliste streng in der gespeicherten Reihenfolge. Normalerweise hält Windows sie in kanonischer Reihenfolge – explizite Verweigerungen, explizite Erlaubnisse, dann geerbte Einträge –, damit auf derselben Ebene Verweigern gewinnt und ein expliziter Eintrag vor einem geerbten gilt. Diese Liste weicht davon ab (meist von einem Skript, einem alten Werkzeug oder einem Migrationsprogramm geschrieben). Dann kann ein Erlauben vor einem Verweigern greifen oder eine geerbte Verweigerung ein explizites Erlauben aushebeln. Zutritt wertet wie Windows die gespeicherte Reihenfolge aus – das Ergebnis kann von dem abweichen, was die Einträge auf den ersten Blick versprechen.</value>
+  </data>
+  <data name="Rule_ZT15_Recommendation" xml:space="preserve">
+    <value>Die Sicherheitseinstellungen des Ordners im Explorer öffnen: Windows meldet, dass die Berechtigungen falsch angeordnet sind, und bietet an, sie neu anzuordnen. Das kann ändern, wer Zugriff hat – das Ergebnis danach prüfen (etwa mit einem neuen Scan).</value>
+  </data>
+  <data name="Rule_ZT15_Title" xml:space="preserve">
+    <value>Einträge nicht in kanonischer Reihenfolge</value>
   </data>
   <data name="Scan_AdminShareDefault" xml:space="preserve">
     <value>Freigabe-Berechtigungen nicht lesbar: Administrative Freigabe ohne eigene Berechtigungen – es gilt die interne Windows-Vorgabe (in der Regel nur Administratoren)</value>

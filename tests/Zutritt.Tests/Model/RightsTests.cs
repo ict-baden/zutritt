@@ -34,7 +34,7 @@ public sealed class RightsTests
     public void Bezeichnung_passt_zur_Auswertung(ShareAccess deniedFrom, ShareAccess remaining)
     {
         var b = new ScanBuilder().User(Sid(2001), @"T\anna");
-        b.WithShare(new ShareAce(SidCatalog.Everyone, ShareAccess.Vollzugriff, false), new ShareAce(SidCatalog.Everyone, deniedFrom, true));
+        b.WithShare(new ShareAce(SidCatalog.Everyone, deniedFrom, true), new ShareAce(SidCatalog.Everyone, ShareAccess.Vollzugriff, false));
         var root = b.Folder("", 0, Allow(SidCatalog.Everyone, FileRights.FullControl));
         var grant = EffectiveAccess.ForFolder(b.Scan, root).Single();
         Assert.Equal(Rights.CapByShare(AccessLevel.Vollzugriff, remaining), grant.ViaShare);

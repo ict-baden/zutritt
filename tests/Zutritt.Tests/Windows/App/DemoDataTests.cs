@@ -53,8 +53,8 @@ public sealed class DemoDataTests
         // Screenshots und Doku zeigen diese Demo – sie soll immer gleich aussehen
         var (older, newer) = DemoData.Create();
         Assert.Equal(Core.Analysis.FindingRules.All.Select(r => r.Id), newer.Findings.Select(f => f.RuleId).Distinct().Order(StringComparer.Ordinal));
-        Assert.Equal(35, older.Findings.Count);
-        Assert.Equal(36, newer.Findings.Count);
+        Assert.Equal(36, older.Findings.Count);
+        Assert.Equal(37, newer.Findings.Count);
         Assert.Equal(Core.Analysis.FindingRules.Evaluate(newer).Select(f => f.Key).Order(StringComparer.Ordinal),
             newer.Findings.Select(f => f.Key).Order(StringComparer.Ordinal));
     }

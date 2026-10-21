@@ -79,6 +79,21 @@ public sealed class NodeSignatureTests
     }
 
     [Fact]
+    public void Mit_Verweigerung_zaehlt_die_Reihenfolge()
+    {
+        // Ordnet ein Skript nur den Elternordner neu, behält das Kind die alte Reihenfolge – es gewährt anderes (ZT15)
+        var allowFirst = Node(Ace("S-1-5-20", FileRights.Modify), Ace("S-1-5-19", FileRights.Write, deny: true));
+        var denyFirst = Node(Ace("S-1-5-19", FileRights.Write, deny: true), Ace("S-1-5-20", FileRights.Modify));
+        Assert.NotEqual(NodeSignature.Of(allowFirst), NodeSignature.Of(denyFirst));
+        Assert.NotEqual(NodeSignature.Effective(allowFirst), NodeSignature.Effective(denyFirst));
+
+        // Ohne Verweigerung ist die Reihenfolge gleichgültig
+        var ab = Node(Ace("S-1-5-20", FileRights.Modify), Ace("S-1-5-19", FileRights.Read));
+        var ba = Node(Ace("S-1-5-19", FileRights.Read), Ace("S-1-5-20", FileRights.Modify));
+        Assert.Equal(NodeSignature.Of(ab), NodeSignature.Of(ba));
+    }
+
+    [Fact]
     public void Gleiche_Rechte_aber_andere_Weitergabe_unterscheidet()
     {
         // „Nur eine Ebene“ (NP) gegenüber normal vererbbar: dieselben Rechte am Ordner, aber nicht an den Enkeln.

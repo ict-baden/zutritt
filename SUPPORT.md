@@ -21,9 +21,8 @@ Mit einem Supportvertrag von ICT-Baden bekommen Sie:
 - Vorrang bei Fehlerbehebungen und Sicherheitsinformationen vorab
 - Anpassungen und Schulungen nach Absprache
 
-Kontakt: über die Kontaktangaben im [Impressum von ICT-Baden](https://ict-baden.de/index.html?page=imprint).
-Contact: see the contact details in the [ICT-Baden imprint](https://ict-baden.de/index.html?page=imprint).
-<!-- ⚠ Eigene Support-Adresse eintragen, sobald das Postfach existiert (OFFEN.md); bis dahin die Kontaktangaben im Impressum. -->
+Kontakt: über die [Kontaktseite von ICT-Baden](https://ict-baden.de/#kontakt) oder die Angaben im [Impressum](https://ict-baden.de/impressum/).
+Contact: via the [ICT-Baden contact page](https://ict-baden.de/#kontakt) or the details in the [imprint](https://ict-baden.de/impressum/).
 
 ## Was Sie mitschicken / What to include
 

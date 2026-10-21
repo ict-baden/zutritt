@@ -140,7 +140,7 @@ The table lists stored folders; subfolders without permissions of their own inhe
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/comparison-dark.png">
-  <img alt="Vergleich: “Verglichen mit 05.10.2026, 06:00 · \\FS01 · 35 Befunde”, seven days earlier; five tiles for new findings, resolved findings, access changes, ACL changes and memberships; the list of the four new findings." src="assets/screenshots/comparison-light.png" width="900">
+  <img alt="Vergleich: “Verglichen mit 05.10.2026, 06:00 · \\FS01 · 36 Befunde”, seven days earlier; five tiles for new findings, resolved findings, access changes, ACL changes and memberships; the list of the four new findings." src="assets/screenshots/comparison-light.png" width="900">
 </picture>
 
 *Verglichen mit* (compared with) preselects the previous run with the same targets; you can choose any earlier run instead. If that run had different targets, a warning says that differences may come from that. The tiles select the list below:
@@ -187,7 +187,7 @@ From top to bottom:
 | *Drittanbieter-Lizenzen* › *Anzeigen* | `THIRD-PARTY-NOTICES.txt`: every library Zutritt contains, with version, source, copyright and licence text. Built into the program, so it works for the single `Zutritt.exe` as well. |
 | *Hilfe & Support* | Opens [SUPPORT.md](../SUPPORT.md): free help on GitHub, guaranteed help with a support contract. |
 | *Diagnosepaket erstellen* | Saves a ZIP with version, system details and the log of the last 7 days for a support request. *Ohne Namen und Adressen* (without names and addresses, on by default) replaces computer, account and server names, paths, SIDs and addresses. No runs, no reports. Details: [Data & privacy › Diagnostics package](data-and-privacy.md#diagnostics-package-and-support). |
-| *Quellcode (GitHub)*, *Datenschutz*, *Impressum*, *Webseite* | Links to the repository, to [Data & privacy](data-and-privacy.md), to the Impressum of ICT-Baden and to its website. |
+| *Quellcode (GitHub)*, *Datenschutz*, *Impressum*, *Webseite* | Links to the repository, to [Data & privacy](data-and-privacy.md), to the Impressum of ICT-Baden and to the Zutritt product page. |
 | *Befehlszeile und geplante Aufgaben* | An example for a weekly scheduled task and the exit codes; `Zutritt.exe --info` prints the same details as text. |
 | *Tastatur* | The keyboard shortcuts. |
 
@@ -223,7 +223,7 @@ For well-known accounts – *Jeder*, *VORDEFINIERT\…*, *NT-AUTORITÄT\…* –
 
 ## Languages
 
-The window, the command-line output and the reports are available in **English, German, Spanish, French and Chinese (simplified)**. Spanish, French and Chinese are machine translations that have not been reviewed by native speakers yet.
+The window, the command-line output and the reports are available in **English, German, Spanish, French and Chinese (simplified)**. Spanish, French and Chinese are machine translations that have not been reviewed by native speakers yet; the language selection marks them, e.g. *Español (traducción automática)*. The names of Windows accounts in those languages (e.g. *Tout le monde*, *Usuarios autentificados*) follow localized Windows; where Windows keeps the English name (Chinese Windows mostly does), Zutritt does too.
 
 | How | Where | Wins over |
 |---|---|---|

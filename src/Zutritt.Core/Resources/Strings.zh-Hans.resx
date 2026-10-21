@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- Zutritt – 简体中文文本。机器翻译，尚未经母语者审校（准则 13），首次公开发布前需审校。标有 “TODO-übersetzen” 的条目仍为英文。 -->
+  <!-- Zutritt – 简体中文文本。机器翻译，尚未经母语者审校（准则 13）；语言选择和 README 中已注明。注释为 “nicht an echter Ausgabe belegt” 的 Windows 帐户名称需在中文版 Windows 上核对。 -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -101,6 +101,9 @@
   </data>
   <data name="App_Tagline" xml:space="preserve">
     <value>显示谁可以访问文件共享中的哪些内容——包括发现项、比较和报告。</value>
+  </data>
+  <data name="App_Title" xml:space="preserve">
+    <value>Zutritt – 共享权限</value>
   </data>
   <data name="App_UnexpectedError" xml:space="preserve">
     <value>意外错误：{0}</value>
@@ -893,6 +896,15 @@ Zutritt 只读取——不会更改任何权限或文件。
   <data name="Finding_InheritsNothing" xml:space="preserve">
     <value>虽然已启用继承，但未从上级文件夹继承任何内容——通常是某个程序以自己的权限创建了该文件夹。上层的权限要到下一次传播后才会在此生效。</value>
   </data>
+  <data name="Finding_NonCanonicalAfterInherited" xml:space="preserve">
+    <value>“{0}”的显式条目位于继承的条目之后——Windows 按存储顺序评估，前面的继承条目先生效。</value>
+  </data>
+  <data name="Finding_NonCanonicalDeny" xml:space="preserve">
+    <value>“{0}”的拒绝条目位于允许条目之后——Windows 按存储顺序评估，前面的允许条目先生效。</value>
+  </data>
+  <data name="Finding_NonCanonicalShareDeny" xml:space="preserve">
+    <value>共享权限：“{0}”的拒绝条目位于允许条目之后——服务器按存储顺序评估，前面的允许条目先生效。</value>
+  </data>
   <data name="Finding_NotChecked" xml:space="preserve">
     <value>未检查：{0}。</value>
   </data>
@@ -1193,6 +1205,9 @@ Zutritt 只读取——不会更改任何权限或文件。
   </data>
   <data name="Info_LanguageMachine" xml:space="preserve">
     <value>此计算机的默认设置（{0}）</value>
+  </data>
+  <data name="Info_LanguageMachineTranslated" xml:space="preserve">
+    <value>{0}（机器翻译）</value>
   </data>
   <data name="Info_LanguageNotSaved" xml:space="preserve">
     <value>无法保存语言：{0}</value>
@@ -2412,6 +2427,15 @@ Zutritt 只读取——不会更改任何权限或文件。
   <data name="Rule_ZT14_Title" xml:space="preserve">
     <value>权限与继承不一致</value>
   </data>
+  <data name="Rule_ZT15_Explanation" xml:space="preserve">
+    <value>Windows 严格按照条目在访问控制列表中的存储顺序进行检查。通常 Windows 会让条目保持规范顺序——显式拒绝、显式允许，然后是继承的条目——这样在同一级别上拒绝优先，显式条目优先于继承的条目。此列表未遵循该顺序（通常由脚本、旧工具或迁移程序写入）。此时允许条目可能先于拒绝条目生效，或者继承的拒绝可能覆盖显式允许。Zutritt 与 Windows 一样按存储顺序进行评估——结果可能与条目表面上看起来的不同。</value>
+  </data>
+  <data name="Rule_ZT15_Recommendation" xml:space="preserve">
+    <value>在资源管理器中打开该文件夹的安全设置：Windows 会提示权限顺序不正确，并提供重新排序。重新排序可能会改变谁拥有访问权限——之后请检查结果（例如重新扫描一次）。</value>
+  </data>
+  <data name="Rule_ZT15_Title" xml:space="preserve">
+    <value>条目未按规范顺序排列</value>
+  </data>
   <data name="Scan_AdminShareDefault" xml:space="preserve">
     <value>共享权限不可读：管理共享没有自己的权限——适用 Windows 内部默认设置（通常仅限管理员）</value>
   </data>
@@ -2594,31 +2618,26 @@ Zutritt 只读取——不会更改任何权限或文件。
   </data>
   <data name="Sid_AccessControlAssistanceOperators" xml:space="preserve">
     <value>Access Control Assistance Operators</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_AccountOperators" xml:space="preserve">
     <value>Account Operators</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_Administrators" xml:space="preserve">
     <value>Administrators</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_AllAppPackages" xml:space="preserve">
-    <value>ALL APPLICATION PACKAGES</value>
-    <comment>TODO-übersetzen</comment>
+    <value>所有应用程序包</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_AllRestrictedAppPackages" xml:space="preserve">
-    <value>ALL RESTRICTED APPLICATION PACKAGES</value>
-    <comment>TODO-übersetzen</comment>
+    <value>所有受限制的应用程序包</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_AllServices" xml:space="preserve">
     <value>ALL SERVICES</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_AnonymousLogon" xml:space="preserve">
     <value>ANONYMOUS LOGON</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_AppCapability" xml:space="preserve">
     <value>应用功能 ({0})</value>
@@ -2628,232 +2647,181 @@ Zutritt 只读取——不会更改任何权限或文件。
   </data>
   <data name="Sid_AuthenticatedUsers" xml:space="preserve">
     <value>Authenticated Users</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_BackupOperators" xml:space="preserve">
     <value>Backup Operators</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_Batch" xml:space="preserve">
     <value>BATCH</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_CapabilityGroup" xml:space="preserve">
     <value>功能组 ({0})</value>
   </data>
   <data name="Sid_CertificateServiceDcomAccess" xml:space="preserve">
     <value>Certificate Service DCOM Access</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_ConsoleLogon" xml:space="preserve">
     <value>CONSOLE LOGON</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_CreatorGroup" xml:space="preserve">
     <value>CREATOR GROUP</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_CreatorGroupServer" xml:space="preserve">
     <value>CREATOR GROUP SERVER</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_CreatorOwner" xml:space="preserve">
     <value>CREATOR OWNER</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_CreatorOwnerServer" xml:space="preserve">
     <value>CREATOR OWNER SERVER</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_CryptographicOperators" xml:space="preserve">
     <value>Cryptographic Operators</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_DistributedComUsers" xml:space="preserve">
     <value>Distributed COM Users</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_EnterpriseDomainControllers" xml:space="preserve">
     <value>ENTERPRISE DOMAIN CONTROLLERS</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_EventLogReaders" xml:space="preserve">
     <value>Event Log Readers</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_Everyone" xml:space="preserve">
     <value>Everyone</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_Guests" xml:space="preserve">
     <value>Guests</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_HyperVAdministrators" xml:space="preserve">
     <value>Hyper-V Administrators</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_IisAppPool" xml:space="preserve">
     <value>IIS 应用程序池 ({0})</value>
   </data>
   <data name="Sid_IncomingForestTrustBuilders" xml:space="preserve">
     <value>Incoming Forest Trust Builders</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_IntegrityLevel" xml:space="preserve">
     <value>完整性级别 ({0})</value>
   </data>
   <data name="Sid_Interactive" xml:space="preserve">
     <value>INTERACTIVE</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_Local" xml:space="preserve">
     <value>LOCAL</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_LocalAccount" xml:space="preserve">
-    <value>Local account</value>
-    <comment>TODO-übersetzen</comment>
+    <value>本地帐户</value>
   </data>
   <data name="Sid_LocalAdminAccount" xml:space="preserve">
-    <value>Local account and member of Administrators group</value>
-    <comment>TODO-übersetzen</comment>
+    <value>本地帐户和管理员组成员</value>
   </data>
   <data name="Sid_LocalService" xml:space="preserve">
     <value>LOCAL SERVICE</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_LogonSession" xml:space="preserve">
     <value>登录会话 ({0})</value>
   </data>
   <data name="Sid_Network" xml:space="preserve">
     <value>NETWORK</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_NetworkConfigurationOperators" xml:space="preserve">
     <value>Network Configuration Operators</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_NetworkService" xml:space="preserve">
     <value>NETWORK SERVICE</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_NtlmAuthentication" xml:space="preserve">
     <value>NTLM Authentication</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_NullSid" xml:space="preserve">
     <value>NULL SID</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_OtherOrganization" xml:space="preserve">
     <value>Other Organization</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_OwnerRights" xml:space="preserve">
     <value>OWNER RIGHTS</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_PerformanceLogUsers" xml:space="preserve">
     <value>Performance Log Users</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_PerformanceMonitorUsers" xml:space="preserve">
     <value>Performance Monitor Users</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_PowerUsers" xml:space="preserve">
     <value>Power Users</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_PrefixAppPackages" xml:space="preserve">
     <value>APPLICATION PACKAGE AUTHORITY\</value>
-    <comment>TODO-übersetzen</comment>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_PrefixBuiltin" xml:space="preserve">
     <value>BUILTIN\</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_PrefixNt" xml:space="preserve">
     <value>NT AUTHORITY\</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_PreWindows2000" xml:space="preserve">
     <value>Pre-Windows 2000 Compatible Access</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_PrintOperators" xml:space="preserve">
     <value>Print Operators</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_RdsEndpointServers" xml:space="preserve">
     <value>RDS Endpoint Servers</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_RdsManagementServers" xml:space="preserve">
     <value>RDS Management Servers</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_RdsRemoteAccessServers" xml:space="preserve">
     <value>RDS Remote Access Servers</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_RemoteDesktopUsers" xml:space="preserve">
     <value>Remote Desktop Users</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_RemoteInteractiveLogon" xml:space="preserve">
     <value>REMOTE INTERACTIVE LOGON</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_RemoteManagementUsers" xml:space="preserve">
     <value>Remote Management Users</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_Replicator" xml:space="preserve">
     <value>Replicator</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_Restricted" xml:space="preserve">
     <value>RESTRICTED</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_ScheduledTask" xml:space="preserve">
     <value>计划任务 ({0})</value>
   </data>
   <data name="Sid_Self" xml:space="preserve">
     <value>SELF</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_ServerOperators" xml:space="preserve">
     <value>Server Operators</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_Service" xml:space="preserve">
     <value>SERVICE</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_ServiceNotInstalled" xml:space="preserve">
     <value>未安装的服务 ({0})</value>
   </data>
   <data name="Sid_TerminalServerLicenseServers" xml:space="preserve">
     <value>Terminal Server License Servers</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_TerminalServerUser" xml:space="preserve">
     <value>TERMINAL SERVER USER</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_ThisOrganization" xml:space="preserve">
     <value>This Organization</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_UserModeDriver" xml:space="preserve">
     <value>用户模式驱动程序 ({0})</value>
   </data>
   <data name="Sid_Users" xml:space="preserve">
     <value>Users</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_VirtualMachine" xml:space="preserve">
     <value>虚拟机 ({0})</value>
@@ -2863,7 +2831,6 @@ Zutritt 只读取——不会更改任何权限或文件。
   </data>
   <data name="Sid_WindowsAuthorizationAccess" xml:space="preserve">
     <value>Windows Authorization Access Group</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Store_AccessDenied" xml:space="preserve">
     <value>拒绝访问数据库。</value>

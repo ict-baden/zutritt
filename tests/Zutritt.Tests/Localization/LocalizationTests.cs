@@ -81,9 +81,28 @@ public sealed partial class LocalizationTests
     {
         // Richtlinie 13: vor dem ersten öffentlichen Release liest ein Muttersprachler gegen – bis dahin steht es in der Datei
         var comment = Document(code).Root!.Nodes().OfType<XComment>().FirstOrDefault()?.Value ?? "";
-        Assert.Contains("TODO-übersetzen", comment);
         Assert.Matches("(?i)automática|automatique|机器翻译", comment);
     }
+
+    [Theory]
+    [InlineData("es")]
+    [InlineData("fr")]
+    [InlineData("zh-Hans")]
+    public void Keine_offenen_Uebersetzungen(string code)
+    {
+        foreach (var data in Document(code).Root!.Elements("data"))
+            Assert.DoesNotContain("TODO-übersetzen", (string?)data.Element("comment") ?? "");
+    }
+
+    [Theory]
+    [InlineData("de", "")]
+    [InlineData("en", "")]
+    [InlineData("es", " (traducción automática)")]
+    [InlineData("fr", " (traduction automatique)")]
+    [InlineData("zh-Hans", "（机器翻译）")]
+    public void Sprachauswahl_kennzeichnet_maschinelle_Uebersetzung(string code, string suffix) =>
+        // Den Sprachnamen selbst liefert ICU bzw. Windows (z. B. „简体中文“ oder „中文(简体)“)
+        Assert.Equal(UiLanguage.NativeName(code) + suffix, UiLanguage.ChoiceName(code));
 
     [Fact]
     public void Deutsch_ist_vollstaendig_und_ohne_Markierung()

@@ -49,14 +49,18 @@ Details that help when filtering:
 
 ## PDF
 
-A4 portrait, set in Segoe UI (falling back to Arial, Tahoma or Verdana), with a running header *Zutritt · Berechtigungsbericht* plus the target, and a footer *Erstellt am … · Vertraulich* and *Seite X von Y*. The sections:
+A4 portrait, set in Segoe UI (falling back to Arial, Tahoma or Verdana), with a running header *Zutritt · Berechtigungsbericht* plus the target, and a footer *Erstellt am … · Vertraulich* and *Seite X von Y*.
+
+**Fonts.** Zutritt ships no fonts. The PDF uses the font installed on the computer that creates the report (Segoe UI and Arial come with Windows; on Linux and macOS DejaVu Sans or Liberation Sans) and embeds only the subset of characters the report actually uses, so it looks the same on every computer – as with any PDF created on Windows. For Chinese text a Chinese font from that computer is embedded the same way.
+
+The sections:
 
 | Section | Content |
 |---|---|
 | Cover | Target(s), period, PC, scanned by, version, scope, findings per severity, the run compared with, a table of contents with page numbers, and the note *Vertraulich – enthält Angaben zu Konten und Zugriffsrechten* (confidential) |
 | *Zusammenfassung* | Numbers, findings per severity as coloured tiles, notes, and the comparison in figures |
 | *Befunde* | Grouped by severity and rule; each group has a coloured bar with rule and title, then *Pfad*, *Konto*, *Meldung* |
-| *Prüfregeln und Empfehlungen* | All 14 rules with severity, number of findings, explanation and recommendation – also those without findings |
+| *Prüfregeln und Empfehlungen* | All 15 rules with severity, number of findings, explanation and recommendation – also those without findings |
 | *Freigaben* | Each share with path, remark and share permissions; deny entries in red |
 | *Ordner mit eigenen Rechten* | Each listed folder with depth, inheritance state, owner and share; a table of its explicit entries (*Konto*, *Art*, *Recht*, *Typ*, *Gilt für*) and one line with the inherited ones |
 | *Personen-Übersicht* | People with access: number of folders, highest right, groups, and hints such as *deaktiviert* or *direkt berechtigt* |

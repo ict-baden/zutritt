@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- Zutritt – textes français. TRADUCTION AUTOMATIQUE, non relue par un locuteur natif (directive 13) : à relire avant la première version publique. Les entrées marquées « TODO-übersetzen » sont encore en anglais. -->
+  <!-- Zutritt – textes français. TRADUCTION AUTOMATIQUE, non relue par un locuteur natif (directive 13) : la relecture reste à faire ; le choix de la langue et le README le signalent. Les noms de comptes Windows commentés « nicht an echter Ausgabe belegt » sont à vérifier sur un Windows français. -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
@@ -101,6 +101,9 @@
   </data>
   <data name="App_Tagline" xml:space="preserve">
     <value>Montre qui peut accéder à quoi sur les partages de fichiers – avec constats, comparaison et rapport.</value>
+  </data>
+  <data name="App_Title" xml:space="preserve">
+    <value>Zutritt – Autorisations de partage</value>
   </data>
   <data name="App_UnexpectedError" xml:space="preserve">
     <value>Erreur inattendue : {0}</value>
@@ -898,6 +901,15 @@ Zutritt se contente de lire – il ne modifie ni les autorisations ni les fichie
   <data name="Finding_InheritsNothing" xml:space="preserve">
     <value>N’hérite de rien du dossier parent bien que l’héritage soit activé – en général, un programme a créé le dossier avec ses propres autorisations. Les autorisations d’en haut ne s’appliquent ici qu’après la prochaine propagation.</value>
   </data>
+  <data name="Finding_NonCanonicalAfterInherited" xml:space="preserve">
+    <value>L’entrée explicite pour « {0} » se trouve après des entrées héritées – Windows évalue l’ordre enregistré, les entrées héritées placées avant s’appliquent en premier.</value>
+  </data>
+  <data name="Finding_NonCanonicalDeny" xml:space="preserve">
+    <value>L’entrée de refus pour « {0} » se trouve après une entrée d’autorisation – Windows évalue l’ordre enregistré, les autorisations placées avant s’appliquent en premier.</value>
+  </data>
+  <data name="Finding_NonCanonicalShareDeny" xml:space="preserve">
+    <value>Autorisations du partage : l’entrée de refus pour « {0} » se trouve après une entrée d’autorisation – le serveur évalue l’ordre enregistré, les autorisations placées avant s’appliquent en premier.</value>
+  </data>
   <data name="Finding_NotChecked" xml:space="preserve">
     <value>Non vérifié : {0}.</value>
   </data>
@@ -1198,6 +1210,9 @@ Zutritt se contente de lire – il ne modifie ni les autorisations ni les fichie
   </data>
   <data name="Info_LanguageMachine" xml:space="preserve">
     <value>Valeur par défaut de cet ordinateur ({0})</value>
+  </data>
+  <data name="Info_LanguageMachineTranslated" xml:space="preserve">
+    <value>{0} (traduction automatique)</value>
   </data>
   <data name="Info_LanguageNotSaved" xml:space="preserve">
     <value>La langue n’a pas pu être enregistrée : {0}</value>
@@ -2417,6 +2432,15 @@ Les rapports déjà enregistrés sont conservés.</value>
   <data name="Rule_ZT14_Title" xml:space="preserve">
     <value>Les autorisations diffèrent de l’héritage</value>
   </data>
+  <data name="Rule_ZT15_Explanation" xml:space="preserve">
+    <value>Windows vérifie les entrées d’une liste d’accès strictement dans l’ordre où elles sont enregistrées. Normalement, Windows les maintient dans l’ordre canonique – refus explicites, autorisations explicites, puis entrées héritées – afin qu’au même niveau le refus l’emporte et qu’une entrée explicite prime sur une entrée héritée. Cette liste ne respecte pas cet ordre (souvent écrite par un script, un ancien outil ou un programme de migration). Une autorisation peut alors s’appliquer avant un refus, ou un refus hérité peut annuler une autorisation explicite. Zutritt évalue l’ordre enregistré, exactement comme Windows – le résultat peut différer de ce que les entrées laissent supposer au premier abord.</value>
+  </data>
+  <data name="Rule_ZT15_Recommendation" xml:space="preserve">
+    <value>Ouvrir les paramètres de sécurité du dossier dans l’Explorateur : Windows signale que les autorisations ne sont pas correctement ordonnées et propose de les réordonner. Cela peut modifier qui a accès – vérifier ensuite le résultat (par exemple avec une nouvelle analyse).</value>
+  </data>
+  <data name="Rule_ZT15_Title" xml:space="preserve">
+    <value>Entrées dans un ordre non canonique</value>
+  </data>
   <data name="Scan_AdminShareDefault" xml:space="preserve">
     <value>Autorisations du partage illisibles : partage administratif sans autorisations propres – la valeur interne de Windows s’applique (en général, administrateurs uniquement)</value>
   </data>
@@ -2598,32 +2622,30 @@ Les rapports déjà enregistrés sont conservés.</value>
     <value>La fenêtre fait {0:0}×{1:0} au lieu de {2:0}×{3:0} points – les images seraient déformées.</value>
   </data>
   <data name="Sid_AccessControlAssistanceOperators" xml:space="preserve">
-    <value>Access Control Assistance Operators</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Opérateurs d’assistance de contrôle d’accès</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_AccountOperators" xml:space="preserve">
-    <value>Account Operators</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Opérateurs de compte</value>
   </data>
   <data name="Sid_Administrators" xml:space="preserve">
-    <value>Administrators</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Administrateurs</value>
   </data>
   <data name="Sid_AllAppPackages" xml:space="preserve">
-    <value>ALL APPLICATION PACKAGES</value>
-    <comment>TODO-übersetzen</comment>
+    <value>TOUS LES PACKAGES D’APPLICATION</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_AllRestrictedAppPackages" xml:space="preserve">
-    <value>ALL RESTRICTED APPLICATION PACKAGES</value>
-    <comment>TODO-übersetzen</comment>
+    <value>TOUS LES PACKAGES D’APPLICATION RESTREINTS</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_AllServices" xml:space="preserve">
     <value>ALL SERVICES</value>
-    <comment>TODO-übersetzen</comment>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_AnonymousLogon" xml:space="preserve">
     <value>ANONYMOUS LOGON</value>
-    <comment>TODO-übersetzen</comment>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_AppCapability" xml:space="preserve">
     <value>Fonctionnalité d’application ({0})</value>
@@ -2632,233 +2654,202 @@ Les rapports déjà enregistrés sont conservés.</value>
     <value>Package d’application ({0})</value>
   </data>
   <data name="Sid_AuthenticatedUsers" xml:space="preserve">
-    <value>Authenticated Users</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Utilisateurs authentifiés</value>
   </data>
   <data name="Sid_BackupOperators" xml:space="preserve">
-    <value>Backup Operators</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Opérateurs de sauvegarde</value>
   </data>
   <data name="Sid_Batch" xml:space="preserve">
-    <value>BATCH</value>
-    <comment>TODO-übersetzen</comment>
+    <value>TACHE</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_CapabilityGroup" xml:space="preserve">
     <value>Groupe de fonctionnalités ({0})</value>
   </data>
   <data name="Sid_CertificateServiceDcomAccess" xml:space="preserve">
-    <value>Certificate Service DCOM Access</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Accès DCOM service de certificats</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_ConsoleLogon" xml:space="preserve">
-    <value>CONSOLE LOGON</value>
-    <comment>TODO-übersetzen</comment>
+    <value>OUVERTURE DE SESSION DE CONSOLE</value>
   </data>
   <data name="Sid_CreatorGroup" xml:space="preserve">
-    <value>CREATOR GROUP</value>
-    <comment>TODO-übersetzen</comment>
+    <value>GROUPE CREATEUR</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_CreatorGroupServer" xml:space="preserve">
-    <value>CREATOR GROUP SERVER</value>
-    <comment>TODO-übersetzen</comment>
+    <value>SERVEUR GROUPE CREATEUR</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_CreatorOwner" xml:space="preserve">
-    <value>CREATOR OWNER</value>
-    <comment>TODO-übersetzen</comment>
+    <value>CREATEUR PROPRIETAIRE</value>
   </data>
   <data name="Sid_CreatorOwnerServer" xml:space="preserve">
-    <value>CREATOR OWNER SERVER</value>
-    <comment>TODO-übersetzen</comment>
+    <value>SERVEUR CREATEUR PROPRIETAIRE</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_CryptographicOperators" xml:space="preserve">
-    <value>Cryptographic Operators</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Opérateurs de chiffrement</value>
   </data>
   <data name="Sid_DistributedComUsers" xml:space="preserve">
-    <value>Distributed COM Users</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Utilisateurs du modèle COM distribué</value>
   </data>
   <data name="Sid_EnterpriseDomainControllers" xml:space="preserve">
-    <value>ENTERPRISE DOMAIN CONTROLLERS</value>
-    <comment>TODO-übersetzen</comment>
+    <value>CONTROLEURS DE DOMAINE D’ENTREPRISE</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_EventLogReaders" xml:space="preserve">
-    <value>Event Log Readers</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Lecteurs des journaux d’événements</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_Everyone" xml:space="preserve">
-    <value>Everyone</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Tout le monde</value>
   </data>
   <data name="Sid_Guests" xml:space="preserve">
-    <value>Guests</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Invités</value>
   </data>
   <data name="Sid_HyperVAdministrators" xml:space="preserve">
-    <value>Hyper-V Administrators</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Administrateurs Hyper-V</value>
   </data>
   <data name="Sid_IisAppPool" xml:space="preserve">
     <value>Pool d’applications IIS ({0})</value>
   </data>
   <data name="Sid_IncomingForestTrustBuilders" xml:space="preserve">
-    <value>Incoming Forest Trust Builders</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Générateurs d’approbations de forêt entrante</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_IntegrityLevel" xml:space="preserve">
     <value>Niveau d’intégrité ({0})</value>
   </data>
   <data name="Sid_Interactive" xml:space="preserve">
-    <value>INTERACTIVE</value>
-    <comment>TODO-übersetzen</comment>
+    <value>INTERACTIF</value>
   </data>
   <data name="Sid_Local" xml:space="preserve">
     <value>LOCAL</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_LocalAccount" xml:space="preserve">
-    <value>Local account</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Compte local</value>
   </data>
   <data name="Sid_LocalAdminAccount" xml:space="preserve">
-    <value>Local account and member of Administrators group</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Compte local et membre du groupe Administrateurs</value>
   </data>
   <data name="Sid_LocalService" xml:space="preserve">
-    <value>LOCAL SERVICE</value>
-    <comment>TODO-übersetzen</comment>
+    <value>SERVICE LOCAL</value>
   </data>
   <data name="Sid_LogonSession" xml:space="preserve">
     <value>Session d’ouverture ({0})</value>
   </data>
   <data name="Sid_Network" xml:space="preserve">
-    <value>NETWORK</value>
-    <comment>TODO-übersetzen</comment>
+    <value>RESEAU</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_NetworkConfigurationOperators" xml:space="preserve">
-    <value>Network Configuration Operators</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Opérateurs de configuration réseau</value>
   </data>
   <data name="Sid_NetworkService" xml:space="preserve">
-    <value>NETWORK SERVICE</value>
-    <comment>TODO-übersetzen</comment>
+    <value>SERVICE RÉSEAU</value>
   </data>
   <data name="Sid_NtlmAuthentication" xml:space="preserve">
-    <value>NTLM Authentication</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Authentifications NTLM</value>
   </data>
   <data name="Sid_NullSid" xml:space="preserve">
-    <value>NULL SID</value>
-    <comment>TODO-übersetzen</comment>
+    <value>SID NULL</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_OtherOrganization" xml:space="preserve">
-    <value>Other Organization</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Autre organisation</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_OwnerRights" xml:space="preserve">
-    <value>OWNER RIGHTS</value>
-    <comment>TODO-übersetzen</comment>
+    <value>DROITS DU PROPRIETAIRE</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_PerformanceLogUsers" xml:space="preserve">
-    <value>Performance Log Users</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Utilisateurs du journal de performances</value>
   </data>
   <data name="Sid_PerformanceMonitorUsers" xml:space="preserve">
-    <value>Performance Monitor Users</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Utilisateurs de l’Analyseur de performances</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_PowerUsers" xml:space="preserve">
-    <value>Power Users</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Utilisateurs avec pouvoir</value>
   </data>
   <data name="Sid_PrefixAppPackages" xml:space="preserve">
-    <value>APPLICATION PACKAGE AUTHORITY\</value>
-    <comment>TODO-übersetzen</comment>
+    <value>AUTORITE DE PACKAGE D’APPLICATION\</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_PrefixBuiltin" xml:space="preserve">
     <value>BUILTIN\</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_PrefixNt" xml:space="preserve">
-    <value>NT AUTHORITY\</value>
-    <comment>TODO-übersetzen</comment>
+    <value>AUTORITE NT\</value>
   </data>
   <data name="Sid_PreWindows2000" xml:space="preserve">
-    <value>Pre-Windows 2000 Compatible Access</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Accès compatible pré-Windows 2000</value>
   </data>
   <data name="Sid_PrintOperators" xml:space="preserve">
-    <value>Print Operators</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Opérateurs d’impression</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_RdsEndpointServers" xml:space="preserve">
-    <value>RDS Endpoint Servers</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Serveurs RDS Endpoint</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_RdsManagementServers" xml:space="preserve">
-    <value>RDS Management Servers</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Serveurs Administration RDS</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_RdsRemoteAccessServers" xml:space="preserve">
-    <value>RDS Remote Access Servers</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Serveurs Accès Distant RDS</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_RemoteDesktopUsers" xml:space="preserve">
-    <value>Remote Desktop Users</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Utilisateurs du Bureau à distance</value>
   </data>
   <data name="Sid_RemoteInteractiveLogon" xml:space="preserve">
     <value>REMOTE INTERACTIVE LOGON</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_RemoteManagementUsers" xml:space="preserve">
-    <value>Remote Management Users</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Utilisateurs de gestion à distance</value>
   </data>
   <data name="Sid_Replicator" xml:space="preserve">
-    <value>Replicator</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Duplicateurs</value>
   </data>
   <data name="Sid_Restricted" xml:space="preserve">
-    <value>RESTRICTED</value>
-    <comment>TODO-übersetzen</comment>
+    <value>RESTREINT</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_ScheduledTask" xml:space="preserve">
     <value>Tâche planifiée ({0})</value>
   </data>
   <data name="Sid_Self" xml:space="preserve">
     <value>SELF</value>
-    <comment>TODO-übersetzen</comment>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_ServerOperators" xml:space="preserve">
-    <value>Server Operators</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Opérateurs de serveur</value>
   </data>
   <data name="Sid_Service" xml:space="preserve">
     <value>SERVICE</value>
-    <comment>TODO-übersetzen</comment>
   </data>
   <data name="Sid_ServiceNotInstalled" xml:space="preserve">
     <value>Service non installé ({0})</value>
   </data>
   <data name="Sid_TerminalServerLicenseServers" xml:space="preserve">
-    <value>Terminal Server License Servers</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Serveurs de licences des services Terminal Server</value>
   </data>
   <data name="Sid_TerminalServerUser" xml:space="preserve">
     <value>TERMINAL SERVER USER</value>
-    <comment>TODO-übersetzen</comment>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Sid_ThisOrganization" xml:space="preserve">
-    <value>This Organization</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Cette organisation</value>
   </data>
   <data name="Sid_UserModeDriver" xml:space="preserve">
     <value>Pilote en mode utilisateur ({0})</value>
   </data>
   <data name="Sid_Users" xml:space="preserve">
-    <value>Users</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Utilisateurs</value>
   </data>
   <data name="Sid_VirtualMachine" xml:space="preserve">
     <value>Machine virtuelle ({0})</value>
@@ -2867,8 +2858,8 @@ Les rapports déjà enregistrés sont conservés.</value>
     <value>Compte système virtuel ({0})</value>
   </data>
   <data name="Sid_WindowsAuthorizationAccess" xml:space="preserve">
-    <value>Windows Authorization Access Group</value>
-    <comment>TODO-übersetzen</comment>
+    <value>Groupe d’accès d’autorisation Windows</value>
+    <comment>Windows-Name nicht an echter Ausgabe belegt – auf lokalisiertem Windows prüfen (whoami /groups)</comment>
   </data>
   <data name="Store_AccessDenied" xml:space="preserve">
     <value>Accès à la base de données refusé.</value>

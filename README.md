@@ -2,23 +2,25 @@
   <img src="docs/assets/banner.png" alt="Zutritt – Who can access what? Share and NTFS permissions resolved down to people – with findings, history and a report to sign off." width="100%">
 </p>
 
+<h1 align="center">Zutritt – Share Permissions <sub><i>(Freigaben-Rechte)</i></sub></h1>
+
 <p align="center">
-  <a href="https://github.com/ict-baden/zutritt/releases/tag/latest"><img alt="Download: latest" src="https://img.shields.io/badge/Download-latest-2ea44f?logo=github&logoColor=white"></a>
+  <a href="https://github.com/ict-baden/zutritt/releases/latest"><img alt="Download: latest release" src="https://img.shields.io/github/v/release/ict-baden/zutritt?label=Download&logo=github&logoColor=white&color=2ea44f"></a>
   <img alt="Windows 10 and 11, x64" src="https://img.shields.io/badge/Windows-10%20%7C%2011%20x64-0078D4">
   <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white">
   <img alt="Data stays local" src="https://img.shields.io/badge/Data-stays%20local-2E7D32">
   <img alt="Read-only" src="https://img.shields.io/badge/Access-read--only-2E7D32">
   <img alt="User interface in English, German, Spanish, French and Chinese" src="https://img.shields.io/badge/UI-en%20%C2%B7%20de%20%C2%B7%20es%20%C2%B7%20fr%20%C2%B7%20zh-6B7280">
   <img alt="Licence: MIT" src="https://img.shields.io/badge/Licence-MIT-blue">
-  <img alt="Status: pre-release" src="https://img.shields.io/badge/Status-pre--release-E3A008">
+  <img alt="Status: early version" src="https://img.shields.io/badge/Status-early%20version%200.x-E3A008">
   <a href="https://github.com/ict-baden/zutritt/actions/workflows/build.yml"><img alt="Build" src="https://github.com/ict-baden/zutritt/actions/workflows/build.yml/badge.svg"></a>
 </p>
 
 <p align="center">
-  <b><a href="https://github.com/ict-baden/zutritt/releases/tag/latest">Download</a></b>
+  <b><a href="https://github.com/ict-baden/zutritt/releases/latest">Download</a></b>
   &nbsp;·&nbsp; <a href="#what-zutritt-does">Features</a>
   &nbsp;·&nbsp; <a href="#quick-start">Quick start</a>
-  &nbsp;·&nbsp; <a href="#the-14-rules">Rules</a>
+  &nbsp;·&nbsp; <a href="#the-15-rules">Rules</a>
   &nbsp;·&nbsp; <a href="#documentation">Documentation</a>
   &nbsp;·&nbsp; <a href="#limits-honestly">Limits</a>
 </p>
@@ -36,7 +38,7 @@
 </p>
 
 > [!NOTE]
-> **Deutsch:** Zutritt zeigt, wer auf Dateifreigaben worauf zugreifen darf – und über welche Gruppe. Es liest Freigabe- und NTFS-Rechte, löst Gruppen bis zur einzelnen Person auf, meldet riskante Berechtigungen und schreibt einen Excel- oder PDF-Bericht zum Abzeichnen. Nur lesend, ohne Server und ohne Agent. Download: [Zutritt.exe](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt.exe) oder [Zutritt-x64.msi](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt-x64.msi). Oberfläche, Befehlszeile und Berichte gibt es auf Deutsch, Englisch, Spanisch, Französisch und Chinesisch (folgt Windows, umstellbar auf der Seite *Info*), diese Dokumentation ist englisch.
+> **Deutsch:** Zutritt zeigt, wer auf Dateifreigaben worauf zugreifen darf – und über welche Gruppe. Es liest Freigabe- und NTFS-Rechte, löst Gruppen bis zur einzelnen Person auf, meldet riskante Berechtigungen und schreibt einen Excel- oder PDF-Bericht zum Abzeichnen. Nur lesend, ohne Server und ohne Agent. Download: [aktuelle Version](https://github.com/ict-baden/zutritt/releases/latest) (MSI, [Zutritt.exe](https://github.com/ict-baden/zutritt/releases/latest/download/Zutritt.exe), ZIP). Oberfläche, Befehlszeile und Berichte gibt es auf Deutsch, Englisch, Spanisch, Französisch und Chinesisch (folgt Windows, umstellbar auf der Seite *Info*), diese Dokumentation ist englisch.
 >
 > **The application, its command-line output and the reports come in English, German, Spanish, French and Chinese (simplified)** – following the Windows display language, switchable on the *Info* page ([Languages](docs/usage.md#languages)). Spanish, French and Chinese are machine translations that have not been reviewed by native speakers yet. The screenshots in this documentation show the German interface and quote its labels, for example *Befunde* (findings) or *Wer darf hier rein* (who can get in here).
 
@@ -57,7 +59,7 @@
         <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/findings-dark.png">
         <img alt="Befunde page: findings grouped by severity, with the detail pane for ZT01 showing explanation and recommendation." src="docs/assets/screenshots/findings-light.png" width="290">
       </picture>
-      <br><b>14 rules with a clear recommendation</b><br>
+      <br><b>15 rules with a clear recommendation</b><br>
       <i>Everyone</i> can write, orphaned SIDs, rights given to individuals, hidden inheritance breaks, moved folders – each with “why it matters”.
     </td>
     <td width="33%" valign="top">
@@ -101,7 +103,7 @@
 
 <table>
   <tr>
-    <td width="50%" valign="top"><b>Effective access, computed like Windows</b><br>Canonical ACE order, deny entries, inheritance, <i>OWNER RIGHTS</i>, share ∩ NTFS – checked against the Windows access check in the test suite</td>
+    <td width="50%" valign="top"><b>Effective access, computed like Windows</b><br>Stored ACE order (non-canonical lists included), deny entries, inheritance, <i>OWNER RIGHTS</i>, share ∩ NTFS – checked against the Windows access check in the test suite</td>
     <td width="50%" valign="top"><b>Groups down to people</b><br>Local accounts and groups of the scanned server and, on domain-joined PCs, Active Directory – nested, with cycle protection. Active Directory is so far tested against a simulated directory only (<a href="#limits-honestly">Limits</a>)</td>
   </tr>
   <tr>
@@ -124,14 +126,16 @@
   </tr>
 </table>
 
-**① Download** – from the release [**latest**](https://github.com/ict-baden/zutritt/releases/tag/latest), the newest build of `main`. These links always point to it:
+**① Download** – from the **[current release](https://github.com/ict-baden/zutritt/releases/latest)** (file names carry the version, e.g. `Zutritt-0.1.0-x64.msi`):
 
 | File | What it is |
 |---|---|
-| **[Zutritt-x64.msi](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt-x64.msi)** | Installer for all users: `C:\Program Files\Zutritt`, Start menu entry, no service, no autostart. No .NET runtime needed. Silent: `msiexec /i Zutritt-x64.msi /qn` – for Intune or GPO. |
-| **[Zutritt.exe](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt.exe)** | A single file that runs without installation and without a .NET runtime. |
-| [Zutritt-win-x64-framework.zip](https://github.com/ict-baden/zutritt/releases/download/latest/Zutritt-win-x64-framework.zip) | Small variant; needs the .NET 10 Desktop Runtime. |
-| [SHA256SUMS.txt](https://github.com/ict-baden/zutritt/releases/download/latest/SHA256SUMS.txt) | Checksums of all files – the builds are not code-signed yet, so check them ([how](docs/installation.md#verifying-the-download)). |
+| **Zutritt-*version*-x64.msi** | Installer for all users: `C:\Program Files\Zutritt`, Start menu entry, no service, no autostart. No .NET runtime needed. Silent: `msiexec /i Zutritt-0.1.0-x64.msi /qn` – for Intune or GPO. |
+| **[Zutritt.exe](https://github.com/ict-baden/zutritt/releases/latest/download/Zutritt.exe)** | A single file that runs without installation and without a .NET runtime. |
+| Zutritt-*version*-win-x64-framework.zip | Small variant; needs the .NET 10 Desktop Runtime. |
+| [SHA256SUMS.txt](https://github.com/ict-baden/zutritt/releases/latest/download/SHA256SUMS.txt) | Checksums of all files – the builds are not code-signed yet, so check them ([how](docs/installation.md#verifying-the-download)). |
+
+The newest build of `main` is the pre-release [**latest**](https://github.com/ict-baden/zutritt/releases/tag/latest), with fixed file names (`Zutritt-x64.msi`, `Zutritt.exe` …) – for trying changes before the next version, not for production.
 
 Want to look around without a file server? Start **`Zutritt.exe --demo`** – two built-in demo runs in a temporary database that is deleted when you close the window.
 
@@ -157,7 +161,7 @@ schtasks /create /tn "Zutritt Wochenbericht" /sc weekly /d MO /st 06:00 /tr ^
 
 All commands, options, logging and encoding: **[Command line →](docs/command-line.md)**
 
-## The 14 rules
+## The 15 rules
 
 ACL findings are reported where an entry is set explicitly – not again on every folder that inherits it.
 
@@ -177,6 +181,7 @@ ACL findings are reported where an entry is set explicitly – not again on ever
 | [ZT12](docs/rules.md#zt12--disabled-account-has-rights) | ![Medium](https://img.shields.io/badge/Medium-EF6C00) | A disabled account has its own rights | *Deaktiviertes Konto berechtigt* |
 | [ZT13](docs/rules.md#zt13--share-permissions-not-readable) | ![Info](https://img.shields.io/badge/Info-BDBDBD) | Share permissions could not be read | *Freigabe-Berechtigungen nicht lesbar* |
 | [ZT14](docs/rules.md#zt14--permissions-differ-from-inheritance) | ![Low](https://img.shields.io/badge/Low-FBC02D) | Inherited entries do not match the parent – typically a moved folder | *Rechte weichen von der Vererbung ab* |
+| [ZT15](docs/rules.md#zt15--entries-not-in-canonical-order) | ![Medium](https://img.shields.io/badge/Medium-EF6C00) | Entries not in canonical order (e.g. an allow before a deny) – Windows evaluates the stored order | *Einträge nicht in kanonischer Reihenfolge* |
 
 Folders whose permissions Windows itself manages (owner *TrustedInstaller*, entries for app packages and capabilities) do not trigger the housekeeping rules ZT02, ZT03, ZT06, ZT10 and ZT14, nor ZT05 for the folder's owner. Every rule in detail: **[Rules reference →](docs/rules.md)**
 
@@ -187,7 +192,7 @@ Folders whose permissions Windows itself manages (owner *TrustedInstaller*, entr
 | Share **and** NTFS permissions | ◐ NTFS easy, share permissions need extra work | ✔︎ | ✔︎ |
 | Groups resolved down to people | ✘ manual | ✔︎ | ✔︎ local SAM and AD of the scanning PC's domain |
 | Effective access (deny, inheritance, share ∩ NTFS) | ✘ | ✔︎ | ✔︎ |
-| Risk findings with recommendations | ✘ | ✔︎ | ✔︎ 14 fixed rules |
+| Risk findings with recommendations | ✘ | ✔︎ | ✔︎ 15 fixed rules |
 | Comparison with the previous run | ◐ diff by hand | ✔︎ | ✔︎ |
 | Report to sign off | ◐ build it yourself | ✔︎ | ✔︎ PDF with sign-off block, Excel with filters |
 | Change permissions, request and approval workflows | ✔︎ (icacls) | ✔︎ usually | ✘ deliberately read-only |
@@ -208,7 +213,7 @@ Zutritt answers one question well – *who can access what, and why* – for adm
   </tr>
   <tr>
     <td valign="top"><a href="docs/command-line.md"><b>Command line</b></a><br><sub><code>scan</code>, <code>liste</code>, <code>bericht</code>, <code>--version</code>, <code>--info</code>, options, exit codes, scheduled tasks, logging and encoding</sub></td>
-    <td valign="top"><a href="docs/rules.md"><b>Rules reference</b></a><br><sub>All 14 rules: what they mean, why they matter, what to do, and the deliberate exceptions</sub></td>
+    <td valign="top"><a href="docs/rules.md"><b>Rules reference</b></a><br><sub>All 15 rules: what they mean, why they matter, what to do, and the deliberate exceptions</sub></td>
   </tr>
   <tr>
     <td valign="top"><a href="docs/how-it-works.md"><b>How it works</b></a><br><sub>Scanning, what gets stored, NT4-style ACLs, the effective-access algorithm, identities, comparison</sub></td>
@@ -264,12 +269,14 @@ Needs the .NET 10 SDK (`global.json`: 10.0.100, roll forward to the latest featu
 
 ---
 
-<!-- Impressum: dieselbe Adresse wie in der App (AppInfo.ImpressumUrl); die neue Webseite leitet sie später weiter. -->
+<!-- Impressum: dieselbe Adresse wie in der App (AppInfo.ImpressumUrl). -->
 <sub>
 Zutritt is free and open source software by <b>ICT-Baden</b>. &nbsp;·&nbsp;
 Licence: <a href="LICENSE">MIT</a> &nbsp;·&nbsp;
 Third-party licences: <a href="THIRD-PARTY-NOTICES.txt">THIRD-PARTY-NOTICES.txt</a> &nbsp;·&nbsp;
 Support: free via GitHub, guaranteed with a <a href="SUPPORT.md">support contract</a> &nbsp;·&nbsp;
 <a href="SECURITY.md">Security</a> &nbsp;·&nbsp;
-<a href="https://ict-baden.de/index.html?page=imprint">Impressum</a>
+<a href="https://ict-baden.de/">Website</a> &nbsp;·&nbsp;
+<a href="https://ict-baden.de/impressum/">Impressum</a> &nbsp;·&nbsp;
+<a href="https://ict-baden.de/datenschutz/">Datenschutz</a>
 </sub>

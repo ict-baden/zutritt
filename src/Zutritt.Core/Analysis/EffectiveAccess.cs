@@ -9,10 +9,10 @@ namespace Zutritt.Core.Analysis;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Auswertung wie die Zugriffsprüfung von Windows: Einträge in kanonischer Reihenfolge (explizit verweigern,
-/// explizit erlauben, dann geerbte Einträge in gespeicherter Reihenfolge); ein Recht gilt, wenn es erlaubt
-/// wurde, bevor ein passender Verweigern-Eintrag es sperrt. Auf derselben Ebene gewinnt damit Verweigern, ein
-/// expliziter Erlauben-Eintrag schlägt aber eine geerbte Verweigerung – genau wie bei Windows.
+/// Auswertung wie die Zugriffsprüfung von Windows: Einträge in gespeicherter Reihenfolge; ein Recht gilt, wenn es
+/// erlaubt wurde, bevor ein passender Verweigern-Eintrag es sperrt. In der üblichen kanonischen Reihenfolge (explizit
+/// verweigern, explizit erlauben, dann geerbt) gewinnt damit auf derselben Ebene Verweigern, ein expliziter
+/// Erlauben-Eintrag schlägt eine geerbte Verweigerung. Andere Reihenfolgen meldet ZT15.
 /// </para>
 /// <para>
 /// Einträge für „INHERIT_ONLY“ zählen nicht für den Ordner selbst, ERSTELLER-BESITZER wird ignoriert,

@@ -61,10 +61,10 @@ public sealed class AppInfoTests
     }
 
     [Fact]
-    public void Impressum_zeigt_auf_die_erreichbare_Seite()
+    public void Impressum_und_Webseite_zeigen_auf_die_Seiten_von_ICT_Baden()
     {
-        // „/impressum“ gibt es auf der heutigen Webseite nicht (404), nur index.html?page=imprint; die neue leitet weiter
-        Assert.Equal("https://ict-baden.de/index.html?page=imprint", AppInfo.ImpressumUrl);
+        Assert.Equal("https://ict-baden.de/impressum/", AppInfo.ImpressumUrl);
+        Assert.Equal("https://ict-baden.de/produkte/zutritt/", AppInfo.WebsiteUrl);
     }
 
     [Theory]

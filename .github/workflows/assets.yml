@@ -1,0 +1,51 @@
+# Erzeugt die Bilder der Doku (Screenshots, Berichtsseiten, Banner) auf einem Windows-Runner neu – für alle, die keine
+# angemeldete Windows-Sitzung haben (CLAUDE.md). Ergebnis als Artefakt „doku-bilder“, einchecken von Hand.
+# Start: von Hand (workflow_dispatch) oder durch Push auf einen Branch „assets/…“ (geht auch, bevor die Datei in main ist).
+name: Doku-Bilder
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['assets/**']
+
+permissions:
+  contents: read
+
+jobs:
+  assets:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Werkzeuge
+        shell: pwsh
+        working-directory: tools/screenshots
+        run: |
+          pip install pypdfium2 pillow
+          if ($LASTEXITCODE -ne 0) { throw "pip fehlgeschlagen" }
+          if (Test-Path package-lock.json) { npm ci } else { npm install }
+          if ($LASTEXITCODE -ne 0) { throw "npm fehlgeschlagen" }
+
+      - name: Bilder erzeugen
+        shell: pwsh
+        run: ./tools/screenshots/make-assets.ps1
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: doku-bilder
+          path: docs/assets/
+          if-no-files-found: error
+          retention-days: 7

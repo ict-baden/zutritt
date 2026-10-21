@@ -8,7 +8,7 @@ namespace Zutritt.Demo;
 
 /// <summary>
 /// Eingebauter Demo-Lauf: erfundener Fileserver \\FS01 eines Pharma-Mittelständlers mit den Freigaben Labor, QM
-/// und Produktion, Rollenkonten statt Personennamen und allen Befund-Arten (ZT01–ZT14), dazu ein Lauf eine Woche früher für den
+/// und Produktion, Rollenkonten statt Personennamen und allen Befund-Arten (ZT01–ZT15), dazu ein Lauf eine Woche früher für den
 /// Vergleich. Keine echten Kundendaten. Die Befunde kommen aus den echten Regeln (<see cref="FindingRules.Evaluate"/>),
 /// ihre Texte und die Namen der Windows-eigenen Konten (Jeder, VORDEFINIERT\Administratoren …) also in der Sprache der
 /// Oberfläche – wie bei einem echten Scan. Ordner, Domäne MUSTER und ihre Gruppen sind Daten einer deutschen Firma.
@@ -203,8 +203,8 @@ public static class DemoData
             {
                 Server = "FS01", Name = "QM", LocalPath = @"D:\Freigaben\QM", Remark = "Qualitätsmanagement",
                 // Der externe Auditor darf über das Netz höchstens lesen – Verweigern „ab Ändern“ (Lesen bleibt erlaubt)
-                Permissions = [new ShareAce(AuthUsers, ShareAccess.Aendern, false), new ShareAce(Administrators, ShareAccess.Vollzugriff, false),
-                    new ShareAce(ExtAuditor, ShareAccess.Aendern, true)],
+                Permissions = [new ShareAce(ExtAuditor, ShareAccess.Aendern, true), new ShareAce(AuthUsers, ShareAccess.Aendern, false),
+                    new ShareAce(Administrators, ShareAccess.Vollzugriff, false)],
             });
             Scan.Shares.Add(new ShareInfo
             {
@@ -252,7 +252,7 @@ public static class DemoData
             }
 
             Folder(S, @"\Archiv", 1, broken: false, Administrators,
-                A(AuthUsers, Read), A(Labor02, Modify, deny: true), I(System, Full), I(Administrators, Full), I(LaborAlle, Modify));
+                A(Labor02, Modify, deny: true), A(AuthUsers, Read), I(System, Full), I(Administrators, Full), I(LaborAlle, Modify));
 
             Folder(S, @"\Projekte", 1, broken: false, Administrators,
                 A(Geschaeftsleitung, Read), I(System, Full), I(Administrators, Full), I(LaborAlle, Modify));
@@ -297,6 +297,9 @@ public static class DemoData
                 A(AuthUsers, Read), I(System, Full), I(Administrators, Full), I(QmTeam, Modify), I(QmLeser, Read));
             Folder(S, @"\SOPs\Archiv", 2, broken: false, Administrators,
                 A(ProduktionAlle, Read, deny: true), I(System, Full), I(Administrators, Full), I(QmTeam, Modify), I(QmLeser, Read));
+            // Von einem Migrationsskript angelegt: der eigene Eintrag steht hinter den geerbten (nicht kanonisch, ZT15)
+            Folder(S, @"\SOPs\Import", 2, broken: false, Administrators,
+                I(System, Full), I(Administrators, Full), I(QmTeam, Modify), I(QmLeser, Read), A(ProduktionLeitung, Read));
 
             if (!older)
             {

@@ -17,14 +17,11 @@ public static class AppInfo
     public const string PrivacyUrl = RepositoryUrl + "/blob/main/docs/data-and-privacy.md";
     public const string LicenseUrl = RepositoryUrl + "/blob/main/LICENSE";
 
-    /// <summary>
-    /// Impressum – es gibt nur eines, auf der Webseite (Richtlinie 07). Die heutige Webseite hat es nur unter dieser
-    /// Adresse („/impressum“ ergibt 404); die neue Webseite leitet sie später weiter.
-    /// </summary>
-    public const string ImpressumUrl = "https://ict-baden.de/index.html?page=imprint";
+    /// <summary>Impressum – es gibt nur eines, auf der Webseite (Richtlinie 07).</summary>
+    public const string ImpressumUrl = "https://ict-baden.de/impressum/";
 
-    /// <summary>Webseite – ⚠ noch offen (OFFEN.md); bis dahin die Organisation auf GitHub.</summary>
-    public const string WebsiteUrl = "https://github.com/ict-baden";
+    /// <summary>Webseite: die Produktseite von Zutritt.</summary>
+    public const string WebsiteUrl = "https://ict-baden.de/produkte/zutritt/";
 
     public static string LicenseName => Strings.App_LicenseName;
 

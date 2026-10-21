@@ -32,8 +32,9 @@ public static class FindingRules
     internal const string DisabledAccount = "ZT12";
     internal const string ShareUnreadable = "ZT13";
     internal const string InheritanceDiffers = "ZT14";
+    internal const string NonCanonical = "ZT15";
 
-    /// <summary>Alle Regeln in fester Reihenfolge (ZT01 … ZT14), Texte in der Sprache der Oberfläche.</summary>
+    /// <summary>Alle Regeln in fester Reihenfolge (ZT01 … ZT15), Texte in der Sprache der Oberfläche.</summary>
     public static IReadOnlyList<RuleInfo> All =>
     [
         new(BroadWrite, Severity.Hoch, Strings.Rule_ZT01_Title,
@@ -78,6 +79,9 @@ public static class FindingRules
         new(InheritanceDiffers, Severity.Niedrig, Strings.Rule_ZT14_Title,
             Strings.Rule_ZT14_Explanation,
             Strings.Rule_ZT14_Recommendation),
+        new(NonCanonical, Severity.Mittel, Strings.Rule_ZT15_Title,
+            Strings.Rule_ZT15_Explanation,
+            Strings.Rule_ZT15_Recommendation),
     ];
 
     /// <summary>Regel zur ID (z. B. „ZT01“), null wenn unbekannt.</summary>
@@ -113,6 +117,12 @@ public static class FindingRules
             if (folder.InheritanceDiffers && !folder.InheritanceBroken && !managed
                 && !folder.Aces.Any(a => SidCatalog.IsWindowsInternal(a.Sid)))
                 sink.Add(InheritanceDiffers, folder.Path, null, DescribeInheritanceDiffers(ctx, folder));
+
+            // Auch in Windows-Ordnern: Die Reihenfolge entscheidet, wer Zugriff hat – Windows selbst schreibt sie nie so
+            if (!AccessContext.IsCanonical(folder.Aces, out var misplaced, out var afterInherited))
+                sink.Add(NonCanonical, folder.Path, misplaced!.Sid,
+                    Texts.Format(afterInherited ? Strings.Finding_NonCanonicalAfterInherited : Strings.Finding_NonCanonicalDeny,
+                        ctx.Label(misplaced.Sid)));
         }
 
         EvaluateShares(ctx, sink);
@@ -335,6 +345,18 @@ public static class FindingRules
                     Texts.Format(Strings.Finding_ShareUnreadable, share.UncPath));
                 continue;
             }
+            // Freigabe-Rechte kennen keine Vererbung: kanonisch heißt Verweigern vor Erlauben
+            var allowSeen = false;
+            foreach (var ace in share.Permissions)
+            {
+                if (!ace.IsDeny) allowSeen = true;
+                else if (allowSeen)
+                {
+                    sink.Add(NonCanonical, share.UncPath, ace.Sid,
+                        Texts.Format(Strings.Finding_NonCanonicalShareDeny, ctx.Label(ace.Sid)));
+                    break; // ein Befund je Freigabe genügt
+                }
+            }
             foreach (var ace in share.Permissions)
             {
                 if (!ace.IsDeny && ace.Access >= ShareAccess.Aendern
@@ -377,8 +399,7 @@ public static class FindingRules
     {
         public static ScopeLevels For(AccessContext ctx, FolderNode folder, string sid)
         {
-            // Explizite Verweigerungen stehen kanonisch vor expliziten Erlaubnissen – sie treffen auch die Mitglieder,
-            // geerbte Verweigerungen können explizite Erlaubnisse dagegen nicht aufheben.
+            // Explizite Verweigerungen stehen kanonisch vor expliziten Erlaubnissen – sie treffen auch die Mitglieder.
             var token = ctx.TokenOf(sid, AccessContext.LogonFor(folder));
             Span<FileRights> allow = stackalloc FileRights[3];
             Span<FileRights> deny = stackalloc FileRights[3];
@@ -387,15 +408,20 @@ public static class FindingRules
 
             foreach (var ace in folder.Aces)
             {
-                if (ace.IsInherited) continue;
-                bool own = ace.Sid.Equals(sid, StringComparison.OrdinalIgnoreCase);
+                // Geerbte Erlaubnisse zählen nicht (die Regel gilt dem expliziten Eintrag), geerbte Verweigerungen schon:
+                // In kanonischer Reihenfolge stehen sie hinter allen expliziten Erlaubnissen und sperren nichts mehr davon,
+                // in nicht kanonischer (ZT15) können sie davor stehen und sperren – wie bei Windows.
+                if (ace.IsInherited && !ace.IsDeny) continue;
+                bool own = !ace.IsInherited && ace.Sid.Equals(sid, StringComparison.OrdinalIgnoreCase);
                 if (ace.IsDeny ? !token.Contains(ace.Sid) : !own) continue;
 
                 var mask = Rights.MapGeneric(ace.Rights);
                 var target = ace.IsDeny ? deny : allow;
-                if (!ace.InheritOnly) target[0] |= mask;
-                if (!folder.IsFile && (ace.Inheritance & AceInheritance.ContainerInherit) != 0) target[1] |= mask;
-                if (!folder.IsFile && (ace.Inheritance & AceInheritance.ObjectInherit) != 0) target[2] |= mask;
+                // Gespeicherte Reihenfolge wie bei Windows: Eine Verweigerung sperrt nur, was davor noch nicht erlaubt war
+                // (in kanonischer Reihenfolge stehen alle expliziten Verweigerungen vorn, dann ist das alles).
+                if (!ace.InheritOnly) target[0] |= ace.IsDeny ? mask & ~allow[0] : mask;
+                if (!folder.IsFile && (ace.Inheritance & AceInheritance.ContainerInherit) != 0) target[1] |= ace.IsDeny ? mask & ~allow[1] : mask;
+                if (!folder.IsFile && (ace.Inheritance & AceInheritance.ObjectInherit) != 0) target[2] |= ace.IsDeny ? mask & ~allow[2] : mask;
 
                 if (own && ace.IsDeny) { hasDeny = true; ownDeny |= mask; }
                 if (own && !ace.IsDeny) { hasAllow = true; ownAllow |= mask; }

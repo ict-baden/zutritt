@@ -4,10 +4,10 @@
 
 Bitte **kein öffentliches Issue**. Melden Sie Sicherheitslücken vertraulich:
 
-- über GitHub: [Private vulnerability report](https://github.com/ict-baden/zutritt/security/advisories/new)
-<!-- ⚠ E-Mail-Adresse für Sicherheitsmeldungen folgt, sobald sie feststeht (OFFEN.md „E-Mail-Adressen“). -->
+- über GitHub: [Private vulnerability report](https://github.com/ict-baden/zutritt/security/advisories/new) (bevorzugt)
+- ohne GitHub-Konto: über die [Kontaktseite von ICT-Baden](https://ict-baden.de/#kontakt) – bitte nur um einen vertraulichen Kanal bitten, keine Details in die erste Nachricht
 
-Please **do not open a public issue**. Report vulnerabilities privately via the link above.
+Please **do not open a public issue**. Report vulnerabilities privately via GitHub (preferred) or, without a GitHub account, ask for a confidential channel via the [ICT-Baden contact page](https://ict-baden.de/#kontakt).
 
 Hilfreich sind: betroffene Version, Schritte zum Nachstellen, mögliche Auswirkung. Bitte keine echten Berichte, Datenbanken (`zutritt.db`) oder Server-, Freigabe- und Kontonamen aus Ihrer Umgebung beilegen – sie zeigen, wer worauf zugreifen darf.
 

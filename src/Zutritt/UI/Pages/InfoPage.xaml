@@ -10,7 +10,7 @@
                     <Image Source="pack://application:,,,/Zutritt;component/Assets/zutritt.png" Width="64" Height="64"
                            RenderOptions.BitmapScalingMode="HighQuality"/>
                     <StackPanel Margin="20,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="Zutritt" Style="{StaticResource SubtitleText}"/>
+                        <TextBlock Text="{x:Static res:Strings.App_Title}" Style="{StaticResource SubtitleText}"/>
                         <TextBlock x:Name="VersionText" Text="" Style="{StaticResource Caption}"/>
                         <TextBlock Text="{x:Static res:Strings.App_Tagline}"
                                    Style="{StaticResource Caption}"/>

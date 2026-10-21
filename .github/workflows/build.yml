@@ -111,6 +111,20 @@ jobs:
         # räumen auf. Die Test-Ziele nacheinander, sonst kommen sich die echten Freigaben und Konten in die Quere.
         run: dotnet test "${{ env.APP }}.sln" -c Release --no-build -p:TestTfmsInParallel=false --logger "trx;LogFilePrefix=tests" --results-directory TestResults
 
+      - name: Windows-Abgleich lief wirklich
+        shell: pwsh
+        run: |
+          # Der Abgleich mit der Zugriffsprüfung von Windows (AuthZ, auch nicht kanonische Listen – Befund ZT15) ist ein
+          # [AdminFact]: Ohne Adminrechte würde er still übersprungen. Hier muss er bestanden sein.
+          $name = 'Berechnete_Rechte_entsprechen_der_Zugriffspruefung_von_Windows'
+          $results = @(Get-ChildItem TestResults -Filter *.trx | ForEach-Object {
+            ([xml](Get-Content $_.FullName -Raw)).TestRun.Results.UnitTestResult | Where-Object { $_.testName -like "*$name*" }
+          })
+          if ($results.Count -eq 0) { throw "$name fehlt in den Testergebnissen" }
+          $notPassed = @($results | Where-Object outcome -ne 'Passed')
+          if ($notPassed.Count -gt 0) { throw "$name nicht bestanden: $($notPassed.outcome -join ', ')" }
+          Write-Host "$name bestanden ($($results.Count)x)"
+
       - name: Testergebnisse
         if: always()
         # Nur zur Fehlersuche: Ist der Artefaktspeicher der Organisation voll, bleibt der Lauf trotzdem grün

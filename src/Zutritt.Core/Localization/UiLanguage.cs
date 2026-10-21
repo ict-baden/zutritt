@@ -140,6 +140,23 @@ public static class UiLanguage
         return name.Length == 0 ? code : char.ToUpper(name[0], culture) + name[1..];
     }
 
+    /// <summary>Maschinell übersetzt und noch nicht von Muttersprachlern gegengelesen (Richtlinie 13).</summary>
+    public static IReadOnlyList<string> MachineTranslated { get; } = ["es", "fr", "zh-Hans"];
+
+    /// <summary>
+    /// Name für die Sprachauswahl in der Sprache selbst, bei maschinell übersetzten Sprachen mit Hinweis darauf –
+    /// z. B. „Español (traducción automática)“.
+    /// </summary>
+    public static string ChoiceName(string code)
+    {
+        var name = NativeName(code);
+        if (!MachineTranslated.Contains(code)) return name;
+        var culture = CultureInfo.GetCultureInfo(code);
+        var format = Resources.Strings.ResourceManager.GetString(nameof(Resources.Strings.Info_LanguageMachineTranslated), culture)
+            ?? Resources.Strings.Info_LanguageMachineTranslated;
+        return string.Format(culture, format, name);
+    }
+
     private static readonly JsonDocumentOptions ReadOptions = new() { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip };
 
     internal static string Read(string path)

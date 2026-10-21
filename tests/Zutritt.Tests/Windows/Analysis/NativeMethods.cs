@@ -87,4 +87,9 @@ internal static class NativeMethods
     [DllImport("advapi32.dll", EntryPoint = "GetFileSecurityW", CharSet = CharSet.Unicode, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool GetFileSecurity(string fileName, uint requestedInformation, byte[]? securityDescriptor, uint length, out uint lengthNeeded);
+
+    /// <summary>Schreibt die DACL unverändert – ohne Sortieren und ohne neu zu vererben (anders als SetNamedSecurityInfo).</summary>
+    [DllImport("advapi32.dll", EntryPoint = "SetFileSecurityW", CharSet = CharSet.Unicode, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool SetFileSecurity(string fileName, uint securityInformation, byte[] securityDescriptor);
 }

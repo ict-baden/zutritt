@@ -2,9 +2,9 @@
 
 # Rules reference
 
-The 14 rules (*Prüfregeln*) Zutritt evaluates on every run: what each finding means, why it matters, what to do about it – and when it is deliberately not reported. The rule IDs are stable across versions, so findings can be compared between runs.
+The 15 rules (*Prüfregeln*) Zutritt evaluates on every run: what each finding means, why it matters, what to do about it – and when it is deliberately not reported. The rule IDs are stable across versions, so findings can be compared between runs.
 
-**Contents:** [Overview](#overview) · [How findings are produced](#how-findings-are-produced) · [ZT01](#zt01--broad-group-can-write) · [ZT02](#zt02--broad-group-can-read) · [ZT03](#zt03--right-granted-directly-to-a-person) · [ZT04](#zt04--orphaned-sid) · [ZT05](#zt05--full-control-for-non-admins) · [ZT06](#zt06--deeply-hidden-exception) · [ZT07](#zt07--deny-entry) · [ZT08](#zt08--share-everyone-can-change) · [ZT09](#zt09--folder-not-readable) · [ZT10](#zt10--owner-is-a-user-account) · [ZT11](#zt11--empty-group-has-rights) · [ZT12](#zt12--disabled-account-has-rights) · [ZT13](#zt13--share-permissions-not-readable) · [ZT14](#zt14--permissions-differ-from-inheritance)
+**Contents:** [Overview](#overview) · [How findings are produced](#how-findings-are-produced) · [ZT01](#zt01--broad-group-can-write) · [ZT02](#zt02--broad-group-can-read) · [ZT03](#zt03--right-granted-directly-to-a-person) · [ZT04](#zt04--orphaned-sid) · [ZT05](#zt05--full-control-for-non-admins) · [ZT06](#zt06--deeply-hidden-exception) · [ZT07](#zt07--deny-entry) · [ZT08](#zt08--share-everyone-can-change) · [ZT09](#zt09--folder-not-readable) · [ZT10](#zt10--owner-is-a-user-account) · [ZT11](#zt11--empty-group-has-rights) · [ZT12](#zt12--disabled-account-has-rights) · [ZT13](#zt13--share-permissions-not-readable) · [ZT14](#zt14--permissions-differ-from-inheritance) · [ZT15](#zt15--entries-not-in-canonical-order)
 
 ## Overview
 
@@ -24,6 +24,7 @@ The 14 rules (*Prüfregeln*) Zutritt evaluates on every run: what each finding m
 | ZT12 | ![Medium](https://img.shields.io/badge/Medium-EF6C00) | Disabled account has rights | *Deaktiviertes Konto berechtigt* | explicit NTFS entries |
 | ZT13 | ![Info](https://img.shields.io/badge/Info-BDBDBD) | Share permissions not readable | *Freigabe-Berechtigungen nicht lesbar* | share permissions |
 | ZT14 | ![Low](https://img.shields.io/badge/Low-FBC02D) | Permissions differ from inheritance | *Rechte weichen von der Vererbung ab* | inherited NTFS entries |
+| ZT15 | ![Medium](https://img.shields.io/badge/Medium-EF6C00) | Entries not in canonical order | *Einträge nicht in kanonischer Reihenfolge* | order of NTFS and share entries |
 
 **Severities** – *Hoch* (high), *Mittel* (medium), *Niedrig* (low), *Info* – order the lists, colour the reports and set the [exit code](command-line.md#exit-codes) of `scan`: any *Hoch* gives 2, any *Mittel* gives 1, *Niedrig* and *Info* alone give 0.
 
@@ -32,7 +33,7 @@ The 14 rules (*Prüfregeln*) Zutritt evaluates on every run: what each finding m
 - **Where the entry is set.** NTFS findings come from **explicit** (not inherited) entries only. A finding appears on the folder where the entry is set, not again on each of the thousands of folders that inherit it.
 - **One finding per rule, path and account.** This combination is the finding's key; the comparison uses it to decide what is new and what is resolved.
 - **Per scope.** An entry can apply to the folder itself, to its subfolders, or only to its files. Zutritt evaluates these scopes separately, so rights from different scopes never add up to a right that exists nowhere. If the right only reaches the contents, the message says *(gilt für Unterordner bzw. Dateien)* (applies to subfolders or files).
-- **After deny entries.** For ZT01, ZT02 and ZT05 the right counts after explicit deny entries on the same folder that hit the account or its members. *Jeder: Ändern* together with an explicit deny of writing for *Jeder* is therefore not a ZT01.
+- **After deny entries.** For ZT01, ZT02 and ZT05 the right counts after explicit deny entries on the same folder that hit the account or its members – in stored order, like Windows: a deny only blocks what no entry before it has allowed (an inherited deny counts too if it stands before the explicit allow, see ZT15). *Jeder: Ändern* together with an explicit deny of writing for *Jeder* placed before it (the canonical order) is therefore not a ZT01; placed after it, it blocks nothing, and the folder gets ZT01 and ZT15.
 - **Rights levels.** Messages name the level – *Auflisten*, *Lesen*, *Schreiben*, *Ändern*, *Vollzugriff* – see [rights levels](how-it-works.md#rights-levels). Deny entries name the individual rights that are denied (e.g. *„Löschen“ verweigert*), because a level would be misleading there.
 - **Findings are stored with the run.** Reports show the findings as they were evaluated at scan time; they are not re-evaluated later.
 
@@ -49,7 +50,7 @@ The 14 rules (*Prüfregeln*) Zutritt evaluates on every run: what each finding m
 A folder counts as managed by Windows when its owner is *TrustedInstaller* or it has an explicit entry for an identity only Windows itself assigns: app packages (`S-1-15-2-…`), capabilities (`S-1-15-3-…`) and capability groups, *TrustedInstaller*, *EINGESCHRÄNKT* (RESTRICTED) or *SCHREIBGESCHÜTZT* (WRITE RESTRICTED). That “users may read `C:\Program Files`” is intended, and nobody should change permissions there anyway. In such folders:
 
 - **not reported:** ZT02, ZT03, ZT06, ZT10, ZT14, and ZT05 for the folder's own owner;
-- **still reported:** ZT01, ZT05 for anyone else, ZT04, ZT07, ZT11, ZT12.
+- **still reported:** ZT01, ZT05 for anyone else, ZT04, ZT07, ZT11, ZT12, ZT15.
 
 These exceptions were developed against `C:\Program Files`, `C:\ProgramData`, `C:\Users` and `C:\Windows\System32`.
 
@@ -360,6 +361,30 @@ On the *Ordner* page such folders carry the marker *Vererbung weicht ab* – see
 > Der Ordner (oder die Datei) hat geerbte Einträge, die nicht zum übergeordneten Ordner passen. Typisch sind verschobene Ordner: Beim Verschieben innerhalb eines Laufwerks nimmt Windows die alten geerbten Rechte mit, statt die des neuen Ortes zu übernehmen. Hier gelten dann womöglich noch Rechte vom früheren Ort – auch für Personen, die am neuen Ort keinen Zugriff haben sollen –, und Änderungen am übergeordneten Ordner kommen erst nach der nächsten Weitergabe der Rechte an.
 >
 > **Empfehlung:** Prüfen, ob die abweichenden Rechte noch gebraucht werden. Sonst die Vererbung neu anwenden: in den erweiterten Sicherheitseinstellungen die Vererbung deaktivieren, dabei die geerbten Einträge entfernen und sie gleich wieder aktivieren – eigene Einträge bleiben erhalten.
+
+</details>
+
+---
+
+### ZT15 – Entries not in canonical order
+
+![Medium](https://img.shields.io/badge/Medium-EF6C00) &nbsp; *Einträge nicht in kanonischer Reihenfolge*
+
+**What it means.** Windows checks the entries of an access list strictly in stored order. Windows itself (Explorer, icacls, `Set-Acl`) always writes them in canonical order – explicit deny, explicit allow, then inherited entries – so that a deny on the same level wins and an explicit entry beats an inherited one. Scripts working on the raw security descriptor, old tools and migration programs can leave a different order. Then an allow placed before a deny takes effect first, or an inherited deny placed before an explicit allow blocks it. What the entries seem to say and what Windows grants differ.
+
+**What to do.** Open the folder's security settings in Explorer: Windows reports that the permissions are incorrectly ordered and offers to reorder them. Reordering can change who has access – check the result afterwards, for example with a new scan and a [comparison](usage.md).
+
+**When it fires.** An explicit entry stands after an inherited one, or an explicit deny stands after an explicit allow – in NTFS permissions or, as a deny after an allow, in share permissions. The order of inherited entries among themselves (nearest parent first) cannot be checked from the list alone and does not count. Zutritt always evaluates the stored order, exactly like Windows – see [effective access](how-it-works.md#effective-access); this rule makes the unusual order visible. The finding names the first misplaced entry.
+
+**Not reported.** Never suppressed – also in Windows-managed folders, because the order decides who has access.
+
+**Example.** *Verweigern-Eintrag für „MUSTER\\Labor-02“ steht hinter einem Erlauben-Eintrag – Windows wertet die gespeicherte Reihenfolge aus, Erlaubnisse davor greifen zuerst.*
+
+<details><summary>Text in the app and reports</summary>
+
+> Windows prüft die Einträge einer Zugriffsliste streng in der gespeicherten Reihenfolge. Normalerweise hält Windows sie in kanonischer Reihenfolge – explizite Verweigerungen, explizite Erlaubnisse, dann geerbte Einträge –, damit auf derselben Ebene Verweigern gewinnt und ein expliziter Eintrag vor einem geerbten gilt. Diese Liste weicht davon ab (meist von einem Skript, einem alten Werkzeug oder einem Migrationsprogramm geschrieben). Dann kann ein Erlauben vor einem Verweigern greifen oder eine geerbte Verweigerung ein explizites Erlauben aushebeln. Zutritt wertet wie Windows die gespeicherte Reihenfolge aus – das Ergebnis kann von dem abweichen, was die Einträge auf den ersten Blick versprechen.
+>
+> **Empfehlung:** Die Sicherheitseinstellungen des Ordners im Explorer öffnen: Windows meldet, dass die Berechtigungen falsch angeordnet sind, und bietet an, sie neu anzuordnen. Das kann ändern, wer Zugriff hat – das Ergebnis danach prüfen (etwa mit einem neuen Scan).
 
 </details>
 

@@ -54,7 +54,7 @@ public partial class InfoPage : UserControl, IPage
         _defaultLanguage = fallback;
         var first = Texts.Format(fromMachine ? Strings.Info_LanguageMachine : Strings.Info_LanguageSystem, UiLanguage.NativeName(fallback));
         var choices = new List<LanguageChoice> { new("", first) };
-        choices.AddRange(UiLanguage.Supported.Select(code => new LanguageChoice(code, UiLanguage.NativeName(code))));
+        choices.AddRange(UiLanguage.Supported.Select(code => new LanguageChoice(code, UiLanguage.ChoiceName(code))));
         LanguageBox.ItemsSource = choices;
         var current = UiLanguage.UserSetting();
         LanguageBox.SelectedItem = choices.FirstOrDefault(c => c.Code == current) ?? choices[0];

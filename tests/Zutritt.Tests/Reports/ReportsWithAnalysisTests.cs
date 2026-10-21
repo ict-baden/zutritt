@@ -77,7 +77,9 @@ public sealed class ReportsWithAnalysisTests : IDisposable
     {
         var older = EvaluatedScan(new DateTimeOffset(2026, 10, 7, 9, 0, 0, TimeSpan.FromHours(2)));
         var newer = EvaluatedScan();
-        newer.Folders.Single(f => f.Path.EndsWith(@"\Archiv")).Aces.Add(new AceEntry { Sid = Erika, Rights = Full });
+        // Neuer expliziter Eintrag vor den geerbten (kanonisch, wie Windows ihn einträgt)
+        var archiv = newer.Folders.Single(f => f.Path.EndsWith(@"\Archiv"));
+        archiv.Aces.Insert(archiv.Aces.FindIndex(a => a.IsInherited), new AceEntry { Sid = Erika, Rights = Full });
         newer.Findings.Clear();
         newer.Findings.AddRange(FindingRules.Evaluate(newer));
         var comparison = ScanComparer.Compare(older, newer);

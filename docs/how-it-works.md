@@ -14,7 +14,7 @@ A run passes through the phases shown in the progress display – *Ziele*, *Ordn
 flowchart LR
     T["Ziele<br>targets and shares"] --> O["Ordner<br>walk the trees, read ACLs"]
     O --> K["Konten<br>resolve SIDs, expand groups"]
-    K --> B["Befunde<br>evaluate 14 rules"]
+    K --> B["Befunde<br>evaluate 15 rules"]
     B --> D[("SQLite<br>per user")]
     D --> V["Vergleich<br>with the previous run"]
     D --> R["Excel and PDF"]
@@ -130,21 +130,21 @@ Generic rights (`GENERIC_ALL` etc., e.g. on *ERSTELLER-BESITZER* entries) are ma
 ```mermaid
 flowchart TB
     P["Person"] --> TK["Token<br>own SID and nested groups<br>Jeder, Authentifizierte Benutzer<br>NETZWERK or INTERAKTIV"]
-    TK --> N["NTFS<br>ACEs in canonical order"]
+    TK --> N["NTFS<br>ACEs in stored order"]
     TK --> S["Share<br>highest allowed level, capped by denies"]
     N --> E["Effective right<br>the stricter of both"]
     S --> E
 ```
 
 1. **The token.** For a person: their SID, every group they are a member of (transitively), *Jeder* and *Authentifizierte Benutzer*, and *NETZWERK* when the folder is reached through a share or *INTERAKTIV* when it is not.
-2. **NTFS.** The folder's entries are taken in canonical order – explicit deny, explicit allow, then inherited entries in stored order (nearest parent first). A right counts if it is allowed before a matching deny entry blocks it. On the same level deny wins; an explicit allow beats an inherited deny – exactly as in Windows. Entries marked “inherit only” do not count for the folder itself; *ERSTELLER-BESITZER* is a placeholder and never in a token; *BESITZERRECHTE* (OWNER RIGHTS) applies to the owner, directly or through a group.
-3. **Share.** The highest share level of all matching allow entries, limited to below the lowest level a matching deny entry blocks.
+2. **NTFS.** The folder's entries are taken in stored order, exactly as Windows checks them. A right counts if it is allowed before a matching deny entry blocks it. Windows normally keeps the canonical order – explicit deny, explicit allow, then inherited entries (nearest parent first) – so on the same level deny wins and an explicit allow beats an inherited deny. Lists in another order (scripts, migrations) are evaluated as stored, too, and reported as [ZT15](rules.md#zt15--entries-not-in-canonical-order). Entries marked “inherit only” do not count for the folder itself; *ERSTELLER-BESITZER* is a placeholder and never in a token; *BESITZERRECHTE* (OWNER RIGHTS) applies to the owner, directly or through a group.
+3. **Share.** The highest share level of all matching allow entries, limited to below the lowest level a matching deny entry before it blocks – in stored order, like the server (Windows writes share denies first; other orders are reported as ZT15).
 4. **Effective right.** Over the network the stricter of share and NTFS applies: share *Lesen* caps at *Lesen*, share *Ändern* caps at *Ändern*, share *Vollzugriff* leaves NTFS as it is. Without a share, or with unreadable share permissions, the effective right is the NTFS right.
 5. **Explanation.** The entry that contributes the highest right, reached by the shortest group chain, explains *Über Gruppen* – e.g. *QC-Team › Labor-Alle*. The person's own entry is shown as *direkt berechtigt* (app, PDF) or *direkt* (Excel).
 
 Not counted: the implicit rights of the owner (read and change permissions) – [ZT10](rules.md#zt10--owner-is-a-user-account) reports personal owners instead. Users, computers and unresolvable SIDs are implicitly members of *Jeder* and *Authentifizierte Benutzer*; groups get only their real memberships.
 
-The test suite checks this calculation bit for bit against the Windows access check (AuthZ) on real folders, with a real local account in a real local group.
+The test suite checks this calculation bit for bit against the Windows access check (AuthZ) on real folders, with a real local account in a real local group – including non-canonical lists written raw and what Windows inherits from them. The Windows CI job fails if this check does not pass.
 
 ## Comparison
 

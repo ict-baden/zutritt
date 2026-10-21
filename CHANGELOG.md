@@ -4,12 +4,15 @@ Alle wichtigen Änderungen an Zutritt. Format nach [Keep a Changelog](https://ke
 
 ## [Unveröffentlicht]
 
+## [0.1.0] – 2026-10-21
+
 ### Neu
 - Erste Version.
 - Scan von Freigaben (`\\server\freigabe`), ganzen Servern (`\\server`), lokalen Ordnern und allen Freigaben dieses Rechners (`.`): Freigabe-Berechtigungen und NTFS-Rechte, nur lesend. Abzweigungen (Junctions) werden vermerkt, nicht verfolgt.
 - Gruppen bis zu einzelnen Personen aufgelöst, verschachtelt und mit Schutz vor Zyklen: lokale Konten und Gruppen des gescannten Servers, auf Rechnern in einer Domäne auch Active Directory der eigenen Domäne.
-- Effektive Rechte wie Windows sie berechnet: kanonische Reihenfolge, Verweigern-Einträge, Vererbung, *OWNER RIGHTS*, Freigabe und NTFS zusammen.
-- 14 Prüfregeln ZT01–ZT14 mit Erklärung und Empfehlung, z. B. breite Gruppe darf schreiben, verwaiste SID, Recht direkt an eine Person, Rechte weichen von der Vererbung ab (verschobene Ordner).
+- Effektive Rechte wie Windows sie berechnet: Einträge in gespeicherter Reihenfolge (auch nicht kanonische Listen), Verweigern-Einträge, Vererbung, *OWNER RIGHTS*, Freigabe und NTFS zusammen – in der CI Bit für Bit gegen die Zugriffsprüfung von Windows (AuthZ) abgeglichen.
+- ZT15 meldet Zugriffslisten, die nicht in kanonischer Reihenfolge stehen (Verweigern hinter Erlauben, explizit hinter geerbt) – dort gewährt Windows anderes, als die Einträge auf den ersten Blick versprechen.
+- 15 Prüfregeln ZT01–ZT15 mit Erklärung und Empfehlung, z. B. breite Gruppe darf schreiben, verwaiste SID, Recht direkt an eine Person, Rechte weichen von der Vererbung ab (verschobene Ordner).
 - Seiten *Übersicht*, *Befunde*, *Ordner* („Wer darf hier rein“), *Personen*, *Vergleich*, *Bericht* und *Info*, hell und dunkel.
 - Vergleich mit dem vorigen Lauf: neue und behobene Befunde, geänderte Einträge und Gruppenmitgliedschaften, wer jetzt mehr oder weniger darf.
 - Bericht als Excel-Datei mit Filtern und als PDF mit Deckblatt, Zusammenfassung, Befunden und Block zum Abzeichnen.
@@ -43,7 +46,9 @@ Alle wichtigen Änderungen an Zutritt. Format nach [Keep a Changelog](https://ke
 - Der Vergleich zweier Läufe mit anderem Umfang (z. B. einmal mit Dateien, einmal nur bis Tiefe 1, mit und ohne administrative Freigaben oder mit anderer Ebene für versteckte Ausnahmen) meldet keine scheinbar entfallenen Rechte und „behobenen“ Befunde mehr: Verglichen wird nur, was beide Läufe erfasst haben, und Vergleichsseite, Befehlszeile, PDF und Excel weisen auf den abweichenden Umfang hin. Der automatische Vergleich nimmt bevorzugt den letzten Lauf mit denselben Einstellungen.
 - `scan D:` und `scan D:\` gelten beim Vergleich als dasselbe Ziel; Läufe, die frühere Ausgaben mit `scan D:` gespeichert haben, findet der automatische Vergleich weiterhin. Die Warnung „andere Ziele“ auf der Vergleichsseite ordnet Ziele genauso zu wie der automatische Vergleich (abschließendes `\`, `/`).
 - Die Kachel der Vergleichsseite heißt „ACL- und Ordneränderungen“, weil sie auch Ordner mit neuen oder entfallenen eigenen Rechten zählt (Befehlszeile und Berichte zählen die ACL-Änderungen allein).
-- Impressum-Link in App, `--info`, README und SUPPORT.md führte ins Leere (404); er zeigt jetzt auf die erreichbare Seite `https://ict-baden.de/index.html?page=imprint`. Kontakt für den Supportvertrag sind bis zu einem eigenen Postfach die Kontaktangaben dort.
+- Impressum-Link in App, `--info`, README und SUPPORT.md zeigt auf `https://ict-baden.de/impressum/`, der Link *Webseite* auf die Produktseite `https://ict-baden.de/produkte/zutritt/`. Kontakt für Supportvertrag und Sicherheitsmeldungen ohne GitHub-Konto: die Kontaktseite `https://ict-baden.de/#kontakt`.
+- Spanische, französische und chinesische Namen der Windows-Konten (*Tout le monde*, *Usuarios autentificados* …) wie in lokalisiertem Windows statt Englisch; die Sprachauswahl kennzeichnet maschinell übersetzte Sprachen.
+- Fenstertitel und Seite *Info* führen den Untertitel „Zutritt – Freigaben-Rechte“ (englisch „Share Permissions“), damit der Name nicht mit Zutrittskontrolle verwechselt wird.
 - Ein MSI-Update oder eine Deinstallation beendet eine laufende Zutritt-Befehlszeile mit Exitcode 3 (Fehler oder Abbruch) statt 1 – für eine geplante Aufgabe hieß 1 „Befunde Mittel“.
 - Die Fortschrittszeile der Befehlszeile brach den Scan in Konsolen mit etwa 57 bis 75 Spalten Breite ab.
 - Chinesische Schriftzeichen in Ordner- und Kontonamen erscheinen im PDF nicht mehr als leere Kästchen, sofern Windows eine Schrift mit ihnen hat (z. B. DengXian, SimHei); bei chinesischer Oberfläche ist der ganze Bericht in dieser Schrift gesetzt.

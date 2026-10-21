@@ -213,8 +213,9 @@ internal sealed class AccessContext
     }
 
     /// <summary>
-    /// Bildet die Zugriffsprüfung von Windows (MAXIMUM_ALLOWED) nach: Einträge in kanonischer Reihenfolge,
-    /// ein Bit gilt, sobald es erlaubt wurde, bevor ein passender Verweigern-Eintrag es sperrt.
+    /// Bildet die Zugriffsprüfung von Windows (MAXIMUM_ALLOWED) nach: Einträge in gespeicherter Reihenfolge,
+    /// ein Bit gilt, sobald es erlaubt wurde, bevor ein passender Verweigern-Eintrag es sperrt. Windows sortiert beim
+    /// Prüfen nicht – steht eine Liste nicht in kanonischer Reihenfolge (Befund ZT15), zählt die gespeicherte.
     /// </summary>
     /// <param name="onlyAllowSid">Nur Erlauben-Einträge dieser SID zählen (Verweigerungen weiter für das ganze Token).</param>
     /// <param name="explain">Eintrag mit dem höchsten Recht und kürzestem Weg merken (für „über welche Gruppen“).</param>
@@ -295,27 +296,38 @@ internal sealed class AccessContext
     /// <summary>Eintrag in Auswertungsreihenfolge; generische Rechte schon abgebildet.</summary>
     private readonly record struct PreparedAce(string Sid, FileRights Mask, bool IsDeny);
 
-    /// <summary>Wirksame Einträge des Knotens selbst (ohne INHERIT_ONLY und ERSTELLER-BESITZER) in kanonischer Reihenfolge.</summary>
+    /// <summary>Wirksame Einträge des Knotens selbst (ohne INHERIT_ONLY und ERSTELLER-BESITZER) in gespeicherter Reihenfolge.</summary>
     private PreparedAce[] Prepared(FolderNode node)
     {
         if (_prepared.TryGetValue(node, out var prepared)) return prepared;
         var list = new List<PreparedAce>(node.Aces.Count);
-        foreach (var ace in Canonical(node.Aces))
+        foreach (var ace in node.Aces)
             if (!ace.InheritOnly && !SidCatalog.IsCreatorPlaceholder(ace.Sid))
                 list.Add(new PreparedAce(ace.Sid, Rights.MapGeneric(ace.Rights), ace.IsDeny));
         return _prepared[node] = [.. list];
     }
 
     /// <summary>
-    /// Kanonische Reihenfolge wie bei Windows: explizite Verweigerungen, explizite Erlaubnisse, danach die
-    /// geerbten Einträge in gespeicherter Reihenfolge (näherer Elternordner zuerst). Explizite Einträge werden
-    /// so unabhängig von ihrer Speicherreihenfolge ausgewertet – „Verweigern gewinnt“ auf derselben Ebene.
+    /// Steht die Liste in kanonischer Reihenfolge – erst die expliziten Einträge (Verweigerungen vor Erlaubnissen),
+    /// dann die geerbten? Die Reihenfolge der geerbten untereinander (näherer Elternordner zuerst) lässt sich aus der
+    /// Liste allein nicht prüfen und zählt hier nicht. Windows wertet immer die gespeicherte Reihenfolge aus; nur in
+    /// kanonischer Reihenfolge gilt „Verweigern gewinnt“ auf derselben Ebene und „explizit vor geerbt“.
     /// </summary>
-    internal static IEnumerable<AceEntry> Canonical(IReadOnlyList<AceEntry> aces)
+    /// <param name="offending">Erster Eintrag, der fehl am Platz ist, sonst null.</param>
+    /// <param name="afterInherited">true: expliziter Eintrag hinter geerbten; false: Verweigern hinter Erlauben.</param>
+    internal static bool IsCanonical(IReadOnlyList<AceEntry> aces, out AceEntry? offending, out bool afterInherited)
     {
-        foreach (var a in aces) if (!a.IsInherited && a.IsDeny) yield return a;
-        foreach (var a in aces) if (!a.IsInherited && !a.IsDeny) yield return a;
-        foreach (var a in aces) if (a.IsInherited) yield return a;
+        bool sawInherited = false, sawExplicitAllow = false;
+        foreach (var a in aces)
+        {
+            if (a.IsInherited) { sawInherited = true; continue; }
+            if (sawInherited) { offending = a; afterInherited = true; return false; }
+            if (!a.IsDeny) sawExplicitAllow = true;
+            else if (sawExplicitAllow) { offending = a; afterInherited = false; return false; }
+        }
+        offending = null;
+        afterInherited = false;
+        return true;
     }
 
     /// <summary>Weg vom Konto zum Eintrag, der das Recht bringt, als Namen (leer = direkt).</summary>
@@ -355,8 +367,11 @@ internal sealed class AccessContext
         var share = ShareOf(node);
         if (share is null || !share.PermissionsReadable) return null;
         var allowed = ShareAccess.Keine;
+        var effective = ShareAccess.Keine;
         // Höher als jede echte Stufe = nichts verweigert
         var deniedFrom = ShareAccess.Vollzugriff + 1;
+        // Wie NTFS in gespeicherter Reihenfolge: Ein Erlauben zählt bis unter die bis dahin gesperrte Stufe, was es gewährt
+        // hat, nimmt ein späteres Verweigern nicht mehr weg (kanonisch stehen alle Verweigerungen vorn)
         foreach (var ace in share.Permissions)
         {
             if (!token.Contains(ace.Sid)) continue;
@@ -364,13 +379,13 @@ internal sealed class AccessContext
             {
                 // „Keine“ legt der Scanner nie an; käme es doch vor, sperrt es nichts (lieber Zugriff zeigen)
                 if (ace.Access > ShareAccess.Keine && ace.Access < deniedFrom) deniedFrom = ace.Access;
+                continue;
             }
-            else if (ace.Access > allowed)
-            {
-                allowed = ace.Access;
-            }
+            if (ace.Access > allowed) allowed = ace.Access;
+            var survives = ace.Access < deniedFrom ? ace.Access : deniedFrom - 1;
+            if (survives > effective) effective = survives;
         }
-        return (allowed, allowed < deniedFrom ? allowed : deniedFrom - 1);
+        return (allowed, effective);
     }
 
     // ---------- Ordner, die nicht gespeichert sind ----------
@@ -424,7 +439,8 @@ internal sealed class AccessContext
             ShareUnc = ancestor.ShareUnc,
             InheritanceBroken = false,
         };
-        foreach (var ace in Canonical(ancestor.Aces))
+        // Windows übernimmt die vererbbaren Einträge in der Reihenfolge des Vorfahren – auch eine nicht kanonische
+        foreach (var ace in ancestor.Aces)
         {
             // ERSTELLER-BESITZER wird beim Erben durch den (unbekannten) Ersteller ersetzt
             if (SidCatalog.IsCreatorPlaceholder(ace.Sid)) continue;

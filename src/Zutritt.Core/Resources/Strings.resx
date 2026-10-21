@@ -112,6 +112,10 @@
   <data name="App_Tagline" xml:space="preserve">
     <value>Shows who can access what on file shares – with findings, comparison and report.</value>
   </data>
+  <data name="App_Title" xml:space="preserve">
+    <value>Zutritt – Share Permissions</value>
+    <comment>Window title and heading on the Info page: product name plus subtitle (Zutritt is also a German word for physical access control)</comment>
+  </data>
   <data name="App_UnexpectedError" xml:space="preserve">
     <value>Unexpected error: {0}</value>
     <comment>{0} = message with error code</comment>
@@ -934,6 +938,18 @@ Zutritt only reads – it changes no permissions and no files.
   <data name="Finding_InheritsNothing" xml:space="preserve">
     <value>Inherits nothing from the parent folder although inheritance is enabled – usually a program created the folder with its own permissions. The permissions from above only apply here after the next propagation.</value>
   </data>
+  <data name="Finding_NonCanonicalAfterInherited" xml:space="preserve">
+    <value>Explicit entry for “{0}” stands after inherited entries – Windows evaluates the stored order, inherited entries before it take effect first.</value>
+    <comment>{0} = who</comment>
+  </data>
+  <data name="Finding_NonCanonicalDeny" xml:space="preserve">
+    <value>Deny entry for “{0}” stands after an allow entry – Windows evaluates the stored order, allow entries before it take effect first.</value>
+    <comment>{0} = who</comment>
+  </data>
+  <data name="Finding_NonCanonicalShareDeny" xml:space="preserve">
+    <value>Share permissions: deny entry for “{0}” stands after an allow entry – the server evaluates the stored order, allow entries before it take effect first.</value>
+    <comment>{0} = who</comment>
+  </data>
   <data name="Finding_NotChecked" xml:space="preserve">
     <value>Not checked: {0}.</value>
     <comment>{0} = error.Message.TrimEnd('.')</comment>
@@ -1272,6 +1288,10 @@ Zutritt only reads – it changes no permissions and no files.
   <data name="Info_LanguageMachine" xml:space="preserve">
     <value>Default for this computer ({0})</value>
     <comment>{0} = name of the language set in %ProgramData%\Zutritt\settings.json; shown instead of Info_LanguageSystem when that file sets a language</comment>
+  </data>
+  <data name="Info_LanguageMachineTranslated" xml:space="preserve">
+    <value>{0} (machine translation)</value>
+    <comment>{0} = language name in that language; shown in that language in the language selection</comment>
   </data>
   <data name="Info_LanguageNotSaved" xml:space="preserve">
     <value>The language could not be saved: {0}</value>
@@ -2586,6 +2606,15 @@ Reports that have already been saved are kept.</value>
   </data>
   <data name="Rule_ZT14_Title" xml:space="preserve">
     <value>Permissions differ from inheritance</value>
+  </data>
+  <data name="Rule_ZT15_Explanation" xml:space="preserve">
+    <value>Windows checks the entries of an access list strictly in the order in which they are stored. Normally Windows keeps them in canonical order – explicit deny, explicit allow, then inherited entries – so that a deny on the same level wins and an explicit entry takes precedence over an inherited one. This list is not in that order (usually written by a script, an old tool or a migration program). An allow entry can then take effect before a deny entry, or an inherited deny can override an explicit allow. Zutritt evaluates the stored order, exactly like Windows – the result may differ from what the entries suggest at first glance.</value>
+  </data>
+  <data name="Rule_ZT15_Recommendation" xml:space="preserve">
+    <value>Open the folder's security settings in Explorer: Windows reports that the permissions are incorrectly ordered and offers to reorder them. Reordering can change who has access – check the result afterwards (for example with a new scan).</value>
+  </data>
+  <data name="Rule_ZT15_Title" xml:space="preserve">
+    <value>Entries not in canonical order</value>
   </data>
   <data name="Scan_AdminShareDefault" xml:space="preserve">
     <value>Share permissions not readable: administrative share without its own permissions – the internal Windows default applies (usually administrators only)</value>

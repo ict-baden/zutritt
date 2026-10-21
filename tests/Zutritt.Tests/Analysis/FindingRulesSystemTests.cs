@@ -24,6 +24,86 @@ public sealed class FindingRulesSystemTests
 
     private static IEnumerable<string> Rules(ScanBuilder b) => FindingRules.Evaluate(b.Scan).Select(f => f.RuleId);
 
+    // ---------- ZT15 ----------
+
+    [Fact]
+    public void ZT15_Verweigern_hinter_Erlauben()
+    {
+        var u = Sid(2001); var g = Sid(1001);
+        var b = new ScanBuilder().User(u, @"T\u").Group(g, @"T\G", u);
+        b.LocalFolder(@"D:\Daten\X", 0, Allow(g, Modify), Deny(u, FileRights.Write));
+        var finding = Assert.Single(FindingRules.Evaluate(b.Scan), f => f.RuleId == "ZT15");
+        Assert.Equal(u, finding.Sid);
+        Assert.Equal(Severity.Mittel, finding.Severity);
+        Assert.Equal("Verweigern-Eintrag für „T\\u“ steht hinter einem Erlauben-Eintrag – Windows wertet die gespeicherte Reihenfolge aus, Erlaubnisse davor greifen zuerst.", finding.Message);
+    }
+
+    [Fact]
+    public void ZT15_expliziter_Eintrag_hinter_geerbten_auch_in_Windows_Ordnern()
+    {
+        var u = Sid(2001);
+        var b = new ScanBuilder().User(u, @"T\u");
+        b.LocalFolder(@"D:\Daten\Y", 0, Allow(S.Administrators, Full, inherited: true), Allow(u, Modify));
+        b.LocalFolder(@"C:\Programme\Z", 0, Allow(S.Administrators, Full, inherited: true), Allow(AppCapability, Read));
+        var findings = FindingRules.Evaluate(b.Scan).Where(f => f.RuleId == "ZT15").ToList();
+        Assert.Equal(2, findings.Count);
+        Assert.StartsWith("Expliziter Eintrag für „T\\u“ steht hinter geerbten Einträgen", findings.Single(f => f.Path.StartsWith("D:")).Message);
+    }
+
+    [Fact]
+    public void ZT15_nicht_bei_kanonischer_Reihenfolge()
+    {
+        var u = Sid(2001); var g = Sid(1001);
+        var b = new ScanBuilder().User(u, @"T\u").Group(g, @"T\G", u);
+        // Verweigern vor Erlauben, explizit vor geerbt; geerbte untereinander beliebig (Erlauben vom näheren Vorfahren zuerst)
+        b.LocalFolder(@"D:\A", 0, Deny(u, FileRights.Write), Allow(g, Modify),
+            Allow(u, Read, inherited: true), Deny(g, FileRights.Delete, inherited: true));
+        b.LocalFolder(@"D:\B", 0);
+        Assert.DoesNotContain("ZT15", Rules(b));
+    }
+
+    [Fact]
+    public void Nicht_kanonisch_Erlauben_vor_Verweigern_zaehlt_fuer_die_Regeln()
+    {
+        // Jeder: Ändern vor „Jeder: Schreiben verweigert“ – Windows gewährt Ändern, also ZT01 statt nur ZT02
+        var b = new ScanBuilder();
+        b.LocalFolder(@"D:\Offen", 0, Allow(S.Everyone, Modify), Deny(S.Everyone, FileRights.Write));
+        var rules = Rules(b).ToList();
+        Assert.Contains("ZT01", rules);
+        Assert.Contains("ZT15", rules);
+
+        // Kanonisch sperrt die Verweigerung das Schreiben
+        var canonical = new ScanBuilder();
+        canonical.LocalFolder(@"D:\Zu", 0, Deny(S.Everyone, FileRights.Write), Allow(S.Everyone, Modify));
+        Assert.DoesNotContain("ZT01", Rules(canonical));
+    }
+
+    [Fact]
+    public void Nicht_kanonisch_geerbte_Verweigerung_vor_explizitem_Erlauben_sperrt_fuer_die_Regeln()
+    {
+        // Windows sperrt hier das Schreiben – also kein ZT01, nur ZT02 und ZT15
+        var b = new ScanBuilder();
+        b.LocalFolder(@"D:\Zu", 0, Deny(S.Everyone, FileRights.Write, inherited: true), Allow(S.Everyone, Modify));
+        var rules = Rules(b).ToList();
+        Assert.DoesNotContain("ZT01", rules);
+        Assert.Contains("ZT02", rules);
+        Assert.Contains("ZT15", rules);
+        // Eine geerbte Verweigerung ist kein Verweigern-Eintrag im Sinne von ZT07 (der gilt nur expliziten)
+        Assert.DoesNotContain("ZT07", rules);
+    }
+
+    [Fact]
+    public void ZT15_fuer_Freigabe_mit_Verweigern_hinter_Erlauben()
+    {
+        var u = Sid(2001);
+        var b = new ScanBuilder().User(u, @"T\u").WithShare(
+            new ShareAce(S.Everyone, ShareAccess.Vollzugriff, false), new ShareAce(u, ShareAccess.Aendern, true));
+        b.Folder("", 0, Allow(u, Full));
+        var finding = Assert.Single(FindingRules.Evaluate(b.Scan), f => f.RuleId == "ZT15");
+        Assert.Equal(u, finding.Sid);
+        Assert.StartsWith("Freigabe-Berechtigungen: Verweigern-Eintrag für „T\\u“", finding.Message);
+    }
+
     // ---------- ZT14 ----------
 
     [Fact]
