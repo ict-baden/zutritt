@@ -6,6 +6,26 @@ Jeder Versionsabschnitt endet mit „English“: Das ist der Text des Releases a
 
 ## [Unveröffentlicht]
 
+## [0.1.2] – 2026-10-22
+
+### Behoben
+- MSI: Nach einem Update vom rollierenden Build `latest` (oder einem anderen Build von main) auf ein Tag-Release fehlte `Zutritt.exe`. Das Tag-Release trug die Dateiversion `x.y.z.0`, älter als die der Builds von main derselben Version (`x.y.z.<Lauf>`); Windows Installer kopierte die Exe deshalb nicht, entfernte aber die alte. Jetzt trägt die Dateiversion immer die Lauf-Nummer, auch beim Tag, und die MSI ersetzt jede Datei, deren Version abweicht (`REINSTALLMODE=dmus`). Betroffen waren v0.1.0 und v0.1.1, wenn sie über einen Build von `latest` derselben Version installiert wurden; die MSI 0.1.2 bringt `Zutritt.exe` zurück.
+
+### Geändert
+- Die CI installiert jede MSI über den Build von `latest`, über das letzte Tag-Release und über ein Paket derselben Version mit neuerer Exe und prüft danach alle Dateien, die Dateiversion und den Start von `Zutritt.exe`.
+- Die CI prüft die Syntax aller PowerShell-Schritte der Workflows und aller Skripte, auch der Schritte, die nur bei Tags laufen; ein typografisches Anführungszeichen als String-Begrenzer gilt als Fehler. Den Release-Text erzeugt sie schon im Pull Request, sobald der CHANGELOG den Abschnitt der Version hat.
+
+### English
+
+Fixes an MSI update that could leave out `Zutritt.exe`.
+
+#### Fixed
+- MSI: after updating from the rolling `latest` build (or another build of `main`) to a tagged release, `Zutritt.exe` was missing. The tagged release had the file version `x.y.z.0`, older than that of `main` builds of the same version (`x.y.z.<run>`), so Windows Installer did not copy the exe but still removed the old one. The file version now always ends in the run number, for tagged releases too, and the MSI replaces every file whose version differs (`REINSTALLMODE=dmus`). This affected v0.1.0 and v0.1.1 when installed over a `latest` build of the same version; installing 0.1.2 restores `Zutritt.exe`.
+
+#### Changed
+- Every MSI is now tested in CI by installing it over the `latest` build, over the last tagged release and over a package of the same version with a newer exe; afterwards all files, the file version and the start of `Zutritt.exe` are checked.
+- CI checks the syntax of every PowerShell step and script, including the steps that only run for tagged releases, and generates the release notes in the pull request already (when the changelog has the version's section).
+
 ## [0.1.1] – 2026-10-21
 
 ### Geändert

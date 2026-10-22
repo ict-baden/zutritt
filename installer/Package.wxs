@@ -20,6 +20,13 @@
     <!-- AllowSameVersionUpgrades: CI-Builds unterscheiden sich nur in der 4. Stelle, die Windows Installer beim Vergleich
          ignoriert. Ohne die Option würden sie nebeneinander statt übereinander installiert. -->
     <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="Eine neuere Version von Zutritt ist bereits installiert." />
+    <!-- Dateien ersetzen, sobald ihre Version abweicht (d statt o), auch wenn die installierte neuer ist: Windows Installer
+         entscheidet beim Costing, also vor dem Entfernen der alten Version (RemoveExistingProducts). Mit „o“ kopierte er
+         eine ältere Zutritt.exe nicht und entfernte danach die alte – nach einem Update vom CI-Build
+         „latest“ auf ein Tag-Release fehlte Zutritt.exe (Dateiversion x.y.z.0 beim Tag, bis 0.1.1). Seit 0.1.2 trägt
+         auch das Tag-Release die Lauf-Nummer; dmus deckt zusätzlich eine neuere Exe derselben Version ab. Alle Dateien
+         liegen nur in INSTALLFOLDER, nichts wird mit anderen Programmen geteilt. Test: .github/scripts/msi-update-test.ps1 -->
+    <Property Id="REINSTALLMODE" Value="dmus" />
     <MediaTemplate EmbedCab="yes" />
 
     <Icon Id="ZutrittIcon" SourceFile="$(AssetsDir)\zutritt.ico" />

@@ -38,6 +38,24 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: PowerShell-Syntax (alle Workflow-Schritte und Skripte)
+        # Auch die Schritte, die nur bei Tags oder auf main laufen: Bei Lupe und Vitrine brach der Release-Schritt an einem
+        # ParserError ab (typografische Anführungszeichen in einem String) – im Pull Request lief er nie.
+        run: |
+          python3 -c 'import yaml' 2>/dev/null || { sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends python3-yaml; }
+          python3 .github/scripts/ps-syntax.py > "$RUNNER_TEMP/ps-blocks.json"
+          pwsh -NoProfile -File .github/scripts/ps-syntax.ps1 -Blocks "$RUNNER_TEMP/ps-blocks.json"
+
+      - name: Release-Text der csproj-Version
+        # Das Skript des Tag-Laufs einmal richtig ausführen. Hat der CHANGELOG schon den Abschnitt der csproj-Version
+        # (Release-PR), muss daraus ein Text entstehen; auf main nach dem Anheben gibt es ihn noch nicht.
+        shell: pwsh
+        run: |
+          $v = ([xml](Get-Content "src/$env:APP/$env:APP.csproj")).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          if (Select-String -Path CHANGELOG.md -Pattern "^## \[$([regex]::Escape($v))\]" -Quiet) {
+            ./.github/scripts/release-notes.ps1 -Version $v
+          } else { Write-Host "::notice::CHANGELOG.md hat noch keinen Abschnitt $v – den Release-Text prüft erst der Release-PR" }
+
       - name: Schriften für die PDF-Tests
         # Segoe UI und Arial gibt es unter Linux nicht; freie Schriften für den PDF-Bericht (Liberation ist metrisch gleich Arial)
         run: |
@@ -93,12 +111,21 @@ jobs:
           # (AllowSameVersionUpgrades), und ein Release v0.1.1 ist immer neuer als jeder 0.1.0-CI-Build.
           $core = $v -replace '[-+].*$', ''
           $msi = if ($env:GITHUB_REF_TYPE -eq 'tag') { $core } else { "$core.$env:GITHUB_RUN_NUMBER" }
+          # Dateiversion der Exe und DLLs immer mit Lauf-Nummer, auch beim Tag (x.y.z.<Lauf>). Bis 0.1.1 war sie beim Tag
+          # x.y.z.0 und damit älter als die eines CI-Builds derselben Basisversion: Windows Installer kopierte Zutritt.exe
+          # beim Update von 'latest' nicht und entfernte die alte (installer/Package.wxs). Die Lauf-Nummer steigt mit
+          # jedem neuen Lauf (ein erneuter Versuch behält sie – den deckt REINSTALLMODE=dmus ab), das Release ist also
+          # neuer als jeder frühere Build. 65535 hält der Update-Test frei.
+          if ([int]$env:GITHUB_RUN_NUMBER -ge 65535) { throw "Lauf-Nummer $env:GITHUB_RUN_NUMBER passt nicht mehr in die 4. Stelle der Dateiversion" }
+          $file = "$core.$env:GITHUB_RUN_NUMBER"
           # Dateinamen: Releases aus einem Tag mit Version, sonst fest, damit die Links auf 'latest' dauerhaft gelten
           $suffix = if ($env:GITHUB_REF_TYPE -eq 'tag') { "-$v" } else { '' }
           "version=$v" >> $env:GITHUB_OUTPUT
           "msi=$msi" >> $env:GITHUB_OUTPUT
+          "file=$file" >> $env:GITHUB_OUTPUT
+          "highver=$core.65535" >> $env:GITHUB_OUTPUT
           "suffix=$suffix" >> $env:GITHUB_OUTPUT
-          Write-Host "Version: $v  MSI: $msi  Signieren: $env:SIGN"
+          Write-Host "Version: $v  MSI: $msi  Datei: $file  Signieren: $env:SIGN"
 
       - name: Release-Text (nur bei Tag v*)
         # Englischer Abschnitt des CHANGELOG mit Dateiliste statt --generate-notes (deutsche PR-Titel, „New Contributors“,
@@ -152,9 +179,13 @@ jobs:
         shell: pwsh
         run: |
           $v = '${{ steps.version.outputs.version }}'
-          # Dateiversion mit der Build-Nummer als 4. Stelle (wie die MSI), sonst trüge jeder Build 0.1.0.0
-          $common = @("src/$env:APP/$env:APP.csproj", '-c', 'Release', '-r', 'win-x64', '-p:PublishSingleFile=true', "-p:Version=$v",
-                      '-p:FileVersion=${{ steps.version.outputs.msi }}', '-p:DebugType=none')
+          $base = @("src/$env:APP/$env:APP.csproj", '-c', 'Release', '-r', 'win-x64', '-p:PublishSingleFile=true', "-p:Version=$v", '-p:DebugType=none')
+          # Nur für den Update-Test (wird nicht veröffentlicht): dieselbe Version mit höherer Dateiversion, wie ein späterer
+          # CI-Build derselben Basisversion. Zuerst, damit die Builds unten obj/ und deps.json für SBOM und Prüfung stellen.
+          dotnet publish @base '-p:FileVersion=${{ steps.version.outputs.highver }}' --self-contained true -o out/self-contained-highver
+          if ($LASTEXITCODE -ne 0) { throw "Publish (Update-Test, höhere Dateiversion) fehlgeschlagen ($LASTEXITCODE)" }
+          # Dateiversion mit der Lauf-Nummer als 4. Stelle, auch beim Tag (Schritt „Version bestimmen“)
+          $common = $base + '-p:FileVersion=${{ steps.version.outputs.file }}'
           # Benötigt .NET 10 Desktop Runtime auf dem Zielgerät
           dotnet publish @common --self-contained false -o out/framework
           if ($LASTEXITCODE -ne 0) { throw "Publish (framework) fehlgeschlagen ($LASTEXITCODE)" }
@@ -252,6 +283,10 @@ jobs:
           dotnet build "installer/$env:APP.Installer.wixproj" -c Release "-p:PublishDir=$PWD/out/self-contained/" -p:ProductVersion=${{ steps.version.outputs.msi }}
           if ($LASTEXITCODE -ne 0) { throw "MSI-Build fehlgeschlagen ($LASTEXITCODE)" }
           Copy-Item "installer/bin/Release/$env:APP.msi" "dist/$env:APP${{ steps.version.outputs.suffix }}-x64.msi"
+          # Nur für den Update-Test: dieselbe MSI-Version mit der Exe höherer Dateiversion (eigener ProductCode)
+          dotnet build "installer/$env:APP.Installer.wixproj" -c Release "-p:PublishDir=$PWD/out/self-contained-highver/" -p:ProductVersion=${{ steps.version.outputs.msi }} `
+            "-p:OutputPath=$PWD/out/msi-highver/" "-p:IntermediateOutputPath=$PWD/out/msi-highver-obj/"
+          if ($LASTEXITCODE -ne 0) { throw "MSI-Build (Update-Test) fehlgeschlagen ($LASTEXITCODE)" }
 
       - name: MSI signieren
         if: env.SIGN == 'true'
@@ -340,6 +375,19 @@ jobs:
                     'HKLM:\SOFTWARE\ICT-Baden\Zutritt') | Where-Object { Test-Path $_ }
           if ($left.Count -gt 0) { throw "Reste nach der Deinstallation: $($left -join ', ')" }
           Write-Host "MSI-Probe bestanden: installiert, gestartet, deinstalliert, keine Reste."
+
+      - name: MSI-Probe – Update von latest, vom letzten Tag-Release und über eine neuere Exe
+        # Befund 2026-10-21: Nach einem Update vom CI-Build 'latest' auf ein Tag-Release fehlte Zutritt.exe (Dateiversion
+        # x.y.z.0 beim Tag). Prüft nach jedem Update alle Dateien, die Dateiversion und den Start (Skript).
+        timeout-minutes: 20
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          FILE_VERSION: ${{ steps.version.outputs.file }}
+        shell: pwsh
+        run: |
+          ./.github/scripts/msi-update-test.ps1 -Msi "dist/$env:APP${{ steps.version.outputs.suffix }}-x64.msi" -PublishDir out/self-contained `
+            -Version $env:VERSION -FileVersion $env:FILE_VERSION -HigherFileVersionMsi "out/msi-highver/$env:APP.msi" -App $env:APP -LogDir msi-logs
 
       - name: MSI-Protokolle
         if: failure()
