@@ -452,7 +452,9 @@ jobs:
         shell: pwsh
         run: |
           # v1.0.0-rc1 und ähnliche: Vorabversion, nicht „Latest“
-          $pre = if ($env:GITHUB_REF_NAME -match '-') { @('--prerelease') } else { @() }
+          # @(if …): Ein if gibt ein Array mit einem Element als String zurück, und @pre zerlegte ihn dann in Zeichen
+          # (bei Vitrine scheiterte so ein Vorabversions-Release)
+          $pre = @(if ($env:GITHUB_REF_NAME -match '-') { '--prerelease' })
           gh release create $env:GITHUB_REF_NAME (Get-ChildItem dist/*).FullName --title "$env:APP $env:GITHUB_REF_NAME" --notes-file "$env:RUNNER_TEMP/release-notes.md" @pre
           if ($LASTEXITCODE -ne 0) { throw "Release ließ sich nicht anlegen ($LASTEXITCODE)" }
 

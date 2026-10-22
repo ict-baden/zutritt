@@ -6,6 +6,9 @@ Jeder Versionsabschnitt endet mit „English“: Das ist der Text des Releases a
 
 ## [Unveröffentlicht]
 
+### Behoben
+- Release einer Vorabversion (Tag wie `v1.0.0-rc1`): Der Schalter `--prerelease` kam beim Aufruf von `gh release create` in einzelnen Zeichen an, das Release wäre nicht entstanden. Getaggte Versionen ohne Bindestrich waren nicht betroffen.
+
 ## [0.1.2] – 2026-10-22
 
 ### Behoben
