@@ -25,7 +25,7 @@ Which file to download, how to check it, how to roll it out, and which rights th
 
 **Releases.** Each **tagged version** (`v0.1.0`, `v1.2.0` …) gets its own release – the [current one](https://github.com/ict-baden/zutritt/releases/latest) is what to install. Its file names contain the version (see below) – except `SHA256SUMS.txt` and `Zutritt.exe`, which keeps its name so that scheduled tasks, scripts and application control rules that call it keep working after an update; `Zutritt.exe --version` and its file properties show the version. `Zutritt.exe` and `SHA256SUMS.txt` of the current version are always at [`releases/latest/download/Zutritt.exe`](https://github.com/ict-baden/zutritt/releases/latest/download/Zutritt.exe) and [`…/SHA256SUMS.txt`](https://github.com/ict-baden/zutritt/releases/latest/download/SHA256SUMS.txt).
 
-**[latest](https://github.com/ict-baden/zutritt/releases/tag/latest)** is the newest build of `main`, updated in place on every push and marked as a *pre-release*. Its file names never change, so these links always give the newest build:
+**[latest](https://github.com/ict-baden/zutritt/releases/tag/latest)** is the newest build of `main`, updated in place by every full build of `main` (nightly when `main` has changed, see [Development](development.md#ci-and-releases)) and marked as a *pre-release*. Its file names never change, so these links always give the newest build:
 
 | File | Runtime | Use it for |
 |---|---|---|

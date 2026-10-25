@@ -3,22 +3,32 @@
 # ist, und veröffentlicht selbst – wie in der Vorlage, ohne Umweg über Artefakte (deren Speicher teilen sich alle Repos
 # der Organisation, ist er voll, darf das kein Release verhindern). Jedes Release enthält zusätzlich eine Stückliste
 # (SBOM, richtlinien/06), öffentliche Repos einen Herkunftsnachweis (richtlinien/05).
+#
+# Wann wie viel gebaut wird, steht in Richtlinie 04 („Wann die CI baut“). Kurz: Pushs und PRs bauen nur den Job
+# „linux“, den Job „windows“ (mit Release) gibt es nachts (nur wenn main neu ist), bei Tags, von Hand, mit [voll] in
+# der Commit-Nachricht und bei PRs mit Label voll-bauen oder Windows-Pfaden (FULL_PATHS). Reine Doku startet nichts.
 name: Build
 
 on:
   push:
     branches: [main]
-    tags: ['v*']
+    tags: ['v*'] # Pfadfilter gelten für Tags nicht, ein Tag baut immer
+    paths-ignore: ['**.md', 'docs/**', 'LICENSE', '.github/ISSUE_TEMPLATE/**']
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    paths-ignore: ['**.md', 'docs/**', 'LICENSE', '.github/ISSUE_TEMPLATE/**']
+  schedule:
+    - cron: '47 2 * * *' # Minute je Repo anders, damit nicht alle gleichzeitig starten
   workflow_dispatch:
 
 permissions:
   contents: read
 
-# Läufe auf demselben Branch nacheinander, damit sich die 'latest'-Releases nicht überholen
+# Läufe auf demselben Branch nacheinander, damit sich die 'latest'-Releases nicht überholen.
+# In PRs bricht ein neuer Push den alten Lauf ab.
 concurrency:
   group: build-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   APP: "Zutritt"
@@ -29,7 +39,59 @@ env:
   SIGN: ${{ vars.SIGNING_ACCOUNT != '' && github.event_name != 'pull_request' }}
 
 jobs:
+  # Entscheidet, wie viel dieser Lauf baut. run=false: nichts zu tun (Nachtlauf ohne neue Commits).
+  # full=true: Windows, Pakete, Signieren, Releases. Sonst nur der Linux-Teil (bei Apps mit plattformneutralem Kern).
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      run: ${{ steps.gate.outputs.run }}
+      full: ${{ steps.gate.outputs.full }}
+    steps:
+      - name: Umfang bestimmen
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          MSG: ${{ github.event.head_commit.message }}
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          PR: ${{ github.event.pull_request.number }}
+          # Geänderte Dateien, bei denen ein PR den Job „windows“ braucht: alles, was Linux nicht baut oder testet
+          # (WPF-App, Windows-Anbindung, Windows-Tests, MSI, Build-Einstellungen, Werkzeuge, Lizenztexte im Paket)
+          FULL_PATHS: '^(\.github/|installer/|src/Zutritt/|src/Zutritt\.Platform\.Windows/|tests/Zutritt\.Tests/(Windows/|Zutritt\.Tests\.csproj$)|\.config/|Directory\.Build\.(props|targets)$|global\.json$|Zutritt\.sln$|THIRD-PARTY-NOTICES\.txt$)'
+          # Reine Doku, wie paths-ignore oben
+          DOC_PATHS: '(\.md$|^docs/|^LICENSE$|^\.github/ISSUE_TEMPLATE/)'
+        run: |
+          set -euo pipefail
+          run=true; full=false
+          case "$EVENT" in
+            workflow_dispatch) full=true ;;
+            push)
+              # Bei mehreren Commits in einem Push zählt die Nachricht des letzten
+              if [ "$GITHUB_REF_TYPE" = tag ] || [[ "$MSG" == *"[voll]"* ]]; then full=true; fi ;;
+            pull_request)
+              files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR/files" --jq '.[].filename')
+              if [[ ",$LABELS," == *",voll-bauen,"* ]] || grep -qE "$FULL_PATHS" <<< "$files"; then full=true; fi ;;
+            schedule)
+              # Der Tag 'latest' steht auf dem Commit des letzten vollen Builds von main
+              built=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/latest" --jq .object.sha 2>/dev/null || true)
+              if [ "$built" = "$GITHUB_SHA" ]; then
+                run=false
+              else
+                # Scheitert der Vergleich (kein 'latest', Verlauf umgeschrieben), wird voll gebaut
+                changed=$(gh api "repos/$GITHUB_REPOSITORY/compare/$built...$GITHUB_SHA" --jq '.files[].filename' 2>/dev/null || echo '?')
+                if [ -n "$built" ] && ! grep -qvE "$DOC_PATHS" <<< "$changed"; then run=false; else full=true; fi # sonst nur Doku
+              fi ;;
+          esac
+          echo "Ereignis: $EVENT  run=$run  full=$full"
+          { echo "run=$run"; echo "full=$full"; } >> "$GITHUB_OUTPUT"
+
   linux:
+    needs: gate
+    if: needs.gate.outputs.run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -81,8 +143,10 @@ jobs:
           retention-days: 7
 
   windows:
-    # Erst bauen und veröffentlichen, wenn der plattformneutrale Teil auch unter Linux grün ist
-    needs: linux
+    # Erst bauen und veröffentlichen, wenn der plattformneutrale Teil auch unter Linux grün ist. Nur beim vollen Build
+    # (Job „gate“, Richtlinie 04).
+    needs: [gate, linux]
+    if: needs.gate.outputs.full == 'true'
     runs-on: windows-latest
     permissions:
       contents: write # für die Releases
@@ -459,7 +523,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Release ließ sich nicht anlegen ($LASTEXITCODE)" }
 
       - name: "Release 'latest' aktualisieren (main)"
-        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+        # Push mit [voll], Nachtlauf und Start von Hand auf main; der Tag 'latest' zeigt danach auf diesen Commit (Job „gate“)
+        if: needs.gate.outputs.full == 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
