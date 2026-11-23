@@ -21,10 +21,11 @@ public sealed class AppInfoTests
     }
 
     [Fact]
-    public void Die_App_gibt_sich_nie_als_1_0_aus()
+    public void Die_Version_hat_drei_Stellen()
     {
-        // 1.0.0 erst nach den Kriterien aus Richtlinie 04 – die Basisversion steht in der csproj
-        Assert.DoesNotMatch(@"^1\.0\.0", AppInfo.Version);
+        // Die Basisversion steht in der csproj. Bis 0.1.3 verbot dieser Test „1.0.0“ (Richtlinie 04: erst getestet in
+        // echter Umgebung, Doku vollständig, signiert). 1.0.0 ist die erste öffentliche Version nach dem Test gegen eine
+        // echte Domäne; signiert ist sie noch nicht – das steht in README und docs/limitations.md.
         Assert.Matches(@"^\d+\.\d+\.\d+", AppInfo.Version);
     }
 
