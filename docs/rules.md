@@ -41,7 +41,7 @@ The 15 rules (*Prüfregeln*) Zutritt evaluates on every run: what each finding m
 
 | Term | Accounts |
 |---|---|
-| **Broad group** | *Jeder* (Everyone), *Authentifizierte Benutzer* (Authenticated Users), *VORDEFINIERT\\Benutzer* (BUILTIN\\Users), *VORDEFINIERT\\Gäste* (Guests), *Domänen-Benutzer* (Domain Users, RID 513), *Domänen-Gäste* (Domain Guests, RID 514), *INTERAKTIV* and *NETZWERK* |
+| **Broad group** | *Jeder* (Everyone), *Authentifizierte Benutzer* (Authenticated Users), *Diese Organisation* (This Organization, `S-1-5-15`), *VORDEFINIERT\\Benutzer* (BUILTIN\\Users), *VORDEFINIERT\\Gäste* (Guests), *Domänen-Benutzer* (Domain Users, RID 513), *Domänen-Gäste* (Domain Guests, RID 514), *INTERAKTIV* and *NETZWERK* |
 | **Administrator-like** | *SYSTEM*, *Administratoren*, *Domänen-Admins* (RID 512), *Organisations-Admins* (RID 519), *TrustedInstaller*, *Sicherungs-Operatoren* (Backup Operators) and the placeholder *ERSTELLER-BESITZER* (CREATOR OWNER) |
 | **Not a person** | Service SIDs (*NT SERVICE\\…*), virtual accounts (IIS application pools, virtual machines, drivers, scheduled tasks, *Window Manager\\DWM-1* …), app packages and capabilities, integrity levels, *SYSTEM*, *LOKALER DIENST*, *NETZWERKDIENST*. Windows sometimes reports virtual accounts as users; Zutritt never treats them as people. |
 

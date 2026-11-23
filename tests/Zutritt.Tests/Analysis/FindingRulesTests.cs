@@ -166,6 +166,18 @@ public sealed class FindingRulesTests
     }
 
     [Fact]
+    public void Diese_Organisation_ist_eine_breite_Gruppe()
+    {
+        // Praxistest 2026-11-20: „Diese Organisation: Ändern“ blieb ohne Befund
+        var b = new ScanBuilder();
+        b.Folder("", 0, Allow(SidCatalog.ThisOrganization, Modify));
+        b.Folder(@"\X", 1, Allow(SidCatalog.ThisOrganization, Read));
+        var keys = FindingRules.Evaluate(b.Scan).Select(f => (f.RuleId, f.Path, f.Sid)).ToList();
+        Assert.Contains(("ZT01", ScanBuilder.Share, SidCatalog.ThisOrganization), keys);
+        Assert.Contains(("ZT02", ScanBuilder.Share + @"\X", SidCatalog.ThisOrganization), keys);
+    }
+
+    [Fact]
     public void Breite_Gruppe_mit_Vollzugriff_ist_ZT01_nicht_ZT05()
     {
         var b = new ScanBuilder();

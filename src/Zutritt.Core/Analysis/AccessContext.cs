@@ -120,17 +120,19 @@ internal sealed class AccessContext
         !SidCatalog.IsCreatorPlaceholder(sid) && !SidCatalog.IsSpecialIdentity(sid)
         && KindOf(sid) is not (PrincipalKind.Gruppe or PrincipalKind.Bekannt);
 
-    /// <summary>Mitgliedschaft laut Verzeichnis, bei Konten plus implizit Jeder und Authentifizierte Benutzer.</summary>
+    /// <summary>
+    /// Mitgliedschaft laut Verzeichnis, bei Konten plus implizit Jeder, Authentifizierte Benutzer und Diese Organisation.
+    /// </summary>
     public Membership GroupsOf(string sid)
     {
         if (_groups.TryGetValue(sid, out var cached)) return cached;
-        string[] seeds = IsAccountLike(sid) ? [SidCatalog.Everyone, SidCatalog.AuthenticatedUsers] : [];
+        string[] seeds = IsAccountLike(sid) ? [SidCatalog.Everyone, SidCatalog.AuthenticatedUsers, SidCatalog.ThisOrganization] : [];
         return _groups[sid] = Build(sid, seeds);
     }
 
     /// <summary>
     /// Alle SIDs, deren Einträge für das Konto (bzw. jedes Mitglied der Gruppe) gelten: Mitgliedschaft, Jeder,
-    /// Authentifizierte Benutzer und die Anmelde-SID (NETZWERK über die Freigabe, sonst INTERAKTIV).
+    /// Authentifizierte Benutzer, Diese Organisation und die Anmelde-SID (NETZWERK über die Freigabe, sonst INTERAKTIV).
     /// </summary>
     public Membership TokenOf(string sid, LogonKind logon)
     {
@@ -145,12 +147,15 @@ internal sealed class AccessContext
             bool everyone = !(sid.Equals(SidCatalog.Everyone, StringComparison.OrdinalIgnoreCase)
                 || sid.Equals(SidCatalog.AnonymousLogon, StringComparison.OrdinalIgnoreCase)
                 || sid.Equals(SidCatalog.NullSid, StringComparison.OrdinalIgnoreCase));
-            seeds = everyone ? [SidCatalog.Everyone, logonSid] : [logonSid];
+            // Wer „Diese Organisation“ im Token hat, ist ein angemeldetes Konto
+            seeds = sid.Equals(SidCatalog.ThisOrganization, StringComparison.OrdinalIgnoreCase)
+                ? [SidCatalog.Everyone, SidCatalog.AuthenticatedUsers, logonSid]
+                : everyone ? [SidCatalog.Everyone, logonSid] : [logonSid];
         }
         else
         {
             // Konten und Gruppen: Mitglieder einer Gruppe sind angemeldete Konten
-            seeds = [SidCatalog.Everyone, SidCatalog.AuthenticatedUsers, logonSid];
+            seeds = [SidCatalog.Everyone, SidCatalog.AuthenticatedUsers, SidCatalog.ThisOrganization, logonSid];
         }
         return _tokens[(sid, logon)] = Build(sid, seeds);
     }

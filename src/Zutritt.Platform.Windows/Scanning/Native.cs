@@ -58,6 +58,33 @@ internal static unsafe partial class Native
     [LibraryImport("netapi32.dll")]
     public static partial int NetApiBufferFree(nint buffer);
 
+    // ---------- DFS ----------
+
+    public const uint DFS_STORAGE_STATE_ONLINE = 2;
+    public const uint DFS_STORAGE_STATE_ACTIVE = 4;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DFS_INFO_3
+    {
+        public nint EntryPath;
+        public nint Comment;
+        public uint State;
+        public uint NumberOfStorages;
+        public nint Storage;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct DFS_STORAGE_INFO
+    {
+        public uint State;
+        public nint ServerName;
+        public nint ShareName;
+    }
+
+    /// <summary>Was dieser Rechner (der DFS-Client) über eine DFS-Wurzel oder -Verknüpfung weiß; holt bei Bedarf den Verweis.</summary>
+    [LibraryImport("netapi32.dll", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial int NetDfsGetClientInfo(string dfsEntryPath, string? serverName, string? shareName, uint level, out nint buffer);
+
     // ---------- advapi32: Sicherheitsbeschreibungen ----------
     public const uint OWNER_SECURITY_INFORMATION = 0x00000001;
     public const uint GROUP_SECURITY_INFORMATION = 0x00000002;

@@ -7,7 +7,7 @@ Which file to download, how to check it, how to roll it out, and which rights th
 **Contents:** [Requirements](#requirements) · [Downloads](#downloads) · [Verifying the download](#verifying-the-download) · [MSI installer](#msi-installer) · [Deploying with Intune or Group Policy](#deploying-with-intune-or-group-policy) · [Single exe and ZIP](#single-exe-and-zip) · [Rights for scanning](#rights-for-scanning) · [Recommended setup](#recommended-setup) · [Updates and uninstalling](#updates-and-uninstalling) · [Supported versions](#supported-versions)
 
 > [!IMPORTANT]
-> **Pre-release, not code-signed yet.** Zutritt is built and tested in GitHub Actions on every push to `main`, but there is no tagged version yet. Program and MSI are signed as soon as Artifact Signing is set up for ICT-Baden; until then Windows SmartScreen may warn when you start them. Check the files against `SHA256SUMS.txt` – see [Verifying the download](#verifying-the-download).
+> **Not code-signed yet.** Zutritt is built and tested in GitHub Actions; tagged versions are published as [releases](https://github.com/ict-baden/zutritt/releases). Program and MSI are signed as soon as Artifact Signing is set up for ICT-Baden; until then Windows SmartScreen may warn when you start them. Check the files against `SHA256SUMS.txt` – see [Verifying the download](#verifying-the-download).
 
 ## Requirements
 

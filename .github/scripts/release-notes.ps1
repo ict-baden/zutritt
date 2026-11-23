@@ -5,7 +5,7 @@
 .DESCRIPTION
     Statt „--generate-notes“: Das listete deutsche PR-Titel, nannte Beitragende als „New Contributor“, die längst
     mitarbeiten, und verglich mit dem rollierenden Tag „latest“ (leerer Vergleich, wenn beide auf denselben Commit zeigen).
-    CHANGELOG.md bleibt deutsch (Vorlage aus ict-baden/richtlinien), Release-Texte sind englisch: Jeder Versionsabschnitt
+    CHANGELOG.md bleibt deutsch (nach der Vorlage der internen Richtlinien), Release-Texte sind englisch: Jeder Versionsabschnitt
     endet deshalb mit „### English“, und das ist der Release-Text. Fehlt er oder ist er leer, bricht das Skript ab – die CI
     ruft es vor dem Bauen auf, damit kein Release ohne Text entsteht. Der Test „Jede_Version_hat_einen_englischen_
     Release_Text“ prüft dasselbe schon im Pull Request.

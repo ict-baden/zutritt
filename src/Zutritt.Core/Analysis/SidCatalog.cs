@@ -20,6 +20,11 @@ public static class SidCatalog
     public const string AnonymousLogon = "S-1-5-7";
     public const string AuthenticatedUsers = "S-1-5-11";
     public const string Restricted = "S-1-5-12";
+    /// <summary>
+    /// „Diese Organisation“: Windows legt sie bei der Anmeldung in das Token jedes Kontos, das nicht über eine
+    /// Gesamtstruktur-Vertrauensstellung mit ausgewählter Authentifizierung kommt – also praktisch jedes eigenen Kontos.
+    /// </summary>
+    public const string ThisOrganization = "S-1-5-15";
     public const string WriteRestricted = "S-1-5-33";
     public const string LocalSystem = "S-1-5-18";
     public const string LocalService = "S-1-5-19";
@@ -39,7 +44,7 @@ public static class SidCatalog
 
     private static readonly HashSet<string> BroadFixed = new(StringComparer.OrdinalIgnoreCase)
     {
-        Everyone, AuthenticatedUsers, Users, Guests, Interactive, Network,
+        Everyone, AuthenticatedUsers, ThisOrganization, Users, Guests, Interactive, Network,
     };
 
     private static readonly HashSet<string> AdminLikeFixed = new(StringComparer.OrdinalIgnoreCase)
@@ -49,8 +54,8 @@ public static class SidCatalog
 
 
     /// <summary>
-    /// „Breite Gruppe“: umfasst praktisch alle Personen (Jeder, Authentifizierte Benutzer, VORDEFINIERT\Benutzer
-    /// und \Gäste, Domänen-Benutzer und -Gäste, INTERAKTIV, NETZWERK).
+    /// „Breite Gruppe“: umfasst praktisch alle Personen (Jeder, Authentifizierte Benutzer, Diese Organisation,
+    /// VORDEFINIERT\Benutzer und \Gäste, Domänen-Benutzer und -Gäste, INTERAKTIV, NETZWERK).
     /// </summary>
     public static bool IsBroad(string sid) =>
         BroadFixed.Contains(sid) || DomainRid(sid) is RidDomainUsers or RidDomainGuests;

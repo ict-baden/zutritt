@@ -6,7 +6,6 @@ Zutritt is free and open source. There are two ways to get help.
 ## Kostenlos: GitHub / Free: GitHub
 
 - **Fehler, Wünsche und Fragen:** [Issue anlegen](https://github.com/ict-baden/zutritt/issues/new/choose)
-<!-- ⚠ Zeile „Fragen: Discussions“ aus der Vorlage wieder aufnehmen, sobald Discussions im Repo eingeschaltet ist. -->
 
 Wir lesen alles, können aber keine Reaktionszeit zusagen. Alles dort ist öffentlich – bitte keine internen Daten.
 We read everything but cannot promise response times. Everything there is public.
@@ -21,8 +20,8 @@ Mit einem Supportvertrag von ICT-Baden bekommen Sie:
 - Vorrang bei Fehlerbehebungen und Sicherheitsinformationen vorab
 - Anpassungen und Schulungen nach Absprache
 
-Kontakt: über die [Kontaktseite von ICT-Baden](https://ict-baden.de/#kontakt) oder die Angaben im [Impressum](https://ict-baden.de/impressum/).
-Contact: via the [ICT-Baden contact page](https://ict-baden.de/#kontakt) or the details in the [imprint](https://ict-baden.de/impressum/).
+Kontakt: über die [Kontaktseite von ICT-Baden](https://ict-baden.de/#kontakt); Leistungen und Preise unter [Support und Preise](https://ict-baden.de/support/).
+Contact: via the [ICT-Baden contact page](https://ict-baden.de/#kontakt); services and prices under [support and pricing](https://ict-baden.de/en/support/).
 
 ## Was Sie mitschicken / What to include
 

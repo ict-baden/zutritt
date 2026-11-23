@@ -1,4 +1,4 @@
-# Zeilenenden passend zur .editorconfig (richtlinien/02): im Repo immer LF, beim Auschecken LF –
+# Zeilenenden passend zur .editorconfig (interne Richtlinie 02): im Repo immer LF, beim Auschecken LF –
 # nur Windows-Skripte und die Solution mit CRLF. Gilt unabhängig von core.autocrlf des Klons.
 * text=auto eol=lf
 *.ps1 text eol=crlf

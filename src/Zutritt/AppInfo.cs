@@ -33,7 +33,7 @@ public static class AppInfo
     /// <summary>Stimmt: Zutritt hat keine Telemetrie, keinen Update-Check und baut keine Verbindungen nach außen auf.</summary>
     public static string NoDataSentence => Strings.App_NoDataSentence;
 
-    private const string FallbackPublisher = "ICT-Baden";
+    private const string FallbackPublisher = "ICT Baden GmbH";
 
     private static readonly Assembly Self = typeof(AppInfo).Assembly;
 
@@ -49,11 +49,11 @@ public static class AppInfo
     /// <summary>„0.1.0-ci.12 (Build abc1234)“ bzw. nur die Version.</summary>
     public static string VersionWithBuild => Commit is null ? Version : Texts.Format(Strings.Ui_VersionWithBuild, Version, Commit);
 
-    /// <summary>Herausgeber (AssemblyCompany), solange die Firmierung offen ist „ICT-Baden“.</summary>
+    /// <summary>Herausgeber (AssemblyCompany): die Firmierung aus dem Impressum, „ICT Baden GmbH“.</summary>
     public static string Publisher { get; } =
         Self.GetCustomAttribute<AssemblyCompanyAttribute>()?.Company is { Length: > 0 } company && company != Name ? company : FallbackPublisher;
 
-    /// <summary>„© 2026 ICT-Baden“ (AssemblyCopyright).</summary>
+    /// <summary>„© 2026 ICT Baden GmbH“ (AssemblyCopyright).</summary>
     public static string Copyright { get; } =
         Self.GetCustomAttribute<AssemblyCopyrightAttribute>()?.Copyright is { Length: > 0 } copyright ? copyright : $"© 2026 {Publisher}";
 

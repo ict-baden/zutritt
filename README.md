@@ -12,7 +12,7 @@
   <img alt="Read-only" src="https://img.shields.io/badge/Access-read--only-2E7D32">
   <img alt="User interface in English, German, Spanish, French and Chinese" src="https://img.shields.io/badge/UI-en%20%C2%B7%20de%20%C2%B7%20es%20%C2%B7%20fr%20%C2%B7%20zh-6B7280">
   <img alt="Licence: MIT" src="https://img.shields.io/badge/Licence-MIT-blue">
-  <img alt="Status: early version" src="https://img.shields.io/badge/Status-early%20version%200.x-E3A008">
+  <img alt="Status: not code-signed yet" src="https://img.shields.io/badge/Status-not%20code--signed%20yet-E3A008">
   <a href="https://github.com/ict-baden/zutritt/actions/workflows/build.yml"><img alt="Build" src="https://github.com/ict-baden/zutritt/actions/workflows/build.yml/badge.svg"></a>
 </p>
 
@@ -126,7 +126,7 @@
   </tr>
 </table>
 
-**① Download** – from the **[current release](https://github.com/ict-baden/zutritt/releases/latest)** (file names carry the version, e.g. `Zutritt-0.1.1-x64.msi`; `Zutritt.exe` keeps its name, so that scheduled tasks and scripts that call it keep working after an update, and so does `SHA256SUMS.txt`):
+**① Download** – from the **[current release](https://github.com/ict-baden/zutritt/releases/latest)** (file names carry the version, e.g. `Zutritt-1.0.0-x64.msi`; `Zutritt.exe` keeps its name, so that scheduled tasks and scripts that call it keep working after an update, and so does `SHA256SUMS.txt`):
 
 | File | What it is |
 |---|---|
@@ -239,11 +239,11 @@ Periodic reviews of access rights are expected in GMP environments (EU GMP Annex
 
 - **Windows only, by design.** NTFS permissions, SMB share permissions (`NetShareEnum`, `NetShareGetInfo`), the local account databases of servers (SAM, LSA) and Active Directory are Windows concepts that only Windows APIs can read – so Zutritt is a Windows program. Its analysis core (rules, effective access, comparison, storage, reports) is platform-neutral and tested on Linux in CI; a front end on another platform over stored runs would be possible, scanning stays on Windows.
 - **Rights of the scanning account matter.** Folders it cannot read are reported (ZT09); where a folder cannot even be listed, nothing below it is assessed. Share permissions need administrator rights on the server (ZT13).
-- **Active Directory** is used only when the scanning PC is domain-joined, and only for its own domain. Groups from trusted domains are named but not expanded. AD lookups are tested against a simulated directory only, not yet against a real domain.
+- **Active Directory** is used only when the scanning PC is domain-joined, and only for its own domain. Groups from trusted domains are named but not expanded. Tested against one real test domain; several domains and trusts are not tested.
 - **When in doubt, Zutritt shows more access, not less:** conditional allow entries count, conditional deny entries are ignored, unreadable share permissions mean “NTFS only”.
 - **Files** are only examined with `--dateien` (*Dateien einbeziehen*), and then only files with their own permissions.
 - **Very large reports** are truncated with a visible notice – the PDF earlier than the Excel workbook.
-- **Pre-release, not code-signed yet.** Until Artifact Signing is set up, SmartScreen may warn; verify the downloads with `SHA256SUMS.txt` ([Installation › Verifying the download](docs/installation.md#verifying-the-download)).
+- **Not code-signed yet.** Until Artifact Signing is set up, SmartScreen may warn; verify the downloads with `SHA256SUMS.txt` ([Installation › Verifying the download](docs/installation.md#verifying-the-download)).
 - **A source that does not answer** – domain controller, account database, share listing – is given up after 60 seconds (accounts) or 2 minutes (shares) and reported, so the run still finishes.
 
 Everything else: **[Limitations →](docs/limitations.md)**
@@ -259,6 +259,14 @@ dotnet publish src/Zutritt/Zutritt.csproj -c Release -r win-x64 -p:PublishSingle
 On Linux or macOS the platform-neutral core and its tests build as well: `dotnet test tests/Zutritt.Tests -f net10.0`.
 
 Needs the .NET 10 SDK (`global.json`: 10.0.100, roll forward to the latest feature band). MSI, CI, architecture and screenshots: **[Development →](docs/development.md)** · Contributing: **[CONTRIBUTING.md](CONTRIBUTING.md)** · Changes: **[CHANGELOG.md](CHANGELOG.md)**
+
+## Publisher
+
+Zutritt is published by **ICT Baden GmbH**:
+[Product page](https://ict-baden.de/produkte/zutritt/) ·
+[Impressum (legal notice)](https://ict-baden.de/impressum/) ·
+[Privacy notice](https://ict-baden.de/datenschutz/zutritt/) (details: [Data and privacy](docs/data-and-privacy.md)) ·
+[Support](SUPPORT.md) · [Security](SECURITY.md)
 
 <br>
 

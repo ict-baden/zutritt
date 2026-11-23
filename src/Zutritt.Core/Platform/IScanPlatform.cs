@@ -38,6 +38,13 @@ public interface IScanPlatform
     /// <summary>Eine einzelne Freigabe \server\name.</summary>
     ShareLookup LookupShare(string server, string share);
 
+    /// <summary>
+    /// Zielfreigabe, wenn <paramref name="uncPath"/> genau eine DFS-Wurzel (\\server\namensraum) oder eine
+    /// DFS-Verknüpfung darin ist; sonst null (kein DFS, ein Ordner unterhalb einer Verknüpfung, nicht ermittelbar).
+    /// Bei mehreren Zielen das gerade benutzte.
+    /// </summary>
+    DfsTarget? ResolveDfs(string uncPath) => null;
+
     /// <summary>Ob unter dem Zielpfad ein Ordner oder eine Datei liegt – oder warum er nicht erreichbar ist.</summary>
     TargetProbe Probe(string path);
 

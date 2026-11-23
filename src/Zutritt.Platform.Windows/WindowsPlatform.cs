@@ -77,6 +77,8 @@ public sealed class WindowsPlatform : IScanPlatform
 
     public ShareLookup LookupShare(string server, string share) => ShareEnumerator.Lookup(server, share);
 
+    public DfsTarget? ResolveDfs(string uncPath) => DfsResolver.Resolve(uncPath);
+
     public TargetProbe Probe(string path)
     {
         uint attributes = Scanning.Native.GetFileAttributes(LongPath.ToExtended(path));

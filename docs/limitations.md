@@ -8,7 +8,7 @@ What Zutritt cannot see or decide, stated plainly. Where it has to guess, it err
 
 ## Status
 
-- **Early version.** 0.1.0 is the first tagged version; builds of `main` in between are published as the pre-release [`latest`](https://github.com/ict-baden/zutritt/releases/tag/latest).
+- **Not yet used on customer file servers.** Every build runs the automated tests on Windows and Linux, including a bit-for-bit comparison with the Windows access check. By hand, Zutritt was checked against one test domain ([Identities and groups](#identities-and-groups)), not yet on production file servers. Builds of `main` between tagged versions are published as the pre-release [`latest`](https://github.com/ict-baden/zutritt/releases/tag/latest).
 - **Not code-signed yet.** Signing starts once Artifact Signing is set up for ICT-Baden; until then SmartScreen may warn about `Zutritt.exe` and the MSI. Every release has `SHA256SUMS.txt` to check the files ([Installation › Verifying the download](installation.md#verifying-the-download)).
 - **Languages.** English and German are complete. Spanish, French and Chinese (simplified) are machine translations not yet reviewed by native speakers; names of Windows built-in accounts follow localized Windows (*Tout le monde*, *Usuarios autentificados* …; Chinese Windows keeps most of them in English) – checked against real Windows output where available, the rest still needs a check on localized Windows. Texts that are stored with a run – finding messages, read errors, names of built-in accounts – stay in the language of the scan; an old run therefore shows them in the language it was made in.
 - **PDF and Chinese characters.** PDFsharp cannot read font collections (`.ttc`), so the PDF uses a Chinese font only if one is installed as a single `.ttf` file (DengXian, SimHei, Noto Sans SC, Droid Sans Fallback, Arial Unicode MS). Without one, Chinese text in the PDF shows as boxes; the Excel report always has the full text.
@@ -26,11 +26,12 @@ Zutritt reports what the scanning account can read ([details](installation.md#ri
 ## Identities and groups
 
 - **Active Directory only for the scanning PC's own domain.** Domain groups are expanded only when the PC is domain-joined and a domain controller answers. Accounts of **trusted domains or forests** are named through Windows (LSA), but their groups are **not expanded** – their members do not appear as people.
-- **AD lookups are tested against a simulated directory only.** The development machine has no domain; the AD code is covered by tests with a fake directory and by tests for an unreachable domain, but not yet against a real domain controller.
+- **Tested against one real domain, not against several.** Group resolution, effective access and the rules were checked on 2026-11-20 against a test domain (Windows Server 2025, one domain controller, one member server) and compared with the Windows access check and with real access over SMB. Not tested: several domains, trusts and forests, NAS and Samba servers. The automated tests use a simulated directory.
 - **Remote SAM restrictions.** Current Windows versions allow remote queries of the local account database only for administrators by default (policy *RestrictRemoteSAM*). Without them, members of a server's local and *VORDEFINIERT* groups are missing, and whether a local account is **disabled** is unknown – so [ZT12](rules.md#zt12--disabled-account-has-rights) cannot fire for it. Local accounts are still named through the server's LSA; they stay *Unbekannt* only if that lookup fails too.
 - **Same BUILTIN group on several servers.** *VORDEFINIERT\\Administratoren* has the same SID on every server but different members. A run can hold each SID only once, so when one run covers several servers, the members of all servers are **merged** and a note is added. Access through such a group may then apply on only one of the servers. Scan servers separately where this matters.
 - **Nesting deeper than 20 levels** is not expanded further; the group is marked incomplete.
 - **Entra ID accounts** (`S-1-12-…`) can only be named if they have signed in on the machine; otherwise they stay *Unbekannt*.
+- **Identities that depend on how someone signs in.** *Jeder*, *Authentifizierte Benutzer*, *Diese Organisation* and *NETZWERK* or *INTERAKTIV* are part of every person's token. Entries for other sign-in identities – *REMOTE-INTERAKTIVE ANMELDUNG*, *KONSOLENANMELDUNG*, *LOKAL*, *BATCH*, *DIENST*, *DIALUP*, the authentication packages (*NTLM-Authentifizierung* …), *Lokales Konto* – are shown on the folder but **count for no one**, because a scan cannot know who signs in that way. Here Zutritt shows less access than may exist; such entries are rare on data folders.
 - **The people view** lists accounts that appear in the run – in an ACL or in a resolved group. Someone who only gets access through *Jeder* or *Authentifizierte Benutzer* is not listed individually; the folder page says that practically everyone can get in.
 
 ## When in doubt, more access
@@ -56,6 +57,7 @@ These decisions are deliberate:
 
 ## Scanning
 
+- **DFS namespaces.** A path through DFS (`\\domain\namespace\link\…`) is rated with the share permissions of the share it really lives on – Windows checks those, not the ones of the namespace share. Zutritt asks the DFS client of the scanning PC for the target (`NetDfsGetClientInfo`). If a link has **several targets**, the one this PC currently uses counts; their share permissions can differ, so scan the target servers directly where this matters. If the target share cannot be read, NTFS alone counts ([ZT13](rules.md#zt13--share-permissions-not-readable)). Tested with a domain-based namespace on Windows Server 2025; stand-alone namespaces are not tested.
 - **Files** are only examined with `--dateien` / *Dateien einbeziehen*, and only stored when they have permissions of their own.
 - **Junctions and symbolic links** are recorded but not followed. What they point to is only scanned if it is a target itself or lies under one.
 - **Depth is relative to the target.** [ZT06](rules.md#zt06--deeply-hidden-exception) counts levels below the scanned target; a deeper target finds fewer “deep” exceptions.
@@ -76,7 +78,7 @@ Very large runs are truncated in the reports with a visible notice – the PDF m
 
 ## Command line
 
-- **Unreachable targets do not change the exit code** – they become *Info* findings. A run that could read nothing can end with exit code 0 ([details](command-line.md#exit-codes)).
+- **Partly unreachable targets do not change the exit code** – they become *Info* findings, and the summary says how many targets were not checked. Only a run in which **no** target could be checked ends with exit code 3 ([details](command-line.md#exit-codes)).
 - **`> NUL`** does not silence the output; it still appears in the console.
 - **PowerShell 7.4+** writes the console's code page into files with `> log.txt`; use a `.cmd` file for logs ([details](command-line.md#logs-and-encoding)).
 - **A Windows program:** command prompts do not wait for it unless you use `start /wait` or `| Out-Default`.

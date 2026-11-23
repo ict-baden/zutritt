@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 using Zutritt.Core.Identity;
+using Zutritt.Tests.Analysis;
 using Zutritt.Core.Model;
 using Zutritt.Core.Platform;
 using Zutritt.Core.Scanning;
@@ -95,10 +96,112 @@ public sealed class FakePlatformTests
         }
     }
 
-    /// <summary>Plattform im Speicher: Ordner mit Rechten und Fehlern, Freigaben gibt es keine.</summary>
+    // ---------- DFS ----------
+
+    private static readonly ShareAce EveryoneRead = new("S-1-1-0", ShareAccess.Lesen, false);
+    private static readonly ShareAce EveryoneFull = new("S-1-1-0", ShareAccess.Vollzugriff, false);
+
+    /// <summary>Namensraum \\FIRMA\dfs (liegt auf \\DC01\dfs, Jeder: Lesen) mit Verknüpfung „Labor“ → \\FS01\Labor (Jeder: Vollzugriff).</summary>
+    private static FakeScanPlatform DfsPlatform() => new FakeScanPlatform()
+        .Share("DC01", "dfs", EveryoneRead)
+        .Share("FIRMA", "dfs", EveryoneRead)
+        .Share("FS01", "Labor", EveryoneFull)
+        .Dfs(@"\\FIRMA\dfs", "DC01", "dfs")
+        .Dfs(@"\\FIRMA\dfs\Abteilungen\Labor", "FS01", "Labor")
+        .Folder(@"\\FIRMA\dfs", explicitAce: true)
+        .Folder(@"\\FIRMA\dfs\Abteilungen")
+        .Folder(@"\\FIRMA\dfs\Abteilungen\Labor", explicitAce: true)
+        .Folder(@"\\FIRMA\dfs\Abteilungen\Labor\QC", explicitAce: true)
+        .Folder(@"\\FIRMA\dfs\Allgemein", explicitAce: true);
+
+    [Fact]
+    public async Task DFS_Wurzel_Ordner_hinter_einer_Verknuepfung_bekommen_die_Zielfreigabe()
+    {
+        // Praxistest 2026-11-20: Der Bericht zeigte für Ordner hinter einer Verknüpfung die Freigabe-Rechte der
+        // DFS-Wurzel („Lesen“), der Benutzer konnte über den DFS-Pfad aber schreiben.
+        var scan = await new Scanner(DfsPlatform(), (_, _) => { }, _ => []).RunAsync(new ScanRequest { Targets = [@"\\FIRMA\dfs"] });
+
+        string? ShareOf(string path) => scan.Folders.Single(f => f.Path == path).ShareUnc;
+        Assert.Equal(@"\\DC01\dfs", ShareOf(@"\\FIRMA\dfs"));
+        Assert.Equal(@"\\DC01\dfs", ShareOf(@"\\FIRMA\dfs\Allgemein"));
+        Assert.Equal(@"\\FS01\Labor", ShareOf(@"\\FIRMA\dfs\Abteilungen\Labor"));
+        Assert.Equal(@"\\FS01\Labor", ShareOf(@"\\FIRMA\dfs\Abteilungen\Labor\QC"));
+        // Die Freigabe des Namensraums unter dem Namen der Domäne zählt nicht eigens: Es ist dieselbe wie \\DC01\dfs
+        Assert.Equal([@"\\DC01\dfs", @"\\FS01\Labor"], scan.Shares.Select(s => s.UncPath).Order(StringComparer.Ordinal));
+
+        var person = EffectiveAccessInternals.Grant(scan, scan.Folders.Single(f => f.Path == @"\\FIRMA\dfs\Abteilungen\Labor\QC"), User);
+        Assert.Equal(AccessLevel.Aendern, person.Effective);
+        var inRoot = EffectiveAccessInternals.Grant(scan, scan.Folders.Single(f => f.Path == @"\\FIRMA\dfs\Allgemein"), User);
+        Assert.Equal(AccessLevel.Lesen, inRoot.Effective);
+    }
+
+    [Theory]
+    [InlineData(@"\\FIRMA\dfs\Abteilungen\Labor")]
+    [InlineData(@"\\FIRMA\dfs\Abteilungen\Labor\QC")]
+    public async Task DFS_Ziel_auf_oder_unter_einer_Verknuepfung_bekommt_die_Zielfreigabe(string target)
+    {
+        var scan = await new Scanner(DfsPlatform(), (_, _) => { }, _ => []).RunAsync(new ScanRequest { Targets = [target] });
+
+        Assert.All(scan.Folders, f => Assert.Equal(@"\\FS01\Labor", f.ShareUnc));
+        Assert.Equal(@"\\FS01\Labor", Assert.Single(scan.Shares).UncPath);
+    }
+
+    [Fact]
+    public async Task DFS_Zielfreigabe_nicht_lesbar_zaehlt_als_Rechte_nicht_lesbar()
+    {
+        var platform = new FakeScanPlatform()
+            .Share("FIRMA", "dfs", EveryoneRead).Share("DC01", "dfs", EveryoneRead)
+            .Dfs(@"\\FIRMA\dfs", "DC01", "dfs").Dfs(@"\\FIRMA\dfs\Fern", "NAS9", "Daten")
+            .Folder(@"\\FIRMA\dfs", explicitAce: true).Folder(@"\\FIRMA\dfs\Fern", explicitAce: true);
+        var scan = await new Scanner(platform, (_, _) => { }, _ => []).RunAsync(new ScanRequest { Targets = [@"\\FIRMA\dfs"] });
+
+        Assert.Equal(@"\\NAS9\Daten", scan.Folders.Single(f => f.Path == @"\\FIRMA\dfs\Fern").ShareUnc);
+        var share = scan.Shares.Single(s => s.UncPath == @"\\NAS9\Daten");
+        Assert.False(share.PermissionsReadable);
+        // Ohne lesbare Freigabe-Rechte zählt NTFS allein – nie die Rechte der DFS-Wurzel
+        var person = EffectiveAccessInternals.Grant(scan, scan.Folders.Single(f => f.Path == @"\\FIRMA\dfs\Fern"), User);
+        Assert.Equal(AccessLevel.Aendern, person.Effective);
+    }
+
+    [Fact]
+    public async Task Gewoehnliche_Freigabe_fragt_DFS_nur_einmal_und_bleibt_wie_sie_ist()
+    {
+        var platform = new FakeScanPlatform().Share("FS01", "Labor", EveryoneFull)
+            .Folder(@"\\FS01\Labor", explicitAce: true).Folder(@"\\FS01\Labor\A").Folder(@"\\FS01\Labor\A\B");
+        var scan = await new Scanner(platform, (_, _) => { }, _ => []).RunAsync(new ScanRequest { Targets = [@"\\FS01\Labor\A"] });
+
+        Assert.All(scan.Folders, f => Assert.Equal(@"\\FS01\Labor", f.ShareUnc));
+        Assert.Equal([@"\\FS01\Labor"], platform.DfsQueries);
+    }
+
+    /// <summary>Plattform im Speicher: Ordner mit Rechten und Fehlern, auf Wunsch Freigaben und DFS-Ziele.</summary>
     private sealed class FakeScanPlatform : IScanPlatform
     {
         private readonly Dictionary<string, (bool ExplicitAce, string? ListError)> _folders = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, ShareInfo> _shares = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, DfsTarget> _dfs = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>Welche Pfade nach DFS gefragt wurden, in dieser Reihenfolge.</summary>
+        public List<string> DfsQueries { get; } = [];
+
+        public FakeScanPlatform Share(string server, string name, params ShareAce[] permissions)
+        {
+            var share = new ShareInfo { Server = server, Name = name, Permissions = [.. permissions] };
+            _shares[share.UncPath] = share;
+            return this;
+        }
+
+        public FakeScanPlatform Dfs(string entryPath, string server, string share)
+        {
+            _dfs[entryPath] = new DfsTarget(server, share);
+            return this;
+        }
+
+        public DfsTarget? ResolveDfs(string uncPath)
+        {
+            DfsQueries.Add(uncPath);
+            return _dfs.GetValueOrDefault(uncPath);
+        }
 
         public FakeDirectory Directory { get; } = new();
         public ManualResetEventSlim? HangOnShares { get; init; }
@@ -135,7 +238,10 @@ public sealed class FakePlatformTests
             return new([], "Kein Serverdienst", ServerServiceStopped: true);
         }
 
-        public ShareLookup LookupShare(string server, string share) => new(null, "Netzwerkpfad nicht gefunden", NotFound: false);
+        public ShareLookup LookupShare(string server, string share)
+            => _shares.TryGetValue(WindowsPath.Unc(server, share), out var info)
+                ? new(new ShareRead(info, null), null, NotFound: false)
+                : new(null, "Netzwerkpfad nicht gefunden", NotFound: false);
 
         public TargetProbe Probe(string path)
             => _folders.ContainsKey(path) ? TargetProbe.Directory : TargetProbe.Unreachable("Netzwerkpfad nicht gefunden");

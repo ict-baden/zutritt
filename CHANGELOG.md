@@ -6,8 +6,38 @@ Jeder Versionsabschnitt endet mit „English“: Das ist der Text des Releases a
 
 ## [Unveröffentlicht]
 
+## [1.0.0] – 2026-11-23
+
+Erste öffentliche Version. Sie enthält, was als 0.1.3 vorgesehen war (nie veröffentlicht), und die Korrekturen aus dem Test gegen eine echte Domäne (Windows Server 2025, Domänencontroller mit DFS, Mitgliedsserver). Ab jetzt braucht eine Änderung, die Befehlszeile, Exit-Codes oder die Datenbank bricht, eine neue Hauptversion.
+
 ### Behoben
+- **DFS-Pfade** (`\\domäne\namensraum\…`) bekamen die Freigabe-Rechte der Freigabe des Namensraums statt der Freigabe, auf der die Ordner wirklich liegen. Der Bericht zeigte dadurch weniger Zugriff, als bestand – im Test „Lesen“, obwohl der Benutzer über denselben Pfad schreiben konnte. Zutritt löst DFS-Wurzel und DFS-Verknüpfungen jetzt auf die Zielfreigabe auf (als Ziel, auf dem Weg zum Ziel und beim Durchlaufen des Namensraums); ist die Zielfreigabe nicht lesbar, zählt NTFS allein (ZT13).
+- Einträge für **„Diese Organisation“** (`S-1-5-15`) zählten für niemanden: Ein Ordner, auf den jedes Konto schreiben durfte, erschien als „nur Administratoren“, ohne Befund. Die Identität gehört jetzt zum Token jedes Kontos und gilt als breite Gruppe (ZT01, ZT02).
+- Seite *Personen*: Eine Mitgliedschaft, die Windows nur stillschweigend vergibt (Jeder, Authentifizierte Benutzer, Diese Organisation), erschien als bloße SID, wenn kein Eintrag im Lauf sie nannte. Sie trägt jetzt ihren Namen.
 - Release einer Vorabversion (Tag wie `v1.0.0-rc1`): Der Schalter `--prerelease` kam beim Aufruf von `gh release create` in einzelnen Zeichen an, das Release wäre nicht entstanden. Getaggte Versionen ohne Bindestrich waren nicht betroffen.
+
+### Geändert
+- **Herausgeber:** Lizenz, Dateieigenschaften, MSI (*Hersteller*) und die Info-Seite nennen die Firmierung aus dem Impressum, „ICT Baden GmbH“ (bisher „ICT-Baden“). Der Registry-Schlüssel der MSI und der `UpgradeCode` bleiben gleich, ein Update über ältere Versionen funktioniert wie bisher.
+- **Doku:** Zutritt ist gegen eine echte Domäne geprüft (Windows Server 2025, ein Domänencontroller, ein Mitgliedsserver, DFS); `docs/limitations.md` nennt, was dabei ungeprüft blieb (mehrere Domänen, Vertrauensstellungen, NAS). Neu beschrieben: DFS, die Identitäten im Zugriffstoken und Einträge für Anmeldearten, die für niemanden zählen. Die Einstufung „early version“ und „Pre-release“ entfällt, „nicht signiert“ bleibt. `docs/limitations.md` nannte für einen Lauf ohne ein einziges geprüftes Ziel Exitcode 0; richtig ist 3.
+- README mit Abschnitt *Publisher*; `SUPPORT.md` verweist auf Kontaktseite sowie Support und Preise; Sicherheitslücken lassen sich auch ohne GitHub-Konto melden (Issue-Auswahl).
+- Öffentliche Dateien nennen keine internen Repos mehr.
+
+### English
+
+First public version. Zutritt was checked by hand against a real domain (Windows Server 2025, a domain controller with DFS and a member server) and compared with the Windows access check and with real access over SMB; this release fixes the two cases in which it showed less access than there was. From now on, a change that breaks the command line, the exit codes or the database needs a new major version.
+
+Not code-signed yet – check the files against `SHA256SUMS.txt`. What Zutritt cannot see or decide: [Limitations](https://github.com/ict-baden/zutritt/blob/main/docs/limitations.md).
+
+#### Fixed
+- **DFS paths** (`\\domain\namespace\…`) were rated with the share permissions of the namespace share instead of the share the folders really live on. The report then showed less access than there was – in the test *Lesen* (read) although the user could write through the same path. Zutritt now resolves the DFS root and DFS links to the target share (for the target, on the way to it and while walking the namespace); if the target share cannot be read, NTFS alone counts (ZT13).
+- Entries for **“This Organization”** (`S-1-5-15`) counted for no one: a folder every account could write to appeared as “administrators only”, without a finding. The identity is now part of every account's token and counts as a broad group (ZT01, ZT02).
+- *Personen* page: a membership that Windows grants implicitly (Everyone, Authenticated Users, This Organization) appeared as a bare SID when no entry in the run named it. It now shows its name.
+- Releasing a pre-release version (a tag like `v1.0.0-rc1`): the switch `--prerelease` reached `gh release create` as single characters, so the release would not have been created. Tagged versions without a hyphen were not affected.
+
+#### Changed
+- **Publisher:** licence, file properties, the MSI (*Manufacturer*) and the *Info* page name the company as in the legal notice, ICT Baden GmbH (so far “ICT-Baden”). The registry key of the MSI and its `UpgradeCode` are unchanged; updating over older versions works as before.
+- **Documentation:** tested against a real domain; `docs/limitations.md` says what was not tested (several domains, trusts, NAS). New: DFS, the identities in the access token, and entries for sign-in types that count for no one. `docs/limitations.md` gave exit code 0 for a run in which no target could be checked; it is 3.
+- The README has a *Publisher* section; `SUPPORT.md` points to the contact page and to support and pricing; vulnerabilities can also be reported without a GitHub account.
 
 ## [0.1.2] – 2026-10-22
 
