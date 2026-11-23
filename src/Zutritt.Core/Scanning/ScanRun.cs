@@ -18,15 +18,18 @@ internal sealed class ScanRun
     public static string PhaseFindings => Strings.Phase_Findings;
     public static string PhaseDone => Strings.Phase_Done;
 
-    private sealed record Root(string Path, bool IsLocal, ScanTarget? Unc, ShareLookup? Lookup);
+    /// <param name="Dfs">Zielfreigabe, wenn die Wurzel über DFS erreicht wird – <see cref="Lookup"/> gehört dann zu ihr.</param>
+    /// <param name="InDfsRoot">Die Wurzel liegt im DFS-Namensraum selbst; darunter können Verknüpfungen auf andere Freigaben folgen.</param>
+    private sealed record Root(string Path, bool IsLocal, ScanTarget? Unc, ShareLookup? Lookup, DfsTarget? Dfs = null, bool InDfsRoot = false);
 
     /// <summary>
     /// Noch zu prüfender Ordner. <see cref="ParentSignature"/> null = Rechte des Elternordners unbekannt;
     /// <see cref="ParentDescriptor"/> = rohe Beschreibung des Elternordners (für Zugriffslisten im NT4-Stil);
-    /// <see cref="Expected"/> = was der Ordner vom Elternordner erben müsste, null = unbekannt (Wurzel, Fehler).
+    /// <see cref="Expected"/> = was der Ordner vom Elternordner erben müsste, null = unbekannt (Wurzel, Fehler);
+    /// <see cref="InDfsRoot"/> = Ordner im DFS-Namensraum selbst, seine Unterordner können DFS-Verknüpfungen sein.
     /// </summary>
     private readonly record struct Pending(string Path, int Depth, string? ParentSignature, byte[]? ParentDescriptor, string? ShareUnc, bool IsLink,
-        InheritanceExpectation? Expected);
+        InheritanceExpectation? Expected, bool InDfsRoot = false);
 
     private readonly IScanPlatform _platform;
     private readonly ScanResult _result;
@@ -123,9 +126,7 @@ internal sealed class ScanRun
                 break;
 
             case TargetKind.UncPath:
-                var lookup = LookupShare(target.Server!, target.Share!);
-                if (lookup.Read is not null) AddShare(lookup.Read);
-                AddRoot(new Root(target.Path, IsLocal: false, target, lookup));
+                AddRoot(UncRoot(target, known: null));
                 break;
 
             case TargetKind.Server:
@@ -135,9 +136,8 @@ internal sealed class ScanRun
                 if (shares.Count == 0) { NotChecked(target.Path, Strings.Scan_NoDiskShares); break; }
                 foreach (var read in shares)
                 {
-                    AddShare(read);
                     var unc = new ScanTarget(TargetKind.UncPath, read.Share.UncPath, read.Share.Server, read.Share.Name);
-                    AddRoot(new Root(read.Share.UncPath, IsLocal: false, unc, new ShareLookup(read, null, false)));
+                    AddRoot(UncRoot(unc, new ShareLookup(read, null, false)));
                 }
                 break;
 
@@ -145,6 +145,55 @@ internal sealed class ScanRun
                 ResolveLocalShares();
                 break;
         }
+    }
+
+    /// <summary>
+    /// Wurzel für \\server\freigabe[\unterordner]. Ist der Pfad ein DFS-Pfad, zählt die Zielfreigabe: Windows prüft
+    /// beim Zugriff deren Freigabe-Rechte, nicht die der Freigabe des Namensraums (Praxistest 2026-11-20: Bericht
+    /// zeigte „Lesen“, der Benutzer konnte über den DFS-Pfad schreiben).
+    /// </summary>
+    /// <param name="known">Schon gelesene Freigabe (aus der Freigabeliste des Servers), sonst wird sie nachgeschlagen.</param>
+    private Root UncRoot(ScanTarget target, ShareLookup? known)
+    {
+        var dfs = DfsFor(target, out bool inNamespaceRoot);
+        if (dfs is null)
+        {
+            var lookup = known ?? LookupShare(target.Server!, target.Share!);
+            if (lookup.Read is not null) AddShare(lookup.Read);
+            return new Root(target.Path, IsLocal: false, target, lookup);
+        }
+        var targetLookup = LookupShare(dfs.Server, dfs.Share);
+        if (targetLookup.Read is not null) AddShare(targetLookup.Read);
+        return new Root(target.Path, IsLocal: false, target, targetLookup, dfs, inNamespaceRoot);
+    }
+
+    /// <summary>
+    /// Zielfreigabe eines DFS-Pfads: die der längsten Verknüpfung auf dem Weg zum Ziel, sonst die der DFS-Wurzel
+    /// (<paramref name="inNamespaceRoot"/> = true). Null, wenn \\server\freigabe kein DFS-Namensraum ist.
+    /// </summary>
+    private DfsTarget? DfsFor(ScanTarget target, out bool inNamespaceRoot)
+    {
+        inNamespaceRoot = false;
+        var root = ResolveDfs(target.ShareUnc);
+        if (root is null) return null;
+        for (string? p = target.Path; p is not null && p.Length > target.ShareUnc.Length; p = WindowsPath.Parent(p))
+            if (ResolveDfs(p) is { } link) return link;
+        inNamespaceRoot = true;
+        return root;
+    }
+
+    private DfsTarget? ResolveDfs(string unc)
+        => TimeBudget.TryRun(() => _platform.ResolveDfs(unc), ShareTimeout, out var target) ? target : null;
+
+    /// <summary>Zielfreigabe einer DFS-Verknüpfung aufnehmen; sind ihre Rechte nicht lesbar, als „nicht lesbar“ (dann zählt NTFS allein).</summary>
+    private string DfsShareUnc(DfsTarget target)
+    {
+        var lookup = LookupShare(target.Server, target.Share);
+        var read = lookup.Read ?? new ShareRead(
+            new ShareInfo { Server = target.Server, Name = target.Share, PermissionsReadable = false },
+            lookup.Error ?? Strings.Scan_SharePermissionsUnreadable);
+        AddShare(read);
+        return read.Share.UncPath;
     }
 
     private void ResolveLocalShares()
@@ -254,7 +303,10 @@ internal sealed class ScanRun
         // damit Ordner und Bericht trotzdem wissen, über welche Freigabe der Zugriff läuft.
         if (root is { IsLocal: false, Unc: not null, Lookup: { Read: null } lookup })
         {
-            var placeholder = new ShareInfo { Server = root.Unc.Server!, Name = root.Unc.Share!, PermissionsReadable = false };
+            var placeholder = new ShareInfo
+            {
+                Server = root.Dfs?.Server ?? root.Unc.Server!, Name = root.Dfs?.Share ?? root.Unc.Share!, PermissionsReadable = false,
+            };
             AddShare(new ShareRead(placeholder, lookup.Error ?? Strings.Scan_SharePermissionsUnreadable));
         }
 
@@ -274,7 +326,7 @@ internal sealed class ScanRun
 
         // Tiefensuche mit eigenem Stapel statt Rekursion: Bäume mit Hunderten Ebenen sprengen so keinen Aufrufstapel.
         var stack = new Stack<Pending>();
-        stack.Push(new Pending(root.Path, 0, null, null, shareUnc, IsLink: false, Expected: null));
+        stack.Push(new Pending(root.Path, 0, null, null, shareUnc, IsLink: false, Expected: null, root.InDfsRoot));
         while (stack.Count > 0)
         {
             _ct.ThrowIfCancellationRequested();
@@ -285,7 +337,8 @@ internal sealed class ScanRun
     private string? RootShareUnc(Root root)
     {
         // Schreibweise der gelesenen Freigabe übernehmen, damit Ordner und Freigabeliste genau zusammenpassen.
-        if (!root.IsLocal) return root.Lookup?.Read?.Share.UncPath ?? root.Unc?.ShareUnc;
+        if (!root.IsLocal)
+            return root.Lookup?.Read?.Share.UncPath ?? (root.Dfs is { } dfs ? WindowsPath.Unc(dfs.Server, dfs.Share) : root.Unc?.ShareUnc);
         var read = _localMap?.Longest(root.Path);
         if (read is null) return null;
         AddShare(read);
@@ -344,8 +397,16 @@ internal sealed class ScanRun
                 if (_rootPaths.Contains(child)) continue; // eigenes Ziel, wird mit eigener Wurzel geprüft
                 // Einmal je Ordner und nur, wenn er Unterordner hat
                 if (childSignature is not null) expected ??= InheritanceExpectation.ForSubfolders(node);
-                stack.Push(new Pending(child, item.Depth + 1, childSignature, descriptor, ChildShareUnc(child, item.ShareUnc), entry.IsLink,
-                    childSignature is null ? null : expected));
+                var childShare = ChildShareUnc(child, item.ShareUnc);
+                bool childInDfsRoot = item.InDfsRoot;
+                // DFS-Verknüpfung: Ab hier liegt der Baum auf einer anderen Freigabe, deren Freigabe-Rechte gelten
+                if (childInDfsRoot && ResolveDfs(child) is { } link)
+                {
+                    childShare = DfsShareUnc(link);
+                    childInDfsRoot = false;
+                }
+                stack.Push(new Pending(child, item.Depth + 1, childSignature, descriptor, childShare, entry.IsLink,
+                    childSignature is null ? null : expected, childInDfsRoot));
             }
         }
 

@@ -35,6 +35,8 @@ Administrative and hidden shares (`C$`, `ADMIN$`, names ending in `$`) are skipp
 
 **Share list and details.** The list of shares comes from `NetShareEnum` level 1, which works without administrator rights. Path and permissions of each share come from `NetShareGetInfo` level 502, which needs administrator rights on the server. Without them, the share stays in the run, marked *Freigabe-Berechtigungen nicht lesbar* (ZT13), and network access is rated by NTFS alone.
 
+**DFS.** If `\\server\share` is a DFS namespace, the folders in it do not all live on that share: every DFS link points to a share on some server, and Windows checks **that** share's permissions on access. Zutritt therefore asks the DFS client of this PC (`NetDfsGetClientInfo`, after touching the path so that the referral is cached) for the target of the namespace root and of each link – for the target itself, for the links on the way to it, and for every folder inside the namespace root while walking. Folders behind a link are assigned to the target share (`\\FS01\Lab`), keep their DFS path, and local groups are read from the target server. With several targets, the one this PC is using counts.
+
 **Share permissions** are reduced to the three levels of the Windows share dialog – *Lesen*, *Ändern*, *Vollzugriff* (read, change, full control):
 
 - **Allow entries** count with the highest level for which at least one characteristic right is set: changing permissions or ownership → *Vollzugriff*; writing, appending, deleting or writing attributes → *Ändern*; reading or executing → *Lesen*.
@@ -129,20 +131,20 @@ Generic rights (`GENERIC_ALL` etc., e.g. on *ERSTELLER-BESITZER* entries) are ma
 
 ```mermaid
 flowchart TB
-    P["Person"] --> TK["Token<br>own SID and nested groups<br>Jeder, Authentifizierte Benutzer<br>NETZWERK or INTERAKTIV"]
+    P["Person"] --> TK["Token<br>own SID and nested groups<br>Jeder, Authentifizierte Benutzer, Diese Organisation<br>NETZWERK or INTERAKTIV"]
     TK --> N["NTFS<br>ACEs in stored order"]
     TK --> S["Share<br>highest allowed level, capped by denies"]
     N --> E["Effective right<br>the stricter of both"]
     S --> E
 ```
 
-1. **The token.** For a person: their SID, every group they are a member of (transitively), *Jeder* and *Authentifizierte Benutzer*, and *NETZWERK* when the folder is reached through a share or *INTERAKTIV* when it is not.
+1. **The token.** For a person: their SID, every group they are a member of (transitively), *Jeder*, *Authentifizierte Benutzer* and *Diese Organisation* (Windows puts `S-1-5-15` into the token of every account of its own organization), and *NETZWERK* when the folder is reached through a share or *INTERAKTIV* when it is not.
 2. **NTFS.** The folder's entries are taken in stored order, exactly as Windows checks them. A right counts if it is allowed before a matching deny entry blocks it. Windows normally keeps the canonical order – explicit deny, explicit allow, then inherited entries (nearest parent first) – so on the same level deny wins and an explicit allow beats an inherited deny. Lists in another order (scripts, migrations) are evaluated as stored, too, and reported as [ZT15](rules.md#zt15--entries-not-in-canonical-order). Entries marked “inherit only” do not count for the folder itself; *ERSTELLER-BESITZER* is a placeholder and never in a token; *BESITZERRECHTE* (OWNER RIGHTS) applies to the owner, directly or through a group.
 3. **Share.** The highest share level of all matching allow entries, limited to below the lowest level a matching deny entry before it blocks – in stored order, like the server (Windows writes share denies first; other orders are reported as ZT15).
 4. **Effective right.** Over the network the stricter of share and NTFS applies: share *Lesen* caps at *Lesen*, share *Ändern* caps at *Ändern*, share *Vollzugriff* leaves NTFS as it is. Without a share, or with unreadable share permissions, the effective right is the NTFS right.
 5. **Explanation.** The entry that contributes the highest right, reached by the shortest group chain, explains *Über Gruppen* – e.g. *QC-Team › Labor-Alle*. The person's own entry is shown as *direkt berechtigt* (app, PDF) or *direkt* (Excel).
 
-Not counted: the implicit rights of the owner (read and change permissions) – [ZT10](rules.md#zt10--owner-is-a-user-account) reports personal owners instead. Users, computers and unresolvable SIDs are implicitly members of *Jeder* and *Authentifizierte Benutzer*; groups get only their real memberships.
+Not counted: the implicit rights of the owner (read and change permissions) – [ZT10](rules.md#zt10--owner-is-a-user-account) reports personal owners instead. Users, computers and unresolvable SIDs are implicitly members of *Jeder*, *Authentifizierte Benutzer* and *Diese Organisation*; groups get only their real memberships.
 
 The test suite checks this calculation bit for bit against the Windows access check (AuthZ) on real folders, with a real local account in a real local group – including non-canonical lists written raw and what Windows inherits from them. The Windows CI job fails if this check does not pass.
 

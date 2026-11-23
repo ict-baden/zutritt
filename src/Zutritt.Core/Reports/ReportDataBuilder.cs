@@ -22,7 +22,7 @@ internal static class ReportDataBuilder
     // Gruppen, die praktisch alle Benutzer enthalten (siehe Spezifikation „Breite Gruppen“)
     private static readonly HashSet<string> BroadWellKnown = new(StringComparer.OrdinalIgnoreCase)
     {
-        "S-1-1-0", "S-1-5-11", "S-1-5-4", "S-1-5-2",
+        "S-1-1-0", "S-1-5-11", "S-1-5-15", "S-1-5-4", "S-1-5-2",
     };
 
     /// <param name="progress">Meldet, woran gerade gearbeitet wird (deutscher Satz für die Oberfläche).</param>

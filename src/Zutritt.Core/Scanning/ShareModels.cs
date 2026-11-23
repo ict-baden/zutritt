@@ -21,6 +21,12 @@ public sealed record ShareLookup(ShareRead? Read, string? Error, bool NotFound);
 /// Verweis auf etwas anderes (Junction, symbolische Verknüpfung, Bereitstellungspunkt) – wird nicht verfolgt.
 /// Andere Reparse-Punkte (z. B. OneDrive-Platzhalter) sind echte Ordner und werden normal durchlaufen.
 /// </param>
+/// <summary>
+/// Freigabe, auf der ein DFS-Pfad wirklich liegt (Ziel einer DFS-Wurzel oder DFS-Verknüpfung). Über einen DFS-Pfad
+/// gelten die Freigabe-Rechte dieser Zielfreigabe, nicht die der Freigabe des Namensraums.
+/// </summary>
+public sealed record DfsTarget(string Server, string Share);
+
 public readonly record struct DirEntry(string Name, bool IsDirectory, bool IsLink);
 
 /// <summary>Was unter einem Zielpfad liegt.</summary>

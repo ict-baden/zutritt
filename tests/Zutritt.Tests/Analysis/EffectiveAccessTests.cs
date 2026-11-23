@@ -23,7 +23,7 @@ public sealed class EffectiveAccessTests
     {
         var groups = EffectiveAccess.GroupsOf(S.Create(), S.Erika);
         Assert.Equal(
-            new[] { S.Erika, S.QcTeam, S.LaborAlle, S.DomainUsers, S.BuiltinUsers, S.Everyone, S.AuthenticatedUsers }.Order(),
+            new[] { S.Erika, S.QcTeam, S.LaborAlle, S.DomainUsers, S.BuiltinUsers, S.Everyone, S.AuthenticatedUsers, SidCatalog.ThisOrganization }.Order(),
             groups.Order());
     }
 
@@ -41,7 +41,7 @@ public sealed class EffectiveAccessTests
     public void GroupsOf_verwaiste_und_unbekannte_SIDs_gelten_als_Konto()
     {
         var scan = S.Create();
-        var expected = new[] { S.Everyone, S.AuthenticatedUsers, S.BuiltinUsers };
+        var expected = new[] { S.Everyone, S.AuthenticatedUsers, SidCatalog.ThisOrganization, S.BuiltinUsers };
         Assert.Equal(expected.Append(S.Verwaist).Order(), EffectiveAccess.GroupsOf(scan, S.Verwaist).Order());
         const string fremd = "S-1-5-21-9-9-9-4711";
         Assert.Equal(expected.Append(fremd).Order(), EffectiveAccess.GroupsOf(scan, fremd).Order());
@@ -82,7 +82,7 @@ public sealed class EffectiveAccessTests
         }
         var top = builder.Folder("", 0, Allow(member, Read));
         var groups = EffectiveAccess.GroupsOf(builder.Scan, u);
-        Assert.Equal(20_000 + 3, groups.Count); // Gruppen + Konto + Jeder + Authentifizierte Benutzer
+        Assert.Equal(20_000 + 4, groups.Count); // Gruppen + Konto + Jeder + Authentifizierte Benutzer + Diese Organisation
 
         var grant = Assert.Single(EffectiveAccess.ForPerson(builder.Scan, u));
         Assert.Equal(AccessLevel.Lesen, grant.Ntfs);
@@ -285,6 +285,35 @@ public sealed class EffectiveAccessTests
         Assert.Equal(AccessLevel.Lesen, EffectiveAccessInternals.Grant(b.Scan, shared, u).Effective);
         Assert.Equal(AccessLevel.Aendern, EffectiveAccessInternals.Grant(b.Scan, local, u).Effective);
         Assert.Equal(AccessLevel.Lesen, EffectiveAccessInternals.Grant(b.Scan, interactiveOnly, u).Effective);
+    }
+
+    [Fact]
+    public void Diese_Organisation_gilt_fuer_jedes_Konto_auch_ueber_die_Freigabe()
+    {
+        // Praxistest 2026-11-20: Ein Ordner mit „Diese Organisation: Ändern“ erschien als „nur Administratoren“,
+        // obwohl jedes Domänenkonto dort schreiben konnte – Windows legt S-1-5-15 in jedes Token.
+        var u = Sid(2001);
+        var b = new ScanBuilder().User(u, @"T\u").WithShare(new ShareAce(S.Everyone, ShareAccess.Vollzugriff, false));
+        var shared = b.Folder("", 0, Allow(SidCatalog.ThisOrganization, Modify));
+        var local = b.LocalFolder(@"D:\Lokal", 0, Allow(SidCatalog.ThisOrganization, Read));
+        var denied = b.LocalFolder(@"D:\Gesperrt", 0, Deny(SidCatalog.ThisOrganization, FileRights.Write), Allow(u, Modify));
+
+        Assert.Equal(AccessLevel.Aendern, EffectiveAccessInternals.Grant(b.Scan, shared, u).Effective);
+        Assert.Equal(AccessLevel.Lesen, EffectiveAccessInternals.Grant(b.Scan, local, u).Effective);
+        Assert.Equal(AccessLevel.Lesen, EffectiveAccessInternals.Grant(b.Scan, denied, u).Effective);
+        Assert.Contains(SidCatalog.ThisOrganization, EffectiveAccess.GroupsOf(b.Scan, u));
+    }
+
+    [Fact]
+    public void Diese_Organisation_erscheint_als_breite_Gruppe_und_ist_authentifiziert()
+    {
+        var b = new ScanBuilder().WithShare(new ShareAce(S.AuthenticatedUsers, ShareAccess.Aendern, false));
+        var folder = b.Folder("", 0, Allow(SidCatalog.ThisOrganization, Modify));
+
+        var grant = Assert.Single(EffectiveAccess.PeopleForFolder(b.Scan, folder));
+        Assert.Equal(SidCatalog.ThisOrganization, grant.Sid);
+        // Die Freigabe nennt nur Authentifizierte Benutzer – wer „Diese Organisation“ im Token hat, ist angemeldet
+        Assert.Equal(AccessLevel.Aendern, grant.Effective);
     }
 
     // ---------- Freigabe ----------
