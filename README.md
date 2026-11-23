@@ -126,7 +126,7 @@
   </tr>
 </table>
 
-**① Download** – from the **[current release](https://github.com/ict-baden/zutritt/releases/latest)** (file names carry the version, e.g. `Zutritt-0.1.1-x64.msi`; `Zutritt.exe` keeps its name, so that scheduled tasks and scripts that call it keep working after an update, and so does `SHA256SUMS.txt`):
+**① Download** – from the **[current release](https://github.com/ict-baden/zutritt/releases/latest)** (file names carry the version, e.g. `Zutritt-1.0.0-x64.msi`; `Zutritt.exe` keeps its name, so that scheduled tasks and scripts that call it keep working after an update, and so does `SHA256SUMS.txt`):
 
 | File | What it is |
 |---|---|
