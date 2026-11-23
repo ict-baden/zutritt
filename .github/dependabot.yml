@@ -7,7 +7,7 @@ updates:
     groups:
       nuget:
         patterns: ["*"]
-    # Diese Sprünge wechseln die Lizenz und sind nach richtlinien/02 nicht erlaubt (siehe CLAUDE.md):
+    # Diese Sprünge wechseln die Lizenz und sind nach interne Richtlinie 02 nicht erlaubt (siehe CLAUDE.md):
     ignore:
       # PDFsharp und MigraDoc: 6.2.x ist MIT, ab 6.5.0 AGPL-3.0 – nur Patch-Updates
       - dependency-name: "PDFsharp*"

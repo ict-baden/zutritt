@@ -69,7 +69,7 @@
                             Description="{x:Static res:Strings.Info_PrivacyDescription}">
                 <Button Click="OpenPrivacy_Click" Content="{x:Static res:Strings.Ui_Open}" AutomationProperties.Name="{x:Static res:Strings.Info_OpenPrivacy}"/>
             </ui:SettingCard>
-            <ui:SettingCard Glyph="&#xE779;" Header="{x:Static res:Strings.Cli_InfoImprint}" x:Name="ImpressumCard" Description="ICT-Baden">
+            <ui:SettingCard Glyph="&#xE779;" Header="{x:Static res:Strings.Cli_InfoImprint}" x:Name="ImpressumCard" Description="ICT Baden GmbH">
                 <Button Click="OpenImpressum_Click" Content="{x:Static res:Strings.Ui_Open}" AutomationProperties.Name="{x:Static res:Strings.Info_OpenImprint}"/>
             </ui:SettingCard>
             <ui:SettingCard Glyph="&#xE774;" Header="{x:Static res:Strings.Cli_InfoWebsite}" Description="{x:Static res:Strings.Info_WebsiteDescription}">

@@ -7,7 +7,15 @@ Jeder Versionsabschnitt endet mit „English“: Das ist der Text des Releases a
 ## [Unveröffentlicht]
 
 ### Behoben
+- **DFS-Pfade** (`\\domäne\namensraum\…`) bekamen die Freigabe-Rechte der Freigabe des Namensraums statt der Freigabe, auf der die Ordner wirklich liegen. Der Bericht zeigte dadurch weniger Zugriff, als bestand – im Test „Lesen“, obwohl der Benutzer über denselben Pfad schreiben konnte. Zutritt löst DFS-Wurzel und DFS-Verknüpfungen jetzt auf die Zielfreigabe auf (als Ziel, auf dem Weg zum Ziel und beim Durchlaufen des Namensraums); ist die Zielfreigabe nicht lesbar, zählt NTFS allein (ZT13).
+- Einträge für **„Diese Organisation“** (`S-1-5-15`) zählten für niemanden: Ein Ordner, auf den jedes Konto schreiben durfte, erschien als „nur Administratoren“, ohne Befund. Die Identität gehört jetzt zum Token jedes Kontos und gilt als breite Gruppe (ZT01, ZT02).
 - Release einer Vorabversion (Tag wie `v1.0.0-rc1`): Der Schalter `--prerelease` kam beim Aufruf von `gh release create` in einzelnen Zeichen an, das Release wäre nicht entstanden. Getaggte Versionen ohne Bindestrich waren nicht betroffen.
+
+### Geändert
+- **Herausgeber:** Lizenz, Dateieigenschaften, MSI (*Hersteller*) und die Info-Seite nennen die Firmierung aus dem Impressum, „ICT Baden GmbH“ (bisher „ICT-Baden“). Der Registry-Schlüssel der MSI und der `UpgradeCode` bleiben gleich, ein Update über ältere Versionen funktioniert wie bisher.
+- **Doku:** Zutritt ist gegen eine echte Domäne geprüft (Windows Server 2025, ein Domänencontroller, ein Mitgliedsserver, DFS); `docs/limitations.md` nennt, was dabei ungeprüft blieb (mehrere Domänen, Vertrauensstellungen, NAS). Neu beschrieben: DFS, die Identitäten im Zugriffstoken und Einträge für Anmeldearten, die für niemanden zählen. Die Einstufung „early version“ und „Pre-release“ entfällt, „nicht signiert“ bleibt. `docs/limitations.md` nannte für einen Lauf ohne ein einziges geprüftes Ziel Exitcode 0; richtig ist 3.
+- README mit Abschnitt *Publisher*; `SUPPORT.md` verweist auf Kontaktseite sowie Support und Preise; Sicherheitslücken lassen sich auch ohne GitHub-Konto melden (Issue-Auswahl).
+- Öffentliche Dateien nennen keine internen Repos mehr.
 
 ## [0.1.2] – 2026-10-22
 

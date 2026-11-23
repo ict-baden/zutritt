@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  MSI für Zutritt (nach der Vorlage aus ict-baden/richtlinien): Programmdateien nach %ProgramFiles%\Zutritt und ein
+  MSI für Zutritt (nach der Vorlage der internen Richtlinien): Programmdateien nach %ProgramFiles%\Zutritt und ein
   Startmenü-Eintrag. Zutritt braucht keinen Dienst und keinen Autostart. Die Datenbank legt die App pro Benutzer unter
   %LocalAppData%\Zutritt an, weil Berechtigungsberichte vertraulich sind.
   UpgradeCode und die GUID der Startmenü-Komponente nie ändern: sonst installiert sich ein Update neben die alte
   Version, statt sie zu ersetzen.
-  Manufacturer wird „ICT-Baden GmbH“, sobald die Firmierung steht (OFFEN.md), zusammen mit LICENSE und
-  Directory.Build.props.
+  Manufacturer ist die Firmierung aus dem Impressum, wie in LICENSE und Directory.Build.props. Der Registry-Schlüssel
+  SOFTWARE\ICT-Baden\Zutritt bleibt, wie er ist: An ihm erkennt Windows Installer den Startmenü-Eintrag.
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <Package Name="Zutritt"
-           Manufacturer="ICT-Baden"
+           Manufacturer="ICT Baden GmbH"
            Version="$(ProductVersion)"
            UpgradeCode="075F2980-6E82-4EF1-ABB5-936F52A88839"
            Scope="perMachine"

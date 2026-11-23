@@ -1,5 +1,5 @@
 <Project>
-  <!-- Gemeinsame Einstellungen für alle Projekte im Repo (Vorlage aus ict-baden/richtlinien) -->
+  <!-- Gemeinsame Einstellungen für alle Projekte im Repo (nach der Vorlage der internen Richtlinien) -->
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
@@ -7,10 +7,11 @@
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
 
-    <Company>ICT-Baden</Company>
+    <!-- Firmierung wie im Impressum (https://ict-baden.de/impressum/) -->
+    <Company>ICT Baden GmbH</Company>
     <Product>Zutritt</Product>
-    <Copyright>© 2026 ICT-Baden</Copyright>
-    <!-- Richtlinie 13: Texte in Zutritt.Core/Resources/Strings*.resx, Englisch ist die Rückfallsprache -->
+    <Copyright>© 2026 ICT Baden GmbH</Copyright>
+    <!-- Texte in Zutritt.Core/Resources/Strings*.resx, Englisch ist die Rückfallsprache -->
     <NeutralLanguage>en</NeutralLanguage>
     <!-- Nur Sprachressourcen der fünf Sprachen mitliefern (auch die fremder Pakete) -->
     <SatelliteResourceLanguages>en;de;es;fr;zh-Hans</SatelliteResourceLanguages>

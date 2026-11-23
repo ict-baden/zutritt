@@ -172,14 +172,14 @@ The file name is suggested as `Zutritt-Bericht-<target>-<date>`. After saving, *
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/about-dark.png">
-  <img alt="Info: Zutritt with version, build and .NET version, © 2026 ICT-Baden · MIT-Lizenz; the database path with “Ordner öffnen”; the card “Nur lesend, Daten bleiben hier” with the sentence that the software sends no data to ICT-Baden; under Lizenz the cards “MIT-Lizenz” with “Lizenztext anzeigen” and “Drittanbieter-Lizenzen”; under Hilfe und Links “Hilfe &amp; Support” and “Diagnosepaket erstellen” with the switch “Ohne Namen und Adressen”." src="assets/screenshots/about-light.png" width="900">
+  <img alt="Info: Zutritt with version, build and .NET version, © 2026 ICT Baden GmbH · MIT-Lizenz; the database path with “Ordner öffnen”; the card “Nur lesend, Daten bleiben hier” with the sentence that the software sends no data to ICT-Baden; under Lizenz the cards “MIT-Lizenz” with “Lizenztext anzeigen” and “Drittanbieter-Lizenzen”; under Hilfe und Links “Hilfe &amp; Support” and “Diagnosepaket erstellen” with the switch “Ohne Namen und Adressen”." src="assets/screenshots/about-light.png" width="900">
 </picture>
 
 From top to bottom:
 
 | Card | Shows or does |
 |---|---|
-| *Zutritt* | Version, build (commit) and .NET version, e.g. *Version 0.1.0 · Build abc1234*; *© 2026 ICT-Baden · MIT-Lizenz*. |
+| *Zutritt* | Version, build (commit) and .NET version, e.g. *Version 0.1.0 · Build abc1234*; *© 2026 ICT Baden GmbH · MIT-Lizenz*. |
 | *Datenbank* | Where the run history is (`%LocalAppData%\Zutritt\zutritt.db`, in the demo a temporary file); *Ordner öffnen* opens the folder. |
 | *Nur lesend, Daten bleiben hier* | Zutritt changes nothing – and *Diese Software sendet keine Daten an ICT-Baden* (sends no data to ICT-Baden). |
 | *Sprache* | The language of window, command line and reports: *Wie Windows* (*Vorgabe für diesen Rechner* if an administrator preset a language for all users) or one of the five languages; takes effect at the next start ([Languages](#languages)). Not in the screenshot above yet. |

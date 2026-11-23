@@ -1,8 +1,8 @@
-# Nach der Vorlage aus ict-baden/richtlinien (vorlagen/.github/workflows/build.yml), Windows-Desktop-App mit MSI.
-# Dazu: Job „linux“ testet den plattformneutralen Teil (richtlinien/02); der Job „windows“ startet erst, wenn er grün
+# Nach der Vorlage der internen ICT-Baden-Richtlinien (nicht öffentlich), Windows-Desktop-App mit MSI.
+# Dazu: Job „linux“ testet den plattformneutralen Teil (interne Richtlinie 02); der Job „windows“ startet erst, wenn er grün
 # ist, und veröffentlicht selbst – wie in der Vorlage, ohne Umweg über Artefakte (deren Speicher teilen sich alle Repos
 # der Organisation, ist er voll, darf das kein Release verhindern). Jedes Release enthält zusätzlich eine Stückliste
-# (SBOM, richtlinien/06), öffentliche Repos einen Herkunftsnachweis (richtlinien/05).
+# (SBOM, interne Richtlinie 06), öffentliche Repos einen Herkunftsnachweis (interne Richtlinie 05).
 name: Build
 
 on:
@@ -24,7 +24,7 @@ env:
   APP: "Zutritt"
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
-  # Signieren nur, wenn die Organisation Artifact Signing eingerichtet hat (siehe richtlinien/05-signieren.md)
+  # Signieren nur, wenn die Organisation Artifact Signing eingerichtet hat (interne Richtlinie 05)
   # und nicht bei Pull Requests (dort gibt es kein OIDC-Token mit den nötigen Rechten).
   SIGN: ${{ vars.SIGNING_ACCOUNT != '' && github.event_name != 'pull_request' }}
 
@@ -265,7 +265,7 @@ jobs:
       - name: Pakete schnüren
         shell: pwsh
         run: |
-          # Lizenztexte gehören neben die Exe, ins ZIP und in die MSI (richtlinien/06) – die csproj kopiert sie beim Publish
+          # Lizenztexte gehören neben die Exe, ins ZIP und in die MSI (interne Richtlinie 06) – die csproj kopiert sie beim Publish
           foreach ($dir in 'out/framework', 'out/self-contained') {
             foreach ($file in 'LICENSE', 'THIRD-PARTY-NOTICES.txt') {
               if (-not (Test-Path "$dir/$file")) { throw "$dir/$file fehlt: src/$env:APP/$env:APP.csproj muss $file in den Publish-Ordner kopieren." }
@@ -402,7 +402,7 @@ jobs:
       - name: Stückliste (SBOM)
         shell: pwsh
         run: |
-          # CycloneDX-Stückliste der ausgelieferten Pakete und Runtime-Pakete (richtlinien/06). Die WiX-Custom-Action
+          # CycloneDX-Stückliste der ausgelieferten Pakete und Runtime-Pakete (interne Richtlinie 06). Die WiX-Custom-Action
           # der MSI steht in THIRD-PARTY-NOTICES.txt.
           dotnet tool restore
           if ($LASTEXITCODE -ne 0) { throw "dotnet tool restore fehlgeschlagen ($LASTEXITCODE)" }
@@ -428,7 +428,7 @@ jobs:
           Get-Content dist/SHA256SUMS.txt
 
       - name: Herkunftsnachweis
-        # Nur für öffentliche Repos; für private bräuchte es GitHub Enterprise (richtlinien/05)
+        # Nur für öffentliche Repos; für private bräuchte es GitHub Enterprise (interne Richtlinie 05)
         if: github.event_name != 'pull_request' && !github.event.repository.private
         uses: actions/attest-build-provenance@v4
         with:

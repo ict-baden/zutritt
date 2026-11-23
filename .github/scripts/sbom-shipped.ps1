@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Gleicht die CycloneDX-Stückliste an das an, was die Pakete wirklich enthalten (richtlinien/06).
+    Gleicht die CycloneDX-Stückliste an das an, was die Pakete wirklich enthalten (interne Richtlinie 06).
 
 .DESCRIPTION
     CycloneDX liest die Paketgraphen aus NuGet und nennt dabei auch Pakete, die NuGet für net10.0-windows weglässt

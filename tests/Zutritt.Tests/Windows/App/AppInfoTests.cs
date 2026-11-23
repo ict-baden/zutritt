@@ -31,8 +31,8 @@ public sealed class AppInfoTests
     [Fact]
     public void Herausgeber_und_Copyright_kommen_aus_den_Assembly_Angaben()
     {
-        Assert.StartsWith("ICT-Baden", AppInfo.Publisher);
-        Assert.Matches(@"^© \d{4} ICT-Baden", AppInfo.Copyright);
+        Assert.Equal("ICT Baden GmbH", AppInfo.Publisher);
+        Assert.Matches(@"^© \d{4} ICT Baden GmbH", AppInfo.Copyright);
         Assert.Equal("Diese Software sendet keine Daten an ICT-Baden.", AppInfo.NoDataSentence);
     }
 

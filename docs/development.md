@@ -6,6 +6,9 @@ Building, testing and releasing Zutritt, how the code is organised, and how the 
 
 **Contents:** [Requirements](#requirements) · [Build](#build) · [Tests](#tests) · [Architecture](#architecture) · [Database schema](#database-schema) · [MSI](#msi) · [CI and releases](#ci-and-releases) · [Releasing a version](#releasing-a-version) · [Dependencies and licences](#dependencies-and-licences) · [Screenshots and images](#screenshots-and-images) · [Hidden switches](#hidden-switches)
 
+> [!NOTE]
+> Comments in source code, tests and CI cite the internal ICT-Baden guidelines (`Richtlinie NN`, `interne Richtlinie NN`); they are not public. `CLAUDE.md` refers to internal, non-public repositories as well. Everything needed to build, test and contribute is in [CONTRIBUTING.md](../CONTRIBUTING.md) and in this folder.
+
 ## Requirements
 
 - **.NET 10 SDK.** `global.json` pins `10.0.100` with `rollForward: latestFeature`, so newer 10.0 feature bands work too.
