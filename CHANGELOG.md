@@ -13,6 +13,7 @@ Erste öffentliche Version. Sie enthält, was als 0.1.3 vorgesehen war (nie ver�
 ### Behoben
 - **DFS-Pfade** (`\\domäne\namensraum\…`) bekamen die Freigabe-Rechte der Freigabe des Namensraums statt der Freigabe, auf der die Ordner wirklich liegen. Der Bericht zeigte dadurch weniger Zugriff, als bestand – im Test „Lesen“, obwohl der Benutzer über denselben Pfad schreiben konnte. Zutritt löst DFS-Wurzel und DFS-Verknüpfungen jetzt auf die Zielfreigabe auf (als Ziel, auf dem Weg zum Ziel und beim Durchlaufen des Namensraums); ist die Zielfreigabe nicht lesbar, zählt NTFS allein (ZT13).
 - Einträge für **„Diese Organisation“** (`S-1-5-15`) zählten für niemanden: Ein Ordner, auf den jedes Konto schreiben durfte, erschien als „nur Administratoren“, ohne Befund. Die Identität gehört jetzt zum Token jedes Kontos und gilt als breite Gruppe (ZT01, ZT02).
+- Seite *Personen*: Eine Mitgliedschaft, die Windows nur stillschweigend vergibt (Jeder, Authentifizierte Benutzer, Diese Organisation), erschien als bloße SID, wenn kein Eintrag im Lauf sie nannte. Sie trägt jetzt ihren Namen.
 - Release einer Vorabversion (Tag wie `v1.0.0-rc1`): Der Schalter `--prerelease` kam beim Aufruf von `gh release create` in einzelnen Zeichen an, das Release wäre nicht entstanden. Getaggte Versionen ohne Bindestrich waren nicht betroffen.
 
 ### Geändert
@@ -30,6 +31,7 @@ Not code-signed yet – check the files against `SHA256SUMS.txt`. What Zutritt c
 #### Fixed
 - **DFS paths** (`\\domain\namespace\…`) were rated with the share permissions of the namespace share instead of the share the folders really live on. The report then showed less access than there was – in the test *Lesen* (read) although the user could write through the same path. Zutritt now resolves the DFS root and DFS links to the target share (for the target, on the way to it and while walking the namespace); if the target share cannot be read, NTFS alone counts (ZT13).
 - Entries for **“This Organization”** (`S-1-5-15`) counted for no one: a folder every account could write to appeared as “administrators only”, without a finding. The identity is now part of every account's token and counts as a broad group (ZT01, ZT02).
+- *Personen* page: a membership that Windows grants implicitly (Everyone, Authenticated Users, This Organization) appeared as a bare SID when no entry in the run named it. It now shows its name.
 - Releasing a pre-release version (a tag like `v1.0.0-rc1`): the switch `--prerelease` reached `gh release create` as single characters, so the release would not have been created. Tagged versions without a hyphen were not affected.
 
 #### Changed

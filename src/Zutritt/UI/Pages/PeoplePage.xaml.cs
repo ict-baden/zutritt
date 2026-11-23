@@ -278,7 +278,10 @@ public partial class PeoplePage : UserControl, IPage, ISearchPage
 
         // Gruppen: echte Gruppen alphabetisch, bekannte Prinzipale (Jeder, Authentifizierte Benutzer) dahinter
         var memberOf = groups.Where(g => !g.Equals(item.Sid, StringComparison.OrdinalIgnoreCase))
-            .Select(g => scan.Principals.GetValueOrDefault(g) is { } gp ? (Name: gp.Label, Known: gp.Kind == PrincipalKind.Bekannt) : (Name: g, Known: false))
+            // Implizite Identitäten (Jeder, Authentifizierte Benutzer, Diese Organisation) stehen nur im Lauf, wenn ein
+            // Eintrag sie nennt – sonst der bekannte Name statt der bloßen SID
+            .Select(g => scan.Principals.GetValueOrDefault(g) is { } gp ? (Name: gp.Label, Known: gp.Kind == PrincipalKind.Bekannt)
+                : SidCatalog.FallbackName(g) is { } known ? (Name: known, Known: true) : (Name: g, Known: false))
             .OrderBy(g => g.Known).ThenBy(g => g.Name, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
         foreach (var g in memberOf)
