@@ -6,6 +6,9 @@ Jeder Versionsabschnitt endet mit „English“: Das ist der Text des Releases a
 
 ## [Unveröffentlicht]
 
+### Geändert
+- `docs/data-and-privacy.md`: Bei einem Pfad durch einen DFS-Namensraum spricht Zutritt auch die Server an, auf die die DFS-Verknüpfungen zeigen (seit 1.0.0, dort nicht genannt).
+
 ## [1.0.0] – 2026-11-23
 
 Erste öffentliche Version. Sie enthält, was als 0.1.3 vorgesehen war (nie veröffentlicht), und die Korrekturen aus dem Test gegen eine echte Domäne (Windows Server 2025, Domänencontroller mit DFS, Mitgliedsserver). Ab jetzt braucht eine Änderung, die Befehlszeile, Exit-Codes oder die Datenbank bricht, eine neue Hauptversion.
