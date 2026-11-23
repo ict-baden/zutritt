@@ -144,7 +144,7 @@ dotnet build installer/Zutritt.Installer.wixproj -c Release -p:ProductVersion=0.
 
 ## CI and releases
 
-`.github/workflows/build.yml` runs for pushes to `main`, tags `v*`, pull requests, nightly and manual starts; changes to documentation only (`**.md`, `docs/**`, `LICENSE`, issue templates) start nothing. A first job **`gate`** decides how much a run builds ([richtlinien, guideline 04](https://github.com/ict-baden/richtlinien), *Wann die CI baut*), because Windows minutes cost twice as much:
+`.github/workflows/build.yml` runs for pushes to `main`, tags `v*`, pull requests, nightly and manual starts; changes to documentation only (`**.md`, `docs/**`, `LICENSE`, issue templates) start nothing. A first job **`gate`** decides how much a run builds (internal guideline 04, *Wann die CI baut*), because Windows minutes cost twice as much:
 
 - **Push to `main`, push to a pull request:** only `linux`.
 - **Full build** (`linux`, then `windows`): nightly when `main` has changed more than documentation since the last full build (the tag `latest`), tags `v*`, manual starts (`gh workflow run build.yml --ref main`), a push whose last commit message contains `[voll]`, and pull requests with the label `voll-bauen` or with changes that Linux does not build or test (`FULL_PATHS` in the workflow: `.github/`, `installer/`, the WPF app, `Zutritt.Platform.Windows`, the Windows tests, build settings, tools). On `main` a full build updates `latest`.
