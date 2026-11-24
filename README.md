@@ -220,7 +220,7 @@ Zutritt answers one question well – *who can access what, and why* – for adm
     <td valign="top"><a href="docs/excel-and-pdf.md"><b>Reports: Excel &amp; PDF</b></a><br><sub>Excel sheets, PDF sections, the sign-off block, size limits and truncation</sub></td>
   </tr>
   <tr>
-    <td valign="top"><a href="docs/data-and-privacy.md"><b>Data &amp; privacy</b></a><br><sub>What is read, what is stored where, the per-user database, log and diagnostics package, no data to ICT-Baden, handling reports confidentially</sub></td>
+    <td valign="top"><a href="docs/data-and-privacy.md"><b>Data &amp; privacy</b></a><br><sub>What is read, what is stored where, the per-user database, log and diagnostics package, no data to ICT Baden, handling reports confidentially</sub></td>
     <td valign="top"><a href="docs/limitations.md"><b>Limitations</b></a><br><sub>What Zutritt cannot see or decide – and how it errs on the side of showing more access</sub></td>
   </tr>
   <tr>
@@ -279,7 +279,7 @@ Zutritt is published by **ICT Baden GmbH**:
 
 <!-- Impressum und Datenschutz: dieselben Adressen wie in der App (AppInfo.ImpressumUrl, AppInfo.PrivacyUrl). -->
 <sub>
-Zutritt is free and open source software by <b>ICT-Baden</b>. &nbsp;·&nbsp;
+Zutritt is free and open source software by <b>ICT Baden</b>. &nbsp;·&nbsp;
 Licence: <a href="LICENSE">MIT</a> &nbsp;·&nbsp;
 Third-party licences: <a href="THIRD-PARTY-NOTICES.txt">THIRD-PARTY-NOTICES.txt</a> &nbsp;·&nbsp;
 Support: free via GitHub, guaranteed with a <a href="SUPPORT.md">support contract</a> &nbsp;·&nbsp;

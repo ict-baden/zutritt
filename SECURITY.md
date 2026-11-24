@@ -5,9 +5,9 @@
 Bitte **kein öffentliches Issue**. Melden Sie Sicherheitslücken vertraulich:
 
 - über GitHub: [Private vulnerability report](https://github.com/ict-baden/zutritt/security/advisories/new) (bevorzugt)
-- ohne GitHub-Konto: über die [Kontaktseite von ICT-Baden](https://ict-baden.de/#kontakt) – bitte nur um einen vertraulichen Kanal bitten, keine Details in die erste Nachricht
+- ohne GitHub-Konto: per E-Mail an [security@ict-baden.de](mailto:security@ict-baden.de) (Policy: <https://ict-baden.de/sicherheit/>)
 
-Please **do not open a public issue**. Report vulnerabilities privately via GitHub (preferred) or, without a GitHub account, ask for a confidential channel via the [ICT-Baden contact page](https://ict-baden.de/#kontakt).
+Please **do not open a public issue**. Report vulnerabilities privately via GitHub (preferred) or, without a GitHub account, by email to [security@ict-baden.de](mailto:security@ict-baden.de) (policy: <https://ict-baden.de/en/security/>).
 
 Hilfreich sind: betroffene Version, Schritte zum Nachstellen, mögliche Auswirkung. Bitte keine echten Berichte, Datenbanken (`zutritt.db`) oder Server-, Freigabe- und Kontonamen aus Ihrer Umgebung beilegen – sie zeigen, wer worauf zugreifen darf.
 
@@ -23,6 +23,6 @@ Wir veröffentlichen behobene Schwachstellen als GitHub Security Advisory und ne
 
 ## Unterstützte Versionen / Supported versions
 
-Sicherheitsupdates gibt es für die jeweils **neueste veröffentlichte Version**. Kunden mit Supportvertrag erhalten Sicherheitsinformationen vorab.
+Sicherheitsupdates gibt es für die jeweils **neueste veröffentlichte Version**; Kunden mit Supportvertrag zusätzlich für die vorherige Hauptversion bis zwölf Monate nach Erscheinen der Nachfolgerin. Kunden mit Supportvertrag erhalten Sicherheitsinformationen vorab.
 
-Security fixes are provided for the **latest released version**.
+Security fixes are provided for the **latest released version**; customers with a support contract also receive them for the previous major version until twelve months after its successor appears.

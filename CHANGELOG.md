@@ -8,6 +8,10 @@ Jeder Versionsabschnitt endet mit „English“: Das ist der Text des Releases a
 
 ### Geändert
 - `docs/data-and-privacy.md`: Bei einem Pfad durch einen DFS-Namensraum spricht Zutritt auch die Server an, auf die die DFS-Verknüpfungen zeigen (seit 1.0.0, dort nicht genannt).
+- `SECURITY.md` und Issue-Auswahl: Ohne GitHub-Konto geht die Meldung einer Sicherheitslücke per E-Mail an security@ict-baden.de (Policy: https://ict-baden.de/sicherheit/) statt über die Kontaktseite. Kunden mit Supportvertrag bekommen Sicherheitsupdates zusätzlich für die vorherige Hauptversion, bis zwölf Monate nach Erscheinen der Nachfolgerin (auch in `docs/installation.md` und `docs/limitations.md`).
+- README, `SUPPORT.md` und `docs/` schreiben im Fließtext „ICT Baden“ ohne Bindestrich; technische Kennungen und die Texte der Info-Seite bleiben unverändert. `docs/development.md` nannte als `Manufacturer` der MSI noch „ICT-Baden“; richtig ist „ICT Baden GmbH“ (seit 1.0.0).
+- `CLAUDE.md` nennt keine internen Repos mehr und verweist auf `CONTRIBUTING.md` und `docs/development.md`.
+- Tests: Vornamen aus der Testliste entfernt (`DemoDataTests`).
 
 ## [1.0.0] – 2026-11-23
 

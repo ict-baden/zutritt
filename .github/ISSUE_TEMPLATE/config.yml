@@ -7,5 +7,5 @@ contact_links:
     url: https://github.com/ict-baden/zutritt/security/advisories/new
     about: Bitte nicht als öffentliches Issue. / Please do not open a public issue.
   - name: Sicherheitslücke melden ohne GitHub / Report a vulnerability without GitHub
-    url: https://ict-baden.de/#kontakt
-    about: Über die Kontaktseite, zunächst ohne Einzelheiten – wir melden uns mit einem vertraulichen Weg. / Through the contact page, no details at first – we reply with a confidential channel.
+    url: https://ict-baden.de/sicherheit/
+    about: Per E-Mail an security@ict-baden.de, die Policy steht auf dieser Seite. / By email to security@ict-baden.de, the policy is on this page.
