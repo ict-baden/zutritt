@@ -7,7 +7,7 @@ Building, testing and releasing Zutritt, how the code is organised, and how the 
 **Contents:** [Requirements](#requirements) · [Build](#build) · [Tests](#tests) · [Architecture](#architecture) · [Database schema](#database-schema) · [MSI](#msi) · [CI and releases](#ci-and-releases) · [Releasing a version](#releasing-a-version) · [Dependencies and licences](#dependencies-and-licences) · [Screenshots and images](#screenshots-and-images) · [Hidden switches](#hidden-switches)
 
 > [!NOTE]
-> Comments in source code, tests and CI cite the internal ICT-Baden guidelines (`Richtlinie NN`, `interne Richtlinie NN`); they are not public. `CLAUDE.md` refers to internal, non-public repositories as well. Everything needed to build, test and contribute is in [CONTRIBUTING.md](../CONTRIBUTING.md) and in this folder.
+> Comments in source code, tests and CI cite the internal ICT Baden guidelines (`Richtlinie NN`, `interne Richtlinie NN`); they are not public. Everything needed to build, test and contribute is in [CONTRIBUTING.md](../CONTRIBUTING.md) and in this folder.
 
 ## Requirements
 
@@ -73,7 +73,7 @@ Notable test groups:
 
 ## Architecture
 
-Zutritt is bound to Windows by its task: NTFS permissions, SMB share permissions, the local account databases (SAM, LSA) and Active Directory exist only there. That is why the app is a WPF program (the exception the ICT-Baden guidelines make for Windows-bound tools). Everything that does not need Windows lives in a platform-neutral core, so it can be tested on Linux and reused by another front end if one is ever needed.
+Zutritt is bound to Windows by its task: NTFS permissions, SMB share permissions, the local account databases (SAM, LSA) and Active Directory exist only there. That is why the app is a WPF program (the exception the ICT Baden guidelines make for Windows-bound tools). Everything that does not need Windows lives in a platform-neutral core, so it can be tested on Linux and reused by another front end if one is ever needed.
 
 ```mermaid
 flowchart LR
@@ -140,7 +140,7 @@ dotnet publish src/Zutritt/Zutritt.csproj -c Release -r win-x64 -p:PublishSingle
 dotnet build installer/Zutritt.Installer.wixproj -c Release -p:ProductVersion=0.1.0
 ```
 
-`installer/Package.wxs` installs everything from the publish folder (without `.pdb`, with `LICENSE` and `THIRD-PARTY-NOTICES.txt`) per machine into `C:\Program Files\Zutritt`, adds a Start menu shortcut, closes a running Zutritt (a scan stopped this way ends with exit code 3, like Ctrl+C), links *Apps & features* to `SUPPORT.md`, and sets `MajorUpgrade` with `AllowSameVersionUpgrades` so that CI builds – which differ only in the fourth version part – replace each other. **Never change the `UpgradeCode` or the GUID of the Start menu component** – an update would then install next to the old version instead of replacing it. The UI culture of the package is `de-DE`; `Manufacturer` is *ICT-Baden*. ICE38, 43, 57, 60 and 61 are suppressed with reasons in the project file; all other ICE checks also run on CI.
+`installer/Package.wxs` installs everything from the publish folder (without `.pdb`, with `LICENSE` and `THIRD-PARTY-NOTICES.txt`) per machine into `C:\Program Files\Zutritt`, adds a Start menu shortcut, closes a running Zutritt (a scan stopped this way ends with exit code 3, like Ctrl+C), links *Apps & features* to `SUPPORT.md`, and sets `MajorUpgrade` with `AllowSameVersionUpgrades` so that CI builds – which differ only in the fourth version part – replace each other. **Never change the `UpgradeCode` or the GUID of the Start menu component** – an update would then install next to the old version instead of replacing it. The UI culture of the package is `de-DE`; `Manufacturer` is *ICT Baden GmbH*. ICE38, 43, 57, 60 and 61 are suppressed with reasons in the project file; all other ICE checks also run on CI.
 
 ## CI and releases
 

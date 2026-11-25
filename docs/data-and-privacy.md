@@ -8,9 +8,9 @@ What Zutritt reads, what it keeps where, how to delete it, which connections it 
 
 ## In short
 
-- **Zutritt sends no data to ICT-Baden** – no telemetry, no crash reports, no usage statistics, no update check. The *Info* page and `Zutritt.exe --info` say so: *Diese Software sendet keine Daten an ICT-Baden.*
+- **Zutritt sends no data to ICT Baden** – no telemetry, no crash reports, no usage statistics, no update check. The *Info* page and `Zutritt.exe --info` say so: *Diese Software sendet keine Daten an ICT-Baden.*
 - **Everything stays on the PC that scans:** the run history in a per-user database, a short log, and the reports you save.
-- **The operator is responsible for the data.** A run contains names of people, their group memberships and their access. Whoever runs Zutritt – the customer – is the controller in the sense of the GDPR; ICT-Baden processes none of it through the software.
+- **The operator is responsible for the data.** A run contains names of people, their group memberships and their access. Whoever runs Zutritt – the customer – is the controller in the sense of the GDPR; ICT Baden processes none of it through the software.
 - **Only one setting is stored: the language**, and only if you choose one on the *Info* page – in `%LocalAppData%\Zutritt\settings.json`. Zutritt also reads `%ProgramData%\Zutritt\settings.json` (a language preset by the administrator) and the environment variable `ZUTRITT_LANGUAGE`. Scan options are chosen per scan and saved with the run; Zutritt keeps no settings in the registry (it only reads whether Windows uses the light or dark theme). The MSI writes one registry value for its Start menu entry ([Installation › MSI](installation.md#msi-installer)).
 
 ## Read-only
@@ -92,13 +92,13 @@ Error messages from Windows or .NET can contain a file path, for example of a re
 The switch ***Ohne Namen und Adressen*** is on by default: names of this PC, its user, its domain and DNS domain, server names and UNC paths, local paths (also with spaces in the middle), account SIDs, *DOMÄNE\\name* accounts, names in LDAP paths (*CN=…*, *OU=…*, *DC=…*), quoted names in every language of the interface, IP and e-mail addresses are replaced (*RECHNER*, *BENUTZER*, *SERVER-1* …). A path without quotes ends at the first space after which no further part of the path follows – Zutritt's own messages quote paths, but a message from Windows might not. Look into the ZIP before you send it.
 
 - **Free support on GitHub is public.** Attach only the anonymised package – never reports, `zutritt.db` or real server, share and account names ([SUPPORT.md](../SUPPORT.md)).
-- **Confidential analysis** of real runs or reports is part of a support contract with a data processing agreement (*Auftragsverarbeitungsvertrag*), because ICT-Baden then processes personal data on the customer's behalf.
+- **Confidential analysis** of real runs or reports is part of a support contract with a data processing agreement (*Auftragsverarbeitungsvertrag*), because ICT Baden then processes personal data on the customer's behalf.
 
 ## Network connections
 
 Zutritt connects only to what it scans and resolves: the file servers (SMB and the Windows network APIs for shares and local accounts) – for a path through a DFS namespace also the servers the DFS links point to, because the folders live there –, the LSA of these servers and of this PC, and – on domain-joined PCs – the domain controllers of its own domain. There is no telemetry, no update check and no other internet connection.
 
-The *Info* page has links to the source code, help and support, the privacy notice of Zutritt on the ICT-Baden website (a summary of this page), the Impressum and the product page; the licence texts are built into the program and shown in a window. They open in your browser **only when you click them**, and only `http`/`https` addresses are opened.
+The *Info* page has links to the source code, help and support, the privacy notice of Zutritt on the ICT Baden website (a summary of this page), the Impressum and the product page; the licence texts are built into the program and shown in a window. They open in your browser **only when you click them**, and only `http`/`https` addresses are opened.
 
 ---
 

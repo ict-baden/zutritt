@@ -172,7 +172,7 @@ The file name is suggested as `Zutritt-Bericht-<target>-<date>`. After saving, *
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/about-dark.png">
-  <img alt="Info: Zutritt with version, build and .NET version, © 2026 ICT Baden GmbH · MIT-Lizenz; the database path with “Ordner öffnen”; the card “Nur lesend, Daten bleiben hier” with the sentence that the software sends no data to ICT-Baden; under Lizenz the cards “MIT-Lizenz” with “Lizenztext anzeigen” and “Drittanbieter-Lizenzen”; under Hilfe und Links “Hilfe &amp; Support” and “Diagnosepaket erstellen” with the switch “Ohne Namen und Adressen”." src="assets/screenshots/about-light.png" width="900">
+  <img alt="Info: Zutritt with version, build and .NET version, © 2026 ICT Baden GmbH · MIT-Lizenz; the database path with “Ordner öffnen”; the card “Nur lesend, Daten bleiben hier” with the sentence that the software sends no data to ICT Baden; under Lizenz the cards “MIT-Lizenz” with “Lizenztext anzeigen” and “Drittanbieter-Lizenzen”; under Hilfe und Links “Hilfe &amp; Support” and “Diagnosepaket erstellen” with the switch “Ohne Namen und Adressen”." src="assets/screenshots/about-light.png" width="900">
 </picture>
 
 From top to bottom:
@@ -181,13 +181,13 @@ From top to bottom:
 |---|---|
 | *Zutritt* | Version, build (commit) and .NET version, e.g. *Version 0.1.0 · Build abc1234*; *© 2026 ICT Baden GmbH · MIT-Lizenz*. |
 | *Datenbank* | Where the run history is (`%LocalAppData%\Zutritt\zutritt.db`, in the demo a temporary file); *Ordner öffnen* opens the folder. |
-| *Nur lesend, Daten bleiben hier* | Zutritt changes nothing – and *Diese Software sendet keine Daten an ICT-Baden* (sends no data to ICT-Baden). |
+| *Nur lesend, Daten bleiben hier* | Zutritt changes nothing – and *Diese Software sendet keine Daten an ICT-Baden* (sends no data to ICT Baden). |
 | *Sprache* | The language of window, command line and reports: *Wie Windows* (*Vorgabe für diesen Rechner* if an administrator preset a language for all users) or one of the five languages; takes effect at the next start ([Languages](#languages)). Not in the screenshot above yet. |
 | *MIT-Lizenz* › *Lizenztext anzeigen* | The licence text of Zutritt in a window. |
 | *Drittanbieter-Lizenzen* › *Anzeigen* | `THIRD-PARTY-NOTICES.txt`: every library Zutritt contains, with version, source, copyright and licence text. Built into the program, so it works for the single `Zutritt.exe` as well. |
 | *Hilfe & Support* | Opens [SUPPORT.md](../SUPPORT.md): free help on GitHub, guaranteed help with a support contract. |
 | *Diagnosepaket erstellen* | Saves a ZIP with version, system details and the log of the last 7 days for a support request. *Ohne Namen und Adressen* (without names and addresses, on by default) replaces computer, account and server names, paths, SIDs and addresses. No runs, no reports. Details: [Data & privacy › Diagnostics package](data-and-privacy.md#diagnostics-package-and-support). |
-| *Quellcode (GitHub)*, *Datenschutz*, *Impressum*, *Webseite* | Links to the repository, to the privacy notice of Zutritt on the ICT-Baden website (`https://ict-baden.de/datenschutz/zutritt/`; the details are in [Data & privacy](data-and-privacy.md)), to the Impressum of ICT-Baden and to the Zutritt product page. |
+| *Quellcode (GitHub)*, *Datenschutz*, *Impressum*, *Webseite* | Links to the repository, to the privacy notice of Zutritt on the ICT Baden website (`https://ict-baden.de/datenschutz/zutritt/`; the details are in [Data & privacy](data-and-privacy.md)), to the Impressum of ICT Baden and to the Zutritt product page. |
 | *Befehlszeile und geplante Aufgaben* | An example for a weekly scheduled task and the exit codes; `Zutritt.exe --info` prints the same details as text. |
 | *Tastatur* | The keyboard shortcuts. |
 

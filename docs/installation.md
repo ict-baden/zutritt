@@ -7,7 +7,7 @@ Which file to download, how to check it, how to roll it out, and which rights th
 **Contents:** [Requirements](#requirements) · [Downloads](#downloads) · [Verifying the download](#verifying-the-download) · [MSI installer](#msi-installer) · [Deploying with Intune or Group Policy](#deploying-with-intune-or-group-policy) · [Single exe and ZIP](#single-exe-and-zip) · [Rights for scanning](#rights-for-scanning) · [Recommended setup](#recommended-setup) · [Updates and uninstalling](#updates-and-uninstalling) · [Supported versions](#supported-versions)
 
 > [!IMPORTANT]
-> **Not code-signed yet.** Zutritt is built and tested in GitHub Actions; tagged versions are published as [releases](https://github.com/ict-baden/zutritt/releases). Program and MSI are signed as soon as Artifact Signing is set up for ICT-Baden; until then Windows SmartScreen may warn when you start them. Check the files against `SHA256SUMS.txt` – see [Verifying the download](#verifying-the-download).
+> **Not code-signed yet.** Zutritt is built and tested in GitHub Actions; tagged versions are published as [releases](https://github.com/ict-baden/zutritt/releases). Program and MSI are signed as soon as Artifact Signing is set up for ICT Baden; until then Windows SmartScreen may warn when you start them. Check the files against `SHA256SUMS.txt` – see [Verifying the download](#verifying-the-download).
 
 ## Requirements
 
@@ -140,7 +140,7 @@ Zutritt does not check for updates by itself. Watch the [releases](https://githu
 
 ## Supported versions
 
-Security fixes are provided for the **newest released version** only – install it to get them ([SECURITY.md](../SECURITY.md)). Builds of `main` on `latest` are always the newest state but are not a release with a version promise. Help is available for free on GitHub and with guaranteed response times under a support contract ([SUPPORT.md](../SUPPORT.md)).
+Security fixes are provided for the **newest released version** – install it to get them; customers with a support contract also receive them for the previous major version until twelve months after its successor appears ([SECURITY.md](../SECURITY.md)). Builds of `main` on `latest` are always the newest state but are not a release with a version promise. Help is available for free on GitHub and with guaranteed response times under a support contract ([SUPPORT.md](../SUPPORT.md)).
 
 ---
 
